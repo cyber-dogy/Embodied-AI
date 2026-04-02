@@ -1,0 +1,9 @@
+# Optional evaluation dependencies.
+# Install this only when you want to run RLBench success selection / rollout eval.
+#
+# RLBench and PyRep are not regular PyPI-only dependencies in many environments.
+# AutoDL users should typically prepare a separate RLBench-capable environment
+# or install from the official source instructions.
+
+rlbench
+pyrep

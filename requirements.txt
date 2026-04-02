@@ -1,0 +1,15 @@
+torch
+numpy
+numba
+zarr
+numcodecs
+imagecodecs
+open3d
+matplotlib
+imageio
+spatialmath-python
+diffusers==0.24.0
+huggingface_hub==0.25.2
+wandb
+tqdm
+ipykernel

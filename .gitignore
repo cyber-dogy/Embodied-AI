@@ -1,0 +1,19 @@
+# 排除权重文件
+ckpt/
+# 排除数据文件
+data/
+# Python缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+# 环境
+.env
+.venv
+env/
+venv/
+# IDE
+.vscode/
+.idea/
