@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from functools import partial
 from os.path import join
@@ -114,6 +115,7 @@ class RLBenchEnv(BaseEnv):
 
     def _prepare_coppeliasim_env(self, headless: bool) -> None:
         """Ensure the Python process has the same launch env as the shell setup."""
+        self._guard_against_ipykernel()
         root = os.environ.get("COPPELIASIM_ROOT", os.path.expanduser("~/CoppeliaSim"))
         if not os.path.isdir(root):
             raise FileNotFoundError(
@@ -136,6 +138,19 @@ class RLBenchEnv(BaseEnv):
         if not headless:
             # Force the native X11 backend for the old bundled Qt runtime.
             os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
+
+    def _guard_against_ipykernel(self) -> None:
+        if "ipykernel" not in sys.modules:
+            return
+        if os.environ.get("RLBENCH_ALLOW_IPYKERNEL", "").lower() in {"1", "true", "yes"}:
+            return
+        raise RuntimeError(
+            "Launching RLBench/CoppeliaSim inside an ipykernel/Jupyter process is unstable in "
+            "this environment and can crash the kernel with Qt thread errors. Run the "
+            "evaluation from a standalone Python process instead, e.g. "
+            "`python scripts/eval_checkpoint.py --ckpt-path ...`, or set "
+            "`RLBENCH_ALLOW_IPYKERNEL=1` if you want to bypass this guard."
+        )
 
     def _launch_environment(self, headless: bool) -> None:
         if headless:

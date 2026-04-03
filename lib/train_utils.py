@@ -729,7 +729,8 @@ def run_success_rate_eval(
                     if show_progress and heartbeat_every is not None and step > 0 and step % heartbeat_every == 0:
                         print(f"{progress_desc}: episode={episode_idx} heartbeat step={step}")
                     robot_state, obs = env.get_obs()
-                    prediction = model.predict_action(obs, robot_state)
+                    with torch.inference_mode():
+                        prediction = model.predict_action(obs, robot_state)
                     predicted_robot_state = select_robot_state_from_prediction(
                         prediction,
                         mode=cfg.command_mode,
@@ -1085,8 +1086,15 @@ def train_experiment(cfg: ExperimentConfig, strategy: str = "fm") -> dict[str, A
     return summary
 
 
-def load_model_for_eval(cfg: ExperimentConfig, strategy: str, ckpt_path: str | Path, prefer_ema: bool = True):
-    payload = torch.load(Path(ckpt_path), map_location="cpu")
+def load_model_for_eval(
+    cfg: ExperimentConfig,
+    strategy: str,
+    ckpt_path: str | Path,
+    prefer_ema: bool = True,
+    payload: dict[str, Any] | None = None,
+):
+    if payload is None:
+        payload = torch.load(Path(ckpt_path), map_location="cpu")
     model = build_policy(cfg, strategy)
     if prefer_ema and payload.get("ema_state_dict") is not None:
         model.load_state_dict(payload["ema_state_dict"])
