@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import contextlib
 import math
 
 import torch
@@ -102,14 +101,44 @@ class SelfAttnEncoder(nn.Module):
                 nn.init.xavier_uniform_(p)
 
 
-class DiTDecoderBlock(nn.Module):
-    """DiT-style decoder block with standard 6-parameter AdaLN-Zero."""
+class ShiftScaleMod(nn.Module):
+    def __init__(self, dim: int):
+        super().__init__()
+        self.act = nn.SiLU()
+        self.scale = nn.Linear(dim, dim)
+        self.shift = nn.Linear(dim, dim)
 
+    def forward(self, x: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
+        cond = self.act(cond)
+        return x * self.scale(cond)[None] + self.shift(cond)[None]
+
+    def reset_parameters(self) -> None:
+        nn.init.xavier_uniform_(self.scale.weight)
+        nn.init.xavier_uniform_(self.shift.weight)
+        nn.init.zeros_(self.scale.bias)
+        nn.init.zeros_(self.shift.bias)
+
+
+class ZeroScaleMod(nn.Module):
+    def __init__(self, dim: int):
+        super().__init__()
+        self.act = nn.SiLU()
+        self.scale = nn.Linear(dim, dim)
+
+    def forward(self, x: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
+        cond = self.act(cond)
+        return x * self.scale(cond)[None]
+
+    def reset_parameters(self) -> None:
+        nn.init.zeros_(self.scale.weight)
+        nn.init.zeros_(self.scale.bias)
+
+
+class DiTDecoderBlock(nn.Module):
     def __init__(
         self,
         d_model: int,
         nhead: int,
-        cond_dim: int,
         dim_feedforward: int = 2048,
         dropout: float = 0.1,
         activation: str = "gelu",
@@ -118,65 +147,59 @@ class DiTDecoderBlock(nn.Module):
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         self.linear1 = nn.Linear(d_model, dim_feedforward)
         self.linear2 = nn.Linear(dim_feedforward, d_model)
-        self.norm1 = nn.LayerNorm(d_model, elementwise_affine=False, eps=1e-6)
-        self.norm2 = nn.LayerNorm(d_model, elementwise_affine=False, eps=1e-6)
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
         self.dropout3 = nn.Dropout(dropout)
         self.activation = _get_activation_fn(activation)
-
-        self.adaLN_modulation = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(cond_dim, 6 * d_model, bias=True),
-        )
+        self.attn_mod1 = ShiftScaleMod(d_model)
+        self.attn_mod2 = ZeroScaleMod(d_model)
+        self.mlp_mod1 = ShiftScaleMod(d_model)
+        self.mlp_mod2 = ZeroScaleMod(d_model)
 
     def forward(self, x: torch.Tensor, time_cond: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
         cond = torch.mean(cond, dim=0)
-        cond = torch.cat([cond, time_cond], dim=-1)
-        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(cond).chunk(6, dim=1)
-
-        # Attention branch: norm -> modulate -> attn -> gate * output -> residual
-        x2 = self.norm1(x) * (1 + scale_msa.unsqueeze(0)) + shift_msa.unsqueeze(0)
+        cond = cond + time_cond
+        x2 = self.attn_mod1(self.norm1(x), cond)
         x2, _ = self.self_attn(x2, x2, x2, need_weights=False)
-        x = x + gate_msa.unsqueeze(0) * self.dropout1(x2)
+        x = self.attn_mod2(self.dropout1(x2), cond) + x
 
-        # MLP branch: norm -> modulate -> mlp -> gate * output -> residual
-        x2 = self.norm2(x) * (1 + scale_mlp.unsqueeze(0)) + shift_mlp.unsqueeze(0)
+        x2 = self.mlp_mod1(self.norm2(x), cond)
         x2 = self.linear2(self.dropout2(self.activation(self.linear1(x2))))
-        x = x + gate_mlp.unsqueeze(0) * self.dropout3(x2)
-        return x
+        x2 = self.mlp_mod2(self.dropout3(x2), cond)
+        return x + x2
 
     def reset_parameters(self) -> None:
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
-        nn.init.constant_(self.adaLN_modulation[-1].weight, 0)
-        nn.init.constant_(self.adaLN_modulation[-1].bias, 0)
+        for block in (self.attn_mod1, self.attn_mod2, self.mlp_mod1, self.mlp_mod2):
+            block.reset_parameters()
 
 
 class FinalLayer(nn.Module):
-    def __init__(self, hidden_size: int, out_size: int, cond_dim: int):
+    def __init__(self, hidden_size: int, out_size: int):
         super().__init__()
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, out_size, bias=True)
         self.adaLN_modulation = nn.Sequential(
             nn.SiLU(),
-            nn.Linear(cond_dim, 2 * hidden_size, bias=True),
+            nn.Linear(hidden_size, 2 * hidden_size, bias=True),
         )
 
-    def forward(self, x: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, time_cond: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
+        cond = torch.mean(cond, dim=0)
+        cond = cond + time_cond
         shift, scale = self.adaLN_modulation(cond).chunk(2, dim=1)
         x = self.norm_final(x)
-        x = x * (1 + scale).unsqueeze(0) + shift.unsqueeze(0)
+        x = x * scale[None] + shift[None]
         x = self.linear(x)
         return x.transpose(0, 1)
 
     def reset_parameters(self) -> None:
         for p in self.parameters():
-            if p.dim() > 1:
-                nn.init.xavier_uniform_(p)
-        nn.init.constant_(self.adaLN_modulation[-1].weight, 0)
-        nn.init.constant_(self.adaLN_modulation[-1].bias, 0)
+            nn.init.zeros_(p)
 
 
 class TransformerEncoder(nn.Module):
@@ -263,14 +286,13 @@ class DiTTrajectoryBackbone(nn.Module):
         decoder_module = DiTDecoderBlock(
             hidden_dim,
             nhead=nhead,
-            cond_dim=hidden_dim * 2,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
             activation=activation,
         )
         self.encoder = TransformerEncoder(encoder_module, num_blocks)
         self.decoder = TransformerDecoder(decoder_module, num_blocks)
-        self.output_head = FinalLayer(hidden_dim, self.output_dim, cond_dim=hidden_dim * 2)
+        self.output_head = FinalLayer(hidden_dim, self.output_dim)
 
     def _normalize_timestep(self, sample: torch.Tensor, timestep: torch.Tensor | float | int) -> torch.Tensor:
         timesteps = timestep
@@ -295,13 +317,7 @@ class DiTTrajectoryBackbone(nn.Module):
 
     def forward_enc(self, cond_tokens: torch.Tensor) -> list[torch.Tensor]:
         cond_tokens = cond_tokens.float().transpose(0, 1)
-        autocast_off = (
-            torch.autocast(device_type=cond_tokens.device.type, enabled=False)
-            if cond_tokens.device.type in {"cuda", "cpu"}
-            else contextlib.nullcontext()
-        )
-        with autocast_off:
-            cond_tokens = self.cond_proj(cond_tokens)
+        cond_tokens = self.cond_proj(cond_tokens)
         pos = self.enc_pos(cond_tokens)
         self._assert_finite("cond_tokens", cond_tokens)
         return self.encoder(cond_tokens, pos)
@@ -321,9 +337,7 @@ class DiTTrajectoryBackbone(nn.Module):
         self._assert_finite("dec_in", dec_in)
         dec_out = self.decoder(dec_in, time_enc, enc_cache)
         self._assert_finite("dec_out", dec_out)
-        cond_final = torch.mean(enc_cache[-1], dim=0)
-        cond_final = torch.cat([cond_final, time_enc], dim=-1)
-        return self.output_head(dec_out, cond_final)
+        return self.output_head(dec_out, time_enc, enc_cache[-1])
 
     def forward(
         self,

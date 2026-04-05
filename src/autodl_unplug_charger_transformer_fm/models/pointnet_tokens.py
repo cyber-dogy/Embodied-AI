@@ -5,7 +5,7 @@ import contextlib
 import torch
 import torch.nn as nn
 
-from .dp_pytorch_util import replace_submodules
+from ..utils.dp_pytorch_util import replace_submodules
 from .pointnet import PointNetfeat
 
 

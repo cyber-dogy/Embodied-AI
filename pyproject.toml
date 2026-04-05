@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autodl_unplug_charger_transformer_fm"
+version = "0.1.0"
+description = "Point-cloud Flow Matching / Diffusion training project for RLBench unplug_charger."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "diffusers==0.24.0",
+  "huggingface_hub==0.25.2",
+  "imagecodecs",
+  "imageio",
+  "ipykernel",
+  "matplotlib",
+  "numba",
+  "numcodecs",
+  "numpy",
+  "open3d",
+  "spatialmath-python",
+  "torch",
+  "tqdm",
+  "wandb",
+  "zarr",
+]
+
+[project.scripts]
+autodl-train = "autodl_unplug_charger_transformer_fm.cli.train:main"
+autodl-eval-checkpoint = "autodl_unplug_charger_transformer_fm.cli.eval_checkpoint:main"
+autodl-eval-all-checkpoints = "autodl_unplug_charger_transformer_fm.cli.eval_all_checkpoints:main"
+autodl-record-rollout-videos = "autodl_unplug_charger_transformer_fm.cli.record_rollout_videos:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
