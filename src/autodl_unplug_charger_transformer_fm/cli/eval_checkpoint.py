@@ -73,6 +73,12 @@ def parse_args() -> argparse.Namespace:
         help="Print per-episode progress (default: true).",
     )
     parser.add_argument(
+        "--heartbeat-every",
+        type=int,
+        default=None,
+        help="Optional rollout heartbeat override for RLBench evaluation.",
+    )
+    parser.add_argument(
         "--output-json",
         type=Path,
         default=None,
@@ -103,6 +109,7 @@ def main() -> int:
         seed=eval_seed,
         ckpt_root=ckpt_root,
         device=args.device,
+        heartbeat_every=args.heartbeat_every,
     )
     set_seeds(eval_seed)
 

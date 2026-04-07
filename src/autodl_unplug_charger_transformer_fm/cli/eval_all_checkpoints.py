@@ -5,7 +5,9 @@ import gc
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
+import tempfile
 import time
 from typing import Any
 
@@ -97,6 +99,18 @@ def parse_args() -> argparse.Namespace:
         metavar=("WIDTH", "HEIGHT"),
         default=(10.0, 4.0),
         help="Figure size for the success-rate plot.",
+    )
+    parser.add_argument(
+        "--isolate-checkpoints",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Evaluate each checkpoint in a fresh subprocess so one RLBench/CoppeliaSim hang does not poison the whole sweep.",
+    )
+    parser.add_argument(
+        "--per-checkpoint-timeout-sec",
+        type=int,
+        default=900,
+        help="Timeout for each isolated checkpoint evaluation subprocess.",
     )
     return parser.parse_args()
 
@@ -357,6 +371,106 @@ def eval_single_checkpoint(
         release_eval_resources(summary, model, cfg, payload)
 
 
+def _build_single_eval_command(
+    *,
+    record: dict[str, Any],
+    strategy: str,
+    prefer_ema: bool,
+    seed: int,
+    device: str | None,
+    episodes: int,
+    max_steps: int,
+    heartbeat_every: int,
+    headless: bool,
+    show_progress: bool,
+    output_json: Path,
+) -> list[str]:
+    cmd = [
+        sys.executable,
+        str(PROJECT_ROOT / "scripts" / "eval_checkpoint.py"),
+        "--ckpt-path",
+        str(Path(record["path"]).resolve()),
+        "--strategy",
+        str(strategy),
+        "--episodes",
+        str(int(episodes)),
+        "--max-steps",
+        str(int(max_steps)),
+        "--heartbeat-every",
+        str(int(heartbeat_every)),
+        "--seed",
+        str(int(seed)),
+        "--output-json",
+        str(output_json),
+        "--prefer-ema" if prefer_ema else "--no-prefer-ema",
+        "--headless" if headless else "--no-headless",
+        "--show-progress" if show_progress else "--no-show-progress",
+    ]
+    if device is not None:
+        cmd.extend(["--device", str(device)])
+    return cmd
+
+
+def eval_single_checkpoint_isolated(
+    record: dict[str, Any],
+    *,
+    strategy: str,
+    prefer_ema: bool,
+    seed: int,
+    device: str | None,
+    episodes: int,
+    max_steps: int,
+    headless: bool,
+    show_progress: bool,
+    ckpt_root: Path,
+    heartbeat_every: int,
+    timeout_sec: int,
+) -> dict[str, Any]:
+    ckpt_path = Path(record["path"]).resolve()
+    payload = load_checkpoint_payload(ckpt_path)
+    with tempfile.TemporaryDirectory(prefix=f"{ckpt_path.stem}_", dir=ckpt_root) as tmp_dir:
+        output_json = Path(tmp_dir) / "result.json"
+        cmd = _build_single_eval_command(
+            record=record,
+            strategy=strategy,
+            prefer_ema=prefer_ema,
+            seed=seed,
+            device=device,
+            episodes=episodes,
+            max_steps=max_steps,
+            heartbeat_every=heartbeat_every,
+            headless=headless,
+            show_progress=show_progress,
+            output_json=output_json,
+        )
+        subprocess.run(
+            cmd,
+            cwd=PROJECT_ROOT,
+            check=True,
+            timeout=max(1, int(timeout_sec)),
+        )
+        result_payload = json.loads(output_json.read_text(encoding="utf-8"))
+
+    successes = int(sum(int(bool(row.get("success"))) for row in result_payload.get("episode_records", [])))
+    return {
+        "label": record["label"],
+        "kind": record["kind"],
+        "path": str(ckpt_path),
+        "epoch": record["epoch"] if record.get("epoch") is not None else extract_epoch_from_path(ckpt_path, payload),
+        "completed_epoch": payload.get("completed_epoch"),
+        "best_metric": payload.get("best_metric"),
+        "best_epoch": payload.get("best_epoch"),
+        "best_success_rate": payload.get("best_success_rate"),
+        "best_success_epoch": payload.get("best_success_epoch"),
+        "success_rate": float(result_payload["success_rate"]),
+        "mean_steps": float(result_payload["mean_steps"]),
+        "num_successes": successes,
+        "num_episodes": int(result_payload["num_episodes"]),
+        "duration_sec": float(result_payload["duration_sec"]),
+        "episode_records": result_payload.get("episode_records", []),
+    }
+
+
 def build_failed_result(record: dict[str, Any], ckpt_path: Path, exc: Exception) -> dict[str, Any]:
     payload = None
     try:
@@ -556,19 +670,35 @@ def main() -> int:
                     continue
 
             try:
-                result = eval_single_checkpoint(
-                    record,
-                    strategy=args.strategy,
-                    prefer_ema=args.prefer_ema,
-                    seed=args.seed,
-                    device=args.device,
-                    episodes=args.episodes,
-                    max_steps=args.max_steps,
-                    headless=args.headless,
-                    show_progress=args.show_progress,
-                    ckpt_root=ckpt_root,
-                    heartbeat_every=args.heartbeat_every,
-                )
+                if bool(args.isolate_checkpoints):
+                    result = eval_single_checkpoint_isolated(
+                        record,
+                        strategy=args.strategy,
+                        prefer_ema=args.prefer_ema,
+                        seed=args.seed,
+                        device=args.device,
+                        episodes=args.episodes,
+                        max_steps=args.max_steps,
+                        headless=args.headless,
+                        show_progress=args.show_progress,
+                        ckpt_root=ckpt_root,
+                        heartbeat_every=args.heartbeat_every,
+                        timeout_sec=args.per_checkpoint_timeout_sec,
+                    )
+                else:
+                    result = eval_single_checkpoint(
+                        record,
+                        strategy=args.strategy,
+                        prefer_ema=args.prefer_ema,
+                        seed=args.seed,
+                        device=args.device,
+                        episodes=args.episodes,
+                        max_steps=args.max_steps,
+                        headless=args.headless,
+                        show_progress=args.show_progress,
+                        ckpt_root=ckpt_root,
+                        heartbeat_every=args.heartbeat_every,
+                    )
             except Exception as exc:
                 result = build_failed_result(record, ckpt_path, exc)
                 print(f"evaluation failed for {record['label']}: {exc}")
