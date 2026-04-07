@@ -635,10 +635,14 @@ def finalize_autoresearch_trial(
     if request_overrides is not None:
         override_payload = _trial_request_to_dict(request_overrides)
         base_payload = _trial_request_to_dict(stored_request)
+        default_payload = _trial_request_to_dict(TrialRequest(config_path=stored_request.config_path))
         for key, value in override_payload.items():
             if key == "config_path":
                 continue
-            if value is not None:
+            if value is None:
+                continue
+            if key in default_payload and value == default_payload[key]:
+                continue
                 base_payload[key] = value
         request = _trial_request_from_dict(base_payload)
     else:

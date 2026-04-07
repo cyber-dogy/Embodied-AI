@@ -239,6 +239,70 @@ class TrialRunnerTest(unittest.TestCase):
             self.assertTrue((run_dir / "audit_report.json").exists())
             self.assertTrue((run_dir / "best_success.pt").exists())
 
+    def test_audit_only_cli_style_overrides_do_not_clobber_stage_epochs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            run_dir = repo_root / "ckpt" / "demo_run"
+            epochs_dir = run_dir / "epochs"
+            epochs_dir.mkdir(parents=True)
+            (run_dir / "config.json").write_text("{}", encoding="utf-8")
+            (run_dir / "summary.json").write_text('{"ok": true}\n', encoding="utf-8")
+            (run_dir / "trial_request.json").write_text(
+                json.dumps(
+                    {
+                        "config_path": str(repo_root / "configs" / "trial.json"),
+                        "stage_epochs": 100,
+                        "checkpoint_every": 100,
+                        "experiment_name": "baseline_100",
+                        "description": "baseline",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            _write_fake_checkpoint(epochs_dir / "epoch_0100.pt", completed_epoch=99, train_loss=0.1, valid_loss=0.2)
+
+            cfg = ExperimentConfig(
+                train_data_path=repo_root / "data" / "unplug_charger" / "train",
+                valid_data_path=repo_root / "data" / "unplug_charger" / "valid",
+                ckpt_root=repo_root / "ckpt",
+                train_epochs=100,
+                checkpoint_every_epochs=100,
+                wandb_enable=False,
+            )
+
+            def fake_load_config(_path: Path) -> ExperimentConfig:
+                local_cfg = ExperimentConfig(**cfg.__dict__)
+                local_cfg.run_name = run_dir.name
+                return local_cfg
+
+            def fake_run_checkpoint_audit(**kwargs) -> Path:
+                results_path = run_dir / "audit_raw_results.json"
+                payload = {
+                    "epoch100": {
+                        "label": "epoch_0100",
+                        "kind": "periodic",
+                        "path": str((epochs_dir / "epoch_0100.pt").resolve()),
+                        "epoch": 100,
+                        "success_rate": 0.90,
+                        "mean_steps": 80.0,
+                        "num_successes": 18,
+                        "num_episodes": 20,
+                    }
+                }
+                results_path.write_text(json.dumps(payload), encoding="utf-8")
+                return results_path
+
+            with mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.PROJECT_ROOT", repo_root), \
+                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.load_config", side_effect=fake_load_config), \
+                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
+                audit_result = finalize_autoresearch_trial(
+                    run_dir,
+                    request_overrides=TrialRequest(config_path=repo_root / "configs" / "trial.json"),
+                )
+
+            self.assertEqual(audit_result["success_100"], 0.9)
+            self.assertFalse(audit_result["collapse_detected"])
+
     def test_run_autoresearch_trial_returns_retryable_result_on_audit_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)
