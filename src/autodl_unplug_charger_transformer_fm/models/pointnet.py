@@ -7,7 +7,8 @@ import torch.nn.functional as F
 import torch.nn.parallel
 import torch.utils.data
 from torch.autograd import Variable
-from .dp_pytorch_util import replace_submodules
+
+from ..utils.dp_pytorch_util import replace_submodules
 
 
 class STN3d(nn.Module):

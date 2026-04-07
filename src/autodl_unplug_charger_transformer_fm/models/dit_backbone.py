@@ -113,8 +113,10 @@ class DiTDecoderBlock(nn.Module):
         dim_feedforward: int = 2048,
         dropout: float = 0.1,
         activation: str = "gelu",
+        condition_mode: str = "mean_pool",
     ):
         super().__init__()
+        self.condition_mode = str(condition_mode)
         self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
         self.linear1 = nn.Linear(d_model, dim_feedforward)
         self.linear2 = nn.Linear(dim_feedforward, d_model)
@@ -129,16 +131,34 @@ class DiTDecoderBlock(nn.Module):
             nn.SiLU(),
             nn.Linear(cond_dim, 6 * d_model, bias=True),
         )
+        if self.condition_mode == "cross_attn":
+            self.cross_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+            self.norm_cross = nn.LayerNorm(d_model, elementwise_affine=False, eps=1e-6)
+            self.dropout_cross = nn.Dropout(dropout)
+            self.cross_modulation = nn.Sequential(
+                nn.SiLU(),
+                nn.Linear(cond_dim, 3 * d_model, bias=True),
+            )
+        elif self.condition_mode != "mean_pool":
+            raise ValueError(f"Unsupported decoder condition_mode: {self.condition_mode}")
 
     def forward(self, x: torch.Tensor, time_cond: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
-        cond = torch.mean(cond, dim=0)
-        cond = torch.cat([cond, time_cond], dim=-1)
-        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(cond).chunk(6, dim=1)
+        cond_summary = torch.mean(cond, dim=0)
+        cond_global = torch.cat([cond_summary, time_cond], dim=-1)
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(
+            cond_global
+        ).chunk(6, dim=1)
 
         # Attention branch: norm -> modulate -> attn -> gate * output -> residual
         x2 = self.norm1(x) * (1 + scale_msa.unsqueeze(0)) + shift_msa.unsqueeze(0)
         x2, _ = self.self_attn(x2, x2, x2, need_weights=False)
         x = x + gate_msa.unsqueeze(0) * self.dropout1(x2)
+
+        if self.condition_mode == "cross_attn":
+            shift_cross, scale_cross, gate_cross = self.cross_modulation(cond_global).chunk(3, dim=1)
+            x2 = self.norm_cross(x) * (1 + scale_cross.unsqueeze(0)) + shift_cross.unsqueeze(0)
+            x2, _ = self.cross_attn(x2, cond, cond, need_weights=False)
+            x = x + gate_cross.unsqueeze(0) * self.dropout_cross(x2)
 
         # MLP branch: norm -> modulate -> mlp -> gate * output -> residual
         x2 = self.norm2(x) * (1 + scale_mlp.unsqueeze(0)) + shift_mlp.unsqueeze(0)
@@ -152,11 +172,21 @@ class DiTDecoderBlock(nn.Module):
                 nn.init.xavier_uniform_(p)
         nn.init.constant_(self.adaLN_modulation[-1].weight, 0)
         nn.init.constant_(self.adaLN_modulation[-1].bias, 0)
+        if self.condition_mode == "cross_attn":
+            nn.init.constant_(self.cross_modulation[-1].weight, 0)
+            nn.init.constant_(self.cross_modulation[-1].bias, 0)
 
 
 class FinalLayer(nn.Module):
-    def __init__(self, hidden_size: int, out_size: int, cond_dim: int):
+    def __init__(
+        self,
+        hidden_size: int,
+        out_size: int,
+        cond_dim: int,
+        zero_init_output: bool = False,
+    ):
         super().__init__()
+        self.zero_init_output = bool(zero_init_output)
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.linear = nn.Linear(hidden_size, out_size, bias=True)
         self.adaLN_modulation = nn.Sequential(
@@ -177,6 +207,9 @@ class FinalLayer(nn.Module):
                 nn.init.xavier_uniform_(p)
         nn.init.constant_(self.adaLN_modulation[-1].weight, 0)
         nn.init.constant_(self.adaLN_modulation[-1].bias, 0)
+        if self.zero_init_output:
+            nn.init.constant_(self.linear.weight, 0)
+            nn.init.constant_(self.linear.bias, 0)
 
 
 class TransformerEncoder(nn.Module):
@@ -224,6 +257,8 @@ class DiTTrajectoryBackbone(nn.Module):
         nhead: int = 8,
         activation: str = "gelu",
         debug_finiteness: bool = False,
+        final_layer_zero_init: bool = False,
+        decoder_condition_mode: str = "mean_pool",
     ):
         super().__init__()
         self.input_dim = int(input_dim)
@@ -233,6 +268,8 @@ class DiTTrajectoryBackbone(nn.Module):
         self.hidden_dim = int(hidden_dim)
         self.num_blocks = int(num_blocks)
         self.debug_finiteness = bool(debug_finiteness)
+        self.decoder_condition_mode = str(decoder_condition_mode)
+        self.final_layer_zero_init = bool(final_layer_zero_init)
 
         self.enc_pos = PositionalEncoding(hidden_dim)
         self.register_parameter(
@@ -267,10 +304,17 @@ class DiTTrajectoryBackbone(nn.Module):
             dim_feedforward=dim_feedforward,
             dropout=dropout,
             activation=activation,
+            condition_mode=self.decoder_condition_mode,
         )
         self.encoder = TransformerEncoder(encoder_module, num_blocks)
         self.decoder = TransformerDecoder(decoder_module, num_blocks)
-        self.output_head = FinalLayer(hidden_dim, self.output_dim, cond_dim=hidden_dim * 2)
+        self.output_head = FinalLayer(
+            hidden_dim,
+            self.output_dim,
+            cond_dim=hidden_dim * 2,
+            zero_init_output=self.final_layer_zero_init,
+        )
+        self.output_head.reset_parameters()
 
     def _normalize_timestep(self, sample: torch.Tensor, timestep: torch.Tensor | float | int) -> torch.Tensor:
         timesteps = timestep

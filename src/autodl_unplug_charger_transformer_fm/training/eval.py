@@ -285,7 +285,7 @@ def summarize_for_json(summary: dict[str, Any] | None) -> dict[str, Any] | None:
 
 
 def write_summary_json(cfg: ExperimentConfig, summary: dict[str, Any]):
-    path = cfg.ckpt_dir / "summary.json"
+    path = cfg.summary_path
     path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return path
 

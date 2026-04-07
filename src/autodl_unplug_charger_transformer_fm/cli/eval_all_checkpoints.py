@@ -52,7 +52,7 @@ def parse_args() -> argparse.Namespace:
         "--include-special",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="Include best.pt/latest.pt/best_success.pt when present.",
+        help="Include best_valid.pt/best.pt/latest.pt/best_success.pt when present.",
     )
     parser.add_argument(
         "--prefer-ema",
@@ -495,7 +495,7 @@ def main() -> int:
     ckpt_epochs_dir = args.ckpt_epochs_dir.expanduser().resolve()
     ckpt_root = ckpt_epochs_dir.parent
     results_json = args.results_json.expanduser().resolve()
-    special_names = ["latest.pt", "best.pt", "best_success.pt"]
+    special_names = ["latest.pt", "best_valid.pt", "best.pt", "best_success.pt"]
 
     ckpt_records = discover_checkpoints(
         ckpt_epochs_dir,

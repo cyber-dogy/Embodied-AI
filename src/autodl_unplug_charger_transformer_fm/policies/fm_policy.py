@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 
 from .base_policy import BasePolicy
+from ..data.dataset_pcd import augment_pcd_data_with_params
 from ..utils.common import get_device
 from ..utils.fm_utils import get_timesteps
 from ..utils.se3_utils import init_random_traj_th
@@ -21,7 +22,11 @@ class FMPolicyConfig:
     num_k_infer: int
     time_conditioning: bool
     norm_pcd_center: tuple[float, float, float] = (0.4, 0.0, 1.4)
+    robot_state_mean: tuple[float, ...] | None = None
+    robot_state_std: tuple[float, ...] | None = None
     augment_data: bool = False
+    augment_translation_sigma: float = 0.02
+    augment_rotation_sigma: float = 0.10
     noise_type: str = "gaussian"
     noise_scale: float = 1.0
     loss_type: str = "l2"
@@ -52,7 +57,15 @@ class FMTransformerPolicy(nn.Module, BasePolicy):
         self.obs_encoder = obs_encoder
         self.backbone = backbone
         self.norm_pcd_center = tuple(float(v) for v in cfg.norm_pcd_center)
+        self.robot_state_mean = (
+            None if cfg.robot_state_mean is None else tuple(float(v) for v in cfg.robot_state_mean)
+        )
+        self.robot_state_std = (
+            None if cfg.robot_state_std is None else tuple(float(v) for v in cfg.robot_state_std)
+        )
         self.augment_data = bool(cfg.augment_data)
+        self.augment_translation_sigma = float(cfg.augment_translation_sigma)
+        self.augment_rotation_sigma = float(cfg.augment_rotation_sigma)
         self.noise_type = str(cfg.noise_type)
         self.noise_scale = float(cfg.noise_scale)
         self.flow_schedule = str(cfg.flow_schedule)
@@ -65,6 +78,38 @@ class FMTransformerPolicy(nn.Module, BasePolicy):
             self.loss_fun = nn.L1Loss()
         else:
             self.loss_fun = nn.MSELoss()
+        self.register_buffer(
+            "_norm_pcd_center_tensor",
+            torch.tensor(self.norm_pcd_center, dtype=torch.float32),
+            persistent=False,
+        )
+        if self.robot_state_mean is None or self.robot_state_std is None:
+            self.register_buffer("_robot_state_mean_tensor", torch.empty(0), persistent=False)
+            self.register_buffer("_robot_state_std_tensor", torch.empty(0), persistent=False)
+        else:
+            self.register_buffer(
+                "_robot_state_mean_tensor",
+                torch.tensor(self.robot_state_mean, dtype=torch.float32),
+                persistent=False,
+            )
+            self.register_buffer(
+                "_robot_state_std_tensor",
+                torch.tensor(self.robot_state_std, dtype=torch.float32),
+                persistent=False,
+            )
+
+    def _pcd_center_tensor(self, pcd: torch.Tensor) -> torch.Tensor:
+        return self._norm_pcd_center_tensor.to(device=pcd.device, dtype=pcd.dtype)
+
+    def _robot_state_stats(
+        self,
+        robot_state: torch.Tensor,
+    ) -> tuple[torch.Tensor | None, torch.Tensor | None]:
+        if self._robot_state_mean_tensor.numel() == 0 or self._robot_state_std_tensor.numel() == 0:
+            return None, None
+        mean = self._robot_state_mean_tensor.to(device=robot_state.device, dtype=robot_state.dtype)
+        std = self._robot_state_std_tensor.to(device=robot_state.device, dtype=robot_state.dtype)
+        return mean, std.clamp_min(1e-6)
 
     def set_num_k_infer(self, num_k_infer: int) -> None:
         self.num_k_infer = int(num_k_infer)
@@ -75,27 +120,27 @@ class FMTransformerPolicy(nn.Module, BasePolicy):
 
     def _norm_obs(self, pcd: torch.Tensor) -> torch.Tensor:
         pcd = pcd.clone()
-        pcd[..., :3] -= torch.tensor(self.norm_pcd_center, device=pcd.device, dtype=pcd.dtype)
+        pcd[..., :3] -= self._pcd_center_tensor(pcd)
         return pcd
 
     def _norm_robot_state(self, robot_state: torch.Tensor) -> torch.Tensor:
         robot_state = robot_state.clone()
-        robot_state[..., :3] -= torch.tensor(
-            self.norm_pcd_center,
-            device=robot_state.device,
-            dtype=robot_state.dtype,
-        )
-        robot_state[..., 9] -= 0.5
+        mean, std = self._robot_state_stats(robot_state)
+        if mean is not None and std is not None:
+            robot_state = (robot_state - mean) / std
+        else:
+            robot_state[..., :3] -= self._pcd_center_tensor(robot_state)
+            robot_state[..., 9] -= 0.5
         return robot_state
 
     def _denorm_robot_state(self, robot_state: torch.Tensor) -> torch.Tensor:
         robot_state = robot_state.clone()
-        robot_state[..., :3] += torch.tensor(
-            self.norm_pcd_center,
-            device=robot_state.device,
-            dtype=robot_state.dtype,
-        )
-        robot_state[..., 9] += 0.5
+        mean, std = self._robot_state_stats(robot_state)
+        if mean is not None and std is not None:
+            robot_state = robot_state * std + mean
+        else:
+            robot_state[..., :3] += self._pcd_center_tensor(robot_state)
+            robot_state[..., 9] += 0.5
         return robot_state
 
     def _norm_data(self, batch: tuple[torch.Tensor, ...]) -> tuple[torch.Tensor, ...]:
@@ -154,6 +199,12 @@ class FMTransformerPolicy(nn.Module, BasePolicy):
         return loss_xyz, loss_rot6d, loss_grip
 
     def compute_loss_dict(self, batch: tuple[torch.Tensor, ...]) -> dict[str, torch.Tensor]:
+        if self.training and self.augment_data:
+            batch = augment_pcd_data_with_params(
+                batch,
+                sigma_transl=self.augment_translation_sigma,
+                sigma_rot_rad=self.augment_rotation_sigma,
+            )
         pcd, robot_state_obs, robot_state_pred = self._norm_data(batch)
         loss_xyz, loss_rot6d, loss_grip = self.calculate_loss(pcd, robot_state_obs, robot_state_pred)
         total_loss = (

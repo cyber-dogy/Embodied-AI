@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import os
+import tempfile
 from typing import Any
 
 import torch
@@ -48,7 +50,20 @@ def update_ema_model(ema_model: torch.nn.Module | None, model: torch.nn.Module, 
 
 def _save_payload(path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(payload, path)
+    fd, tmp_path = tempfile.mkstemp(
+        dir=path.parent,
+        prefix=f".{path.name}.tmp.",
+        suffix=".pt",
+    )
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            torch.save(payload, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 
 def build_checkpoint_payload(

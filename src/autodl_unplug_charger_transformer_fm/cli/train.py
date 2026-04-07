@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from ..config import ExperimentConfig, load_config
+from ..config import ExperimentConfig, apply_config_overrides, load_config
 from ..utils.common import PROJECT_ROOT
 
 
@@ -32,7 +32,42 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override resume_from_latest in the config.",
     )
+    parser.add_argument(
+        "--set",
+        dest="config_overrides",
+        action="append",
+        default=None,
+        metavar="KEY=VALUE",
+        help="Override a config field using JSON-parsed VALUE, e.g. --set dropout=0.0.",
+    )
     return parser.parse_args()
+
+
+def _parse_override_value(raw: str):
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        lowered = raw.strip().lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+        return raw
+
+
+def _parse_config_overrides(items: list[str] | None) -> dict[str, object] | None:
+    if not items:
+        return None
+    overrides: dict[str, object] = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"Invalid --set override {item!r}. Expected KEY=VALUE.")
+        key = key.strip()
+        if not key:
+            raise SystemExit(f"Invalid --set override {item!r}. Empty key.")
+        overrides[key] = _parse_override_value(value)
+    return overrides
 
 
 def apply_train_overrides(cfg: ExperimentConfig, args: argparse.Namespace) -> ExperimentConfig:
@@ -48,6 +83,7 @@ def apply_train_overrides(cfg: ExperimentConfig, args: argparse.Namespace) -> Ex
         cfg.device = str(args.device)
     if args.resume is not None:
         cfg.resume_from_latest = bool(args.resume)
+    cfg = apply_config_overrides(cfg, _parse_config_overrides(args.config_overrides))
     return cfg
 
 

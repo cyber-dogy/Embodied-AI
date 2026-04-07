@@ -31,6 +31,7 @@ autodl-train = "autodl_unplug_charger_transformer_fm.cli.train:main"
 autodl-eval-checkpoint = "autodl_unplug_charger_transformer_fm.cli.eval_checkpoint:main"
 autodl-eval-all-checkpoints = "autodl_unplug_charger_transformer_fm.cli.eval_all_checkpoints:main"
 autodl-record-rollout-videos = "autodl_unplug_charger_transformer_fm.cli.record_rollout_videos:main"
+autodl-run-autoresearch-trial = "autodl_unplug_charger_transformer_fm.cli.run_autoresearch_trial:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

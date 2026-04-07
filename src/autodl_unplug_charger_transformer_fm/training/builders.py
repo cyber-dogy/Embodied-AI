@@ -68,6 +68,8 @@ def build_backbone(cfg: ExperimentConfig) -> DiTTrajectoryBackbone:
         nhead=cfg.nhead,
         activation=cfg.activation,
         debug_finiteness=cfg.debug_finiteness,
+        final_layer_zero_init=cfg.final_layer_zero_init,
+        decoder_condition_mode=cfg.decoder_condition_mode,
     )
 
 
@@ -87,7 +89,11 @@ def build_policy(cfg: ExperimentConfig, strategy: str):
             num_k_infer=cfg.fm_num_k_infer,
             time_conditioning=cfg.fm_time_conditioning,
             norm_pcd_center=cfg.norm_pcd_center,
-            augment_data=False,
+            robot_state_mean=cfg.robot_state_mean,
+            robot_state_std=cfg.robot_state_std,
+            augment_data=cfg.augment_data,
+            augment_translation_sigma=cfg.augment_translation_sigma,
+            augment_rotation_sigma=cfg.augment_rotation_sigma,
             noise_type=cfg.fm_noise_type,
             noise_scale=cfg.fm_noise_scale,
             loss_type=cfg.loss_type,
@@ -96,7 +102,7 @@ def build_policy(cfg: ExperimentConfig, strategy: str):
             snr_sampler=cfg.fm_snr_sampler,
             subs_factor=cfg.subs_factor,
             pos_emb_scale=20,
-            loss_weights={"xyz": 1.0, "rot6d": 1.0, "grip": 1.0},
+            loss_weights=cfg.fm_loss_weights or {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0},
         )
         policy = FMTransformerPolicy(policy_cfg, obs_encoder=obs_encoder, backbone=backbone)
     elif strategy == "diffusion":

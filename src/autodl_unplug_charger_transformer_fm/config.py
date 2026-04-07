@@ -17,7 +17,7 @@ class ExperimentConfig:
     valid_data_path: Path = DATA_ROOT / "unplug_charger" / "valid"
     seed: int = 1234
     device: str = default_device_str()
-    resume_from_latest: bool = True
+    resume_from_latest: bool = False
 
     n_obs_steps: int = 3
     n_pred_steps: int = 32
@@ -35,6 +35,8 @@ class ExperimentConfig:
     dropout: float = 0.1
     activation: str = "gelu"
     debug_finiteness: bool = True
+    final_layer_zero_init: bool = False
+    decoder_condition_mode: str = "mean_pool"
 
     batch_size: int = 32
     grad_accum_steps: int = 2
@@ -57,8 +59,8 @@ class ExperimentConfig:
     ema_decay: float = 0.9993
 
     val_every_epochs: int = 1
-    success_selection_every_epochs: int = 50
-    checkpoint_every_epochs: int = 50
+    success_selection_every_epochs: int = 0
+    checkpoint_every_epochs: int = 100
     sample_every_epochs: int = 5
     success_selection_episodes: int = 10
     success_max_steps: int = 200
@@ -75,6 +77,11 @@ class ExperimentConfig:
     gripper_close_threshold: float = 0.4
 
     norm_pcd_center: tuple[float, float, float] = (0.4, 0.0, 1.4)
+    robot_state_mean: tuple[float, ...] | None = None
+    robot_state_std: tuple[float, ...] | None = None
+    augment_data: bool = False
+    augment_translation_sigma: float = 0.02
+    augment_rotation_sigma: float = 0.10
     loss_type: str = "l2"
 
     fm_num_k_infer: int = 10
@@ -84,6 +91,7 @@ class ExperimentConfig:
     fm_flow_schedule: str = "exp"
     fm_exp_scale: float = 4.0
     fm_snr_sampler: str = "uniform"
+    fm_loss_weights: dict[str, float] | None = None
 
     diffusion_train_steps: int = 100
     diffusion_eval_steps: int = 100
@@ -106,6 +114,14 @@ class ExperimentConfig:
         self.ckpt_root = Path(self.ckpt_root)
         self.betas = tuple(float(beta) for beta in self.betas)
         self.norm_pcd_center = tuple(float(v) for v in self.norm_pcd_center)
+        if self.robot_state_mean is not None:
+            self.robot_state_mean = tuple(float(v) for v in self.robot_state_mean)
+        if self.robot_state_std is not None:
+            self.robot_state_std = tuple(float(v) for v in self.robot_state_std)
+        if self.fm_loss_weights is not None:
+            self.fm_loss_weights = {
+                str(key): float(value) for key, value in self.fm_loss_weights.items()
+            }
         self.device = str(self.device)
 
     def validate(self) -> None:
@@ -132,11 +148,19 @@ class ExperimentConfig:
 
     @property
     def best_ckpt_path(self) -> Path:
-        return self.ckpt_dir / "best.pt"
+        return self.ckpt_dir / "best_valid.pt"
 
     @property
     def best_success_ckpt_path(self) -> Path:
         return self.ckpt_dir / "best_success.pt"
+
+    @property
+    def summary_path(self) -> Path:
+        return self.ckpt_dir / "summary.json"
+
+    @property
+    def audit_report_path(self) -> Path:
+        return self.ckpt_dir / "audit_report.json"
 
 
 def config_to_dict(cfg: ExperimentConfig) -> dict[str, Any]:
@@ -167,4 +191,18 @@ def load_config(path: str | Path) -> ExperimentConfig:
         value_path = Path(value)
         if not value_path.is_absolute():
             payload[key] = str((PROJECT_ROOT / value_path).resolve())
+    return ExperimentConfig(**payload)
+
+
+def apply_config_overrides(
+    cfg: ExperimentConfig,
+    overrides: dict[str, Any] | None,
+) -> ExperimentConfig:
+    if not overrides:
+        return cfg
+    payload = config_to_dict(cfg)
+    unknown_keys = sorted(set(overrides) - set(payload))
+    if unknown_keys:
+        raise KeyError(f"Unknown config override keys: {', '.join(unknown_keys)}")
+    payload.update(overrides)
     return ExperimentConfig(**payload)
