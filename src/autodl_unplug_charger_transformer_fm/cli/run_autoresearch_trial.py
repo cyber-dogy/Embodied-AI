@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ..research import finalize_autoresearch_trial, run_autoresearch_trial, train_autoresearch_trial
 from ..research.trial_runner import TrialRequest
-from ..utils.common import PROJECT_ROOT
+from ..common.runtime import PROJECT_ROOT
 
 
 def parse_args() -> argparse.Namespace:

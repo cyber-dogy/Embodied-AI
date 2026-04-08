@@ -1,0 +1,12 @@
+{
+  "defaults": {
+    "data": "unplug_charger_pcd",
+    "model": "pointnet_dit_baseline",
+    "policy": "fm_baseline",
+    "train": "baseline_500",
+    "eval": "offline_audit"
+  },
+  "overrides": {
+    "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1"
+  }
+}

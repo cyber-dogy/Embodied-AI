@@ -13,9 +13,9 @@ from typing import Any
 
 import torch
 
+from ..common.runtime import PROJECT_ROOT
 from ..config import ExperimentConfig, apply_config_overrides, load_config
-from ..training.runner import train_experiment
-from ..utils.common import PROJECT_ROOT
+from ..train.runner import train_experiment
 
 
 DEFAULT_COLLAPSE_THRESHOLDS: dict[int, float] = {
@@ -250,7 +250,7 @@ def _run_checkpoint_audit(
         str(int(heartbeat_every)),
         "--plot-path",
         str(plot_path),
-        "--no-include-special",
+        "--include-special",
         "--headless" if headless else "--no-headless",
         "--show-progress" if show_progress else "--no-show-progress",
         "--prefer-ema" if prefer_ema else "--no-prefer-ema",
@@ -280,17 +280,14 @@ def _estimate_audit_timeout_sec(
     return max(int(requested_timeout_sec), int(estimated_timeout))
 
 
-def _load_periodic_eval_records(results_json: Path, run_dir: Path) -> list[dict[str, Any]]:
+def _load_eval_records(results_json: Path) -> list[dict[str, Any]]:
     if not results_json.exists():
         raise FileNotFoundError(f"Audit results JSON not found: {results_json}")
     payload = json.loads(results_json.read_text(encoding="utf-8"))
-    epochs_dir = (run_dir / "epochs").resolve()
     records: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
     for row in payload.values():
         path = Path(row["path"]).resolve()
-        if path.parent != epochs_dir:
-            continue
         path_key = str(path)
         if path_key in seen_paths:
             continue
@@ -298,6 +295,10 @@ def _load_periodic_eval_records(results_json: Path, run_dir: Path) -> list[dict[
         records.append(dict(row))
     records.sort(key=lambda row: (int(row.get("epoch") or 0), row.get("label", "")))
     return records
+
+
+def _filter_periodic_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [row for row in records if str(row.get("kind")) == "periodic"]
 
 
 def _maybe_float(value: Any) -> float | None:
@@ -659,7 +660,7 @@ def finalize_autoresearch_trial(
                 continue
             if key in default_payload and value == default_payload[key]:
                 continue
-                base_payload[key] = value
+            base_payload[key] = value
         request = _trial_request_from_dict(base_payload)
     else:
         request = stored_request
@@ -690,21 +691,26 @@ def finalize_autoresearch_trial(
             show_progress=request.show_progress,
             timeout_sec=effective_timeout_sec,
         )
-        raw_records = _load_periodic_eval_records(audit_results_path, run_dir)
+        raw_records = _load_eval_records(audit_results_path)
         records = [_enrich_record_with_checkpoint_stats(row) for row in raw_records]
+        periodic_records = _filter_periodic_records(records)
         best_success_record = _select_best_success_record(records)
         best_success_path = _materialize_best_success_checkpoint(run_dir, best_success_record)
         collapse_detected, collapse_reasons, collapse_checks = _compute_collapse(
-            records,
+            periodic_records,
             stage_epochs=request.stage_epochs,
             thresholds=thresholds,
             tolerance=request.collapse_drop_tolerance,
         )
         final_payload = _load_final_payload(run_dir)
-        trial_score = _trial_score(records, stage_epochs=request.stage_epochs, collapse_detected=collapse_detected)
+        trial_score = _trial_score(
+            periodic_records,
+            stage_epochs=request.stage_epochs,
+            collapse_detected=collapse_detected,
+        )
         score_by_epoch = {
             int(row["epoch"]): float(row["success_rate"])
-            for row in records
+            for row in periodic_records
             if row.get("epoch") is not None and row.get("success_rate") is not None
         }
 

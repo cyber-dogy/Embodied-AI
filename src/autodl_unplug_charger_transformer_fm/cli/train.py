@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from ..config import ExperimentConfig, apply_config_overrides, load_config
-from ..utils.common import PROJECT_ROOT
+from ..common.runtime import PROJECT_ROOT
 
 
 def parse_args() -> argparse.Namespace:
@@ -89,7 +89,7 @@ def apply_train_overrides(cfg: ExperimentConfig, args: argparse.Namespace) -> Ex
 
 def main() -> int:
     args = parse_args()
-    from ..training.runner import train_experiment
+    from ..train.runner import train_experiment
 
     cfg = apply_train_overrides(load_config(args.config), args)
     summary = train_experiment(cfg, strategy=args.strategy)

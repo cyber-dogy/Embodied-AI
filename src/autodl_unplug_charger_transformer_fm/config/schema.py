@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-import json
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
-from .utils.common import CKPT_ROOT, DATA_ROOT, PROJECT_ROOT, default_device_str
+from ..common.runtime import CKPT_ROOT, DATA_ROOT, default_device_str
 
 
 @dataclass
@@ -13,6 +11,8 @@ class ExperimentConfig:
     run_name: str = "unplug_charger_transformer_fm_autodl_v1"
     task_name: str = "unplug_charger"
     obs_mode: str = "pcd"
+    encoder_name: str = "pointnet_token"
+    backbone_name: str = "dit"
     train_data_path: Path = DATA_ROOT / "unplug_charger" / "train"
     valid_data_path: Path = DATA_ROOT / "unplug_charger" / "valid"
     seed: int = 1234
@@ -41,8 +41,8 @@ class ExperimentConfig:
     batch_size: int = 32
     grad_accum_steps: int = 2
     num_workers: int = 4
-    train_epochs: int = 5000
-    train_use_amp: bool = True
+    train_epochs: int = 500
+    train_use_amp: bool = False
     train_amp_dtype: str = "bfloat16"
     grad_clip_norm: float | None = 1.0
     empty_cuda_cache: bool = True
@@ -99,11 +99,11 @@ class ExperimentConfig:
     diffusion_prediction_type: str = "epsilon"
     diffusion_noise_scale: float = 1.0
 
-    wandb_enable: bool = True
+    wandb_enable: bool = False
     wandb_project: str = "pfp-autodl-transformer-fm"
     wandb_entity: str | None = None
-    wandb_mode: str = "online"
-    wandb_resume: bool = True
+    wandb_mode: str = "disabled"
+    wandb_resume: bool = False
 
     ckpt_root: Path = CKPT_ROOT
     print_every: int = 50
@@ -123,6 +123,9 @@ class ExperimentConfig:
                 str(key): float(value) for key, value in self.fm_loss_weights.items()
             }
         self.device = str(self.device)
+        self.encoder_name = str(self.encoder_name)
+        self.backbone_name = str(self.backbone_name)
+        self.obs_mode = str(self.obs_mode)
 
     def validate(self) -> None:
         if not self.train_data_path.exists():
@@ -161,48 +164,3 @@ class ExperimentConfig:
     @property
     def audit_report_path(self) -> Path:
         return self.ckpt_dir / "audit_report.json"
-
-
-def config_to_dict(cfg: ExperimentConfig) -> dict[str, Any]:
-    payload = asdict(cfg)
-    for key, value in list(payload.items()):
-        if isinstance(value, Path):
-            payload[key] = str(value)
-    return payload
-
-
-def save_config(cfg: ExperimentConfig, path: Path | None = None) -> Path:
-    config_path = cfg.ckpt_dir / "config.json" if path is None else Path(path)
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(
-        json.dumps(config_to_dict(cfg), indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
-    return config_path
-
-
-def load_config(path: str | Path) -> ExperimentConfig:
-    config_path = Path(path).expanduser().resolve()
-    payload = json.loads(config_path.read_text(encoding="utf-8"))
-    for key in ("train_data_path", "valid_data_path", "ckpt_root"):
-        value = payload.get(key)
-        if value is None:
-            continue
-        value_path = Path(value)
-        if not value_path.is_absolute():
-            payload[key] = str((PROJECT_ROOT / value_path).resolve())
-    return ExperimentConfig(**payload)
-
-
-def apply_config_overrides(
-    cfg: ExperimentConfig,
-    overrides: dict[str, Any] | None,
-) -> ExperimentConfig:
-    if not overrides:
-        return cfg
-    payload = config_to_dict(cfg)
-    unknown_keys = sorted(set(overrides) - set(payload))
-    if unknown_keys:
-        raise KeyError(f"Unknown config override keys: {', '.join(unknown_keys)}")
-    payload.update(overrides)
-    return ExperimentConfig(**payload)

@@ -1,147 +1,114 @@
 # FM/DiT Recovery Progress
 
-Date: 2026-04-08
+Date: 2026-04-08  
+Latest update: 2026-04-09
 
-## Confirmed fixes
+## Final status
 
-The following issues were real and have already been fixed in the repo:
+这版仓库已经完成两件关键事：
 
-1. Local import/path pollution
-   - Training/eval wrappers now bootstrap the local `src/` tree first.
-   - This removed namespace-package drift between the current repo and another workspace copy.
+1. 把训练/评估/审计链路修到可复现、可独立运行
+2. 把源码重构成可替换模块化结构
 
-2. FM policy import coupling
-   - `policies/__init__.py` no longer hard-imports diffusion dependencies before FM is used.
-   - This removed an environment-specific failure mode unrelated to FM itself.
+当前默认主方案固定为 repaired baseline，不采用 H1/H2 作为默认训练配方。
 
-3. Broken PointNet import
-   - `models/pointnet.py` now imports `dp_pytorch_util` from the correct local package path.
+## H1 / H2 分别验证什么
 
-4. Checkpoint corruption risk
-   - Checkpoints are now saved atomically instead of writing directly to the final path.
-   - This was likely responsible for the previously corrupted `latest.pt`.
+### H1
+- 目标：验证“数据驱动归一化 + 训练期点云/状态增强”是否能改善泛化
+- 发现：
+  - 原始实现里 `rot6d` 被错误施加平移，是一个真实 bug
+  - 修完这个 bug 后，H1 仍然不如 repaired baseline
+- 结论：
+  - H1 暂不作为默认方案
 
-5. Offline audit fragility
-   - `eval_all_checkpoints.py` now evaluates each checkpoint in its own subprocess.
-   - This isolates RLBench/CoppeliaSim hangs to a single checkpoint instead of poisoning the whole sweep.
+### H2
+- 目标：验证“更接近官方 DiT 的训练动力学”是否是主因
+- 具体改动：
+  - `dropout = 0.0`
+  - `final_layer_zero_init = true`
+- 发现：
+  - `valid loss` 下降
+  - rollout success 没有更好
+  - `best_valid.pt` 甚至可能是坏行为 checkpoint
+- 结论：
+  - H2 不作为默认方案
+  - 当前任务上不能只按 `valid loss` 选 ckpt
 
-6. Offline audit stage-clobber bug
-   - `audit-only` previously overwrote stored `stage_epochs` with the default `500`, causing false collapse detection for 100-epoch runs.
-   - This has been fixed and covered by a regression test.
+## 这版为什么比之前好
 
-## New experiment knobs added
+已经确认并修复的关键问题：
 
-These are now available but not all of them have been promoted into full long-running trials yet:
+1. 路径/导入污染
+   - 训练/评估现在优先走当前仓库的 `src/`
 
-- `decoder_condition_mode = mean_pool | cross_attn`
-- `final_layer_zero_init = true | false`
-- `augment_data = true | false`
-- `augment_translation_sigma`
-- `augment_rotation_sigma`
-- `robot_state_mean`
-- `robot_state_std`
-- `fm_loss_weights`
-- CLI `--set key=value` overrides for both `train.py` and `run_autoresearch_trial.py`
+2. FM 依赖耦合
+   - FM 不再因为 diffusion 依赖链问题提前炸掉
 
-## Baseline@100 result
+3. PointNet 导入错误
+   - 本地工具模块导入路径修正
 
-### Train-only run
+4. checkpoint 保存风险
+   - 改为 atomic save
 
-Run name:
+5. `resume` 污染实验
+   - 默认 `resume_from_latest = false`
+   - autoresearch run 默认唯一 `run_name`
 
-- `unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048`
+6. RLBench/CoppeliaSim 评估不稳定
+   - 推荐流程改成 `train-only -> audit-only`
+   - 批量 ckpt 审计改为单 ckpt 子进程隔离
 
-Important training facts:
+7. audit 阶段逻辑 bug
+   - 修掉了 `stage_epochs` 被错误覆盖导致的误判崩坏问题
 
-- Best valid loss: `0.6605488730496482`
-- Best valid epoch: `31`
-- Final valid loss at epoch 100: `1.3372277707645768`
-- Final train loss at epoch 100: `0.04642475039903581`
+8. 数据增强语义 bug
+   - `rot6d` 不再被错误平移
 
-Interpretation:
+9. 版本控制卫生
+   - `.gitignore` 不再误伤 `src/.../data`
 
-- The repaired baseline is trainable and reaches a strong early regime.
-- Overfitting is still present.
-- It now starts as a gradual post-30-epoch drift, not an immediate early collapse.
+## 结构重构结果
 
-### Offline success audit
+现在正式 source of truth 是：
 
-The original 100-epoch run directory was incorrectly deleted by the old `audit-only` stage-clobber bug.
-However the audit log captured the successful result before deletion.
+- `src/.../config/`
+- `src/.../model/`
+- `src/.../policy/`
+- `src/.../data/`
+- `src/.../train/`
+- `src/.../envs/`
+- `src/.../common/`
+- `notebooks/`
 
-Confirmed success result:
+旧的 `models / policies / training / utils / env` 只保留过渡入口，不再作为主开发目录。
 
-- `epoch_0100 success_rate = 0.90`
-- `18 / 20` episodes succeeded
-- Mean steps: `79.55`
+## 当前最佳方案
 
-Interpretation:
+默认训练配置：
+- [configs/fm_autodl_lab.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/fm_autodl_lab.json)
 
-- The repaired baseline already exceeds the expected "`100` epochs should reach `80%+`" target.
-- Therefore the old failure mode was not solely due to task difficulty or dataset limits.
-- The previous training stack contained real engineering/repro issues that materially suppressed performance.
+当前最佳已验证 ckpt：
+- [epoch_0500.pt](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt)
+- [best_success.pt](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/best_success.pt)
 
-## Current baseline@500 run
+已验证结果：
+- `20 episodes`: `0.95 success_rate`
+- `100 episodes`: `0.85 success_rate`
 
-Current run name:
+对应评估结果：
+- [epoch_0500_manual_eval.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json)
+- [epoch_0500_recheck_100.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_recheck_100.json)
+- [audit_report.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json)
 
-- `unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741`
+## 推荐工作流
 
-Status at the latest recorded checkpoint during this report:
+1. 用 notebook 选择实验配置和模块
+2. 训练走 `train-only`
+3. 成功率评估走 `audit-only`
+4. 部署时按 `audit_report.json` 或 manifest 选 ckpt
 
-- Latest epoch seen: `82`
-- Latest valid loss: `0.8030234572330588`
-- Best valid loss so far: `0.622098089048737`
-- Best valid epoch so far: `53`
+## Artifact manifest
 
-Interpretation:
-
-- The 500-epoch mainline run is still active.
-- The repaired baseline remains strong early, but the valid-loss rebound pattern still exists.
-- The unresolved question is whether this late overfitting also causes a behavior drop by epochs `300` and `500`.
-
-## Current diagnosis
-
-### Category A: Environment and reproducibility
-
-This was a major root cause.
-
-- Mixed import paths meant the code being trained was not guaranteed to be the code visible in the repo.
-- FM imports were coupled to unrelated diffusion dependencies.
-- This alone made previous conclusions about "the model architecture" unreliable.
-
-### Category B: Archiving and audit pipeline
-
-This was also a major root cause.
-
-- Corrupted `latest.pt` was real.
-- Audit runs were previously vulnerable to simulator hangs.
-- `audit-only` could falsely mark stage-100 runs as collapsed because it silently treated them as stage-500 runs.
-
-### Category C: Model/training dynamics
-
-This remains a real secondary issue.
-
-- Even after the pipeline fixes, the baseline still overfits after the early sweet spot.
-- In the repaired 100-epoch run, best valid was at epoch 31 while final valid loss more than doubled by epoch 100.
-- So "trainability" is no longer the main blocker, but "late-stage generalization stability" still needs work.
-
-### Category D: Candidate architectural bottlenecks still worth testing
-
-These have not been ruled out yet:
-
-- Decoder condition mean-pooling instead of token-aware cross-attention
-- Output-layer initialization sensitivity
-- Missing data augmentation in the original training setup
-- Lack of robot-state standardization
-
-## Bottom line so far
-
-The repo was not failing for a single reason.
-
-The strongest confirmed conclusion is:
-
-- The original low/unstable performance was heavily amplified by training-stack and evaluation-stack bugs.
-- After fixing those issues, the baseline already reaches `0.90 success@100` on `20` offline episodes.
-- The remaining problem is no longer "why can it not learn at all?"
-- The remaining problem is "how do we keep the strong early policy from drifting by epochs 300 to 500?"
+最佳与保留 ckpt 清单见：
+- [top10-checkpoint-manifest.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/top10-checkpoint-manifest.json)

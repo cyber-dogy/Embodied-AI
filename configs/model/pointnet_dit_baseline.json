@@ -1,0 +1,15 @@
+{
+  "encoder_name": "pointnet_token",
+  "backbone_name": "dit",
+  "obs_features_dim": 256,
+  "hidden_dim": 512,
+  "time_dim": 256,
+  "num_blocks": 6,
+  "nhead": 8,
+  "dim_feedforward": 2048,
+  "dropout": 0.1,
+  "activation": "gelu",
+  "debug_finiteness": true,
+  "final_layer_zero_init": false,
+  "decoder_condition_mode": "mean_pool"
+}

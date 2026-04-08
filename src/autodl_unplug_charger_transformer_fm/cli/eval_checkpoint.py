@@ -7,7 +7,7 @@ import time
 
 import torch
 
-from ..utils.common import set_seeds
+from ..common.runtime import set_seeds
 from .shared import payload_cfg_to_experiment_cfg
 
 
@@ -95,7 +95,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    from ..training.eval import load_model_for_eval, run_success_rate_eval
+    from ..train.eval import load_model_for_eval, run_success_rate_eval
 
     ckpt_path = args.ckpt_path.expanduser().resolve()
     if not ckpt_path.exists():

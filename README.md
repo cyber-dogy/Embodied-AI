@@ -1,147 +1,150 @@
 # autodl_unplug_charger_transformer_fm
 
-一个面向 `RLBench unplug_charger` 任务的点云策略学习项目仓库。当前主训练流程已经整理为标准 `src` 包结构，训练、评估和视频录制都提供了独立的 Python CLI 入口；`notebooks/` 只保留为实验期学习与调试入口。
+`RLBench unplug_charger` 上的 `point cloud + Transformer + Flow Matching` 模仿学习项目。当前仓库已经整理成研究型模块化结构：`notebooks/` 负责实验编排，核心实现全部下沉到 `src/`，后续替换 `encoder / backbone / policy / modality` 都只需要替换对应模块和实验配置。
 
-## 项目特点
-- 标准包结构：核心代码位于 `src/autodl_unplug_charger_transformer_fm/`
-- 训练入口独立：使用 `scripts/train.py`
-- 评估入口独立：支持单 checkpoint、全 checkpoint、rollout 视频录制
-- notebook 不再承载核心训练逻辑，而是调用脚本或包内 API
-- 配置集中管理：默认训练配置位于 `configs/fm_autodl_lab.json`
+## 当前结论
+- 默认主方案是 repaired baseline，不采用 H1/H2 作为默认训练配方。
+- 当前最佳已验证 ckpt：
+  - `ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt`
+- 当前 canonical best alias：
+  - `ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/best_success.pt`
+- 已验证结果：
+  - `20 episodes`: `0.95 success_rate`
+  - `100 episodes`: `0.85 success_rate`
+- 研究结论与 bug 修复总结见：
+  - [docs/2026-04-08-fm-recovery-progress.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/2026-04-08-fm-recovery-progress.md)
 
-## 目录说明
+## 目录
 ```text
 autodl_unplug_charger_transformer_fm/
-├── configs/                      # JSON 配置预设
-├── docs/                         # 代码结构与使用说明
-├── notebooks/                    # 保留的学习 / 实验 notebook
-├── scripts/                      # 薄封装 CLI 入口
-├── src/
-│   └── autodl_unplug_charger_transformer_fm/
-│       ├── cli/                  # 真正的命令行实现
-│       ├── data/                 # 数据集 / replay buffer / sampler
-│       ├── env/                  # RLBench 环境封装
-│       ├── models/               # PointNet / DiT backbone
-│       ├── policies/             # FM / Diffusion policy
-│       ├── training/             # builders / checkpoints / eval / runner
-│       ├── utils/                # 通用工具函数
-│       └── config.py             # ExperimentConfig 与配置读写
-├── archive/                      # 历史 notebook / 旧说明 / bak 归档
-├── requirements.txt             # 基础依赖
-├── requirements_eval.txt        # RLBench / PyRep 可选依赖
-└── pyproject.toml               # 可编辑安装配置
+├── configs/
+│   ├── data/                     # 数据/观测模态配置
+│   ├── model/                    # encoder/backbone 配置
+│   ├── policy/                   # FM / Diffusion 配置
+│   ├── train/                    # 训练超参配置
+│   ├── eval/                     # rollout / audit 配置
+│   ├── experiment/               # 组合实验入口
+│   └── fm_autodl_lab.json        # 默认实验配置入口
+├── docs/                         # 研究报告、结构说明、artifact manifest
+├── notebooks/                    # 实验总控台，只调用 .py 入口
+├── scripts/                      # 薄封装 CLI
+├── src/autodl_unplug_charger_transformer_fm/
+│   ├── common/                   # runtime / se3 / fm / pointcloud 等通用工具
+│   ├── config/                   # ExperimentConfig + 组合配置加载
+│   ├── data/                     # replay buffer / sampler / modalities
+│   ├── envs/                     # RLBench 环境封装
+│   ├── model/                    # encoders / backbones / heads / registry
+│   ├── policy/                   # fm_policy / diffusion_policy / registry
+│   ├── train/                    # builders / runner / eval / checkpoints
+│   ├── research/                 # autoresearch trial orchestration
+│   └── cli/                      # 真正的命令行实现
+├── ckpt/                         # 本地权重与 run 输出（git ignored）
+└── archive/                      # 历史材料归档
 ```
 
 说明：
-- `src/` 是当前正式代码入口。
-- `lib/` 仍保留为历史迁移参考，请不要继续在新流程中新增逻辑。
-- `archive/` 保存历史 notebook、旧说明文档和 `.bak` 备份，避免混在主流程目录里。
+- `src/.../model` 是 encoder/backbone/head 的正式 source of truth。
+- `src/.../model/encoders/dummy.py` 是最小 smoke encoder，用来验证“换一个 encoder 文件即可替换整条编码链路”。
+- `src/.../policy` 只放策略定义；动作后处理在 `src/.../train/action_postprocess.py`。
+- `src/.../data/modalities` 负责模态相关数据逻辑；未来要加 `rgb`，就在这里加对应模块。
+- `src/.../data/modalities/rgb.py` 目前保留为明确的预留入口；现在切到 `rgb` 会得到清晰的 `NotImplementedError`，而不是静默走错链路。
+- `src/.../models`、`policies`、`training`、`utils` 目前只保留轻量过渡入口，不再作为主开发目录。
 
 ## 安装
-建议先准备训练环境，再在仓库根目录执行：
-
 ```bash
 pip install -r requirements.txt
 pip install -e .
 ```
 
-如果要运行 RLBench 成功率评估或 rollout 视频录制，再额外安装：
+如果要做 RLBench 离线成功率评估或 rollout 视频录制，再安装：
 
 ```bash
 pip install -r requirements_eval.txt
 ```
 
-提示：
-- `requirements_eval.txt` 只覆盖 Python 包名，RLBench / PyRep 往往还需要额外系统环境配置。
-- `scripts/*.py` 设计为在完成 `pip install -e .` 后使用。
+## 训练
+推荐入口是两阶段工作流。
 
-## 快速开始
-默认训练配置：
+从零训练 baseline：
 
 ```bash
-python scripts/train.py --config configs/fm_autodl_lab.json
-```
-
-常用覆盖参数：
-
-```bash
-python scripts/train.py \
+python scripts/run_autoresearch_trial.py \
+  --phase train-only \
   --config configs/fm_autodl_lab.json \
   --strategy fm \
-  --run-name unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1 \
-  --device cuda \
-  --resume
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --experiment-name baseline_500_retrain \
+  --no-enable-wandb
 ```
 
-如果需要换数据根目录或 checkpoint 根目录：
+如果你只想直接触发训练，不走 autoresearch 包装，也可以：
 
 ```bash
 python scripts/train.py \
   --config configs/fm_autodl_lab.json \
-  --data-root /path/to/data \
-  --ckpt-root /path/to/ckpt
+  --strategy fm
 ```
 
-## 评估与可视化
-单个 checkpoint 成功率评估：
+## 离线 audit
+训练完成后，单独做离线成功率审计：
 
+```bash
+python scripts/run_autoresearch_trial.py \
+  --phase audit-only \
+  --run-dir ckpt/<run_name> \
+  --eval-episodes 20 \
+  --audit-timeout-sec 10800 \
+  --headless
+```
+
+说明：
+- RLBench/CoppeliaSim 很容易在 notebook/ipykernel 里卡住，所以默认推荐 `train-only -> audit-only` 分离。
+- ckpt 最终选择以 `audit_report.json` 的 success rate 为准，不要只看 `best_valid.pt`。
+- canonical baseline run 已经补齐了 `audit_report.json` 和 `best_success.pt`，可以直接当作目录模板参考。
+
+## 单个 ckpt 评估
 ```bash
 python scripts/eval_checkpoint.py \
   --ckpt-path ckpt/<run_name>/epochs/epoch_0500.pt \
-  --episodes 20 \
+  --episodes 50 \
   --max-steps 200 \
   --headless
 ```
 
-遍历某个 run 的所有 checkpoint：
-
-```bash
-python scripts/eval_all_checkpoints.py \
-  --ckpt-epochs-dir ckpt/<run_name>/epochs \
-  --results-json ckpt/<run_name>/local_eval_results.json \
-  --plot-path ckpt/<run_name>/local_eval_success_rate.png \
-  --episodes 20 \
-  --max-steps 200 \
-  --headless
-```
-
-录制 rollout 视频：
-
+## 单次仿真 / 录视频
 ```bash
 python scripts/record_rollout_videos.py \
-  --ckpt-path ckpt/<run_name>/best.pt \
+  --ckpt-path ckpt/<run_name>/epochs/epoch_0500.pt \
   --episodes 1 \
   --camera front \
-  --headless
+  --output-dir ckpt/videos/<tag> \
+  --no-headless
 ```
 
-## Notebook 工作流
-- 主 notebook：`notebooks/pfm_unplug_charger_transformer_fm_autodl_lab.ipynb`
-  - 负责设置实验参数
-  - 调用 `scripts/train.py`
-  - 可选调用 `scripts/eval_all_checkpoints.py`
-  - 读取 `summary.json` 和缓存评估结果做汇总
-- 策略对比 notebook：`notebooks/pfm_unplug_charger_transformer_strategy_compare_autodl_lab.ipynb`
-  - 适合快速比较 `fm` / `diffusion`
-  - 调用新包导出的 `ExperimentConfig` 与 `train_experiment`
+如果是无图形环境，改成 `--headless`。
 
-## 数据与输出
-- 训练数据默认读取：
-  - `data/unplug_charger/train`
-  - `data/unplug_charger/valid`
-- 每个训练 run 默认输出到：
-  - `ckpt/<run_name>/config.json`
-  - `ckpt/<run_name>/summary.json`
-  - `ckpt/<run_name>/latest.pt`
-  - `ckpt/<run_name>/best.pt`
-  - `ckpt/<run_name>/epochs/epoch_XXXX.pt`
+## Notebook
+主 notebook：
+- [notebooks/pfm_unplug_charger_transformer_fm_autodl_lab.ipynb](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/notebooks/pfm_unplug_charger_transformer_fm_autodl_lab.ipynb)
 
-## 代码结构文档
-更细的模块职责说明见：
+它现在的职责是：
+- 选择实验配置
+- 选择 `obs_mode / encoder_name / backbone_name / strategy`
+- 调用训练 CLI
+- 调用 audit CLI
+- 调用单次 rollout 录视频 CLI
+- 汇总 `summary.json` / `audit_report.json`
 
-- `docs/code-structure.md`
+## 最佳 artifact 与 manifest
+- 最佳 ckpt manifest：
+  - [docs/top10-checkpoint-manifest.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/top10-checkpoint-manifest.json)
+- 研究结论：
+  - [docs/2026-04-08-fm-recovery-progress.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/2026-04-08-fm-recovery-progress.md)
+- 结构说明：
+  - [docs/code-structure.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure.md)
 
-这个文档会告诉你：
-- 每个模块负责什么
-- 训练 / 评估链路怎么串起来
-- 想改模型、想改训练 loop、想改环境时应该去哪个文件
+注意：
+- 大权重不推 GitHub。
+- 仓库内只保留 manifest、文档、notebook 和运行入口。
+- 本地实际权重路径以 `docs/top10-checkpoint-manifest.json` 为准。

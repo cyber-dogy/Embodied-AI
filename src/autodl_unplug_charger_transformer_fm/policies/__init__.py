@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from .base_policy import BasePolicy
+from ..policy import (
+    BasePolicy,
+    DiffusionPolicyConfig,
+    DiffusionTransformerPolicy,
+    FMPolicyConfig,
+    FMTransformerPolicy,
+)
 
 __all__ = [
     "BasePolicy",
@@ -9,23 +15,3 @@ __all__ = [
     "FMPolicyConfig",
     "FMTransformerPolicy",
 ]
-
-
-def __getattr__(name: str):
-    if name in {"FMPolicyConfig", "FMTransformerPolicy"}:
-        from .fm_policy import FMPolicyConfig, FMTransformerPolicy
-
-        exports = {
-            "FMPolicyConfig": FMPolicyConfig,
-            "FMTransformerPolicy": FMTransformerPolicy,
-        }
-        return exports[name]
-    if name in {"DiffusionPolicyConfig", "DiffusionTransformerPolicy"}:
-        from .diffusion_policy import DiffusionPolicyConfig, DiffusionTransformerPolicy
-
-        exports = {
-            "DiffusionPolicyConfig": DiffusionPolicyConfig,
-            "DiffusionTransformerPolicy": DiffusionTransformerPolicy,
-        }
-        return exports[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

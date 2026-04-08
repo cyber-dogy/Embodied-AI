@@ -7,7 +7,7 @@ import unittest
 import torch
 
 import _bootstrap  # noqa: F401
-from autodl_unplug_charger_transformer_fm.training.checkpoints import _save_payload
+from autodl_unplug_charger_transformer_fm.train.checkpoints import _save_payload
 
 
 class AtomicCheckpointSaveTest(unittest.TestCase):

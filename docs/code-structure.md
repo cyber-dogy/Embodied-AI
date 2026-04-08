@@ -1,201 +1,190 @@
 # 代码结构说明
 
-这份文档用于回答两个问题：
-1. 这个仓库现在的主流程从哪里进入？
-2. 如果我要改某一部分逻辑，应该改哪个 `.py`？
+这份文档回答三个问题：
+1. 现在项目的正式主链路从哪里进入？
+2. 如果我要替换某个模块，应该改哪里？
+3. notebook 和 `.py` 脚本在现在的结构里各自负责什么？
 
-## 1. 主流程总览
+## 1. 主流程
 
 训练主链路：
 
 ```text
-scripts/train.py
-  -> autodl_unplug_charger_transformer_fm.cli.train
-  -> load_config(...)
-  -> train_experiment(...)
-  -> training/builders.py 构建 dataset / model / optimizer
-  -> training/runner.py 执行训练循环
-  -> training/checkpoints.py 保存 latest / best / periodic checkpoint
-  -> training/eval.py 做训练中验证与可选成功率评估
+scripts/run_autoresearch_trial.py
+  -> cli/run_autoresearch_trial.py
+  -> research/trial_runner.py
+  -> train/runner.py
+  -> train/builders.py
+  -> data/registry.py + model/registry.py + policy/registry.py
+  -> checkpoint / summary / periodic ckpt
 ```
 
-评估主链路：
+离线 audit 主链路：
+
+```text
+scripts/run_autoresearch_trial.py --phase audit-only
+  -> cli/run_autoresearch_trial.py
+  -> research/trial_runner.py
+  -> scripts/eval_all_checkpoints.py
+  -> cli/eval_all_checkpoints.py
+  -> train/eval.py
+```
+
+单个 ckpt 评估：
 
 ```text
 scripts/eval_checkpoint.py
   -> cli/eval_checkpoint.py
-  -> 从 checkpoint 读取 payload["cfg"]
-  -> payload_cfg_to_experiment_cfg(...)
-  -> load_model_for_eval(...)
-  -> run_success_rate_eval(...)
+  -> train/eval.py
 ```
 
 notebook 主链路：
 
 ```text
 notebooks/pfm_unplug_charger_transformer_fm_autodl_lab.ipynb
-  -> 拼训练命令
-  -> 调用 scripts/train.py
-  -> 读取 ckpt/<run_name>/summary.json
-  -> 可选调用 scripts/eval_all_checkpoints.py
+  -> 只拼命令和配置 override
+  -> 调用 scripts/run_autoresearch_trial.py
+  -> 调用 scripts/eval_checkpoint.py / scripts/record_rollout_videos.py
+  -> 读取 summary.json / audit_report.json / manifest
 ```
 
-## 2. 顶层目录怎么理解
+## 2. 当前 source of truth
 
-### `src/autodl_unplug_charger_transformer_fm/`
-正式代码入口。现在新增功能或修 bug，优先改这里。
+### `src/autodl_unplug_charger_transformer_fm/config/`
+- `schema.py`
+  - 定义 `ExperimentConfig`
+- `loader.py`
+  - 负责 flat JSON 和模块化 experiment config 的组合加载
+- 如果你想加新的配置字段，先改这里
 
-### `scripts/`
-仓库根目录下的薄封装脚本。它们只负责把命令转发到 `src/.../cli/`，方便你继续用熟悉的 `python scripts/*.py` 工作流。
+### `src/autodl_unplug_charger_transformer_fm/model/`
+- `encoders/`
+  - 观测编码器
+  - 当前正式实现是 `encoders/pointnet/`
+  - `encoders/dummy.py` 用于 replaceability smoke test
+- `backbones/`
+  - 轨迹主干网络
+  - 当前正式实现是 `backbones/dit.py`
+- `heads/`
+  - 输出头
+- `registry.py`
+  - 根据配置实例化 `encoder/backbone`
 
-### `configs/`
-训练配置 JSON。当前默认预设是 `configs/fm_autodl_lab.json`。
+### `src/autodl_unplug_charger_transformer_fm/policy/`
+- 只放策略定义
+- 当前正式策略是 `fm_policy.py`
+- `diffusion_policy.py` 仍保留作对照
+- `registry.py`
+  - 根据 `strategy` 构建 policy
 
-### `notebooks/`
-保留的实验 notebook。这里不再保存训练核心实现，而是保留参数、命令和结果查看逻辑。
+### `src/autodl_unplug_charger_transformer_fm/data/`
+- `modalities/`
+  - 模态相关数据逻辑
+  - 当前正式实现是 `modalities/pcd.py`
+  - `modalities/dummy.py` 用于快速验证换模态后训练主链是否还能跑通
+  - 将来如果换 `rgb`，优先在这里新增 `rgb.py`
+  - 当前 `modalities/rgb.py` 是明确的保留入口，尚未接入真实 RGB pipeline
+- `replay_buffer.py`
+  - 数据存储入口
+- `sequence_sampler.py`
+  - 时序切片采样
+- `registry.py`
+  - 根据 `obs_mode` 选择数据入口
 
-### `archive/`
-历史 notebook、旧说明、`.bak` 代码备份的归档区，不参与主流程。
+### `src/autodl_unplug_charger_transformer_fm/train/`
+- `builders.py`
+  - 把 `config / data / model / policy` 连起来
+- `runner.py`
+  - 训练循环
+- `eval.py`
+  - loader 验证和 RLBench rollout success 评估
+- `action_postprocess.py`
+  - 命令选择与平滑
+- `checkpoints.py`
+  - EMA / atomic save / resume / wandb
 
-### `lib/`
-历史迁移参考。当前正式流程已经切到 `src/`，不要继续把新逻辑加回 `lib/`。
+### `src/autodl_unplug_charger_transformer_fm/envs/`
+- 环境封装
+- 当前正式实现是 `rlbench_env.py`
 
-## 3. 每个核心模块负责什么
+### `src/autodl_unplug_charger_transformer_fm/common/`
+- 运行时路径、随机种子、SE(3)、FM timestep、点云工具等
 
-### `config.py`
-- 定义 `ExperimentConfig`
-- 负责配置加载、保存、路径规范化
-- 如果你要增加新的训练参数，优先改这里
+### `src/autodl_unplug_charger_transformer_fm/research/`
+- `train-only / audit-only / full` 试验编排
+- manifest、audit 报告、collapse 判定
 
-### `cli/train.py`
-- 训练命令行入口
-- 负责读取 `--config` 和少量高频 override
-- 不放训练逻辑本体
+## 3. 可替换点
 
-### `cli/eval_checkpoint.py`
-- 单 checkpoint 成功率评估入口
-- 适合快速验证一个模型权重
+### 想换 encoder
+- 改 `src/.../model/encoders/`
+- 在 `model/registry.py` 里注册新 encoder
+- 在实验配置里改 `encoder_name`
 
-### `cli/eval_all_checkpoints.py`
-- 批量遍历 `epochs/*.pt`
-- 带评估缓存与成功率曲线图输出
+### 想换 backbone
+- 改 `src/.../model/backbones/`
+- 在 `model/registry.py` 里注册新 backbone
+- 在实验配置里改 `backbone_name`
 
-### `cli/record_rollout_videos.py`
-- 录制模拟器 RGB 视频和点云视频
-- 常用于结果展示和误差分析
+### 想换策略
+- 改 `src/.../policy/`
+- 在 `policy/registry.py` 里注册
+- notebook/CLI 用 `--strategy`
 
-### `training/builders.py`
-- 构建 dataset / dataloader
-- 构建 obs encoder / backbone / policy
-- 构建 optimizer / scheduler / AMP 相关工具
-- 如果你想替换 backbone、换 policy 类型，通常从这里接入
+### 想换 `pcd -> rgb`
+- 在 `src/.../data/modalities/` 增加 `rgb.py`
+- 增加对应 encoder
+- 在 `data/registry.py` 和 `model/registry.py` 注册
+- 在实验配置里切换 `obs_mode` 和 `encoder_name`
+- 训练主流程不需要重写
 
-### `training/checkpoints.py`
-- EMA 模型维护
-- checkpoint payload 组织
-- latest / best / periodic checkpoint 的保存与恢复
-- wandb run 初始化与结束
+## 4. 配置结构
 
-### `training/eval.py`
-- loader 上的验证指标
-- RLBench success rate 评估
-- 预测动作后处理（例如选择 horizon、动作平滑）
-- checkpoint 权重加载为可评估模型
+根目录 `configs/` 现在分成：
 
-### `training/runner.py`
-- 真正的训练循环
-- loss 反传、梯度累计、scheduler step、checkpoint 保存、训练摘要输出
-- 如果你想改 epoch 级流程、日志时机、训练后 summary，改这里
+```text
+configs/
+├── data/
+├── model/
+├── policy/
+├── train/
+├── eval/
+├── experiment/
+└── fm_autodl_lab.json
+```
 
-### `models/pointnet_tokens.py`
-- 点云观测编码器
-- PointNet 提取点云特征，再拼接 robot state 形成观测 token
-- 如果你想换 observation encoder，先看这里
+使用方式：
+- 平时直接用 `configs/fm_autodl_lab.json`
+- 它会 `extends -> experiment/fm_autodl_lab.json`
+- experiment config 再组合 `data / model / policy / train / eval`
 
-### `models/dit_backbone.py`
-- 轨迹 backbone
-- 当前实现是 DiT 风格 backbone
-- 如果你想改 transformer 结构、AdaLN 调制、时间嵌入，改这里
+这意味着 notebook 和 CLI 以后只需要切 experiment 或少量 `--set` override。
 
-### `policies/fm_policy.py`
-- Flow Matching 策略
-- 定义训练损失和推理轨迹积分流程
+## 5. notebook 的定位
 
-### `policies/diffusion_policy.py`
-- Diffusion 策略
-- 定义扩散训练与采样逻辑
+`notebooks/` 必须保留，而且它不是附属说明文件。
 
-### `data/dataset_pcd.py`
-- 训练数据集入口
-- 从 replay buffer 中采样连续观察与预测片段
-- 做点云增强和状态配套变换
+它的正式职责是：
+- 做实验参数总控
+- 选择配置与模块组合
+- 调训练命令
+- 调 audit 命令
+- 调单 ckpt rollout/录视频命令
+- 查看结果 JSON
 
-### `data/replay_buffer.py` / `dp_replay_buffer.py` / `dp_sampler.py`
-- 底层 replay buffer 和序列采样逻辑
-- 这部分通常在“换数据格式”时才需要动
+它不再承担：
+- 模型实现
+- 数据 pipeline 实现
+- 长段训练循环
+- 和正式 `.py` 脚本重复维护的逻辑
 
-### `env/rlbench_env.py`
-- RLBench / PyRep 环境封装
-- 负责 reset、step、观测提取、点云生成、错误处理
-- 如果你想改评估行为、环境观测或动作执行方式，改这里
+## 6. 旧目录怎么理解
 
-### `utils/`
-- `common.py`：项目根路径、默认 device、随机种子
-- `se3_utils.py`：位姿、rot6d、随机轨迹等几何工具
-- `o3d_utils.py`：点云处理
-- `fm_utils.py`：Flow Matching 的 timestep 相关工具
-- `task_text.py`：任务文本说明
-- `dp_pytorch_util.py` / `visualization.py`：辅助工具
+这些目录现在仍存在，但已经不是 source of truth：
+- `src/.../models`
+- `src/.../policies`
+- `src/.../training`
+- `src/.../env`
+- `src/.../utils`
 
-## 4. 常见修改场景应该改哪里
-
-想改训练超参数默认值：
-- 改 `configs/fm_autodl_lab.json`
-
-想加一个新的配置字段：
-- 先改 `config.py`
-- 再根据用途改 `training/builders.py` 或 `training/runner.py`
-- 最后如果需要命令行覆盖，再改 `cli/train.py`
-
-想换 observation encoder：
-- 改 `models/pointnet_tokens.py`
-- 如果构造参数变化，再改 `training/builders.py`
-
-想换 backbone：
-- 改 `models/dit_backbone.py`
-- 如果入口构建变了，再改 `training/builders.py`
-
-想加一种新策略：
-- 新增 `policies/<your_policy>.py`
-- 在 `training/builders.py` 的 `build_policy()` 中注册
-- 如需 notebook/CLI 使用，再补 `--strategy`
-
-想改训练循环或 checkpoint 逻辑：
-- 主体在 `training/runner.py`
-- checkpoint 结构在 `training/checkpoints.py`
-
-想改 RLBench 评估行为：
-- success rate 流程在 `training/eval.py`
-- 环境细节在 `env/rlbench_env.py`
-
-## 5. Notebook 应该承担什么
-
-现在 notebook 的定位是：
-- 学习当前项目怎么用
-- 保留实验参数和命令
-- 快速查看训练输出和评估结果
-
-现在 notebook 不应该继续承担：
-- 大段训练主逻辑
-- 模型定义
-- 数据 pipeline 核心实现
-- 与正式脚本重复维护的代码
-
-## 6. 迁移说明
-
-本次整理后，`src/` 已经是主代码目录，但 `lib/` 仍然保留为历史迁移参考，主要是为了不直接抹掉已有实验痕迹和工作区改动。
-
-如果后续你确认新结构长期稳定，再做下一步也会很自然：
-- 删除或彻底归档 `lib/`
-- 为不同实验补更多 `configs/*.json`
-- 给 `tests/` 增加最基础的 smoke tests
+它们目前只保留轻量过渡入口，方便老路径不立刻炸掉；后续如果确认新结构稳定，可以进一步删掉。

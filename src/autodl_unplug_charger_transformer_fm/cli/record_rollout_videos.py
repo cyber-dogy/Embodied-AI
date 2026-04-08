@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import time
 
-from ..utils.common import PROJECT_ROOT
+from ..common.runtime import PROJECT_ROOT
 from .shared import payload_cfg_to_experiment_cfg
 
 
@@ -112,11 +112,13 @@ def record_rollout_videos(args: argparse.Namespace) -> dict:
     import numpy as np
     import torch
 
-    from ..env import RLBenchEnv
-    from ..training.eval import (
-        load_model_for_eval,
+    from ..envs import RLBenchEnv
+    from ..train.action_postprocess import (
         select_robot_state_from_prediction,
         smooth_robot_state_command,
+    )
+    from ..train.eval import (
+        load_model_for_eval,
     )
 
     ckpt_path = Path(args.ckpt_path).expanduser().resolve()
@@ -136,7 +138,7 @@ def record_rollout_videos(args: argparse.Namespace) -> dict:
         use_pc_color=bool(cfg.use_pc_color),
         headless=bool(args.headless),
         vis=False,
-        obs_mode="pcd",
+        obs_mode=cfg.obs_mode,
         responsive_ui=True,
     )
 

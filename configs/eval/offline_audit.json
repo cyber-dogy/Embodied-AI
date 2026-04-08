@@ -1,0 +1,17 @@
+{
+  "success_selection_every_epochs": 0,
+  "success_selection_episodes": 0,
+  "success_max_steps": 200,
+  "standard_eval_episodes": 0,
+  "eval_step_heartbeat_every": 50,
+  "smooth_actions": false,
+  "command_mode": "first",
+  "horizon_index": 0,
+  "average_first_n": 1,
+  "position_alpha": 0.35,
+  "rotation_alpha": 0.25,
+  "max_position_step": 0.03,
+  "gripper_open_threshold": 0.6,
+  "gripper_close_threshold": 0.4,
+  "ckpt_root": "ckpt"
+}

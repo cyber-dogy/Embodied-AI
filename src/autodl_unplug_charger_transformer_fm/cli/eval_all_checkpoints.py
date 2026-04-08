@@ -14,7 +14,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import torch
 
-from ..utils.common import PROJECT_ROOT
+from ..common.runtime import PROJECT_ROOT
 from .shared import payload_cfg_to_experiment_cfg
 
 try:
@@ -305,7 +305,7 @@ def eval_single_checkpoint(
     ckpt_root: Path,
     heartbeat_every: int,
 ) -> dict[str, Any]:
-    from ..training.eval import load_model_for_eval, run_success_rate_eval
+    from ..train.eval import load_model_for_eval, run_success_rate_eval
 
     ckpt_path = Path(record["path"]).resolve()
     payload = None

@@ -1,0 +1,11 @@
+{
+  "loss_type": "l2",
+  "norm_pcd_center": [0.4, 0.0, 1.4],
+  "fm_num_k_infer": 10,
+  "fm_time_conditioning": true,
+  "fm_noise_type": "gaussian",
+  "fm_noise_scale": 1.0,
+  "fm_flow_schedule": "exp",
+  "fm_exp_scale": 4.0,
+  "fm_snr_sampler": "uniform"
+}

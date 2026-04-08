@@ -1,0 +1,4 @@
+{
+  "extends": "baseline_500.json",
+  "train_epochs": 100
+}
