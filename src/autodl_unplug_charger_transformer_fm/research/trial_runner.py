@@ -264,6 +264,22 @@ def _run_checkpoint_audit(
     return results_json
 
 
+def _estimate_audit_timeout_sec(
+    *,
+    run_dir: Path,
+    stage_epochs: int,
+    checkpoint_every: int,
+    requested_timeout_sec: int,
+) -> int:
+    periodic_ckpts = len(_collect_periodic_ckpts(run_dir))
+    if periodic_ckpts <= 0:
+        periodic_ckpts = max(1, int(stage_epochs) // max(1, int(checkpoint_every)))
+    # RLBench evaluation time varies a lot across checkpoints and seeds.
+    # Use a generous per-checkpoint budget so long sweeps do not get marked as false collapses.
+    estimated_timeout = periodic_ckpts * 900 + 300
+    return max(int(requested_timeout_sec), int(estimated_timeout))
+
+
 def _load_periodic_eval_records(results_json: Path, run_dir: Path) -> list[dict[str, Any]]:
     if not results_json.exists():
         raise FileNotFoundError(f"Audit results JSON not found: {results_json}")
@@ -655,6 +671,12 @@ def finalize_autoresearch_trial(
     offline_audit_command = _build_offline_audit_command(run_dir)
 
     try:
+        effective_timeout_sec = _estimate_audit_timeout_sec(
+            run_dir=run_dir,
+            stage_epochs=int(request.stage_epochs),
+            checkpoint_every=int(request.checkpoint_every),
+            requested_timeout_sec=int(request.audit_timeout_sec),
+        )
         audit_results_path = _run_checkpoint_audit(
             run_dir=run_dir,
             strategy=request.strategy,
@@ -666,7 +688,7 @@ def finalize_autoresearch_trial(
             prefer_ema=request.prefer_ema,
             headless=request.headless,
             show_progress=request.show_progress,
-            timeout_sec=request.audit_timeout_sec,
+            timeout_sec=effective_timeout_sec,
         )
         raw_records = _load_periodic_eval_records(audit_results_path, run_dir)
         records = [_enrich_record_with_checkpoint_stats(row) for row in raw_records]

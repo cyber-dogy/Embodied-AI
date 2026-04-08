@@ -13,6 +13,7 @@ from autodl_unplug_charger_transformer_fm.config import ExperimentConfig
 from autodl_unplug_charger_transformer_fm.research.trial_runner import (
     TrialRequest,
     _compute_collapse,
+    _estimate_audit_timeout_sec,
     finalize_autoresearch_trial,
     run_autoresearch_trial,
     train_autoresearch_trial,
@@ -52,6 +53,21 @@ def _write_fake_checkpoint(
 
 
 class TrialRunnerTest(unittest.TestCase):
+    def test_estimate_audit_timeout_scales_with_checkpoint_count(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            run_dir = Path(tmp_dir)
+            epochs_dir = run_dir / "epochs"
+            epochs_dir.mkdir(parents=True)
+            for idx in (100, 200, 300, 400, 500):
+                (epochs_dir / f"epoch_{idx:04d}.pt").write_bytes(b"pt")
+            timeout_sec = _estimate_audit_timeout_sec(
+                run_dir=run_dir,
+                stage_epochs=500,
+                checkpoint_every=100,
+                requested_timeout_sec=1800,
+            )
+            self.assertEqual(timeout_sec, 4800)
+
     def test_compute_collapse_detects_drop_and_threshold_failure(self) -> None:
         records = [
             {"epoch": 100, "success_rate": 0.60},
