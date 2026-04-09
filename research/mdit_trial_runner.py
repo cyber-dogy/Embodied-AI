@@ -328,6 +328,7 @@ def _select_best_success_record(records: list[dict[str, Any]]) -> dict[str, Any]
         valid_records,
         key=lambda row: (
             float(row["success_rate"]),
+            1 if str(row.get("kind")) == "periodic" else 0,
             -float(row["valid_loss_at_epoch"]) if row.get("valid_loss_at_epoch") is not None else float("-inf"),
             -int(row.get("epoch") or 0),
         ),
@@ -355,7 +356,12 @@ def _materialize_best_success_checkpoint(run_dir: Path, best_record: dict[str, A
         return None
     payload = torch.load(best_record["path"], map_location="cpu")
     payload["best_success_rate"] = float(best_record["success_rate"])
-    payload["best_success_epoch"] = int(best_record["epoch"]) - 1
+    record_epoch = best_record.get("epoch")
+    if record_epoch is None:
+        completed_epoch = payload.get("completed_epoch")
+        payload["best_success_epoch"] = None if completed_epoch is None else int(completed_epoch)
+    else:
+        payload["best_success_epoch"] = int(record_epoch) - 1
     path = run_dir / "best_success.pt"
     _atomic_torch_save(path, payload)
     return path

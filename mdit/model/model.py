@@ -10,7 +10,7 @@ from torch import Tensor
 
 from common.runtime import get_device
 from mdit.config import MDITExperimentConfig
-from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
+from mdit.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_STATE, TASK
 from .objectives import FlowMatchingObjective
 from .observation_encoder import ObservationEncoder
 from .transformer import DiffusionTransformer
@@ -85,6 +85,25 @@ class MultiTaskDiTPolicy(nn.Module):
             ACTION: deque(maxlen=self.config.n_action_steps),
         }
 
+    def _select_runtime_cameras(self, images: torch.Tensor) -> torch.Tensor:
+        if images.ndim != 4:
+            raise ValueError(f"Expected RGB observations with shape (N,H,W,C) or (N,C,H,W), got {tuple(images.shape)}")
+
+        num_expected = len(self.config.camera_names)
+        num_available = int(images.shape[0])
+        if num_available == num_expected:
+            return images
+
+        all_camera_count = len(CAMERA_NAME_TO_INDEX)
+        if num_available != all_camera_count:
+            raise ValueError(
+                f"Expected either {num_expected} selected cameras or all {all_camera_count} RLBench cameras, "
+                f"got {num_available}."
+            )
+
+        selected_indices = [CAMERA_NAME_TO_INDEX[name] for name in self.config.camera_names]
+        return images[selected_indices]
+
     def _normalize_batch(self, batch: dict[str, Tensor | list[str]]) -> dict[str, Tensor | list[str]]:
         normalized = dict(batch)
         normalized[OBS_STATE] = normalize_tensor(
@@ -154,8 +173,7 @@ class MultiTaskDiTPolicy(nn.Module):
     ) -> np.ndarray:
         device = get_device()
         images = torch.from_numpy(np.asarray(obs))
-        if images.ndim != 4:
-            raise ValueError(f"Expected RGB observations with shape (N,H,W,C), got {tuple(images.shape)}")
+        images = self._select_runtime_cameras(images)
         if images.shape[-1] == 3:
             images = images.permute(0, 3, 1, 2)
         images = images.to(device=device, dtype=torch.float32).unsqueeze(0)
