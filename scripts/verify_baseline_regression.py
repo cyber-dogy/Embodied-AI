@@ -11,11 +11,11 @@ import _bootstrap  # noqa: F401
 import numpy as np
 import torch
 
-from cli.shared import payload_cfg_to_experiment_cfg
+from pdit.cli.shared import payload_cfg_to_experiment_cfg
 from common.runtime import PROJECT_ROOT, set_device, set_seeds
-from data.registry import build_dataset
-from train.builders import move_batch_to_device
-from train.eval import load_model_for_eval
+from pdit.data.registry import build_dataset
+from pdit.train.builders import move_batch_to_device
+from pdit.train.eval import load_model_for_eval
 
 
 DEFAULT_REFERENCE = PROJECT_ROOT / "docs" / "baseline-regression-reference.json"

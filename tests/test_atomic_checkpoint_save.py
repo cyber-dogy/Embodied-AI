@@ -7,7 +7,7 @@ import unittest
 import torch
 
 import _bootstrap  # noqa: F401
-from train.checkpoints import _save_payload
+from pdit.train.checkpoints import _save_payload
 
 
 class AtomicCheckpointSaveTest(unittest.TestCase):

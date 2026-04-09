@@ -14,8 +14,8 @@ from typing import Any
 import torch
 
 from common.runtime import PROJECT_ROOT
-from config import ExperimentConfig, apply_config_overrides, load_config
-from train.runner import train_experiment
+from pdit.config import ExperimentConfig, apply_config_overrides, load_config
+from pdit.train.runner import train_experiment
 
 
 DEFAULT_COLLAPSE_THRESHOLDS: dict[int, float] = {

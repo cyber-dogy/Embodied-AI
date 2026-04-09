@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "autodl_unplug_charger_transformer_fm"
 version = "0.1.0"
-description = "Point-cloud Flow Matching / Diffusion training project for RLBench unplug_charger."
+description = "Dual-line RLBench research repo with PDIT and faithful MDIT implementations for unplug_charger."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -26,32 +26,40 @@ dependencies = [
   "zarr",
 ]
 
+[project.optional-dependencies]
+mdit = [
+  "timm==0.9.16",
+  "transformers==4.46.3",
+]
+
 [project.scripts]
-autodl-train = "cli.train:main"
-autodl-eval-checkpoint = "cli.eval_checkpoint:main"
-autodl-eval-all-checkpoints = "cli.eval_all_checkpoints:main"
-autodl-record-rollout-videos = "cli.record_rollout_videos:main"
-autodl-run-autoresearch-trial = "cli.run_autoresearch_trial:main"
+autodl-train-pdit = "pdit.cli.train:main"
+autodl-eval-pdit-checkpoint = "pdit.cli.eval_checkpoint:main"
+autodl-eval-pdit-all-checkpoints = "pdit.cli.eval_all_checkpoints:main"
+autodl-record-pdit-rollout-videos = "pdit.cli.record_rollout_videos:main"
+autodl-run-pdit-autoresearch-trial = "pdit.cli.run_autoresearch_trial:main"
+autodl-train-mdit = "mdit.cli.train:main"
+autodl-eval-mdit-checkpoint = "mdit.cli.eval_checkpoint:main"
+autodl-eval-mdit-all-checkpoints = "mdit.cli.eval_all_checkpoints:main"
+autodl-record-mdit-rollout-videos = "mdit.cli.record_rollout_videos:main"
+autodl-run-mdit-autoresearch-trial = "mdit.cli.run_autoresearch_trial:main"
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
 where = ["."]
 include = [
-  "cli*",
   "common*",
-  "config*",
-  "data*",
   "envs*",
-  "model*",
-  "policy*",
+  "mdit*",
+  "pdit*",
   "research*",
-  "train*",
 ]
 exclude = [
   "archive*",
   "autoresearch_records*",
   "ckpt*",
   "configs*",
+  "data*",
   "notebooks*",
   "scripts*",
   "tests*",

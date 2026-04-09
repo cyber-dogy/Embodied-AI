@@ -1,0 +1,171 @@
+from __future__ import annotations
+
+from collections import deque
+from typing import Any
+
+import numpy as np
+import torch
+import torch.nn as nn
+from torch import Tensor
+
+from common.runtime import get_device
+from mdit.config import MDITExperimentConfig
+from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
+from .objectives import FlowMatchingObjective
+from .observation_encoder import ObservationEncoder
+from .transformer import DiffusionTransformer
+from .utils import NormalizationMode, normalize_tensor, populate_queues, unnormalize_tensor
+
+
+class MultiTaskDiTPolicy(nn.Module):
+    name = "mdit_faithful"
+
+    def __init__(self, config: MDITExperimentConfig, dataset_stats: dict[str, dict[str, Any]]):
+        super().__init__()
+        self.config = config
+        self.dataset_stats = dataset_stats
+        self.observation_encoder = ObservationEncoder(config)
+        conditioning_dim = self.observation_encoder.conditioning_dim
+        self.noise_predictor = DiffusionTransformer(config, conditioning_dim=conditioning_dim)
+        self.objective = FlowMatchingObjective(
+            config.objective,
+            action_dim=int(config.action_dim),
+            horizon=int(config.horizon),
+            do_mask_loss_for_padding=False,
+        )
+        self._queues: dict[str, deque] | None = None
+        self.reset()
+
+    def _stat_tensors(self, key: str, device: torch.device, dtype: torch.dtype) -> dict[str, Tensor]:
+        stats = self.dataset_stats[key]
+        return {
+            name: torch.as_tensor(value, device=device, dtype=dtype)
+            for name, value in stats.items()
+        }
+
+    def normalize_state(self, state: Tensor) -> Tensor:
+        return normalize_tensor(
+            state,
+            self._stat_tensors(OBS_STATE, state.device, state.dtype),
+            self.config.normalization_mode,
+        )
+
+    def unnormalize_action(self, action: Tensor) -> Tensor:
+        return unnormalize_tensor(
+            action,
+            self._stat_tensors(ACTION, action.device, action.dtype),
+            self.config.normalization_mode,
+        )
+
+    def get_optim_params(self) -> list[dict[str, Any]]:
+        non_vision_params = []
+        vision_encoder_params = []
+        for name, param in self.named_parameters():
+            if not param.requires_grad:
+                continue
+            if "observation_encoder.vision_encoder" in name or "observation_encoder.vision_encoders" in name:
+                vision_encoder_params.append(param)
+            else:
+                non_vision_params.append(param)
+        params = [{"params": non_vision_params}]
+        if vision_encoder_params:
+            params.append(
+                {
+                    "params": vision_encoder_params,
+                    "lr": self.config.optimizer_lr * self.config.observation_encoder.vision.lr_multiplier,
+                }
+            )
+        return params
+
+    def reset(self) -> None:
+        self._queues = {
+            OBS_STATE: deque(maxlen=self.config.n_obs_steps),
+            OBS_IMAGES: deque(maxlen=self.config.n_obs_steps),
+            TASK: deque(maxlen=self.config.n_obs_steps),
+            ACTION: deque(maxlen=self.config.n_action_steps),
+        }
+
+    def _normalize_batch(self, batch: dict[str, Tensor | list[str]]) -> dict[str, Tensor | list[str]]:
+        normalized = dict(batch)
+        normalized[OBS_STATE] = normalize_tensor(
+            batch[OBS_STATE],
+            self._stat_tensors(OBS_STATE, batch[OBS_STATE].device, batch[OBS_STATE].dtype),
+            self.config.normalization_mode,
+        )
+        normalized[ACTION] = normalize_tensor(
+            batch[ACTION],
+            self._stat_tensors(ACTION, batch[ACTION].device, batch[ACTION].dtype),
+            self.config.normalization_mode,
+        )
+        return normalized
+
+    def forward(self, batch: dict[str, Tensor | list[str]]) -> tuple[Tensor, dict[str, Tensor] | None]:
+        normalized_batch = self._normalize_batch(batch)
+        conditioning_vec = self.observation_encoder.encode(normalized_batch)
+        loss = self.objective.compute_loss(self.noise_predictor, normalized_batch, conditioning_vec)
+        return loss, None
+
+    def _generate_action_chunk(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+        batch_size = int(batch[OBS_STATE].shape[0])
+        normalized_batch = dict(batch)
+        normalized_batch[OBS_STATE] = normalize_tensor(
+            batch[OBS_STATE],
+            self._stat_tensors(OBS_STATE, batch[OBS_STATE].device, batch[OBS_STATE].dtype),
+            self.config.normalization_mode,
+        )
+        conditioning_vec = self.observation_encoder.encode(normalized_batch)
+        actions = self.objective.conditional_sample(self.noise_predictor, batch_size, conditioning_vec)
+        start_idx = self.config.n_obs_steps - 1
+        end_idx = start_idx + self.config.n_action_steps
+        return actions[:, start_idx:end_idx]
+
+    def predict_action_chunk(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+        self.eval()
+        if self._queues is None:
+            self.reset()
+        stacked: dict[str, Tensor | list[str]] = {}
+        for key, queue in self._queues.items():
+            if key == ACTION or len(queue) == 0:
+                continue
+            if key == TASK:
+                latest_task = queue[-1]
+                if isinstance(latest_task, list):
+                    stacked[key] = list(latest_task)
+                else:
+                    stacked[key] = [latest_task]
+            else:
+                stacked[key] = torch.stack(list(queue), dim=1)
+        return self._generate_action_chunk(stacked)
+
+    def select_action(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+        if self._queues is None:
+            self.reset()
+        self._queues = populate_queues(self._queues, batch)
+        if len(self._queues[ACTION]) == 0:
+            action_chunk = self.predict_action_chunk(batch)
+            self._queues[ACTION].extend(action_chunk.transpose(0, 1))
+        return self._queues[ACTION].popleft()
+
+    def predict_action(
+        self,
+        obs: np.ndarray,
+        robot_state: np.ndarray,
+        task_text: str | None = None,
+    ) -> np.ndarray:
+        device = get_device()
+        images = torch.from_numpy(np.asarray(obs))
+        if images.ndim != 4:
+            raise ValueError(f"Expected RGB observations with shape (N,H,W,C), got {tuple(images.shape)}")
+        if images.shape[-1] == 3:
+            images = images.permute(0, 3, 1, 2)
+        images = images.to(device=device, dtype=torch.float32).unsqueeze(0)
+        state = torch.from_numpy(np.asarray(robot_state, dtype=np.float32)).to(device=device).unsqueeze(0)
+        action = self.select_action(
+            {
+                OBS_IMAGES: images,
+                OBS_STATE: state,
+                TASK: [task_text or self.config.task_name],
+            }
+        )
+        action = self.unnormalize_action(action)
+        return action.squeeze(0).detach().cpu().numpy()

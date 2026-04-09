@@ -1,0 +1,1 @@
+"""Faithful MDIT model components."""

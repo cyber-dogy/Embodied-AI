@@ -1,11 +1,17 @@
 # 代码结构说明
 
-这份文档回答四个问题：
+这份文档回答五个问题：
 
-1. 现在项目的正式主链路从哪里进入？
-2. 当前仓库真正的 source of truth 在哪里？
-3. 如果我要替换 encoder / backbone / modality / policy，应该改哪里？
-4. notebook 和脚本在现在的结构里分别负责什么？
+1. 现在仓库为什么是双线结构？
+2. `pdit/` 和 `mdit/` 分别负责什么？
+3. 当前正式入口在哪里？
+4. 如果我要替换 encoder / backbone / modality / policy / transformer，应该改哪里？
+5. notebook 和脚本在现在的结构里分别负责什么？
+
+> 说明
+> 当前仓库已经不是旧的单线结构，而是双线并列：
+> `pdit/` 是当前已验证最强的点云主线，`mdit/` 是 faithful MDIT 独立研究线。
+> 详细说明请以 [code-structure.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure.md) 为准。
 
 ## 1. 正式主链路
 

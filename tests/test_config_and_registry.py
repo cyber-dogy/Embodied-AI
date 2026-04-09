@@ -5,9 +5,9 @@ from pathlib import Path
 
 import _bootstrap  # noqa: F401
 
-from config import ExperimentConfig, load_config
-from data.registry import build_dataset, list_modalities
-from model.registry import (
+from pdit.config import ExperimentConfig, load_config
+from pdit.data.registry import build_dataset, list_modalities
+from pdit.model.registry import (
     build_backbone,
     build_obs_encoder,
     list_backbones,

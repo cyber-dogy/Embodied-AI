@@ -5,15 +5,11 @@ from pathlib import Path
 
 
 _LOCAL_MODULE_NAMES = [
-    "cli",
     "common",
-    "config",
-    "data",
     "envs",
-    "model",
-    "policy",
+    "mdit",
+    "pdit",
     "research",
-    "train",
 ]
 
 

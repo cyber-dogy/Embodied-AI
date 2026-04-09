@@ -17,7 +17,7 @@ sys.path[:] = [str(REPO_ROOT)] + filtered
 
 for name in list(sys.modules):
     root_name = name.split(".", 1)[0]
-    if root_name not in {"cli", "common", "config", "data", "envs", "model", "policy", "research", "train"}:
+    if root_name not in {"common", "envs", "mdit", "pdit", "research"}:
         continue
     module = sys.modules.get(name)
     module_file = getattr(module, "__file__", None)

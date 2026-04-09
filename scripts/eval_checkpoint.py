@@ -2,8 +2,17 @@
 
 import _bootstrap  # noqa: F401
 
-from cli.eval_checkpoint import main
+from common.line_dispatch import dispatch_line_entrypoint
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(
+        dispatch_line_entrypoint(
+            tool_name="scripts/eval_checkpoint.py",
+            description="Dispatch to the PDIT or MDIT single-checkpoint evaluation CLI.",
+            targets={
+                "pdit": "pdit.cli.eval_checkpoint:main",
+                "mdit": "mdit.cli.eval_checkpoint:main",
+            },
+        )
+    )

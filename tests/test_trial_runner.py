@@ -9,7 +9,7 @@ from unittest import mock
 import torch
 
 import _bootstrap  # noqa: F401
-from config import ExperimentConfig
+from pdit.config import ExperimentConfig
 from research.trial_runner import (
     TrialRequest,
     _compute_collapse,

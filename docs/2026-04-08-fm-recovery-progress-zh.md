@@ -1,11 +1,12 @@
 # FM/DiT 恢复进展
 
-日期：2026-04-08
+日期：2026-04-08  
+最新更新：2026-04-09
 
 > 说明
-> 仓库的正式源码主链已经从历史 `src/` 布局迁移到根目录一级模块：
-> `model/`、`policy/`、`train/`、`config/`、`data/`、`envs/`、`common/`、`research/`、`cli/`。
-> 旧 `src` 树仅作为历史快照保留在 `archive/legacy_code/src_layout_snapshot/`。
+> 当前仓库已经升级成双线结构：
+> `pdit/` 是当前已验证最强的点云主线，`mdit/` 是独立 faithful MDIT 研究线。
+> 本文档主要记录 `pdit` 这条线是如何被修稳的。
 
 ## 已确认的修复
 

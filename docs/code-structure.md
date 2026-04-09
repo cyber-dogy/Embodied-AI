@@ -1,221 +1,274 @@
 # 代码结构说明
 
-这份文档回答四个问题：
+这份文档回答五个问题：
 
-1. 现在项目的正式主链路从哪里进入？
-2. 当前仓库的 source of truth 到底在哪里？
-3. 如果我要替换 encoder / backbone / modality / policy，应该改哪里？
-4. notebook 和脚本在现在的结构里分别负责什么？
+1. 现在仓库为什么是双线结构？
+2. `pdit/` 和 `mdit/` 分别负责什么？
+3. 当前正式入口在哪里？
+4. 以后如果要替换 encoder / backbone / modality / transformer，应该改哪里？
+5. notebook 和脚本在现在的结构里分别负责什么？
 
-## 1. 正式主链路
+## 1. 双线结构的原因
+
+当前仓库不再假设“只有一条训练主线”。
+
+现在有两条并列研究线：
+
+- `pdit/`
+  - 当前已验证稳定、已知最强的点云主线
+  - 核心是 `point cloud + FM + DiT-style backbone`
+- `mdit/`
+  - 独立的 faithful MDIT 研究线
+  - 核心是 `RGB + text + MultiTask DiT`
+
+这两条线共享：
+
+- `common/`
+- `envs/`
+- `research/`
+- `scripts/`
+- `configs/`
+- `docs/`
+- `notebooks/`
+
+但它们**不共享模型接口假设**。这点是刻意设计的，目的是保证：
+
+- `pdit` 可以继续作为稳定对照组
+- `mdit` 可以忠实尝试参考实现，不需要被迫适配 `pdit` 的 token contract
+
+## 2. 正式主链路
+
+### PDIT
 
 训练主链路：
 
 ```text
-scripts/run_autoresearch_trial.py
-  -> cli/run_autoresearch_trial.py
+scripts/train_pdit.py
+  -> pdit/cli/train.py
+  -> pdit/train/runner.py
+  -> pdit/train/builders.py
+  -> pdit/data/* + pdit/model/* + pdit/policy/*
+```
+
+autoresearch / audit 主链路：
+
+```text
+scripts/run_autoresearch_trial.py --line pdit ...
+  -> pdit/cli/run_autoresearch_trial.py
   -> research/trial_runner.py
-  -> train/runner.py
-  -> train/builders.py
-  -> data/registry.py + model/registry.py + policy/registry.py
-  -> checkpoint / summary / periodic ckpt
+  -> pdit/train/runner.py
+  -> scripts/eval_pdit_all_checkpoints.py
 ```
 
-离线 audit 主链路：
+### MDIT
+
+训练主链路：
 
 ```text
-scripts/run_autoresearch_trial.py --phase audit-only
-  -> cli/run_autoresearch_trial.py
-  -> research/trial_runner.py
-  -> scripts/eval_all_checkpoints.py
-  -> cli/eval_all_checkpoints.py
-  -> train/eval.py
+scripts/train_mdit.py
+  -> mdit/cli/train.py
+  -> mdit/train/runner.py
+  -> mdit/train/builders.py
+  -> mdit/data/* + mdit/model/*
 ```
 
-单个 ckpt 评估：
+autoresearch / audit 主链路：
 
 ```text
-scripts/eval_checkpoint.py
-  -> cli/eval_checkpoint.py
-  -> train/eval.py
+scripts/run_mdit_autoresearch_trial.py
+  -> mdit/cli/run_autoresearch_trial.py
+  -> research/mdit_trial_runner.py
+  -> mdit/train/runner.py
+  -> scripts/eval_mdit_all_checkpoints.py
 ```
 
-单次 rollout / 录视频：
+### 通用脚本
 
-```text
-scripts/record_rollout_videos.py
-  -> cli/record_rollout_videos.py
-  -> train/eval.py + envs/rlbench_env.py
+保留了一组通用脚本：
+
+- `scripts/train.py`
+- `scripts/eval_checkpoint.py`
+- `scripts/eval_all_checkpoints.py`
+- `scripts/run_autoresearch_trial.py`
+- `scripts/record_rollout_videos.py`
+
+这些脚本现在**必须显式指定**：
+
+```bash
+--line pdit
 ```
 
-notebook 主链路：
+或：
 
-```text
-notebooks/pfm_unplug_charger_transformer_fm_autodl_lab.ipynb
-  -> 只拼命令和配置 override
-  -> 调 scripts/run_autoresearch_trial.py
-  -> 调 scripts/eval_checkpoint.py / scripts/record_rollout_videos.py
-  -> 读 summary.json / audit_report.json / manifest
+```bash
+--line mdit
 ```
 
-## 2. 当前 source of truth
+它们不再静默默认到 `pdit`。
 
-正式源码主链已经迁移到仓库根目录一级模块。
+## 3. source of truth
 
-### `config/`
+### `pdit/`
 
-- `schema.py`
-  - 定义 `ExperimentConfig`
-- `loader.py`
-  - 负责 flat JSON 和模块化 experiment config 的组合加载
-- 想加新的配置字段，先改这里
+- `pdit/config/`
+  - `ExperimentConfig`、配置加载、实验组合
+- `pdit/model/`
+  - `encoders/`
+  - `backbones/`
+  - `heads/`
+  - `registry.py`
+- `pdit/policy/`
+  - `fm_policy.py`
+  - `diffusion_policy.py`
+  - `registry.py`
+- `pdit/data/`
+  - `modalities/pcd.py`
+  - `modalities/rgb.py` 预留
+  - `registry.py`
+- `pdit/train/`
+  - `builders.py`
+  - `runner.py`
+  - `eval.py`
+  - `checkpoints.py`
+  - `action_postprocess.py`
+- `pdit/cli/`
+  - 线路专属 CLI
 
-### `model/`
+### `mdit/`
 
-- `encoders/`
-  - 观测编码器唯一替换点
-  - 当前正式实现是 `encoders/pointnet/`
-  - `encoders/dummy.py` 用于 replaceability smoke test
-- `backbones/`
-  - 轨迹主干网络唯一替换点
-  - 当前正式实现是 `backbones/dit.py`
-- `heads/`
-  - 输出头
-- `registry.py`
-  - 根据配置实例化 `encoder/backbone`
+- `mdit/config/`
+  - faithful MDIT 配置 schema / loader
+- `mdit/model/`
+  - `observation_encoder.py`
+  - `transformer.py`
+  - `objectives.py`
+  - `model.py`
+- `mdit/data/`
+  - RLBench zarr -> faithful MDIT batch contract
+  - dataset stats
+- `mdit/train/`
+  - builders / runner / eval / checkpoints
+- `mdit/cli/`
+  - 线路专属 CLI
 
-### `policy/`
+### 共享层
 
-- 只放策略定义
-- 当前正式策略是 `fm_policy.py`
-- `diffusion_policy.py` 仍保留作对照
-- `registry.py`
-  - 根据 `strategy` 构建 policy
+- `common/`
+  - runtime、路径、随机种子、SE(3)、task text 等
+- `envs/`
+  - RLBench 环境封装
+- `research/`
+  - `pdit` 和 `mdit` 的 trial orchestration
 
-### `data/`
+### 不是源码包的目录
 
-- `modalities/`
-  - 模态相关数据逻辑唯一替换点
-  - 当前正式实现是 `modalities/pcd.py`
-  - `modalities/dummy.py` 用于训练链路 smoke test
-  - `modalities/rgb.py` 是明确的预留入口，目前不会静默 fallback 到 `pcd`
-- `replay_buffer.py`
-  - 数据存储入口
-- `sequence_sampler.py`
-  - 时序切片采样
-- `registry.py`
-  - 根据 `obs_mode` 选择数据入口
+- 根目录 `data/`
+  - 这是数据集目录，不是代码包
+- `ckpt/`
+  - 本地权重和运行结果
+- `archive/`
+  - 旧代码和研究结果归档
 
-### `train/`
+## 4. 可替换点
 
-- `builders.py`
-  - 把 `config / data / model / policy` 连起来
-- `runner.py`
-  - 训练循环
-- `eval.py`
-  - loader 验证和 RLBench rollout success 评估
-- `action_postprocess.py`
-  - 命令选择与平滑
-- `checkpoints.py`
-  - EMA / atomic save / resume / wandb
+### 想改 PDIT encoder
 
-### `envs/`
+- 改 `pdit/model/encoders/`
+- 在 `pdit/model/registry.py` 注册
+- 在 `configs/` 里切 `encoder_name`
 
-- 环境封装
-- 当前正式实现是 `rlbench_env.py`
+### 想改 PDIT backbone
 
-### `common/`
+- 改 `pdit/model/backbones/`
+- 在 `pdit/model/registry.py` 注册
+- 在配置里切 `backbone_name`
 
-- 运行时路径、随机种子、SE(3)、FM timestep、点云工具等通用逻辑
+### 想改 PDIT 模态
 
-### `research/`
+- 改 `pdit/data/modalities/`
+- 在 `pdit/data/registry.py` 注册
+- 再切 `obs_mode`
 
-- `train-only / audit-only / full` 试验编排
-- trial manifest、audit 报告、collapse 判定
+### 想改 MDIT vision/text encoder
 
-### `cli/`
+- 改 `mdit/model/observation_encoder.py`
+- 如果要新增 encoder 族，可以拆到 `mdit/model/encoders/`
 
-- 稳定的命令行实现
-- 负责在入口处固定当前仓库的根目录模块解析，避免串到同工作区的其他项目
+### 想改 MDIT transformer
 
-## 3. 可替换点
+- 改 `mdit/model/transformer.py`
 
-### 想换 encoder
+### 想改 MDIT objective
 
-- 改 [model/encoders](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/model/encoders)
-- 在 [model/registry.py](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/model/registry.py) 注册新 encoder
-- 在实验配置里改 `encoder_name`
+- 改 `mdit/model/objectives.py`
 
-### 想换 backbone
+### 想改 MDIT 数据契约
 
-- 改 [model/backbones](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/model/backbones)
-- 在 [model/registry.py](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/model/registry.py) 注册新 backbone
-- 在实验配置里改 `backbone_name`
-
-### 想换策略
-
-- 改 [policy](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/policy)
-- 在 [policy/registry.py](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/policy/registry.py) 注册
-- notebook / CLI 用 `--strategy`
-
-### 想换 `pcd -> rgb`
-
-- 在 [data/modalities](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/modalities) 增加真实 `rgb.py`
-- 增加对应 encoder
-- 在 [data/registry.py](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/registry.py) 和 [model/registry.py](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/model/registry.py) 注册
-- 在实验配置里切换 `obs_mode` 和 `encoder_name`
-- 训练主流程不需要重写
-
-## 4. 配置结构
-
-根目录 `configs/` 分成：
-
-```text
-configs/
-├── data/
-├── model/
-├── policy/
-├── train/
-├── eval/
-├── experiment/
-└── fm_autodl_lab.json
-```
-
-使用方式：
-
-- 平时直接用 `configs/fm_autodl_lab.json`
-- 它会 `extends -> experiment/fm_autodl_lab.json`
-- experiment config 再组合 `data / model / policy / train / eval`
-
-所以 notebook 和 CLI 以后只需要切 experiment 或少量 `--set` override。
+- 改 `mdit/data/dataset.py`
+- 以及对应 `mdit/train/builders.py`
 
 ## 5. notebook 的定位
 
-`notebooks/` 必须保留，而且它不是附属说明文件。
+`notebooks/` 必须保留，而且它是正式实验入口的一部分。
 
-它的正式职责是：
+现在的 notebook 只做：
 
-- 做实验参数总控
-- 选择配置与模块组合
-- 调训练命令
-- 调 audit 命令
-- 调单 ckpt rollout / 录视频命令
+- 选择线路
+- 选择配置
+- 拼接训练命令
+- 拼接 audit 命令
+- 拼接单 checkpoint 评估 / rollout 命令
 - 查看结果 JSON
 
-它不再承担：
+它不再做：
 
 - 模型实现
-- 数据 pipeline 实现
-- 长段训练循环
-- 和正式 `.py` 脚本重复维护的逻辑
+- 数据实现
+- 正式训练循环实现
+- 线路之间的隐式兼容逻辑
 
-## 6. 历史目录怎么理解
+## 6. 当前推荐工作方式
 
-历史 `src` 结构和旧版 `lib/` 都已经退出正式主链。
+### 用 PDIT 时
 
-- 旧 `src layout` 快照保存在：
-  - [archive/legacy_code/src_layout_snapshot](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/legacy_code/src_layout_snapshot)
-- 旧 `lib/` 代码保存在：
-  - [archive/legacy_code/lib](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/legacy_code/lib)
+- 训练：`scripts/train_pdit.py`
+- 审计：`scripts/run_autoresearch_trial.py --line pdit ...`
+- 单 ckpt 评估：`scripts/eval_pdit_checkpoint.py`
 
-这些目录只是为了保留研究历史，不再作为当前开发入口。
+### 用 MDIT 时
+
+- 训练：`scripts/train_mdit.py`
+- 审计：`scripts/run_mdit_autoresearch_trial.py`
+- 单 ckpt 评估：`scripts/eval_mdit_checkpoint.py`
+
+### 用通用脚本时
+
+一定要显式写：
+
+```bash
+--line pdit
+```
+
+或者：
+
+```bash
+--line mdit
+```
+
+## 7. 历史目录怎么理解
+
+历史 `src/` 和旧 `lib/` 都已经退出当前正式主链。
+
+它们只作为研究历史保留在：
+
+- `archive/legacy_code/`
+
+当前后续开发，请直接以：
+
+- `pdit/`
+- `mdit/`
+- `common/`
+- `envs/`
+- `research/`
+
+为准。
