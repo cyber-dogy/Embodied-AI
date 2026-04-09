@@ -9,8 +9,8 @@ from unittest import mock
 import torch
 
 import _bootstrap  # noqa: F401
-from autodl_unplug_charger_transformer_fm.config import ExperimentConfig
-from autodl_unplug_charger_transformer_fm.research.trial_runner import (
+from config import ExperimentConfig
+from research.trial_runner import (
     TrialRequest,
     _compute_collapse,
     _estimate_audit_timeout_sec,
@@ -147,10 +147,10 @@ class TrialRunnerTest(unittest.TestCase):
                 (run_dir / "audit_success_rate.png").write_bytes(b"png")
                 return results_path
 
-            with mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.PROJECT_ROOT", repo_root), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.load_config", side_effect=fake_load_config), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
+            with mock.patch("research.trial_runner.PROJECT_ROOT", repo_root), \
+                mock.patch("research.trial_runner.load_config", side_effect=fake_load_config), \
+                mock.patch("research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
+                mock.patch("research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
                 result = run_autoresearch_trial(
                     TrialRequest(
                         config_path=config_path,
@@ -230,10 +230,10 @@ class TrialRunnerTest(unittest.TestCase):
                 results_path.write_text(json.dumps(payload), encoding="utf-8")
                 return results_path
 
-            with mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.PROJECT_ROOT", repo_root), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.load_config", side_effect=fake_load_config), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
+            with mock.patch("research.trial_runner.PROJECT_ROOT", repo_root), \
+                mock.patch("research.trial_runner.load_config", side_effect=fake_load_config), \
+                mock.patch("research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
+                mock.patch("research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
                 train_result = train_autoresearch_trial(
                     TrialRequest(
                         config_path=config_path,
@@ -325,10 +325,10 @@ class TrialRunnerTest(unittest.TestCase):
                 results_path.write_text(json.dumps(payload), encoding="utf-8")
                 return results_path
 
-            with mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.PROJECT_ROOT", repo_root), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.load_config", side_effect=fake_load_config), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
+            with mock.patch("research.trial_runner.PROJECT_ROOT", repo_root), \
+                mock.patch("research.trial_runner.load_config", side_effect=fake_load_config), \
+                mock.patch("research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
+                mock.patch("research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
                 train_result = train_autoresearch_trial(
                     TrialRequest(
                         config_path=config_path,
@@ -402,9 +402,9 @@ class TrialRunnerTest(unittest.TestCase):
                 results_path.write_text(json.dumps(payload), encoding="utf-8")
                 return results_path
 
-            with mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.PROJECT_ROOT", repo_root), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.load_config", side_effect=fake_load_config), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
+            with mock.patch("research.trial_runner.PROJECT_ROOT", repo_root), \
+                mock.patch("research.trial_runner.load_config", side_effect=fake_load_config), \
+                mock.patch("research.trial_runner._run_checkpoint_audit", side_effect=fake_run_checkpoint_audit):
                 audit_result = finalize_autoresearch_trial(
                     run_dir,
                     request_overrides=TrialRequest(config_path=repo_root / "configs" / "trial.json"),
@@ -441,11 +441,11 @@ class TrialRunnerTest(unittest.TestCase):
                 _write_fake_checkpoint(epochs_dir / "epoch_0001.pt", completed_epoch=0, train_loss=0.10, valid_loss=0.20)
                 return {"run_name": local_cfg.run_name, "run_dir": str(run_dir)}
 
-            with mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.PROJECT_ROOT", repo_root), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.load_config", side_effect=fake_load_config), \
-                mock.patch("autodl_unplug_charger_transformer_fm.research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
+            with mock.patch("research.trial_runner.PROJECT_ROOT", repo_root), \
+                mock.patch("research.trial_runner.load_config", side_effect=fake_load_config), \
+                mock.patch("research.trial_runner.train_experiment", side_effect=fake_train_experiment), \
                 mock.patch(
-                    "autodl_unplug_charger_transformer_fm.research.trial_runner._run_checkpoint_audit",
+                    "research.trial_runner._run_checkpoint_audit",
                     side_effect=RuntimeError("audit timeout"),
                 ):
                 result = run_autoresearch_trial(

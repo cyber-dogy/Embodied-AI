@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 
 import _bootstrap  # noqa: F401
-from autodl_unplug_charger_transformer_fm.model.backbones.dit import DiTTrajectoryBackbone
-from autodl_unplug_charger_transformer_fm.policy.fm_policy import FMPolicyConfig, FMTransformerPolicy
+from model.backbones.dit import DiTTrajectoryBackbone
+from policy.fm_policy import FMPolicyConfig, FMTransformerPolicy
 
 
 class _DummyObsEncoder(nn.Module):

@@ -2,7 +2,7 @@
 
 ## 变更内容
 
-- `scripts/` 下的脚本包装器现在优先强制导入本仓库的本地 `src/` 目录树。
+- `scripts/` 和 `cli/` 入口现在优先强制导入本仓库的根目录模块，而不是工作区里的同名外部项目。
 - 训练默认参数已调整为更安全的研究行为：
   - `resume_from_latest = false`
   - `checkpoint_every_epochs = 100`

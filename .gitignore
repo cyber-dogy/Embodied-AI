@@ -1,9 +1,8 @@
 # 排除权重文件
 ckpt/
-# 排除数据文件
-data/
-!src/autodl_unplug_charger_transformer_fm/data/
-!src/autodl_unplug_charger_transformer_fm/data/**
+archive/ckpt_research/
+# 排除本地数据集，但保留 data/ 下的源码
+data/unplug_charger/
 # Python缓存
 __pycache__/
 *.pyc

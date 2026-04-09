@@ -2,7 +2,7 @@
 
 import _bootstrap  # noqa: F401
 
-from autodl_unplug_charger_transformer_fm.cli.record_rollout_videos import main
+from cli.record_rollout_videos import main
 
 
 if __name__ == "__main__":

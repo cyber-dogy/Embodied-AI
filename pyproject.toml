@@ -27,14 +27,32 @@ dependencies = [
 ]
 
 [project.scripts]
-autodl-train = "autodl_unplug_charger_transformer_fm.cli.train:main"
-autodl-eval-checkpoint = "autodl_unplug_charger_transformer_fm.cli.eval_checkpoint:main"
-autodl-eval-all-checkpoints = "autodl_unplug_charger_transformer_fm.cli.eval_all_checkpoints:main"
-autodl-record-rollout-videos = "autodl_unplug_charger_transformer_fm.cli.record_rollout_videos:main"
-autodl-run-autoresearch-trial = "autodl_unplug_charger_transformer_fm.cli.run_autoresearch_trial:main"
+autodl-train = "cli.train:main"
+autodl-eval-checkpoint = "cli.eval_checkpoint:main"
+autodl-eval-all-checkpoints = "cli.eval_all_checkpoints:main"
+autodl-record-rollout-videos = "cli.record_rollout_videos:main"
+autodl-run-autoresearch-trial = "cli.run_autoresearch_trial:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = [
+  "cli*",
+  "common*",
+  "config*",
+  "data*",
+  "envs*",
+  "model*",
+  "policy*",
+  "research*",
+  "train*",
+]
+exclude = [
+  "archive*",
+  "autoresearch_records*",
+  "ckpt*",
+  "configs*",
+  "notebooks*",
+  "scripts*",
+  "tests*",
+]

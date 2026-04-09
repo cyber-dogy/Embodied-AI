@@ -1,0 +1,12 @@
+{
+  "task_name": "unplug_charger",
+  "obs_mode": "pcd",
+  "train_data_path": "data/unplug_charger/train",
+  "valid_data_path": "data/unplug_charger/valid",
+  "n_obs_steps": 3,
+  "n_pred_steps": 32,
+  "subs_factor": 3,
+  "n_points": 2048,
+  "use_pc_color": false,
+  "y_dim": 10
+}

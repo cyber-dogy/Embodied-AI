@@ -1,0 +1,41 @@
+{
+  "reference_name": "baseline_best_success_fixed_batch_root_layout",
+  "checkpoint_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/best_success.pt",
+  "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/fm_autodl_lab.json",
+  "dataset_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/valid",
+  "dataset_indices": [
+    0,
+    1
+  ],
+  "seed": 1234,
+  "loss_dict": {
+    "loss_total": 0.1877632886171341,
+    "loss_xyz": 0.0528079979121685,
+    "loss_rot6d": 0.13414962589740753,
+    "loss_grip": 0.0008056547958403826
+  },
+  "pred_y": {
+    "shape": [
+      2,
+      32,
+      10
+    ],
+    "mean": -0.09545843303203583,
+    "std": 0.4664621949195862,
+    "min": -1.0019540786743164,
+    "max": 1.0055530071258545
+  },
+  "pred_traj": {
+    "shape": [
+      11,
+      2,
+      32,
+      10
+    ],
+    "mean": -0.06769032776355743,
+    "std": 0.5479753017425537,
+    "min": -3.045114755630493,
+    "max": 3.0863804817199707
+  },
+  "note": "Rebased after the repository was flattened to root-level modules and validated by post-refactor 20/100 episode behavior checks."
+}

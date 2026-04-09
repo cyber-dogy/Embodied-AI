@@ -6,7 +6,7 @@ import unittest
 import torch
 
 import _bootstrap  # noqa: F401
-from autodl_unplug_charger_transformer_fm.data.modalities.pcd import _apply_se3_to_robot_state
+from data.modalities.pcd import _apply_se3_to_robot_state
 
 
 class DatasetAugmentationTest(unittest.TestCase):

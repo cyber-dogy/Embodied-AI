@@ -5,9 +5,9 @@ from pathlib import Path
 
 import _bootstrap  # noqa: F401
 
-from autodl_unplug_charger_transformer_fm.config import ExperimentConfig, load_config
-from autodl_unplug_charger_transformer_fm.data.registry import build_dataset, list_modalities
-from autodl_unplug_charger_transformer_fm.model.registry import (
+from config import ExperimentConfig, load_config
+from data.registry import build_dataset, list_modalities
+from model.registry import (
     build_backbone,
     build_obs_encoder,
     list_backbones,

@@ -5,9 +5,9 @@
     "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt",
     "sha256": "def2702dbea89f064f198b1ca81eba43dfaf0c225a38957a9c28c11747c3a042",
     "size_bytes": 970946964,
-    "success_rate": 0.95,
+    "success_rate": 1.0,
     "eval_episodes": 20,
-    "evidence": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json"
+    "evidence": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json"
   },
   "retained_checkpoints": [
     {
@@ -16,9 +16,9 @@
       "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt",
       "sha256": "def2702dbea89f064f198b1ca81eba43dfaf0c225a38957a9c28c11747c3a042",
       "size_bytes": 970946964,
-      "success_rate": 0.95,
+      "success_rate": 1.0,
       "eval_episodes": 20,
-      "note": "current canonical best"
+      "note": "current canonical best; post-root-layout recheck = 1.00/20, 0.85/100"
     },
     {
       "rank": 2,
@@ -63,42 +63,42 @@
     {
       "rank": 6,
       "label": "h2_epoch_0100",
-      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/epochs/epoch_0100.pt",
+      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h2_dit_dynamics_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/epochs/epoch_0100.pt",
       "sha256": "836624fcc8c4d787e560747fe413bb96d844bb76cccf9ad8e6d091ee9ed0ace2",
       "size_bytes": 970862740,
       "success_rate": 0.65,
       "eval_episodes": 20,
-      "note": "better valid loss than baseline, worse behavior"
+      "note": "archived H2 evidence checkpoint; better valid loss than baseline, worse behavior"
     },
     {
       "rank": 7,
       "label": "h2_best_success",
-      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_success.pt",
+      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h2_dit_dynamics_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_success.pt",
       "sha256": "ba960a84af66cd8a4e6e1421da699cfcc9466b7a72d0ca2ad2b9c036a4fe0e9b",
       "size_bytes": 970852692,
       "success_rate": 0.65,
       "eval_episodes": 20,
-      "note": "audit-selected alias of the strongest H2 checkpoint"
+      "note": "archived H2 audit-selected alias of the strongest checkpoint"
     },
     {
       "rank": 8,
       "label": "h1_epoch_0100",
-      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914/epochs/epoch_0100.pt",
+      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h1_stats_aug_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914/epochs/epoch_0100.pt",
       "sha256": "6189e461b3fee54083716ad54a32b97089b0a1c7e62f4929ce3b77e4824d10cb",
       "size_bytes": 970862932,
       "success_rate": 0.55,
       "eval_episodes": 20,
-      "note": "evidence checkpoint for the H1 hypothesis"
+      "note": "archived H1 evidence checkpoint"
     },
     {
       "rank": 9,
       "label": "h1_best_success",
-      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914/best_success.pt",
+      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h1_stats_aug_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914/best_success.pt",
       "sha256": "bf289df1adad4b4e5b24c4c77f6fbabfd3bb3f237a2c79948a0d76d3e5c3973c",
       "size_bytes": 970852884,
       "success_rate": 0.55,
       "eval_episodes": 20,
-      "note": "audit-selected alias of the strongest H1 checkpoint"
+      "note": "archived H1 audit-selected alias of the strongest checkpoint"
     },
     {
       "rank": 10,
@@ -110,5 +110,31 @@
       "eval_episodes": null,
       "note": "retained as model-selection counterexample"
     }
-  ]
+  ],
+  "post_refactor_regression": {
+    "root_layout_recheck_20": {
+      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json",
+      "success_rate": 1.0,
+      "eval_episodes": 20,
+      "mean_steps": 60.25
+    },
+    "root_layout_recheck_100": {
+      "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json",
+      "success_rate": 0.85,
+      "eval_episodes": 100,
+      "mean_steps": 83.82
+    }
+  },
+  "archived_runs": {
+    "h1_stats_aug_100": {
+      "archived_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h1_stats_aug_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914",
+      "original_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914",
+      "migration_report": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/migration_report.json"
+    },
+    "h2_dit_dynamics_100": {
+      "archived_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h2_dit_dynamics_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+      "original_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+      "migration_report": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/migration_report.json"
+    }
+  }
 }

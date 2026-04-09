@@ -1,5 +1,10 @@
 # Training / Model Audit
 
+> Historical note
+> This audit was written before the repository was flattened to root-level modules.
+> References to the old `src/` tree describe the repository layout at that time.
+> The archived snapshot now lives under `archive/legacy_code/src_layout_snapshot/`.
+
 ## H1 在验证什么
 
 `H1` 验证：

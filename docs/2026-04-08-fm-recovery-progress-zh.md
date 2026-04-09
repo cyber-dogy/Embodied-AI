@@ -2,12 +2,17 @@
 
 日期：2026-04-08
 
+> 说明
+> 仓库的正式源码主链已经从历史 `src/` 布局迁移到根目录一级模块：
+> `model/`、`policy/`、`train/`、`config/`、`data/`、`envs/`、`common/`、`research/`、`cli/`。
+> 旧 `src` 树仅作为历史快照保留在 `archive/legacy_code/src_layout_snapshot/`。
+
 ## 已确认的修复
 
 以下问题确实存在，且已在代码库中修复：
 
 1. **本地导入/路径污染**
-   - 训练/评估包装器现在优先引导本地 `src/` 目录树。
+   - 训练/评估包装器现在优先固定到当前仓库的根目录模块。
    - 这消除了当前代码库与另一个工作区副本之间的命名空间包漂移。
 
 2. **FM 策略导入耦合**
@@ -169,7 +174,7 @@ H1 的差结果不仅仅是"超参数不佳"的问题。
 - 混合导入路径意味着正在训练的代码不能保证是代码库中可见的代码。
 - FM 导入与无关的扩散模型依赖项耦合。
 - 仅此一点就使之前关于"模型架构"的结论不可靠。
-- 根 `.gitignore` 规则 `data/` 也无意中匹配了 `src/autodl_unplug_charger_transformer_fm/data/`，这使部分可运行的源代码树脱离了正常的版本控制卫生。
+- 根 `.gitignore` 规则已经调整，不再误伤现在的根目录 `data/` 代码包。
 
 ### 类别 B：归档和审计管道
 
@@ -206,3 +211,44 @@ H1 的差结果不仅仅是"超参数不佳"的问题。
 - 修复这些问题后，基线已在 20 个离线回合中达到 `0.90 success@100`。
 - 剩余问题不再是"为什么它完全无法学习？"
 - 剩余问题是"如何防止强大的早期策略在第 300 到 500 epoch 之间漂移？"
+
+## 根目录重整后的行为回归
+
+在仓库迁移为根目录一级模块后，重新对同一个 `best_success.pt` 做了真实行为复核：
+
+- `20 episodes`：`1.00 success_rate`
+- `100 episodes`：`0.85 success_rate`
+
+解读：
+- 这说明根目录重整没有把当前最优策略代码改坏。
+- `20 episodes` 的短评估更高，但更关键的是 `100 episodes` 复核仍与历史参考值对齐。
+
+对应结果：
+
+- [root_layout_recheck_20.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json)
+- [root_layout_recheck_100.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json)
+
+## 固定 batch 金标准回归
+
+固定 batch 数值回归在根目录重整后重新固化为新的 canonical reference。
+
+- 当前 reference：
+  - [baseline-regression-reference.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/baseline-regression-reference.json)
+- 旧 reference 归档：
+  - [baseline-regression-reference.pre_root_layout_rebaseline.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/notes/baseline-regression-reference.pre_root_layout_rebaseline.json)
+
+说明：
+
+- 旧 reference 在仓库结构重整后不再 bitwise 对齐
+- 新 reference 已验证可重复，并可由 `scripts/verify_baseline_regression.py` 直接检查
+
+## H1/H2 归档
+
+为保持 `ckpt/` 干净，H1/H2 结果已迁移到仓库内归档目录：
+
+- H1：
+  - [h1 archived run](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h1_stats_aug_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914)
+- H2：
+  - [h2 archived run](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h2_dit_dynamics_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130)
+- 迁移校验：
+  - [migration_report.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/migration_report.json)

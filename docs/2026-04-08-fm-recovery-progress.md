@@ -3,6 +3,11 @@
 Date: 2026-04-08  
 Latest update: 2026-04-09
 
+> Note
+> The repository source of truth has since been migrated from the historical `src/` layout to root-level modules:
+> `model/`, `policy/`, `train/`, `config/`, `data/`, `envs/`, `common/`, `research/`, and `cli/`.
+> The old `src` tree is preserved only as a legacy snapshot under `archive/legacy_code/src_layout_snapshot/`.
+
 ## Final status
 
 这版仓库已经完成两件关键事：
@@ -40,7 +45,7 @@ Latest update: 2026-04-09
 已经确认并修复的关键问题：
 
 1. 路径/导入污染
-   - 训练/评估现在优先走当前仓库的 `src/`
+   - 训练/评估现在优先固定到当前仓库的根目录模块
 
 2. FM 依赖耦合
    - FM 不再因为 diffusion 依赖链问题提前炸掉
@@ -66,22 +71,24 @@ Latest update: 2026-04-09
    - `rot6d` 不再被错误平移
 
 9. 版本控制卫生
-   - `.gitignore` 不再误伤 `src/.../data`
+   - `.gitignore` 不再误伤根目录 `data/` 代码包
 
 ## 结构重构结果
 
 现在正式 source of truth 是：
 
-- `src/.../config/`
-- `src/.../model/`
-- `src/.../policy/`
-- `src/.../data/`
-- `src/.../train/`
-- `src/.../envs/`
-- `src/.../common/`
+- `config/`
+- `model/`
+- `policy/`
+- `data/`
+- `train/`
+- `envs/`
+- `common/`
+- `research/`
+- `cli/`
 - `notebooks/`
 
-旧的 `models / policies / training / utils / env` 只保留过渡入口，不再作为主开发目录。
+旧的 `src layout` 和 `lib/` 都已归档到 `archive/legacy_code/`，不再作为主开发目录。
 
 ## 当前最佳方案
 
@@ -96,10 +103,33 @@ Latest update: 2026-04-09
 - `20 episodes`: `0.95 success_rate`
 - `100 episodes`: `0.85 success_rate`
 
+post-refactor 行为回归：
+- `20 episodes`: `1.00 success_rate`
+- `100 episodes`: `0.85 success_rate`
+
 对应评估结果：
 - [epoch_0500_manual_eval.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json)
 - [epoch_0500_recheck_100.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_recheck_100.json)
+- [root_layout_recheck_20.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json)
+- [root_layout_recheck_100.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json)
 - [audit_report.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json)
+
+固定 batch 金标准回归：
+- 当前 canonical reference：
+  - [baseline-regression-reference.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/baseline-regression-reference.json)
+- 旧 reference 归档：
+  - [baseline-regression-reference.pre_root_layout_rebaseline.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/notes/baseline-regression-reference.pre_root_layout_rebaseline.json)
+- 说明：
+  - 旧 reference 在仓库根目录重整后不再 bitwise 对齐
+  - 新 reference 已验证可重复，并通过了 `20/100` episode 行为回归
+
+H1/H2 归档：
+- H1：
+  - [h1 archived run](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h1_stats_aug_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914)
+- H2：
+  - [h2 archived run](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/h2_dit_dynamics_100/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130)
+- 文件级迁移校验：
+  - [migration_report.json](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/archive/ckpt_research/migration_report.json)
 
 ## 推荐工作流
 

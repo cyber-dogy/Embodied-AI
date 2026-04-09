@@ -5,7 +5,28 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src"
+filtered = []
+for entry in sys.path:
+    try:
+        if Path(entry or ".").resolve() == REPO_ROOT:
+            continue
+    except Exception:
+        pass
+    filtered.append(entry)
+sys.path[:] = [str(REPO_ROOT)] + filtered
 
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
+for name in list(sys.modules):
+    root_name = name.split(".", 1)[0]
+    if root_name not in {"cli", "common", "config", "data", "envs", "model", "policy", "research", "train"}:
+        continue
+    module = sys.modules.get(name)
+    module_file = getattr(module, "__file__", None)
+    if module_file is None:
+        continue
+    try:
+        module_path = Path(module_file).resolve()
+    except Exception:
+        continue
+    if REPO_ROOT in module_path.parents or module_path == REPO_ROOT:
+        continue
+    sys.modules.pop(name, None)
