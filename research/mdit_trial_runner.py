@@ -233,6 +233,7 @@ def _run_checkpoint_audit(
     headless: bool,
     show_progress: bool,
     timeout_sec: int,
+    include_special: bool,
 ) -> Path:
     results_json = run_dir / "audit_raw_results.json"
     plot_path = run_dir / "audit_success_rate.png"
@@ -255,7 +256,7 @@ def _run_checkpoint_audit(
         str(int(heartbeat_every)),
         "--plot-path",
         str(plot_path),
-        "--include-special",
+        "--include-special" if include_special else "--no-include-special",
         "--headless" if headless else "--no-headless",
         "--show-progress" if show_progress else "--no-show-progress",
     ]
@@ -656,6 +657,7 @@ def finalize_mdit_autoresearch_trial(
         headless=bool(request.headless),
         show_progress=bool(request.show_progress),
         timeout_sec=timeout_sec,
+        include_special=int(request.stage_epochs) >= 500 or int(request.eval_episodes) >= 100,
     )
     records = [_enrich_record_with_checkpoint_stats(row) for row in _load_eval_records(audit_json)]
     periodic_records = _filter_periodic_records(records)
