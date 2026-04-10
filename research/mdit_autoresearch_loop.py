@@ -191,9 +191,11 @@ def _find_existing_trial_record(
             continue
         if str(payload.get("experiment_name")) != str(experiment_name):
             continue
-        if int(payload.get("stage_epochs", 0)) != int(stage_epochs):
+        payload_stage_epochs = payload.get("stage_epochs")
+        if payload_stage_epochs is not None and int(payload_stage_epochs) != int(stage_epochs):
             continue
-        if int(payload.get("eval_episodes", 0)) != int(eval_episodes):
+        payload_eval_episodes = payload.get("eval_episodes")
+        if payload_eval_episodes is not None and int(payload_eval_episodes) != int(eval_episodes):
             continue
         candidates.append((path.stat().st_mtime, path))
     if not candidates:

@@ -138,8 +138,8 @@ class MDITAutoresearchLoopTest(unittest.TestCase):
                     {
                         "line": "mdit",
                         "experiment_name": "cam_all5_100",
-                        "stage_epochs": 100,
-                        "eval_episodes": 20,
+                        "stage_epochs": None,
+                        "eval_episodes": None,
                         "trial_score": -1.0,
                         "success_20": 0.0,
                         "overrides": {
