@@ -1,0 +1,17 @@
+numpy==1.23.5
+scipy==1.10.1
+numba==0.59.1
+zarr==2.17.2
+numcodecs==0.13.1
+imagecodecs==2025.3.30
+open3d==0.18.0
+matplotlib==3.7.5
+imageio==2.37.3
+spatialmath-python==1.1.9
+wandb==0.17.3
+tqdm==4.67.3
+ipykernel==7.2.0
+huggingface_hub==0.25.2
+diffusers==0.27.2
+timm==0.9.16
+transformers==4.46.3

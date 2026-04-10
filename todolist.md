@@ -2,6 +2,18 @@
 
 Last updated: 2026-04-10
 
+## Pause Snapshot
+
+- Old-machine training has been stopped on purpose before migration.
+- Verified no active `mdit` or `pdit` training / autoresearch processes remain on the old machine.
+- Current continuation branch is clean and already pushed:
+  - `autoresearch/20260409-mdit`
+- If you move now, treat the repo as a paused snapshot:
+  - code should come from `git`
+  - local artifacts should be copied separately if you want to keep them
+- Recommended migration doc:
+  - `docs/2026-04-10-5090-migration-checklist.md`
+
 ## Current Git State
 
 - Active continuation branch: `autoresearch/20260409-mdit`
@@ -76,6 +88,10 @@ Important:
 - `ckpt/` is not pushed to GitHub.
 - Active runs on the old machine do **not** transfer through git.
 - If switching machines now, assume `obs3_100` needs to be rerun on the new machine.
+- If you want to keep partial local evidence anyway, copy:
+  - `ckpt/`
+  - `autoresearch_records/`
+  - `results.tsv`
 
 ## Best Known Metrics Right Now
 
