@@ -8,7 +8,6 @@ import torch
 from torch.utils.data import DataLoader
 
 from common.runtime import set_device
-from envs import RLBenchEnv
 from mdit.config import MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
 from .builders import build_policy, get_autocast_context, move_batch_to_device
@@ -66,6 +65,8 @@ def run_success_rate_eval(
     show_progress: bool = True,
     progress_desc: str = "mdit-eval",
 ) -> dict[str, Any]:
+    from envs import RLBenchEnv
+
     env = RLBenchEnv(
         task_name=cfg.task_name,
         voxel_size=0.01,

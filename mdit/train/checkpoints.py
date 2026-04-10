@@ -45,14 +45,13 @@ def build_checkpoint_payload(
     train_loss_history: list[float],
     valid_loss_history: list[float | None],
     epoch_summaries: list[dict[str, Any]],
+    checkpoint_payload_mode: str,
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "cfg": config_to_dict(cfg),
         "line": "mdit",
         "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "scheduler_state_dict": scheduler.state_dict(),
-        "scaler_state_dict": scaler.state_dict(),
+        "checkpoint_payload_mode": str(checkpoint_payload_mode),
         "dataset_stats": dataset_stats,
         "completed_epoch": int(epoch),
         "global_step": int(global_step),
@@ -60,10 +59,20 @@ def build_checkpoint_payload(
         "best_epoch": best_epoch,
         "best_success_rate": best_success_rate,
         "best_success_epoch": best_success_epoch,
-        "train_loss_history": list(train_loss_history),
-        "valid_loss_history": list(valid_loss_history),
-        "epoch_summaries": list(epoch_summaries),
+        "epoch_summary": None if not epoch_summaries else dict(epoch_summaries[-1]),
     }
+    if str(checkpoint_payload_mode) != "lightweight":
+        payload.update(
+            {
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scheduler_state_dict": scheduler.state_dict(),
+                "scaler_state_dict": scaler.state_dict(),
+                "train_loss_history": list(train_loss_history),
+                "valid_loss_history": list(valid_loss_history),
+                "epoch_summaries": list(epoch_summaries),
+            }
+        )
+    return payload
 
 
 def save_checkpoint(
@@ -84,6 +93,7 @@ def save_checkpoint(
     train_loss_history: list[float],
     valid_loss_history: list[float | None],
     epoch_summaries: list[dict[str, Any]],
+    checkpoint_payload_mode: str,
 ) -> None:
     payload = build_checkpoint_payload(
         cfg=cfg,
@@ -101,6 +111,7 @@ def save_checkpoint(
         train_loss_history=train_loss_history,
         valid_loss_history=valid_loss_history,
         epoch_summaries=epoch_summaries,
+        checkpoint_payload_mode=checkpoint_payload_mode,
     )
     _save_payload(path, payload)
 
@@ -128,6 +139,11 @@ def load_resume_state(
         }
 
     payload = torch.load(cfg.latest_ckpt_path, map_location="cpu")
+    if str(payload.get("checkpoint_payload_mode", "full")) != "full":
+        raise ValueError(
+            "Cannot resume from a lightweight MDIT checkpoint. "
+            "Re-run with checkpoint_payload_mode='full' or disable resume."
+        )
     model.load_state_dict(payload["model_state_dict"])
     optimizer.load_state_dict(payload["optimizer_state_dict"])
     scheduler.load_state_dict(payload["scheduler_state_dict"])

@@ -116,26 +116,28 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 best_metric = metric
                 best_epoch = int(epoch)
 
-        save_checkpoint(
-            cfg.latest_ckpt_path,
-            cfg=cfg,
-            model=model,
-            optimizer=optimizer,
-            scheduler=scheduler,
-            scaler=scaler,
-            dataset_stats=dataset_stats,
-            epoch=epoch,
-            global_step=global_step,
-            best_metric=best_metric,
-            best_epoch=best_epoch,
-            best_success_rate=best_success_rate,
-            best_success_epoch=best_success_epoch,
-            train_loss_history=train_loss_history,
-            valid_loss_history=valid_loss_history,
-            epoch_summaries=epoch_summaries,
-        )
+        if cfg.save_latest_ckpt:
+            save_checkpoint(
+                cfg.latest_ckpt_path,
+                cfg=cfg,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                scaler=scaler,
+                dataset_stats=dataset_stats,
+                epoch=epoch,
+                global_step=global_step,
+                best_metric=best_metric,
+                best_epoch=best_epoch,
+                best_success_rate=best_success_rate,
+                best_success_epoch=best_success_epoch,
+                train_loss_history=train_loss_history,
+                valid_loss_history=valid_loss_history,
+                epoch_summaries=epoch_summaries,
+                checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+            )
 
-        if best_epoch == epoch:
+        if cfg.save_best_valid_ckpt and best_epoch == epoch:
             save_checkpoint(
                 cfg.best_ckpt_path,
                 cfg=cfg,
@@ -153,6 +155,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 train_loss_history=train_loss_history,
                 valid_loss_history=valid_loss_history,
                 epoch_summaries=epoch_summaries,
+                checkpoint_payload_mode=cfg.checkpoint_payload_mode,
             )
 
         if int(cfg.checkpoint_every_epochs) > 0 and ((epoch + 1) % int(cfg.checkpoint_every_epochs)) == 0:
@@ -174,6 +177,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 train_loss_history=train_loss_history,
                 valid_loss_history=valid_loss_history,
                 epoch_summaries=epoch_summaries,
+                checkpoint_payload_mode=cfg.checkpoint_payload_mode,
             )
 
     wall_clock_hours = (time.perf_counter() - run_started_at) / 3600.0

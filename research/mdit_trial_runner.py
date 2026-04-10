@@ -181,6 +181,11 @@ def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
     cfg.resume_from_latest = False
     cfg.train_epochs = int(request.stage_epochs)
     cfg.checkpoint_every_epochs = int(request.checkpoint_every)
+    cfg.save_latest_ckpt = False
+    cfg.save_best_valid_ckpt = False
+    cfg.checkpoint_payload_mode = "lightweight"
+    cfg.audit_include_special_ckpts = False
+    cfg.delete_screening_ckpts_after_audit = int(request.stage_epochs) < 500
     if request.run_name:
         cfg.run_name = str(request.run_name)
     else:
@@ -301,8 +306,8 @@ def _enrich_record_with_checkpoint_stats(record: dict[str, Any]) -> dict[str, An
     payload = torch.load(ckpt_path, map_location="cpu")
     completed_epoch = int(payload.get("completed_epoch", -1))
     epoch_summaries = payload.get("epoch_summaries") or []
-    epoch_row = None
-    if 0 <= completed_epoch < len(epoch_summaries):
+    epoch_row = payload.get("epoch_summary")
+    if epoch_row is None and 0 <= completed_epoch < len(epoch_summaries):
         epoch_row = epoch_summaries[completed_epoch]
     enriched = dict(record)
     enriched["completed_epoch"] = completed_epoch
@@ -501,7 +506,6 @@ def _build_train_keep_paths(run_dir: Path, cfg: MDITExperimentConfig) -> list[Pa
         cfg.summary_path,
         cfg.dataset_stats_path,
         _trial_request_path(run_dir),
-        cfg.best_ckpt_path,
         *_collect_periodic_ckpts(run_dir),
     ]
     return [path for path in keep_paths if path.exists()]
@@ -587,7 +591,7 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
             "best_ckpt_path": None,
             "best_success_rate": None,
             "best_success_epoch": None,
-            "best_valid_ckpt_path": str(cfg.best_ckpt_path) if cfg.best_ckpt_path.exists() else None,
+            "best_valid_ckpt_path": None,
             "kept_ckpt_paths": _collect_kept_ckpt_paths(keep_paths),
             "run_name": cfg.run_name,
             "run_dir": str(run_dir),
@@ -657,19 +661,24 @@ def finalize_mdit_autoresearch_trial(
         headless=bool(request.headless),
         show_progress=bool(request.show_progress),
         timeout_sec=timeout_sec,
-        include_special=int(request.stage_epochs) >= 500 or int(request.eval_episodes) >= 100,
+        include_special=False,
     )
     records = [_enrich_record_with_checkpoint_stats(row) for row in _load_eval_records(audit_json)]
     periodic_records = _filter_periodic_records(records)
     thresholds = request.collapse_thresholds or DEFAULT_COLLAPSE_THRESHOLDS
-    collapse_detected, collapse_reasons, collapse_checks = _compute_collapse(
-        periodic_records,
-        stage_epochs=int(request.stage_epochs),
-        thresholds={int(key): float(value) for key, value in thresholds.items()},
-        tolerance=float(request.collapse_drop_tolerance),
-    )
+    if int(request.stage_epochs) >= 500:
+        collapse_detected, collapse_reasons, collapse_checks = _compute_collapse(
+            periodic_records,
+            stage_epochs=int(request.stage_epochs),
+            thresholds={int(key): float(value) for key, value in thresholds.items()},
+            tolerance=float(request.collapse_drop_tolerance),
+        )
+    else:
+        collapse_detected, collapse_reasons, collapse_checks = False, [], []
     best_record = _select_best_success_record(records)
-    best_ckpt_path = _materialize_best_success_checkpoint(run_dir, best_record)
+    best_ckpt_path = None
+    if int(request.stage_epochs) >= 500:
+        best_ckpt_path = _materialize_best_success_checkpoint(run_dir, best_record)
     score = _trial_score(
         best_record,
         stage_epochs=int(request.stage_epochs),
@@ -708,10 +717,14 @@ def finalize_mdit_autoresearch_trial(
         run_dir / "dataset_stats.json",
         run_dir / "audit_report.json",
         _trial_request_path(run_dir),
-        run_dir / "best_valid.pt",
-        run_dir / "best_success.pt",
-        *_keep_epoch_paths(periodic_records),
     ]
+    if int(request.stage_epochs) >= 500:
+        keep_paths.extend(
+            [
+                run_dir / "best_success.pt",
+                *_keep_epoch_paths(periodic_records),
+            ]
+        )
     keep_paths = [path for path in keep_paths if path.exists()]
 
     if collapse_detected and request.cleanup_failed:
@@ -735,7 +748,7 @@ def finalize_mdit_autoresearch_trial(
         "best_ckpt_path": None if best_ckpt_path is None else str(best_ckpt_path),
         "best_success_rate": None if best_record is None else float(best_record["success_rate"]),
         "best_success_epoch": None if best_record is None else int(best_record.get("epoch") or 0),
-        "best_valid_ckpt_path": str(run_dir / "best_valid.pt") if (run_dir / "best_valid.pt").exists() else None,
+        "best_valid_ckpt_path": None,
         "kept_ckpt_paths": _collect_kept_ckpt_paths(keep_paths),
         "run_name": run_dir.name,
         "run_dir": str(run_dir),

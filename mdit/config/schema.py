@@ -69,7 +69,7 @@ class MDITExperimentConfig:
     seed: int = 1234
     resume_from_latest: bool = False
 
-    n_obs_steps: int = 2
+    n_obs_steps: int = 3
     horizon: int = 32
     n_action_steps: int = 16
     robot_state_dim: int = 10
@@ -87,10 +87,15 @@ class MDITExperimentConfig:
     num_workers: int = 4
     train_epochs: int = 500
     grad_clip_norm: float | None = 1.0
-    use_amp: bool = False
+    use_amp: bool = True
     checkpoint_every_epochs: int = 100
     val_every_epochs: int = 1
     print_every: int = 50
+    save_latest_ckpt: bool = True
+    save_best_valid_ckpt: bool = True
+    checkpoint_payload_mode: str = "full"
+    audit_include_special_ckpts: bool = True
+    delete_screening_ckpts_after_audit: bool = False
     lr_scheduler_name: str = "cosine"
     lr_warmup_steps: int = 500
 
@@ -116,6 +121,10 @@ class MDITExperimentConfig:
             raise FileNotFoundError(f"Train data path does not exist: {self.train_data_path}")
         if not self.valid_data_path.exists():
             raise FileNotFoundError(f"Valid data path does not exist: {self.valid_data_path}")
+        if str(self.checkpoint_payload_mode) not in {"full", "lightweight"}:
+            raise ValueError(
+                "checkpoint_payload_mode must be either 'full' or 'lightweight'."
+            )
 
     @property
     def ckpt_dir(self) -> Path:

@@ -21,69 +21,56 @@ class SearchSpec:
 
 
 DEFAULT_BASELINE = SearchSpec(
-    name="mdit_faithful_baseline_100",
+    name="obs3_amp_baseline_100",
     stage_epochs=100,
     eval_episodes=20,
-    description="faithful baseline",
-    overrides={},
+    description="obs3 + amp baseline",
+    overrides={"n_obs_steps": 3, "use_amp": True},
 )
 
 DEFAULT_CANDIDATES: tuple[SearchSpec, ...] = (
     SearchSpec(
-        name="cam_front_wrist_100",
+        name="layers8_obs3_amp_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="2-camera subset front+wrist",
-        overrides={"camera_names": ["front", "wrist"]},
+        description="obs3 + amp + deeper transformer",
+        overrides={"n_obs_steps": 3, "use_amp": True, "transformer.num_layers": 8},
     ),
     SearchSpec(
-        name="cam_all5_100",
+        name="rope_obs3_amp_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="all available cameras",
-        overrides={"camera_names": ["front", "left_shoulder", "right_shoulder", "wrist", "overhead"]},
+        description="obs3 + amp + rotary position encoding",
+        overrides={"n_obs_steps": 3, "use_amp": True, "transformer.use_rope": True},
     ),
     SearchSpec(
-        name="obs3_100",
+        name="uniform_t_obs3_amp_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="increase observation steps to 3",
-        overrides={"n_obs_steps": 3},
+        description="obs3 + amp + uniform FM timestep sampling",
+        overrides={
+            "n_obs_steps": 3,
+            "use_amp": True,
+            "objective.timestep_sampling.strategy_name": "uniform",
+        },
     ),
     SearchSpec(
-        name="dropout0_100",
+        name="vision_last_block_obs3_amp_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="remove transformer dropout",
-        overrides={"transformer.dropout": 0.0},
+        description="obs3 + amp + unfreeze last vision block",
+        overrides={
+            "n_obs_steps": 3,
+            "use_amp": True,
+            "observation_encoder.vision.train_mode": "last_block",
+        },
     ),
     SearchSpec(
-        name="layers8_100",
+        name="lr3e5_obs3_amp_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="deeper transformer",
-        overrides={"transformer.num_layers": 8},
-    ),
-    SearchSpec(
-        name="rope_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="enable rotary position encoding",
-        overrides={"transformer.use_rope": True},
-    ),
-    SearchSpec(
-        name="uniform_t_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="uniform timestep sampling",
-        overrides={"objective.timestep_sampling.strategy_name": "uniform"},
-    ),
-    SearchSpec(
-        name="vision_last_block_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="unfreeze last vision block",
-        overrides={"observation_encoder.vision.train_mode": "last_block"},
+        description="obs3 + amp + higher learning rate",
+        overrides={"n_obs_steps": 3, "use_amp": True, "optimizer_lr": 3.0e-5},
     ),
 )
 
@@ -231,7 +218,9 @@ def wait_for_existing_result(
                 "success_100": float(best_record["success_rate"]) if best_record and int(payload.get("eval_episodes", 0)) >= 100 else None,
                 "collapse_detected": bool(payload.get("collapse_detected")),
                 "collapse_reasons": payload.get("collapse_reasons", []),
-                "best_ckpt_path": None if best_record is None else str(run_dir / "best_success.pt"),
+                "best_ckpt_path": None
+                if best_record is None or not (run_dir / "best_success.pt").exists()
+                else str(run_dir / "best_success.pt"),
                 "best_success_rate": None if best_record is None else float(best_record["success_rate"]),
                 "best_success_epoch": None if best_record is None else int(best_record.get("epoch") or 0),
                 "run_name": run_dir.name,
