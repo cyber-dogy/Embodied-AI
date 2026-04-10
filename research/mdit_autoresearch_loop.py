@@ -154,6 +154,25 @@ def _choose_top_specs(results: list[dict[str, Any]], limit: int = 2) -> list[dic
     return ranked[:limit]
 
 
+def _find_existing_result(
+    rows: list[dict[str, Any]] | None,
+    *,
+    experiment_name: str,
+    stage_epochs: int,
+    eval_episodes: int,
+) -> dict[str, Any] | None:
+    if not rows:
+        return None
+    for row in rows:
+        if (
+            str(row.get("experiment_name")) == str(experiment_name)
+            and int(row.get("stage_epochs", 0)) == int(stage_epochs)
+            and int(row.get("eval_episodes", 0)) == int(eval_episodes)
+        ):
+            return row
+    return None
+
+
 def wait_for_existing_result(
     *,
     run_dir: Path,
@@ -265,16 +284,28 @@ def run_mdit_autoresearch_loop(
     data_root: Path | None = None,
 ) -> dict[str, Any]:
     summary_path = _loop_summary_path(tag)
-    summary: dict[str, Any] = {
-        "tag": tag,
-        "started_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "config_path": str(config_path),
-        "baseline": None,
-        "candidates": [],
-        "promoted": [],
-        "deep_runs": [],
-        "winner": None,
-    }
+    if summary_path.exists():
+        summary = _load_json(summary_path)
+        summary["tag"] = tag
+        summary["config_path"] = str(config_path)
+        summary.setdefault("started_at", time.strftime("%Y-%m-%d %H:%M:%S"))
+        summary["resumed_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        summary.setdefault("baseline", None)
+        summary.setdefault("candidates", [])
+        summary.setdefault("promoted", [])
+        summary.setdefault("deep_runs", [])
+        summary.setdefault("winner", None)
+    else:
+        summary = {
+            "tag": tag,
+            "started_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "config_path": str(config_path),
+            "baseline": None,
+            "candidates": [],
+            "promoted": [],
+            "deep_runs": [],
+            "winner": None,
+        }
     _write_json(summary_path, summary)
 
     if baseline_run_dir is not None:
@@ -287,6 +318,8 @@ def run_mdit_autoresearch_loop(
         baseline_result["eval_episodes"] = 20
         baseline_result["overrides"] = {}
         baseline_result["log_path"] = None
+    elif summary.get("baseline") is not None:
+        baseline_result = dict(summary["baseline"])
     else:
         baseline_result = run_search_spec(
             DEFAULT_BASELINE,
@@ -304,17 +337,26 @@ def run_mdit_autoresearch_loop(
 
     candidate_results: list[dict[str, Any]] = []
     for spec in DEFAULT_CANDIDATES:
-        result = run_search_spec(
-            spec,
-            config_path=config_path,
-            device=device,
-            headless=headless,
-            show_progress=show_progress,
-            cleanup_failed=cleanup_failed,
-            audit_timeout_sec=audit_timeout_sec,
-            ckpt_root=ckpt_root,
-            data_root=data_root,
+        existing_result = _find_existing_result(
+            summary.get("candidates"),
+            experiment_name=spec.name,
+            stage_epochs=spec.stage_epochs,
+            eval_episodes=spec.eval_episodes,
         )
+        if existing_result is not None:
+            result = dict(existing_result)
+        else:
+            result = run_search_spec(
+                spec,
+                config_path=config_path,
+                device=device,
+                headless=headless,
+                show_progress=show_progress,
+                cleanup_failed=cleanup_failed,
+                audit_timeout_sec=audit_timeout_sec,
+                ckpt_root=ckpt_root,
+                data_root=data_root,
+            )
         candidate_results.append(result)
         summary["candidates"] = candidate_results
         _write_json(summary_path, summary)
@@ -332,17 +374,26 @@ def run_mdit_autoresearch_loop(
             description=f"deep run from {row['experiment_name']}",
             overrides=dict(row.get("overrides", {})),
         )
-        result = run_search_spec(
-            spec,
-            config_path=config_path,
-            device=device,
-            headless=headless,
-            show_progress=show_progress,
-            cleanup_failed=cleanup_failed,
-            audit_timeout_sec=max(int(audit_timeout_sec), 21600),
-            ckpt_root=ckpt_root,
-            data_root=data_root,
+        existing_result = _find_existing_result(
+            summary.get("deep_runs"),
+            experiment_name=spec.name,
+            stage_epochs=spec.stage_epochs,
+            eval_episodes=spec.eval_episodes,
         )
+        if existing_result is not None:
+            result = dict(existing_result)
+        else:
+            result = run_search_spec(
+                spec,
+                config_path=config_path,
+                device=device,
+                headless=headless,
+                show_progress=show_progress,
+                cleanup_failed=cleanup_failed,
+                audit_timeout_sec=max(int(audit_timeout_sec), 21600),
+                ckpt_root=ckpt_root,
+                data_root=data_root,
+            )
         deep_results.append(result)
         summary["deep_runs"] = deep_results
         best_so_far = max(deep_results, key=_score_key)
