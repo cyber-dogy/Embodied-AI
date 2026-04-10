@@ -629,7 +629,7 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
 def finalize_mdit_autoresearch_trial(
     run_dir: str | Path,
     *,
-    request_overrides: MDITTrialRequest | None = None,
+    request_overrides: MDITTrialRequest | dict[str, Any] | None = None,
     log_results: bool = True,
 ) -> dict[str, Any]:
     repo_root = PROJECT_ROOT
@@ -640,7 +640,12 @@ def finalize_mdit_autoresearch_trial(
     request = _load_trial_request(run_dir)
     if request_overrides is not None:
         merged = _trial_request_to_dict(request)
-        for key, value in _trial_request_to_dict(request_overrides).items():
+        override_payload = (
+            _trial_request_to_dict(request_overrides)
+            if isinstance(request_overrides, MDITTrialRequest)
+            else dict(request_overrides)
+        )
+        for key, value in override_payload.items():
             if value is not None:
                 merged[key] = value
         request = _trial_request_from_dict(merged)

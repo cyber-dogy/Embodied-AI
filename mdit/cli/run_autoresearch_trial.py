@@ -143,9 +143,13 @@ def main() -> int:
     elif args.phase == "train-only":
         result = train_mdit_autoresearch_trial(request)
     else:
+        audit_override_kwargs = {}
+        for key, value in optional_fields.items():
+            if value is not None:
+                audit_override_kwargs[key] = value
         result = finalize_mdit_autoresearch_trial(
             args.run_dir.expanduser().resolve(),
-            request_overrides=request,
+            request_overrides=audit_override_kwargs,
         )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 0
