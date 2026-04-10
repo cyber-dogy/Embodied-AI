@@ -173,6 +173,35 @@ def _find_existing_result(
     return None
 
 
+def _find_existing_trial_record(
+    *,
+    experiment_name: str,
+    stage_epochs: int,
+    eval_episodes: int,
+) -> dict[str, Any] | None:
+    candidates: list[tuple[float, Path]] = []
+    for path in _record_dir().glob("*.json"):
+        if path.name.startswith("mdit_autoresearch_loop_"):
+            continue
+        try:
+            payload = _load_json(path)
+        except Exception:
+            continue
+        if str(payload.get("line")) != "mdit":
+            continue
+        if str(payload.get("experiment_name")) != str(experiment_name):
+            continue
+        if int(payload.get("stage_epochs", 0)) != int(stage_epochs):
+            continue
+        if int(payload.get("eval_episodes", 0)) != int(eval_episodes):
+            continue
+        candidates.append((path.stat().st_mtime, path))
+    if not candidates:
+        return None
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    return _load_json(candidates[0][1])
+
+
 def wait_for_existing_result(
     *,
     run_dir: Path,
@@ -343,6 +372,12 @@ def run_mdit_autoresearch_loop(
             stage_epochs=spec.stage_epochs,
             eval_episodes=spec.eval_episodes,
         )
+        if existing_result is None:
+            existing_result = _find_existing_trial_record(
+                experiment_name=spec.name,
+                stage_epochs=spec.stage_epochs,
+                eval_episodes=spec.eval_episodes,
+            )
         if existing_result is not None:
             result = dict(existing_result)
         else:
@@ -380,6 +415,12 @@ def run_mdit_autoresearch_loop(
             stage_epochs=spec.stage_epochs,
             eval_episodes=spec.eval_episodes,
         )
+        if existing_result is None:
+            existing_result = _find_existing_trial_record(
+                experiment_name=spec.name,
+                stage_epochs=spec.stage_epochs,
+                eval_episodes=spec.eval_episodes,
+            )
         if existing_result is not None:
             result = dict(existing_result)
         else:

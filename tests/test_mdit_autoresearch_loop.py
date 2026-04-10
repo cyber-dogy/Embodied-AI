@@ -102,6 +102,85 @@ class MDITAutoresearchLoopTest(unittest.TestCase):
             self.assertEqual(result["candidates"][0]["experiment_name"], "cam_front_wrist_100")
             self.assertEqual(result["candidates"][1]["experiment_name"], "obs3_100")
 
+    def test_resume_can_reuse_trial_record_even_if_summary_is_missing_it(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            records_dir = repo_root / "autoresearch_records"
+            (records_dir / "logs").mkdir(parents=True, exist_ok=True)
+            config_path = repo_root / "configs" / "mdit.json"
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            config_path.write_text("{}", encoding="utf-8")
+
+            summary_path = records_dir / "mdit_autoresearch_loop_resume.json"
+            summary_path.write_text(
+                json.dumps(
+                    {
+                        "tag": "resume",
+                        "started_at": "2026-04-10 00:00:00",
+                        "config_path": str(config_path),
+                        "baseline": {
+                            "experiment_name": "mdit_faithful_baseline_100",
+                            "stage_epochs": 100,
+                            "eval_episodes": 20,
+                            "trial_score": -1.0,
+                        },
+                        "candidates": [],
+                        "promoted": [],
+                        "deep_runs": [],
+                        "winner": None,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            (records_dir / "trial_cam.json").write_text(
+                json.dumps(
+                    {
+                        "line": "mdit",
+                        "experiment_name": "cam_all5_100",
+                        "stage_epochs": 100,
+                        "eval_episodes": 20,
+                        "trial_score": -1.0,
+                        "success_20": 0.0,
+                        "overrides": {
+                            "camera_names": ["front", "left_shoulder", "right_shoulder", "wrist", "overhead"]
+                        },
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            specs = (
+                SearchSpec(
+                    name="cam_all5_100",
+                    stage_epochs=100,
+                    eval_episodes=20,
+                    description="existing record",
+                    overrides={"camera_names": ["front", "left_shoulder", "right_shoulder", "wrist", "overhead"]},
+                ),
+            )
+
+            with mock.patch("research.mdit_autoresearch_loop.PROJECT_ROOT", repo_root), \
+                mock.patch("research.mdit_autoresearch_loop.DEFAULT_CANDIDATES", specs), \
+                mock.patch("research.mdit_autoresearch_loop.run_search_spec") as mocked_run, \
+                mock.patch("research.mdit_autoresearch_loop._choose_top_specs", return_value=[]):
+                result = run_mdit_autoresearch_loop(
+                    tag="resume",
+                    config_path=config_path,
+                    device=None,
+                    headless=True,
+                    show_progress=False,
+                    cleanup_failed=True,
+                    audit_timeout_sec=60,
+                    ckpt_root=None,
+                    data_root=None,
+                )
+
+            mocked_run.assert_not_called()
+            self.assertEqual(len(result["candidates"]), 1)
+            self.assertEqual(result["candidates"][0]["experiment_name"], "cam_all5_100")
+
 
 if __name__ == "__main__":
     unittest.main()
