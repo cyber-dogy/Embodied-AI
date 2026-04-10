@@ -15,6 +15,7 @@
 迁移到新机器时，优先看：
 
 - [2026-04-10-5090-migration-checklist.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/2026-04-10-5090-migration-checklist.md)
+- [2026-04-10-5090-environment-setup.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/2026-04-10-5090-environment-setup.md)
 - [todolist.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/todolist.md)
 
 ## 当前最强模型
