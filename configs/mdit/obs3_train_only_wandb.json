@@ -1,0 +1,13 @@
+{
+  "extends": "faithful_baseline",
+  "run_name": "unplug_charger_mdit_obs3_train_only_wandb_v1",
+  "wandb_enable": true,
+  "wandb_project": "autodl-unplug-charger-mdit",
+  "wandb_mode": "online",
+  "save_latest_ckpt": false,
+  "save_best_valid_ckpt": false,
+  "checkpoint_payload_mode": "lightweight",
+  "checkpoint_every_epochs": 100,
+  "n_obs_steps": 3,
+  "use_amp": true
+}

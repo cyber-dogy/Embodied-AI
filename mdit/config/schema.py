@@ -103,6 +103,11 @@ class MDITExperimentConfig:
     optimizer_betas: tuple[float, float] = (0.95, 0.999)
     optimizer_eps: float = 1.0e-8
     optimizer_weight_decay: float = 0.0
+    wandb_enable: bool = False
+    wandb_project: str = "autodl-unplug-charger-mdit"
+    wandb_entity: str | None = None
+    wandb_mode: str = "disabled"
+    wandb_resume: bool = False
 
     success_max_steps: int = 200
     eval_step_heartbeat_every: int = 50

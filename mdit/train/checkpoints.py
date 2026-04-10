@@ -9,6 +9,11 @@ from torch.optim.lr_scheduler import LambdaLR
 
 from mdit.config import MDITExperimentConfig, config_to_dict
 
+try:
+    import wandb
+except ImportError:  # pragma: no cover
+    wandb = None
+
 
 def _save_payload(path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,6 +51,7 @@ def build_checkpoint_payload(
     valid_loss_history: list[float | None],
     epoch_summaries: list[dict[str, Any]],
     checkpoint_payload_mode: str,
+    wandb_run_id: str | None,
 ) -> dict[str, Any]:
     payload = {
         "cfg": config_to_dict(cfg),
@@ -59,6 +65,7 @@ def build_checkpoint_payload(
         "best_epoch": best_epoch,
         "best_success_rate": best_success_rate,
         "best_success_epoch": best_success_epoch,
+        "wandb_run_id": wandb_run_id,
         "epoch_summary": None if not epoch_summaries else dict(epoch_summaries[-1]),
     }
     if str(checkpoint_payload_mode) != "lightweight":
@@ -94,6 +101,7 @@ def save_checkpoint(
     valid_loss_history: list[float | None],
     epoch_summaries: list[dict[str, Any]],
     checkpoint_payload_mode: str,
+    wandb_run_id: str | None,
 ) -> None:
     payload = build_checkpoint_payload(
         cfg=cfg,
@@ -112,6 +120,7 @@ def save_checkpoint(
         valid_loss_history=valid_loss_history,
         epoch_summaries=epoch_summaries,
         checkpoint_payload_mode=checkpoint_payload_mode,
+        wandb_run_id=wandb_run_id,
     )
     _save_payload(path, payload)
 
@@ -136,6 +145,7 @@ def load_resume_state(
             "train_loss_history": [],
             "valid_loss_history": [],
             "epoch_summaries": [],
+            "wandb_run_id": None,
         }
 
     payload = torch.load(cfg.latest_ckpt_path, map_location="cpu")
@@ -163,4 +173,27 @@ def load_resume_state(
         "train_loss_history": list(payload.get("train_loss_history") or []),
         "valid_loss_history": list(payload.get("valid_loss_history") or []),
         "epoch_summaries": list(payload.get("epoch_summaries") or []),
+        "wandb_run_id": payload.get("wandb_run_id"),
     }
+
+
+def init_wandb_run(cfg: MDITExperimentConfig, *, resume_run_id: str | None = None):
+    if not cfg.wandb_enable:
+        return None
+    if wandb is None:
+        raise ImportError("wandb is not installed.")
+    return wandb.init(
+        project=cfg.wandb_project,
+        entity=cfg.wandb_entity,
+        mode=cfg.wandb_mode,
+        name=cfg.run_name,
+        dir=str(cfg.ckpt_dir),
+        config=config_to_dict(cfg),
+        resume="allow" if cfg.wandb_resume else None,
+        id=resume_run_id if cfg.wandb_resume else None,
+    )
+
+
+def finish_wandb_run(run) -> None:
+    if run is not None:
+        run.finish()

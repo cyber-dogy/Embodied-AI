@@ -30,6 +30,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ckpt-root", type=Path, default=None, help="Override checkpoint root.")
     parser.add_argument("--device", type=str, default=None, help="Override runtime device, e.g. cuda or cpu.")
     parser.add_argument(
+        "--enable-wandb",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Enable wandb logging for this MDIT training run.",
+    )
+    parser.add_argument("--wandb-project", type=str, default=None, help="Optional wandb project override.")
+    parser.add_argument("--wandb-entity", type=str, default=None, help="Optional wandb entity override.")
+    parser.add_argument("--wandb-mode", type=str, default=None, help="Optional wandb mode override.")
+    parser.add_argument(
         "--resume",
         action=argparse.BooleanOptionalAction,
         default=None,
@@ -84,6 +93,16 @@ def apply_train_overrides(cfg: MDITExperimentConfig, args: argparse.Namespace) -
         cfg.ckpt_root = args.ckpt_root.expanduser().resolve()
     if args.device is not None:
         cfg.device = str(args.device)
+    if args.enable_wandb is not None:
+        cfg.wandb_enable = bool(args.enable_wandb)
+        if not cfg.wandb_enable and cfg.wandb_mode == "online":
+            cfg.wandb_mode = "disabled"
+    if args.wandb_project is not None:
+        cfg.wandb_project = str(args.wandb_project)
+    if args.wandb_entity is not None:
+        cfg.wandb_entity = str(args.wandb_entity)
+    if args.wandb_mode is not None:
+        cfg.wandb_mode = str(args.wandb_mode)
     if args.resume is not None:
         cfg.resume_from_latest = bool(args.resume)
     cfg = apply_config_overrides(cfg, _parse_config_overrides(args.config_overrides))
