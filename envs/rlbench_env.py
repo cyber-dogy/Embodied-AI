@@ -2,6 +2,7 @@ import os
 import types
 import sys
 import time
+import warnings
 from functools import partial
 from os.path import join
 
@@ -31,10 +32,7 @@ from common.se3 import pfp_to_pose_np, rot6d_to_quat_np
 from common.task_text import choose_instruction
 from .base_env import BaseEnv
 
-try:
-    import rerun as rr
-except ImportError:
-    print("WARNING: Rerun not installed. Visualization will not work.")
+rr = None
 
 
 class RLBenchEnv(BaseEnv):
@@ -108,6 +106,19 @@ class RLBenchEnv(BaseEnv):
         self.last_descriptions: list[str] = []
         self.last_step_error: str | None = None
         if self.vis:
+            global rr
+            if rr is None:
+                try:
+                    import rerun as rr_module
+                except ImportError:
+                    warnings.warn(
+                        "Rerun is not installed; RLBench visualization is disabled.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    self.vis = False
+                    return
+                rr = rr_module
             from common.visualization import RerunViewer
 
             self._rv = RerunViewer

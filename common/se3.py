@@ -6,7 +6,7 @@ from spatialmath.base.transforms3d import isrot
 try:
     from pytorch3d.ops import corresponding_points_alignment
 except ImportError:
-    print("pytorch3d not installed")
+    corresponding_points_alignment = None
 
 from .runtime import get_device
 
@@ -136,6 +136,11 @@ def state5p_to_pfp_th(state5p: torch.Tensor) -> torch.Tensor:
     """
     Convert 5points representation (B, T, 16) to pfp state (B, T, 10) using svd projection.
     """
+    if corresponding_points_alignment is None:
+        raise ImportError(
+            "pytorch3d is required for state5p_to_pfp_th(). "
+            "Install pytorch3d or avoid 5-point pose projection paths."
+        )
     device = state5p.device
     leading_dims = state5p.shape[0:2]
     # Flatten the batch and time dimensions

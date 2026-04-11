@@ -63,6 +63,25 @@ def build_episode_analysis(result: dict) -> dict:
         label = _normalize_error_label(row.get("error"))
         error_buckets[label] = error_buckets.get(label, 0) + 1
 
+    failure_steps = [int(row.get("steps", 0)) for row in failure_records]
+    max_steps = max((int(row.get("steps", 0)) for row in episode_records), default=0)
+    failure_step_buckets = {
+        "lt_20": sum(1 for steps in failure_steps if steps < 20),
+        "20_to_99": sum(1 for steps in failure_steps if 20 <= steps < 100),
+        "100_to_horizon_minus_1": sum(1 for steps in failure_steps if 100 <= steps < max_steps),
+        "at_horizon": sum(1 for steps in failure_steps if steps == max_steps and max_steps > 0),
+    }
+    likely_causes: list[str] = []
+    runtime_failures = int(error_buckets.get("simulator_runtime_error", 0))
+    if runtime_failures >= max(2, len(failure_records) // 2):
+        likely_causes.append("planner_or_simulator_rejecting_many_predicted_actions")
+    if failure_step_buckets["lt_20"] >= max(3, len(failure_records) // 4):
+        likely_causes.append("many_failures_happen_very_early_in_rollout")
+    if failure_step_buckets["at_horizon"] > 0:
+        likely_causes.append("some_rollouts_exhaust_the_horizon_without_finishing")
+    if len(success_records) <= max(2, len(episode_records) // 10):
+        likely_causes.append("policy_quality_is_currently_well_below_target")
+
     return {
         "num_episodes": int(result.get("num_episodes", len(episode_records))),
         "num_successes": len(success_records),
@@ -72,9 +91,11 @@ def build_episode_analysis(result: dict) -> dict:
         "success_episode_indices": [int(row.get("episode", -1)) for row in success_records],
         "failure_episode_indices": [int(row.get("episode", -1)) for row in failure_records],
         "failure_error_buckets": error_buckets,
+        "failure_step_buckets": failure_step_buckets,
         "num_failures_without_error": sum(1 for row in failure_records if not row.get("error")),
         "max_steps_observed": max((int(row.get("steps", 0)) for row in episode_records), default=0),
         "min_steps_observed": min((int(row.get("steps", 0)) for row in episode_records), default=0),
+        "likely_causes": likely_causes,
     }
 
 
