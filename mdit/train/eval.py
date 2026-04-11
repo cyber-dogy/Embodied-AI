@@ -69,9 +69,9 @@ def compute_sample_metric(
     model.eval()
     with torch.inference_mode(), get_autocast_context(cfg.use_amp):
         pred_actions = model._generate_action_chunk(batch)
+    pred_actions = model.unnormalize_action(pred_actions)
     target_actions = batch["action"][:, model.config.n_obs_steps - 1 : model.config.n_obs_steps - 1 + model.config.n_action_steps]
     return float(F.mse_loss(pred_actions, target_actions).detach().cpu())
-    return iterable
 
 
 def run_success_rate_eval(
@@ -189,12 +189,16 @@ def load_model_for_eval(
     cfg: MDITExperimentConfig,
     ckpt_path,
     payload: dict[str, Any] | None = None,
+    prefer_ema: bool = True,
 ):
     if payload is None:
         payload = torch.load(ckpt_path, map_location="cpu")
     device = set_device(cfg.device)
     model = build_policy(cfg, payload["dataset_stats"])
-    model.load_state_dict(payload["model_state_dict"])
+    if prefer_ema and payload.get("ema_state_dict") is not None:
+        model.load_state_dict(payload["ema_state_dict"])
+    else:
+        model.load_state_dict(payload["model_state_dict"])
     model.to(device)
     model.eval()
     return model, payload

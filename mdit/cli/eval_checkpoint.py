@@ -147,6 +147,12 @@ def parse_args() -> argparse.Namespace:
         default=False,
         help="Print full episode_records JSON to stdout after the summary.",
     )
+    parser.add_argument(
+        "--prefer-ema",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Load EMA weights when available (default: true).",
+    )
     return parser.parse_args()
 
 
@@ -197,7 +203,7 @@ def main() -> int:
     )
     set_seeds(eval_seed)
 
-    model, _ = load_model_for_eval(cfg, ckpt_path, payload=payload)
+    model, _ = load_model_for_eval(cfg, ckpt_path, payload=payload, prefer_ema=bool(args.prefer_ema))
 
     started_at = time.perf_counter()
     summary = run_success_rate_eval(

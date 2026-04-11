@@ -14,6 +14,14 @@ class NormalizationMode(str, Enum):
     IDENTITY = "IDENTITY"
 
 
+def _clone_value(value: Any) -> Any:
+    if torch.is_tensor(value):
+        return value.clone()
+    if isinstance(value, list):
+        return list(value)
+    return copy.deepcopy(value)
+
+
 def populate_queues(queues: dict[str, deque], batch: dict[str, Any]) -> dict[str, deque]:
     for key, value in batch.items():
         if key not in queues:
@@ -21,9 +29,9 @@ def populate_queues(queues: dict[str, deque], batch: dict[str, Any]) -> dict[str
         queue = queues[key]
         if len(queue) == 0:
             while len(queue) < queue.maxlen:
-                queue.append(copy.deepcopy(value))
+                queue.append(_clone_value(value))
             continue
-        queue.append(copy.deepcopy(value))
+        queue.append(_clone_value(value))
     return queues
 
 

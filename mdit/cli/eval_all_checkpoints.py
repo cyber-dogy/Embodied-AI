@@ -63,6 +63,12 @@ def parse_args() -> argparse.Namespace:
         help="Ignore cache and reevaluate every checkpoint.",
     )
     parser.add_argument("--limit", type=int, default=None, help="Optional limit on checkpoints.")
+    parser.add_argument(
+        "--prefer-ema",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Load EMA weights when available (default: true).",
+    )
     parser.add_argument("--plot-path", type=Path, default=None, help="Optional success-rate plot output.")
     parser.add_argument(
         "--plot-figsize",
@@ -160,9 +166,10 @@ def save_cached_results(path: Path, results: dict[str, Any]) -> None:
     path.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def make_cache_key(ckpt_path: Path, *, episodes: int, max_steps: int, seed: int) -> str:
+def make_cache_key(ckpt_path: Path, *, episodes: int, max_steps: int, seed: int, prefer_ema: bool = True) -> str:
     return (
         f"{ckpt_path.resolve()}::episodes={int(episodes)}::max_steps={int(max_steps)}::seed={int(seed)}"
+        f"::ema={prefer_ema}"
     )
 
 
@@ -177,6 +184,7 @@ def _run_eval_subprocess(
     headless: bool,
     show_progress: bool,
     timeout_sec: int,
+    prefer_ema: bool = True,
 ) -> dict[str, Any]:
     ckpt_path = Path(record["path"]).resolve()
     with tempfile.TemporaryDirectory(prefix="mdit-eval-") as tmpdir:
@@ -198,6 +206,7 @@ def _run_eval_subprocess(
             str(output_json),
             "--headless" if headless else "--no-headless",
             "--show-progress" if show_progress else "--no-show-progress",
+            "--prefer-ema" if prefer_ema else "--no-prefer-ema",
         ]
         if device is not None:
             cmd.extend(["--device", str(device)])
@@ -225,6 +234,7 @@ def eval_single_checkpoint(
     headless: bool,
     show_progress: bool,
     heartbeat_every: int,
+    prefer_ema: bool = True,
 ) -> dict[str, Any]:
     from mdit.train.eval import load_model_for_eval, run_success_rate_eval
 
@@ -242,7 +252,7 @@ def eval_single_checkpoint(
             heartbeat_every=heartbeat_every,
             device=device,
         )
-        model, _ = load_model_for_eval(cfg, record["path"], payload=payload)
+        model, _ = load_model_for_eval(cfg, record["path"], payload=payload, prefer_ema=prefer_ema)
         started_at = time.perf_counter()
         summary = run_success_rate_eval(
             model,
@@ -304,6 +314,7 @@ def main() -> int:
             episodes=int(args.episodes),
             max_steps=int(args.max_steps),
             seed=int(args.seed),
+            prefer_ema=bool(args.prefer_ema),
         )
         if (not args.force_reeval) and cache_key in cached:
             continue
@@ -318,6 +329,7 @@ def main() -> int:
                 headless=bool(args.headless),
                 show_progress=bool(args.show_progress),
                 timeout_sec=int(args.per_checkpoint_timeout_sec),
+                prefer_ema=bool(args.prefer_ema),
             )
         else:
             result = eval_single_checkpoint(
@@ -329,6 +341,7 @@ def main() -> int:
                 headless=bool(args.headless),
                 show_progress=bool(args.show_progress),
                 heartbeat_every=int(args.heartbeat_every),
+                prefer_ema=bool(args.prefer_ema),
             )
         cached[cache_key] = result
         save_cached_results(args.results_json.expanduser().resolve(), cached)

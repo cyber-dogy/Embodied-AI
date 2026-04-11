@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import os
 import tempfile
 from typing import Any
@@ -7,12 +8,39 @@ from typing import Any
 import torch
 from torch.optim.lr_scheduler import LambdaLR
 
+from common.runtime import get_device
 from mdit.config import MDITExperimentConfig, config_to_dict
 
 try:
     import wandb
 except ImportError:  # pragma: no cover
     wandb = None
+
+
+def build_ema_model(model: torch.nn.Module, enabled: bool) -> torch.nn.Module | None:
+    if not enabled:
+        return None
+    ema_model = copy.deepcopy(model)
+    ema_model.to(get_device())
+    ema_model.eval()
+    for param in ema_model.parameters():
+        param.requires_grad_(False)
+    return ema_model
+
+
+@torch.no_grad()
+def update_ema_model(ema_model: torch.nn.Module | None, model: torch.nn.Module, decay: float) -> None:
+    if ema_model is None:
+        return
+    decay = float(decay)
+    ema_state = ema_model.state_dict()
+    model_state = model.state_dict()
+    for key, ema_value in ema_state.items():
+        model_value = model_state[key].to(device=ema_value.device, dtype=ema_value.dtype)
+        if torch.is_floating_point(ema_value):
+            ema_value.lerp_(model_value, 1.0 - decay)
+        else:
+            ema_value.copy_(model_value)
 
 
 def _save_payload(path, payload: dict[str, Any]) -> None:
@@ -37,6 +65,7 @@ def build_checkpoint_payload(
     *,
     cfg: MDITExperimentConfig,
     model: torch.nn.Module,
+    ema_model: torch.nn.Module | None,
     optimizer: torch.optim.Optimizer,
     scheduler: LambdaLR,
     scaler: torch.cuda.amp.GradScaler,
@@ -57,6 +86,7 @@ def build_checkpoint_payload(
         "cfg": config_to_dict(cfg),
         "line": "mdit",
         "model_state_dict": model.state_dict(),
+        "ema_state_dict": None if ema_model is None else ema_model.state_dict(),
         "checkpoint_payload_mode": str(checkpoint_payload_mode),
         "dataset_stats": dataset_stats,
         "completed_epoch": int(epoch),
@@ -87,6 +117,7 @@ def save_checkpoint(
     *,
     cfg: MDITExperimentConfig,
     model: torch.nn.Module,
+    ema_model: torch.nn.Module | None,
     optimizer: torch.optim.Optimizer,
     scheduler: LambdaLR,
     scaler: torch.cuda.amp.GradScaler,
@@ -106,6 +137,7 @@ def save_checkpoint(
     payload = build_checkpoint_payload(
         cfg=cfg,
         model=model,
+        ema_model=ema_model,
         optimizer=optimizer,
         scheduler=scheduler,
         scaler=scaler,
@@ -146,6 +178,7 @@ def load_resume_state(
             "valid_loss_history": [],
             "epoch_summaries": [],
             "wandb_run_id": None,
+            "ema_state_dict": None,
         }
 
     payload = torch.load(cfg.latest_ckpt_path, map_location="cpu")
@@ -174,6 +207,7 @@ def load_resume_state(
         "valid_loss_history": list(payload.get("valid_loss_history") or []),
         "epoch_summaries": list(payload.get("epoch_summaries") or []),
         "wandb_run_id": payload.get("wandb_run_id"),
+        "ema_state_dict": payload.get("ema_state_dict"),
     }
 
 

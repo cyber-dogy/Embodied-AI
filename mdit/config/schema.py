@@ -93,6 +93,8 @@ class MDITExperimentConfig:
     print_every: int = 50
     save_latest_ckpt: bool = True
     save_best_valid_ckpt: bool = True
+    ema_enable: bool = True
+    ema_decay: float = 0.9993
     checkpoint_payload_mode: str = "full"
     audit_include_special_ckpts: bool = True
     delete_screening_ckpts_after_audit: bool = False

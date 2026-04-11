@@ -145,17 +145,17 @@ python scripts/run_autoresearch_trial.py \
 
 从0开始跑5RGB-MDIT（5RGB + 每相机独立 encoder + last_block 微调）：
 
-
 ```
 #全量微调5独立Vit测试
+tmux new -s mdit_rgb5_sep_all
 
 source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate mdit_env
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
 
-RUN_NAME="unplug_charger_mdit_rgb5_sep_last_500__$(date +%Y%m%d_%H%M%S)"
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
 
-python scripts/run_mdit_autoresearch_trial.py \
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
   --phase train-only \
   --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
   --stage-epochs 500 \
@@ -168,28 +168,82 @@ python scripts/run_mdit_autoresearch_trial.py \
   --set num_workers=8 \
   --set grad_accum_steps=1 \
   --set observation_encoder.vision.use_separate_encoder_per_camera=true \
-  --set observation_encoder.vision.train_mode=\"all\" \
+  --set observation_encoder.vision.train_mode=all \
   --set observation_encoder.vision.lr_multiplier=0.1 \
-  --set resume_from_latest=false
+  --set observation_encoder.vision.resize_shape=[240,240] \
+  --set objective.sigma_min=0.001 \
+  --set objective.num_integration_steps=25 \
+  --set resume_from_latest=false\
+  --set save_latest_ckpt=true\
+  --set checkpoint_payload_mode=full
 
 
 
-python scripts/run_mdit_autoresearch_trial.py \
+
+
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
+
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
   --phase train-only \
   --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
   --stage-epochs 500 \
   --checkpoint-every 100 \
   --device cuda \
-  --experiment-name obs3_rgb5_sep_last_500 \
+  --experiment-name obs3_rgb5_sep_all_500 \
   --run-name "$RUN_NAME" \
   --description "resume 5RGB separate encoders all finetune" \
   --set batch_size=8 \
   --set num_workers=8 \
   --set grad_accum_steps=1 \
   --set observation_encoder.vision.use_separate_encoder_per_camera=true \
-  --set observation_encoder.vision.train_mode=\"all\" \
+  --set observation_encoder.vision.train_mode=all \
   --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set observation_encoder.vision.resize_shape=[240,240] \
+  --set objective.sigma_min=0.001 \
+  --set objective.num_integration_steps=25 \
+  --set save_latest_ckpt=true \
+  --set checkpoint_payload_mode=full \
   --set resume_from_latest=true
+
+跑起来后如果要脱离 tmux：
+Ctrl-b d
+
+之后重连：
+tmux attach -t mdit_rgb5_sep_all
+
+评估代码：
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
+
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
+  --phase audit-only \
+  --run-dir ckpt/$RUN_NAME \
+  --eval-episodes 20 \
+  --audit-timeout-sec 7200 \
+  --headless \
+  --show-progress
+
+单独测ckpt:
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
+
+python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/<RUN_NAME>/epochs/epoch_0100.pt \
+  --episodes 20 \
+  --max-steps 200 \
+  --headless \
+  --show-progress
+
 
 
 ```
@@ -272,8 +326,6 @@ python scripts/run_mdit_autoresearch_trial.py \
 ```bash
   watch -n 1 "nvidia-smi --query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu --format=csv,noheader,nounits | awk -F, '{printf \"GPU: %s | Total: %.2f GB | Used: %.2f GB | Free: %.2f GB | Util: %s%%\\n\", \$1, \$2/1024, \$3/1024, \$4/1024, \$5}'"
 ```
-
-
 
 ## 离线 audit
 

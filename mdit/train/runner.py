@@ -18,7 +18,7 @@ from .builders import (
     get_autocast_context,
     move_batch_to_device,
 )
-from .checkpoints import load_resume_state, save_checkpoint
+from .checkpoints import build_ema_model, load_resume_state, save_checkpoint, update_ema_model
 from .checkpoints import finish_wandb_run, init_wandb_run
 from .eval import evaluate_model_on_loader, compute_sample_metric, make_progress_iter, summarize_for_json, write_summary_json
 
@@ -44,6 +44,11 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
 
     if resume_state["dataset_stats"] is not None:
         dataset_stats = resume_state["dataset_stats"]
+
+    # Build EMA AFTER resume so it copies the correct (possibly resumed) weights
+    ema_model = build_ema_model(model, cfg.ema_enable)
+    if ema_model is not None and resume_state["ema_state_dict"] is not None:
+        ema_model.load_state_dict(resume_state["ema_state_dict"])
 
     train_loss_history = resume_state["train_loss_history"]
     valid_loss_history = resume_state["valid_loss_history"]
@@ -88,6 +93,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     optimizer.zero_grad(set_to_none=True)
                     scheduler.step()
                     global_step += 1
+                    update_ema_model(ema_model, model, cfg.ema_decay)
 
                 raw_loss = float(loss.detach().cpu())
                 epoch_losses.append(raw_loss)
@@ -112,18 +118,20 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
             train_loss_history.append(train_summary["loss_total"])
 
             valid_summary = None
+            eval_model = ema_model if ema_model is not None else model
             if ((epoch + 1) % max(1, cfg.val_every_epochs)) == 0:
-                valid_summary = evaluate_model_on_loader(model, dataloader_valid, cfg)
+                valid_summary = evaluate_model_on_loader(eval_model, dataloader_valid, cfg)
             valid_loss_history.append(None if valid_summary is None else valid_summary["loss_total"])
 
             sample_summary = None
             if valid_summary is not None:
                 try:
                     sample_summary = {
-                        "train_action_mse_error": compute_sample_metric(model, sample_batch_cpu, cfg),
+                        "train_action_mse_error": compute_sample_metric(eval_model, sample_batch_cpu, cfg),
                     }
-                except Exception:
-                    pass
+                except Exception as exc:
+                    import logging
+                    logging.getLogger(__name__).warning("compute_sample_metric failed: %s", exc)
 
             epoch_row = {
                 "epoch": int(epoch),
@@ -144,6 +152,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     cfg.latest_ckpt_path,
                     cfg=cfg,
                     model=model,
+                    ema_model=ema_model,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -166,6 +175,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     cfg.best_ckpt_path,
                     cfg=cfg,
                     model=model,
+                    ema_model=ema_model,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -189,6 +199,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     periodic_path,
                     cfg=cfg,
                     model=model,
+                    ema_model=ema_model,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,

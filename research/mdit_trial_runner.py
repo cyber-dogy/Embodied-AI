@@ -48,6 +48,7 @@ class MDITTrialRequest:
     show_progress: bool = True
     cleanup_failed: bool = True
     audit_timeout_sec: int = 1800
+    prefer_ema: bool = True
     collapse_thresholds: dict[int, float] | None = None
     collapse_drop_tolerance: float = DEFAULT_DROP_TOLERANCE
 
@@ -245,6 +246,7 @@ def _run_checkpoint_audit(
     show_progress: bool,
     timeout_sec: int,
     include_special: bool,
+    prefer_ema: bool = True,
 ) -> Path:
     results_json = run_dir / "audit_raw_results.json"
     plot_path = run_dir / "audit_success_rate.png"
@@ -270,6 +272,7 @@ def _run_checkpoint_audit(
         "--include-special" if include_special else "--no-include-special",
         "--headless" if headless else "--no-headless",
         "--show-progress" if show_progress else "--no-show-progress",
+        "--prefer-ema" if prefer_ema else "--no-prefer-ema",
     ]
     if device is not None:
         cmd.extend(["--device", str(device)])
@@ -678,6 +681,7 @@ def finalize_mdit_autoresearch_trial(
         show_progress=bool(request.show_progress),
         timeout_sec=timeout_sec,
         include_special=False,
+        prefer_ema=bool(request.prefer_ema),
     )
     records = [_enrich_record_with_checkpoint_stats(row) for row in _load_eval_records(audit_json)]
     periodic_records = _filter_periodic_records(records)

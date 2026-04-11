@@ -19,7 +19,7 @@
       "backbone": "vit_base_patch16_clip_224.openai",
       "use_separate_encoder_per_camera": false,
       "lr_multiplier": 0.1,
-      "resize_shape": [224, 224],
+      "resize_shape": [240, 240],
       "crop_shape": [224, 224],
       "crop_is_random": true,
       "train_mode": "frozen"
@@ -40,8 +40,8 @@
   },
   "objective": {
     "objective_name": "flow_matching",
-    "sigma_min": 0.0,
-    "num_integration_steps": 50,
+    "sigma_min": 0.001,
+    "num_integration_steps": 25,
     "integration_method": "euler",
     "timestep_sampling": {
       "strategy_name": "beta",
@@ -57,15 +57,17 @@
   "train_epochs": 500,
   "grad_clip_norm": 1.0,
   "use_amp": true,
+  "ema_enable": true,
+  "ema_decay": 0.9993,
   "checkpoint_every_epochs": 100,
   "val_every_epochs": 1,
   "print_every": 50,
   "lr_scheduler_name": "cosine",
   "lr_warmup_steps": 500,
   "optimizer_lr": 2.0e-5,
-  "optimizer_betas": [0.95, 0.999],
+  "optimizer_betas": [0.9, 0.999],
   "optimizer_eps": 1.0e-8,
-  "optimizer_weight_decay": 0.0,
+  "optimizer_weight_decay": 1.0e-4,
   "success_max_steps": 200,
   "eval_step_heartbeat_every": 50
 }
