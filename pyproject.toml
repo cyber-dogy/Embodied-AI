@@ -31,6 +31,10 @@ mdit = [
   "timm==0.9.16",
   "transformers==4.46.3",
 ]
+lelan = [
+  "efficientnet-pytorch==0.7.1",
+  "transformers==4.46.3",
+]
 
 [project.scripts]
 autodl-train-pdit = "pdit.cli.train:main"
@@ -43,6 +47,10 @@ autodl-eval-mdit-checkpoint = "mdit.cli.eval_checkpoint:main"
 autodl-eval-mdit-all-checkpoints = "mdit.cli.eval_all_checkpoints:main"
 autodl-record-mdit-rollout-videos = "mdit.cli.record_rollout_videos:main"
 autodl-run-mdit-autoresearch-trial = "mdit.cli.run_autoresearch_trial:main"
+autodl-train-lelan = "lelan.cli.train:main"
+autodl-eval-lelan-checkpoint = "lelan.cli.eval_checkpoint:main"
+autodl-eval-lelan-all-checkpoints = "lelan.cli.eval_all_checkpoints:main"
+autodl-record-lelan-rollout-videos = "lelan.cli.record_rollout_videos:main"
 
 [tool.setuptools]
 [tool.setuptools.packages.find]
@@ -50,6 +58,7 @@ where = ["."]
 include = [
   "common*",
   "envs*",
+  "lelan*",
   "mdit*",
   "pdit*",
   "research*",

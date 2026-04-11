@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import sys
 from pathlib import Path
 
@@ -33,23 +34,24 @@ def _purge_foreign_local_modules(repo_root: Path) -> None:
         sys.modules.pop(name, None)
 
 
-def bootstrap_repo_root() -> Path:
-    repo_root = Path(__file__).resolve().parents[1]
-    script_root = Path(__file__).resolve().parent
-    filtered = []
+def _prioritize_repo_root(repo_root: Path) -> None:
+    filtered: list[str] = []
     for entry in sys.path:
         try:
             resolved = Path(entry or ".").resolve()
-            if resolved == script_root:
-                continue
-            if resolved == repo_root:
-                continue
         except Exception:
-            pass
+            filtered.append(entry)
+            continue
+        if resolved == repo_root:
+            continue
         filtered.append(entry)
     sys.path[:] = [str(repo_root)] + filtered
+
+
+def bootstrap_local_cli_imports() -> Path:
+    repo_root = Path(__file__).resolve().parents[2]
+    _prioritize_repo_root(repo_root)
     _purge_foreign_local_modules(repo_root)
+    for name in ("common", "envs", "lelan"):
+        importlib.import_module(name)
     return repo_root
-
-
-bootstrap_repo_root()
