@@ -40,6 +40,48 @@ def summarize_result_for_console(result: dict) -> dict:
     return slim
 
 
+def _normalize_error_label(error: str | None) -> str:
+    text = "" if error is None else str(error).strip()
+    if not text:
+        return "none"
+    lowered = text.lower()
+    if "v-rep side" in lowered or "simulator runtime error" in lowered:
+        return "simulator_runtime_error"
+    if "invalid predicted action" in lowered:
+        return "invalid_predicted_action"
+    if "recursion depth limit" in lowered:
+        return "planning_recursion_limit"
+    return text
+
+
+def build_episode_analysis(result: dict) -> dict:
+    episode_records = list(result.get("episode_records") or [])
+    success_records = [row for row in episode_records if bool(row.get("success"))]
+    failure_records = [row for row in episode_records if not bool(row.get("success"))]
+    error_buckets: dict[str, int] = {}
+    for row in failure_records:
+        label = _normalize_error_label(row.get("error"))
+        error_buckets[label] = error_buckets.get(label, 0) + 1
+
+    return {
+        "num_episodes": int(result.get("num_episodes", len(episode_records))),
+        "num_successes": len(success_records),
+        "num_failures": len(failure_records),
+        "success_rate": float(result.get("success_rate", 0.0)),
+        "mean_steps": float(result.get("mean_steps", 0.0)),
+        "success_episode_indices": [int(row.get("episode", -1)) for row in success_records],
+        "failure_episode_indices": [int(row.get("episode", -1)) for row in failure_records],
+        "failure_error_buckets": error_buckets,
+        "num_failures_without_error": sum(1 for row in failure_records if not row.get("error")),
+        "max_steps_observed": max((int(row.get("steps", 0)) for row in episode_records), default=0),
+        "min_steps_observed": min((int(row.get("steps", 0)) for row in episode_records), default=0),
+    }
+
+
+def build_episode_analysis_path(output_json_path: Path) -> Path:
+    return output_json_path.with_name(f"{output_json_path.stem}__analysis.json")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run faithful MDIT RLBench checkpoint evaluation in a standalone Python process."
@@ -170,11 +212,16 @@ def main() -> int:
     )
     output_json_path.parent.mkdir(parents=True, exist_ok=True)
     output_json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    analysis = build_episode_analysis(result)
+    analysis_path = build_episode_analysis_path(output_json_path)
+    analysis_path.write_text(json.dumps(analysis, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     console_summary = summarize_result_for_console(result)
+    console_summary["episode_analysis"] = analysis
     print("eval summary:")
     print(json.dumps(console_summary, indent=2, ensure_ascii=False))
     print(f"saved full result -> {output_json_path}")
+    print(f"saved episode analysis -> {analysis_path}")
     if bool(args.print_episode_records):
         print("episode_records:")
         print(json.dumps(result["episode_records"], indent=2, ensure_ascii=False))
