@@ -44,7 +44,7 @@ class VisionEncoderConfig:
     resize_shape: tuple[int, int] | None = (224, 224)
     crop_shape: tuple[int, int] | None = (224, 224)
     crop_is_random: bool = True
-    train_mode: str = "frozen"
+    train_mode: str = "all"
 
 
 @dataclass

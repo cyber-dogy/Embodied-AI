@@ -10,7 +10,7 @@ import torch
 import _bootstrap  # noqa: F401
 from mdit.config import MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
-from mdit.constants import OBS_IMAGES, OBS_STATE, TASK
+from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
 from mdit.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
 from research.mdit_trial_runner import _materialize_best_success_checkpoint, _select_best_success_record
 
@@ -87,6 +87,50 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "lightweight MDIT checkpoint"):
                 load_resume_state(cfg, model, optimizer, scheduler, scaler)
 
+    def test_full_checkpoint_resume_restores_wandb_run_id_and_histories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg = MDITExperimentConfig(
+                ckpt_root=Path(tmp_dir),
+                run_name="full_resume_restores_state",
+                resume_from_latest=True,
+            )
+            model = torch.nn.Linear(4, 2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+            scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda _: 1.0)
+            scaler = torch.cuda.amp.GradScaler(enabled=False)
+            save_checkpoint(
+                cfg.latest_ckpt_path,
+                cfg=cfg,
+                model=model,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                scaler=scaler,
+                dataset_stats={"action": {"min": [0.0], "max": [1.0]}},
+                epoch=4,
+                global_step=11,
+                best_metric=0.2,
+                best_epoch=3,
+                best_success_rate=0.35,
+                best_success_epoch=4,
+                train_loss_history=[1.0, 0.5, 0.25],
+                valid_loss_history=[0.8, 0.4, 0.3],
+                epoch_summaries=[{"epoch": 4, "train": {"loss_total": 0.25}}],
+                checkpoint_payload_mode="full",
+                wandb_run_id="wandb-resume-id",
+            )
+
+            restored = load_resume_state(cfg, model, optimizer, scheduler, scaler)
+
+            self.assertTrue(restored["resumed"])
+            self.assertEqual(restored["start_epoch"], 5)
+            self.assertEqual(restored["global_step"], 11)
+            self.assertEqual(restored["best_metric"], 0.2)
+            self.assertEqual(restored["best_success_rate"], 0.35)
+            self.assertEqual(restored["train_loss_history"], [1.0, 0.5, 0.25])
+            self.assertEqual(restored["valid_loss_history"], [0.8, 0.4, 0.3])
+            self.assertEqual(restored["epoch_summaries"], [{"epoch": 4, "train": {"loss_total": 0.25}}])
+            self.assertEqual(restored["wandb_run_id"], "wandb-resume-id")
+
     def test_predict_action_selects_configured_camera_subset(self) -> None:
         policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
         policy.config = MDITExperimentConfig(camera_names=("front", "wrist", "overhead"))
@@ -118,6 +162,70 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         # RLBench camera order is right, left, overhead, front, wrist.
         selected_values = [float(images[0, idx, 0, 0, 0]) for idx in range(3)]
         self.assertEqual(selected_values, [40.0, 50.0, 30.0])
+
+    def test_generate_action_chunk_uses_first_command_step_when_n_action_steps_is_one(self) -> None:
+        policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
+        policy.config = MDITExperimentConfig(n_obs_steps=3, n_action_steps=1)
+        policy.dataset_stats = {
+            OBS_STATE: {
+                "min": [0.0] * 10,
+                "max": [1.0] * 10,
+            }
+        }
+
+        class _DummyEncoder:
+            def encode(self, batch):
+                return torch.zeros(1, 16)
+
+        class _DummyObjective:
+            def conditional_sample(self, noise_predictor, batch_size, conditioning_vec):
+                del noise_predictor, batch_size, conditioning_vec
+                return torch.arange(32 * 10, dtype=torch.float32).reshape(1, 32, 10)
+
+        policy.observation_encoder = _DummyEncoder()
+        policy.objective = _DummyObjective()
+        policy.noise_predictor = object()
+
+        chunk = policy._generate_action_chunk(
+            {
+                OBS_STATE: torch.zeros(1, 3, 10),
+                OBS_IMAGES: torch.zeros(1, 3, 5, 3, 4, 4),
+                TASK: ["demo"],
+            }
+        )
+
+        self.assertEqual(tuple(chunk.shape), (1, 1, 10))
+        self.assertTrue(torch.equal(chunk[0, 0], torch.arange(20, 30, dtype=torch.float32)))
+
+    def test_select_action_replans_each_step_when_n_action_steps_is_one(self) -> None:
+        policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
+        policy.config = MDITExperimentConfig(n_obs_steps=3, n_action_steps=1)
+        policy.reset()
+        call_values: list[int] = []
+
+        def _predict_action_chunk(batch):
+            del batch
+            next_value = len(call_values) + 1
+            call_values.append(next_value)
+            return torch.full((1, 1, 10), float(next_value))
+
+        policy.predict_action_chunk = _predict_action_chunk
+
+        batch = {
+            OBS_STATE: torch.zeros(1, 10),
+            OBS_IMAGES: torch.zeros(1, 5, 3, 4, 4),
+            TASK: ["demo"],
+        }
+
+        first = policy.select_action(batch)
+        second = policy.select_action(batch)
+
+        self.assertEqual(call_values, [1, 2])
+        self.assertEqual(tuple(first.shape), (1, 10))
+        self.assertEqual(tuple(second.shape), (1, 10))
+        self.assertTrue(torch.all(first == 1.0))
+        self.assertTrue(torch.all(second == 2.0))
+        self.assertEqual(len(policy._queues[ACTION]), 0)
 
     def test_select_best_success_prefers_periodic_checkpoint_on_ties(self) -> None:
         periodic = {

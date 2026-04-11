@@ -64,7 +64,7 @@ class CLIPEncoder(nn.Module, BaseVisionEncoder):
             num_classes=0,
         )
         self.embed_dim = int(self.model.embed_dim)
-        self._configure_train_mode(str(getattr(config, "train_mode", "frozen")).lower())
+        self._configure_train_mode(str(getattr(config, "train_mode", "all")).lower())
 
     def _configure_train_mode(self, train_mode: str) -> None:
         for param in self.model.parameters():
