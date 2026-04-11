@@ -95,6 +95,7 @@ def run_success_rate_eval(
         vis=False,
         obs_mode="rgb",
         responsive_ui=True,
+        disable_task_validation=True,
     )
     model.eval()
     records: list[dict[str, Any]] = []

@@ -6,7 +6,10 @@ bootstrap_local_cli_imports()
 
 import argparse
 import json
+import os
 from pathlib import Path
+import shutil
+import sys
 import time
 
 import torch
@@ -84,8 +87,35 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _should_reexec_under_xvfb(args: argparse.Namespace) -> bool:
+    if not bool(args.headless):
+        return False
+    if bool(os.environ.get("DISPLAY")):
+        return False
+    if os.environ.get("MDIT_XVFB_ACTIVE") == "1":
+        return False
+    return shutil.which("xvfb-run") is not None
+
+
+def _reexec_under_xvfb() -> None:
+    cmd = [
+        "xvfb-run",
+        "-a",
+        "-s",
+        "-screen 0 1024x768x24",
+        "env",
+        "QT_QPA_PLATFORM=xcb",
+        "MDIT_XVFB_ACTIVE=1",
+        sys.executable,
+        *sys.argv,
+    ]
+    raise SystemExit(os.spawnvp(os.P_WAIT, "xvfb-run", cmd))
+
+
 def main() -> int:
     args = parse_args()
+    if _should_reexec_under_xvfb(args):
+        _reexec_under_xvfb()
     from mdit.train.eval import load_model_for_eval, run_success_rate_eval
 
     ckpt_path = args.ckpt_path.expanduser().resolve()

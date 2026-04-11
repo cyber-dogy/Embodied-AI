@@ -880,6 +880,7 @@ def run_mdit_attached_watch(
         audited_keys = {
             (int(row.get("epoch") or 0), int(row.get("episodes") or 0), str(row.get("kind") or "periodic"))
             for row in run_audits
+            if str(row.get("status")) == "ok"
         }
         final_audited = False
         switch_triggered = False

@@ -1,4 +1,5 @@
 import os
+import types
 import sys
 import time
 from functools import partial
@@ -54,12 +55,14 @@ class RLBenchEnv(BaseEnv):
         obs_mode: str = "pcd",
         responsive_ui: bool = True,
         log_invalid_action_errors: bool = False,
+        disable_task_validation: bool = False,
     ):
         assert obs_mode in ["pcd", "rgb"], "Invalid obs_mode"
         self.task_name = task_name
         self.obs_mode = obs_mode
         self.responsive_ui = responsive_ui
         self.log_invalid_action_errors = log_invalid_action_errors
+        self.disable_task_validation = bool(disable_task_validation)
         self._prepare_coppeliasim_env(headless=headless)
         # image_size=(128, 128)
         self.voxel_size = voxel_size
@@ -69,7 +72,7 @@ class RLBenchEnv(BaseEnv):
             rgb=True,
             depth=False,
             mask=False,
-            point_cloud=True,
+            point_cloud=self.obs_mode == "pcd",
             image_size=(128, 128),
             render_mode=RenderMode.OPENGL,
         )
@@ -93,6 +96,7 @@ class RLBenchEnv(BaseEnv):
         )
         self._launch_environment(headless=headless)
         self.task = self.env.get_task(name_to_task_class(task_name))
+        self._configure_task_runtime()
         self.robot_position = self.env._robot.arm.get_position()
         self.ws_aabb = o3d.geometry.AxisAlignedBoundingBox(
             min_bound=(self.robot_position[0] + 0.1, -0.65, self.robot_position[2] - 0.05),
@@ -217,6 +221,18 @@ class RLBenchEnv(BaseEnv):
             )
 
         self.env._action_mode.arm_action_mode.set_control_mode(self.env._robot)
+
+    def _configure_task_runtime(self) -> None:
+        if not self.disable_task_validation:
+            return
+        task_impl = getattr(self.task, "_task", None)
+        if task_impl is None:
+            return
+
+        def _skip_validate(*_args, **_kwargs):
+            return None
+
+        task_impl.validate = types.MethodType(_skip_validate, task_impl)
 
     def reset(self):
         descriptions, _ = self.task.reset()
