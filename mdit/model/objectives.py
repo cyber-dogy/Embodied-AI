@@ -44,7 +44,9 @@ class BaseObjective(ABC):
         self.horizon = horizon
 
     @abstractmethod
-    def compute_loss(self, model: nn.Module, batch: dict[str, Tensor], conditioning_vec: Tensor) -> Tensor:
+    def compute_loss(
+        self, model: nn.Module, batch: dict[str, Tensor], conditioning_vec: Tensor
+    ) -> tuple[Tensor, dict[str, Tensor]]:
         """Compute training loss for the objective.
 
         Args:
@@ -53,7 +55,7 @@ class BaseObjective(ABC):
             conditioning_vec: Encoded observation features for conditioning
 
         Returns:
-            Scalar loss tensor
+            Tuple of (scalar loss, dict with component losses: loss_xyz, loss_rot6d, loss_grip)
         """
         pass
 
@@ -107,7 +109,9 @@ class DiffusionObjective(BaseObjective):
             else self.noise_scheduler.config.num_train_timesteps
         )
 
-    def compute_loss(self, model: nn.Module, batch: dict[str, Tensor], conditioning_vec: Tensor) -> Tensor:
+    def compute_loss(
+        self, model: nn.Module, batch: dict[str, Tensor], conditioning_vec: Tensor
+    ) -> tuple[Tensor, dict[str, Tensor]]:
         clean_actions = batch["action"]
         noise = torch.randn_like(clean_actions)
         timesteps = torch.randint(
@@ -134,7 +138,12 @@ class DiffusionObjective(BaseObjective):
             valid_actions = ~batch["action_is_pad"]  # (B, T)
             loss = loss * valid_actions.unsqueeze(-1)
 
-        return loss.mean()
+        loss_dict = {
+            "loss_xyz": loss[..., :3].mean(),
+            "loss_rot6d": loss[..., 3:9].mean(),
+            "loss_grip": loss[..., 9:].mean(),
+        }
+        return loss.mean(), loss_dict
 
     def conditional_sample(self, model: nn.Module, batch_size: int, conditioning_vec: Tensor) -> Tensor:
         device = next(model.parameters()).device
@@ -188,7 +197,9 @@ class FlowMatchingObjective(BaseObjective):
         else:
             raise ValueError(f"Unknown timestep strategy: {self.config.timestep_sampling.strategy_name}")
 
-    def compute_loss(self, model: nn.Module, batch: dict[str, Tensor], conditioning_vec: Tensor) -> Tensor:
+    def compute_loss(
+        self, model: nn.Module, batch: dict[str, Tensor], conditioning_vec: Tensor
+    ) -> tuple[Tensor, dict[str, Tensor]]:
         """Compute flow matching training loss.
 
         Trains the model to predict the velocity field along linear interpolation paths.
@@ -212,7 +223,12 @@ class FlowMatchingObjective(BaseObjective):
             valid_mask = ~batch["action_is_pad"]  # (B, T)
             loss = loss * valid_mask.unsqueeze(-1)  # (B, T, D)
 
-        return loss.mean()
+        loss_dict = {
+            "loss_xyz": loss[..., :3].mean(),
+            "loss_rot6d": loss[..., 3:9].mean(),
+            "loss_grip": loss[..., 9:].mean(),
+        }
+        return loss.mean(), loss_dict
 
     def conditional_sample(self, model: nn.Module, batch_size: int, conditioning_vec: Tensor) -> Tensor:
         """Generate actions by integrating the learned velocity field via ODE.

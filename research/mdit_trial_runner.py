@@ -178,12 +178,18 @@ def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
         cfg.ckpt_root = request.ckpt_root.expanduser().resolve()
     if request.device is not None:
         cfg.device = str(request.device)
-    cfg.resume_from_latest = False
     cfg.train_epochs = int(request.stage_epochs)
     cfg.checkpoint_every_epochs = int(request.checkpoint_every)
-    cfg.save_latest_ckpt = False
-    cfg.save_best_valid_ckpt = False
-    cfg.checkpoint_payload_mode = "lightweight"
+    # Only apply defaults if not already set via config overrides
+    overrides = request.config_overrides or {}
+    if "resume_from_latest" not in overrides:
+        cfg.resume_from_latest = False
+    if "save_latest_ckpt" not in overrides:
+        cfg.save_latest_ckpt = False
+    if "save_best_valid_ckpt" not in overrides:
+        cfg.save_best_valid_ckpt = False
+    if "checkpoint_payload_mode" not in overrides:
+        cfg.checkpoint_payload_mode = "lightweight"
     cfg.audit_include_special_ckpts = False
     cfg.delete_screening_ckpts_after_audit = int(request.stage_epochs) < 500
     if request.run_name:
@@ -508,6 +514,10 @@ def _build_train_keep_paths(run_dir: Path, cfg: MDITExperimentConfig) -> list[Pa
         _trial_request_path(run_dir),
         *_collect_periodic_ckpts(run_dir),
     ]
+    if cfg.save_latest_ckpt:
+        keep_paths.append(cfg.latest_ckpt_path)
+    if cfg.save_best_valid_ckpt:
+        keep_paths.append(cfg.best_ckpt_path)
     return [path for path in keep_paths if path.exists()]
 
 
@@ -571,7 +581,8 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
     run_dir = cfg.ckpt_dir.resolve()
 
     try:
-        _clean_existing_run_dir(run_dir, ckpt_root)
+        if not cfg.resume_from_latest:
+            _clean_existing_run_dir(run_dir, ckpt_root)
         summary = train_experiment(cfg)
         _write_trial_request(run_dir, resolved_request)
         keep_paths = _build_train_keep_paths(run_dir, cfg)

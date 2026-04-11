@@ -20,7 +20,7 @@ from .builders import (
 )
 from .checkpoints import load_resume_state, save_checkpoint
 from .checkpoints import finish_wandb_run, init_wandb_run
-from .eval import evaluate_model_on_loader, make_progress_iter, summarize_for_json, write_summary_json
+from .eval import evaluate_model_on_loader, compute_sample_metric, make_progress_iter, summarize_for_json, write_summary_json
 
 
 def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
@@ -56,6 +56,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
     start_epoch = int(resume_state["start_epoch"])
     run_started_at = time.perf_counter()
 
+    sample_batch_cpu = next(iter(dataloader_train))
+
     try:
         for epoch in range(start_epoch, cfg.train_epochs):
             model.train()
@@ -70,7 +72,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
             for batch_idx, batch_cpu in train_iter:
                 batch = move_batch_to_device(batch_cpu)
                 with get_autocast_context(cfg.use_amp):
-                    loss, _ = model(batch)
+                    loss, loss_dict = model(batch)
                     scaled_loss = loss / max(1, cfg.grad_accum_steps)
                 scaler.scale(scaled_loss).backward()
 
@@ -92,14 +94,15 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 if hasattr(train_iter, "set_postfix"):
                     train_iter.set_postfix(loss=f"{raw_loss:.4f}", lr=f"{scheduler.get_last_lr()[0]:.2e}")
                 if wandb_run is not None and (batch_idx % max(1, cfg.print_every) == 0):
-                    wandb_run.log(
-                        {
-                            "train/loss_total": raw_loss,
-                            "train/lr": float(scheduler.get_last_lr()[0]),
-                            "epoch": epoch,
-                        },
-                        step=global_step,
-                    )
+                    wandb_payload = {
+                        "train/loss_total": raw_loss,
+                        "train/lr": float(scheduler.get_last_lr()[0]),
+                        "epoch": epoch,
+                    }
+                    if loss_dict is not None:
+                        for key, value in loss_dict.items():
+                            wandb_payload[f"train/{key}"] = float(value.detach().cpu())
+                    wandb_run.log(wandb_payload, step=global_step)
 
             train_summary = {
                 "loss_total": float(np.mean(epoch_losses)) if epoch_losses else float("nan"),
@@ -113,11 +116,20 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 valid_summary = evaluate_model_on_loader(model, dataloader_valid, cfg)
             valid_loss_history.append(None if valid_summary is None else valid_summary["loss_total"])
 
+            sample_summary = None
+            if valid_summary is not None:
+                try:
+                    sample_summary = {
+                        "train_action_mse_error": compute_sample_metric(model, sample_batch_cpu, cfg),
+                    }
+                except Exception:
+                    pass
+
             epoch_row = {
                 "epoch": int(epoch),
                 "train": train_summary,
                 "valid": valid_summary,
-                "sample": None,
+                "sample": sample_summary,
             }
             epoch_summaries.append(epoch_row)
 
@@ -203,6 +215,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 if valid_summary is not None:
                     for key, value in valid_summary.items():
                         payload[f"valid/{key}"] = value
+                if sample_summary is not None:
+                    payload.update({f"sample/{key}": value for key, value in sample_summary.items()})
                 wandb_run.log(payload, step=global_step)
                 wandb_run.summary["best_metric"] = best_metric
                 wandb_run.summary["best_epoch"] = best_epoch

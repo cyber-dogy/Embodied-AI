@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 import torch
+import torch.nn.functional as F  # noqa: N812
 from torch.utils.data import DataLoader
 
 from common.runtime import set_device
@@ -40,8 +41,12 @@ def evaluate_model_on_loader(
                 break
             batch = move_batch_to_device(batch_cpu)
             with get_autocast_context(cfg.use_amp):
-                loss, _ = model(batch)
-            metrics_list.append({"loss_total": float(loss.detach().cpu())})
+                loss, loss_dict = model(batch)
+            row = {"loss_total": float(loss.detach().cpu())}
+            if loss_dict is not None:
+                for key, value in loss_dict.items():
+                    row[key] = float(value.detach().cpu())
+            metrics_list.append(row)
     if not metrics_list:
         return None
     summary = summarize_metrics(metrics_list)
@@ -52,6 +57,20 @@ def evaluate_model_on_loader(
 def make_progress_iter(iterable, total=None, desc=None, enable=True):
     if enable and tqdm is not None:
         return tqdm(iterable, total=total, desc=desc, leave=False)
+    return iterable
+
+
+def compute_sample_metric(
+    model: MultiTaskDiTPolicy,
+    batch_cpu: dict[str, Any],
+    cfg: MDITExperimentConfig,
+) -> float:
+    batch = move_batch_to_device(batch_cpu)
+    model.eval()
+    with torch.inference_mode(), get_autocast_context(cfg.use_amp):
+        pred_actions = model._generate_action_chunk(batch)
+    target_actions = batch["action"][:, model.config.n_obs_steps - 1 : model.config.n_obs_steps - 1 + model.config.n_action_steps]
+    return float(F.mse_loss(pred_actions, target_actions).detach().cpu())
     return iterable
 
 

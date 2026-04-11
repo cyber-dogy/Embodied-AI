@@ -118,11 +118,11 @@ class MultiTaskDiTPolicy(nn.Module):
         )
         return normalized
 
-    def forward(self, batch: dict[str, Tensor | list[str]]) -> tuple[Tensor, dict[str, Tensor] | None]:
+    def forward(self, batch: dict[str, Tensor | list[str]]) -> tuple[Tensor, dict[str, Tensor]]:
         normalized_batch = self._normalize_batch(batch)
         conditioning_vec = self.observation_encoder.encode(normalized_batch)
-        loss = self.objective.compute_loss(self.noise_predictor, normalized_batch, conditioning_vec)
-        return loss, None
+        loss, loss_dict = self.objective.compute_loss(self.noise_predictor, normalized_batch, conditioning_vec)
+        return loss, loss_dict
 
     def _generate_action_chunk(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
         batch_size = int(batch[OBS_STATE].shape[0])
