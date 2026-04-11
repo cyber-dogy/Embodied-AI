@@ -135,7 +135,11 @@ class RLBenchEnv(BaseEnv):
         # here as well so GUI mode does not depend on external shell state.
         os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", root)
 
-        if not headless:
+        if headless:
+            # The old Qt runtime bundled with CoppeliaSim 4.1 can still try to
+            # resolve the X11 backend unless we pin an offscreen platform.
+            os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+        else:
             # Force the native X11 backend for the old bundled Qt runtime.
             os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
 

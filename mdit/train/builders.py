@@ -23,19 +23,24 @@ def build_datasets(cfg: MDITExperimentConfig):
 
 def build_dataloaders(cfg: MDITExperimentConfig):
     dataset_train, dataset_valid = build_datasets(cfg)
+    use_cuda_loader_flags = str(cfg.device).startswith("cuda")
+    loader_kwargs = {
+        "batch_size": cfg.batch_size,
+        "num_workers": cfg.num_workers,
+        "pin_memory": use_cuda_loader_flags,
+        "persistent_workers": bool(cfg.num_workers > 0),
+    }
+    if cfg.num_workers > 0:
+        loader_kwargs["prefetch_factor"] = 2
     train_loader = DataLoader(
         dataset_train,
         shuffle=True,
-        batch_size=cfg.batch_size,
-        num_workers=cfg.num_workers,
-        persistent_workers=bool(cfg.num_workers > 0),
+        **loader_kwargs,
     )
     valid_loader = DataLoader(
         dataset_valid,
         shuffle=False,
-        batch_size=cfg.batch_size,
-        num_workers=cfg.num_workers,
-        persistent_workers=bool(cfg.num_workers > 0),
+        **loader_kwargs,
     )
     return dataset_train, dataset_valid, train_loader, valid_loader
 
@@ -99,4 +104,4 @@ def build_grad_scaler(enabled: bool = False):
 
 
 def move_batch_to_device(batch: dict[str, Any]) -> dict[str, Any]:
-    return move_to_device(batch, get_device())
+    return move_to_device(batch, get_device(), non_blocking=True)

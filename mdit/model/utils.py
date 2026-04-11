@@ -67,14 +67,24 @@ def unnormalize_tensor(
     raise ValueError(f"Unsupported normalization mode: {mode}")
 
 
-def move_to_device(data: Any, device: torch.device | str) -> Any:
+def move_to_device(
+    data: Any,
+    device: torch.device | str,
+    *,
+    non_blocking: bool | None = None,
+) -> Any:
+    if non_blocking is None:
+        resolved = torch.device(device) if not isinstance(device, torch.device) else device
+        non_blocking = resolved.type == "cuda"
     if torch.is_tensor(data):
-        return data.to(device)
+        return data.to(device, non_blocking=bool(non_blocking))
     if isinstance(data, dict):
-        return {key: move_to_device(value, device) for key, value in data.items()}
+        return {
+            key: move_to_device(value, device, non_blocking=non_blocking)
+            for key, value in data.items()
+        }
     if isinstance(data, list):
-        return [move_to_device(item, device) for item in data]
+        return [move_to_device(item, device, non_blocking=non_blocking) for item in data]
     if isinstance(data, tuple):
-        return tuple(move_to_device(item, device) for item in data)
+        return tuple(move_to_device(item, device, non_blocking=non_blocking) for item in data)
     return data
-
