@@ -81,30 +81,56 @@ pip install -r requirements_eval.txt
 
 推荐直接用两阶段工作流。
 
-```bash
-cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
-source /home/gjw/miniconda3/etc/profile.d/conda.sh
-conda activate pfp_env
+从0开始跑5RGB-MDIT（share+全量）：
 
-python scripts/run_autoresearch_trial.py \
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_flowmatch_pditfirst_500__$(date +%Y%m%d_%H%M%S)"
+
+python scripts/run_mdit_autoresearch_trial.py \
   --phase train-only \
-  --config configs/fm_autodl_lab.json \
-  --strategy fm \
+  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
   --stage-epochs 500 \
   --checkpoint-every 100 \
-  --experiment-name baseline_500_retrain \
-  --no-enable-wandb
+  --device cuda \
+  --experiment-name obs3_rgb5_flowmatch_pditfirst_500 \
+  --run-name "$RUN_NAME" \
+  --description "5RGB obs3 flow-matching mdit aligned to pdit first-action semantics" \
+  --set batch_size=16 \
+  --set num_workers=8 \
+  --set use_amp=true\
+  --set grad_accum_steps=1 \
+  --set resume_from_latest=false
+
 ```
 
-如果只是直接触发训练循环：
+断点续训：
 
 ```bash
-python scripts/train.py \
-  --config configs/fm_autodl_lab.json \
-  --strategy fm
-```
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
 
-## 离线 audit
+RUN_NAME="<SAME_RUN_NAME>"
+BATCH=<CALIBRATED_BATCH>
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --device cuda \
+  --experiment-name obs3_rgb5_flowmatch_pditfirst_500 \
+  --run-name "$RUN_NAME" \
+  --description "resume 5RGB obs3 flow-matching mdit aligned to pdit first-action semantics" \
+  --set batch_size=16 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set resume_from_latest=true
+```
 
 训练完成后，单独做成功率审计：
 
@@ -116,6 +142,140 @@ python scripts/run_autoresearch_trial.py \
   --audit-timeout-sec 10800 \
   --headless
 ```
+
+从0开始跑5RGB-MDIT（5RGB + 每相机独立 encoder + last_block 微调）：
+
+
+```
+#全量微调5独立Vit测试
+
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_last_500__$(date +%Y%m%d_%H%M%S)"
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_all_500 \
+  --run-name "$RUN_NAME" \
+  --description "5RGB separate encoders all finetune 500ep" \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode=\"all\" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set resume_from_latest=false
+
+
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_last_500 \
+  --run-name "$RUN_NAME" \
+  --description "resume 5RGB separate encoders all finetune" \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode=\"all\" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set resume_from_latest=true
+
+
+```
+
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_last_500__$(date +%Y%m%d_%H%M%S)"
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_last_500 \
+  --run-name "$RUN_NAME" \
+  --description "5RGB separate encoders last-block finetune 500ep" \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode=\"last_block\" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set resume_from_latest=false
+
+```
+
+断点续训：
+
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="<SAME_RUN_NAME>"
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_last_500 \
+  --run-name "$RUN_NAME" \
+  --description "resume 5RGB separate encoders last-block finetune" \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode=\"last_block\" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set resume_from_latest=true
+
+```
+
+训练完成后，单独做成功率审计：
+
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_DIR="ckpt/<RUN_NAME>"
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase audit-only \
+  --run-dir "$RUN_DIR" \
+  --eval-episodes 20 \
+  --audit-timeout-sec 7200 \
+  --headless \
+  --show-progress
+
+```
+
+## 换SSH设备跟踪训练进度
+
+```bash
+  watch -n 1 "nvidia-smi --query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu --format=csv,noheader,nounits | awk -F, '{printf \"GPU: %s | Total: %.2f GB | Used: %.2f GB | Free: %.2f GB | Util: %s%%\\n\", \$1, \$2/1024, \$3/1024, \$4/1024, \$5}'"
+```
+
+
+
+## 离线 audit
 
 说明：
 
