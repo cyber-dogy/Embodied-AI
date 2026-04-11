@@ -40,6 +40,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             valid_loss_history=[0.8, 0.4],
             epoch_summaries=[{"epoch": 3, "train": {"loss_total": 0.5}}],
             checkpoint_payload_mode="lightweight",
+            wandb_run_id=None,
         )
 
         self.assertEqual(payload["checkpoint_payload_mode"], "lightweight")
@@ -80,6 +81,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
                 valid_loss_history=[],
                 epoch_summaries=[],
                 checkpoint_payload_mode="lightweight",
+                wandb_run_id=None,
             )
 
             with self.assertRaisesRegex(ValueError, "lightweight MDIT checkpoint"):

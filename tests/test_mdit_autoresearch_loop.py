@@ -7,7 +7,11 @@ import unittest
 from unittest import mock
 
 import _bootstrap  # noqa: F401
-from research.mdit_autoresearch_loop import SearchSpec, run_mdit_autoresearch_loop
+from research.mdit_autoresearch_loop import (
+    SearchSpec,
+    _decide_watch_action,
+    run_mdit_autoresearch_loop,
+)
 
 
 class MDITAutoresearchLoopTest(unittest.TestCase):
@@ -180,6 +184,78 @@ class MDITAutoresearchLoopTest(unittest.TestCase):
             mocked_run.assert_not_called()
             self.assertEqual(len(result["candidates"]), 1)
             self.assertEqual(result["candidates"][0]["experiment_name"], "cam_all5_100")
+
+    def test_watch_switches_after_bad_epoch_100(self) -> None:
+        decision = _decide_watch_action(
+            records=[
+                {
+                    "run_name": "cam5",
+                    "epoch": 100,
+                    "episodes": 20,
+                    "kind": "periodic",
+                    "status": "ok",
+                    "success_rate": 0.20,
+                    "mean_steps": 180.0,
+                }
+            ],
+            run_name="cam5",
+            prior_state="continue",
+            max_steps=200,
+        )
+
+        self.assertEqual(decision["decision_state"], "switch")
+        self.assertIn("0.25", decision["decision_reason"])
+
+    def test_watch_investigates_midrange_epoch_100(self) -> None:
+        decision = _decide_watch_action(
+            records=[
+                {
+                    "run_name": "cam5",
+                    "epoch": 100,
+                    "episodes": 20,
+                    "kind": "periodic",
+                    "status": "ok",
+                    "success_rate": 0.32,
+                    "mean_steps": 170.0,
+                }
+            ],
+            run_name="cam5",
+            prior_state="continue",
+            max_steps=200,
+        )
+
+        self.assertEqual(decision["decision_state"], "investigate")
+        self.assertIn("epoch 100", decision["decision_reason"])
+
+    def test_watch_switches_after_second_success_drop(self) -> None:
+        decision = _decide_watch_action(
+            records=[
+                {
+                    "run_name": "cam5",
+                    "epoch": 100,
+                    "episodes": 20,
+                    "kind": "periodic",
+                    "status": "ok",
+                    "success_rate": 0.46,
+                    "mean_steps": 150.0,
+                },
+                {
+                    "run_name": "cam5",
+                    "epoch": 200,
+                    "episodes": 20,
+                    "kind": "periodic",
+                    "status": "ok",
+                    "success_rate": 0.38,
+                    "mean_steps": 170.0,
+                },
+            ],
+            run_name="cam5",
+            prior_state="investigate",
+            max_steps=200,
+        )
+
+        self.assertEqual(decision["decision_state"], "switch")
+        self.assertIn("dropped twice", decision["decision_reason"])
 
 
 if __name__ == "__main__":

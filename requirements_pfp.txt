@@ -1,0 +1,25 @@
+# PyTorch (CUDA 12.1)
+torch==2.1.2
+torchvision==0.16.2
+--index-url https://download.pytorch.org/whl/cu121
+
+# Core ML dependencies (versions from todolist.md)
+numpy==1.23.5
+scipy==1.10.1
+timm==0.9.16
+transformers==4.46.3
+diffusers==0.24.0
+huggingface_hub==0.25.2
+
+# Other dependencies from requirements.txt
+numba
+zarr
+numcodecs
+imagecodecs
+open3d
+matplotlib
+imageio
+spatialmath-python
+wandb
+tqdm
+ipykernel
