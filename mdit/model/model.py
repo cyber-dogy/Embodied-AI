@@ -10,11 +10,11 @@ from torch import Tensor
 
 from common.runtime import get_device
 from mdit.config import MDITExperimentConfig
-from mdit.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_STATE, TASK
+from mdit.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_PCD, OBS_STATE, TASK
 from .action_postprocess import postprocess_robot_state_command
 from .objectives import FlowMatchingObjective
 from .observation_encoder import ObservationEncoder
-from .transformer import DiffusionTransformer
+from .transformer import DiffusionTransformer, PDITDiffusionTransformer
 from .utils import NormalizationMode, normalize_tensor, populate_queues, unnormalize_tensor
 
 
@@ -26,8 +26,17 @@ class MultiTaskDiTPolicy(nn.Module):
         self.config = config
         self.dataset_stats = dataset_stats
         self.observation_encoder = ObservationEncoder(config)
-        conditioning_dim = self.observation_encoder.conditioning_dim
-        self.noise_predictor = DiffusionTransformer(config, conditioning_dim=conditioning_dim)
+        self._pcd_transformer_variant = str(getattr(config, "pcd_transformer_variant", "mdit")).lower()
+        if self._pcd_transformer_variant == "pdit":
+            if not bool(config.use_pcd):
+                raise ValueError("pcd_transformer_variant='pdit' requires use_pcd=true.")
+            self.noise_predictor = PDITDiffusionTransformer(
+                config,
+                cond_token_dim=int(self.observation_encoder.token_dim),
+            )
+        else:
+            conditioning_dim = self.observation_encoder.conditioning_dim
+            self.noise_predictor = DiffusionTransformer(config, conditioning_dim=conditioning_dim)
         self.objective = FlowMatchingObjective(
             config.objective,
             action_dim=int(config.action_dim),
@@ -50,6 +59,19 @@ class MultiTaskDiTPolicy(nn.Module):
             self._stat_tensors(OBS_STATE, state.device, state.dtype),
             self.config.normalization_mode,
         )
+
+    def _normalize_conditioning_state(self, state: Tensor) -> Tensor:
+        if not self.config.use_pcd:
+            return self.normalize_state(state)
+        normalized = state.clone()
+        norm_center = torch.as_tensor(
+            self.config.observation_encoder.pcd.norm_center,
+            device=state.device,
+            dtype=state.dtype,
+        )
+        normalized[..., :3] -= norm_center
+        normalized[..., 9] -= 0.5
+        return normalized
 
     def unnormalize_action(self, action: Tensor) -> Tensor:
         return unnormalize_tensor(
@@ -79,12 +101,19 @@ class MultiTaskDiTPolicy(nn.Module):
         return params
 
     def reset(self) -> None:
-        self._queues = {
-            OBS_STATE: deque(maxlen=self.config.n_obs_steps),
-            OBS_IMAGES: deque(maxlen=self.config.n_obs_steps),
-            TASK: deque(maxlen=self.config.n_obs_steps),
-            ACTION: deque(maxlen=self.config.n_action_steps),
-        }
+        if self.config.use_pcd:
+            self._queues = {
+                OBS_STATE: deque(maxlen=self.config.n_obs_steps),
+                OBS_PCD: deque(maxlen=self.config.n_obs_steps),
+                ACTION: deque(maxlen=self.config.n_action_steps),
+            }
+        else:
+            self._queues = {
+                OBS_STATE: deque(maxlen=self.config.n_obs_steps),
+                OBS_IMAGES: deque(maxlen=self.config.n_obs_steps),
+                TASK: deque(maxlen=self.config.n_obs_steps),
+                ACTION: deque(maxlen=self.config.n_action_steps),
+            }
 
     def _select_runtime_cameras(self, images: torch.Tensor) -> torch.Tensor:
         if images.ndim != 4:
@@ -107,11 +136,7 @@ class MultiTaskDiTPolicy(nn.Module):
 
     def _normalize_batch(self, batch: dict[str, Tensor | list[str]]) -> dict[str, Tensor | list[str]]:
         normalized = dict(batch)
-        normalized[OBS_STATE] = normalize_tensor(
-            batch[OBS_STATE],
-            self._stat_tensors(OBS_STATE, batch[OBS_STATE].device, batch[OBS_STATE].dtype),
-            self.config.normalization_mode,
-        )
+        normalized[OBS_STATE] = self._normalize_conditioning_state(batch[OBS_STATE])
         normalized[ACTION] = normalize_tensor(
             batch[ACTION],
             self._stat_tensors(ACTION, batch[ACTION].device, batch[ACTION].dtype),
@@ -119,21 +144,22 @@ class MultiTaskDiTPolicy(nn.Module):
         )
         return normalized
 
+    def _encode_conditioning(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+        if self._pcd_transformer_variant == "pdit":
+            return self.observation_encoder.encode_tokens(batch)
+        return self.observation_encoder.encode(batch)
+
     def forward(self, batch: dict[str, Tensor | list[str]]) -> tuple[Tensor, dict[str, Tensor]]:
         normalized_batch = self._normalize_batch(batch)
-        conditioning_vec = self.observation_encoder.encode(normalized_batch)
+        conditioning_vec = self._encode_conditioning(normalized_batch)
         loss, loss_dict = self.objective.compute_loss(self.noise_predictor, normalized_batch, conditioning_vec)
         return loss, loss_dict
 
     def _generate_action_chunk(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
         batch_size = int(batch[OBS_STATE].shape[0])
         normalized_batch = dict(batch)
-        normalized_batch[OBS_STATE] = normalize_tensor(
-            batch[OBS_STATE],
-            self._stat_tensors(OBS_STATE, batch[OBS_STATE].device, batch[OBS_STATE].dtype),
-            self.config.normalization_mode,
-        )
-        conditioning_vec = self.observation_encoder.encode(normalized_batch)
+        normalized_batch[OBS_STATE] = self._normalize_conditioning_state(batch[OBS_STATE])
+        conditioning_vec = self._encode_conditioning(normalized_batch)
         actions = self.objective.conditional_sample(self.noise_predictor, batch_size, conditioning_vec)
         start_idx = self.config.n_obs_steps - 1
         end_idx = start_idx + self.config.n_action_steps
@@ -193,19 +219,34 @@ class MultiTaskDiTPolicy(nn.Module):
         task_text: str | None = None,
     ) -> np.ndarray:
         device = get_device()
-        images = torch.from_numpy(np.asarray(obs))
-        images = self._select_runtime_cameras(images)
-        if images.shape[-1] == 3:
-            images = images.permute(0, 3, 1, 2)
-        images = images.to(device=device, dtype=torch.float32).unsqueeze(0)
         state = torch.from_numpy(np.asarray(robot_state, dtype=np.float32)).to(device=device).unsqueeze(0)
-        action = self.select_action(
-            {
-                OBS_IMAGES: images,
-                OBS_STATE: state,
-                TASK: [task_text or self.config.task_name],
-            }
-        )
+        if self.config.use_pcd:
+            pcd = np.asarray(obs, dtype=np.float32)  # (P_all, C)
+            n_points = int(self.config.observation_encoder.pcd.n_points)
+            if pcd.shape[0] > n_points:
+                idx = np.random.choice(pcd.shape[0], n_points, replace=False)
+                pcd = pcd[idx]
+            # Shape: (1, P, C) — batch=1; queue stacks T_obs steps → (1, T_obs, P, C)
+            pcd_tensor = torch.from_numpy(pcd).to(device=device, dtype=torch.float32).unsqueeze(0)
+            action = self.select_action(
+                {
+                    OBS_PCD: pcd_tensor,
+                    OBS_STATE: state,
+                }
+            )
+        else:
+            images = torch.from_numpy(np.asarray(obs))
+            images = self._select_runtime_cameras(images)
+            if images.shape[-1] == 3:
+                images = images.permute(0, 3, 1, 2)
+            images = images.to(device=device, dtype=torch.float32).unsqueeze(0)
+            action = self.select_action(
+                {
+                    OBS_IMAGES: images,
+                    OBS_STATE: state,
+                    TASK: [task_text or self.config.task_name],
+                }
+            )
         action = self.unnormalize_action(action)
         action_np = action.squeeze(0).detach().cpu().numpy().astype(np.float32, copy=False)
         return postprocess_robot_state_command(

@@ -52,6 +52,13 @@ def parse_args() -> argparse.Namespace:
         metavar="KEY=VALUE",
         help="Override a config field using JSON-parsed VALUE, e.g. --set transformer.dropout=0.0.",
     )
+    parser.add_argument(
+        "--pcd-transformer-variant",
+        type=str,
+        choices=["mdit", "pdit"],
+        default=None,
+        help="When use_pcd=true, choose MDIT transformer or PDIT DiT backbone implementation.",
+    )
     return parser.parse_args()
 
 
@@ -105,7 +112,12 @@ def apply_train_overrides(cfg: MDITExperimentConfig, args: argparse.Namespace) -
         cfg.wandb_mode = str(args.wandb_mode)
     if args.resume is not None:
         cfg.resume_from_latest = bool(args.resume)
-    cfg = apply_config_overrides(cfg, _parse_config_overrides(args.config_overrides))
+    overrides = _parse_config_overrides(args.config_overrides)
+    if args.pcd_transformer_variant is not None:
+        if overrides is None:
+            overrides = {}
+        overrides["pcd_transformer_variant"] = str(args.pcd_transformer_variant)
+    cfg = apply_config_overrides(cfg, overrides)
     return cfg
 
 

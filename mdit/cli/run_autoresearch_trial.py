@@ -74,6 +74,13 @@ def parse_args() -> argparse.Namespace:
         metavar="KEY=VALUE",
         help="Override a config field using JSON-parsed VALUE, e.g. --set transformer.dropout=0.0.",
     )
+    parser.add_argument(
+        "--pcd-transformer-variant",
+        type=str,
+        choices=["mdit", "pdit"],
+        default=None,
+        help="When use_pcd=true, choose MDIT transformer or PDIT DiT backbone implementation.",
+    )
     return parser.parse_args()
 
 
@@ -111,11 +118,17 @@ def main() -> int:
     if args.phase == "audit-only" and args.run_dir is None:
         raise SystemExit("--run-dir is required for audit-only mode.")
 
+    config_overrides = _parse_config_overrides(args.config_overrides)
+    if args.pcd_transformer_variant is not None:
+        if config_overrides is None:
+            config_overrides = {}
+        config_overrides["pcd_transformer_variant"] = str(args.pcd_transformer_variant)
+
     request_kwargs = {
         "config_path": args.config.expanduser().resolve(),
         "experiment_name": args.experiment_name,
         "description": args.description,
-        "config_overrides": _parse_config_overrides(args.config_overrides),
+        "config_overrides": config_overrides,
     }
     optional_fields = {
         "stage_epochs": args.stage_epochs,

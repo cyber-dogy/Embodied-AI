@@ -236,6 +236,7 @@ class ObservationEncoder(nn.Module):
             self.text_dim = 0
             self.num_cameras = 0
             self.camera_names = []
+            self.token_dim = self.robot_state_dim + int(pcd_cfg.embed_dim)
         else:
             vision_config = config.observation_encoder.vision
             self.camera_names = list(config.camera_names)
@@ -270,6 +271,7 @@ class ObservationEncoder(nn.Module):
 
             text_model_name = str(config.observation_encoder.text.model)
             self.text_encoder = CLIPTextEncoder(model_name=text_model_name, projection_dim=self.text_dim)
+            self.token_dim = self.robot_state_dim + self.text_dim + self.visual_feature_dim * self.num_cameras
 
         self.conditioning_dim = self._compute_conditioning_dim()
 
@@ -301,12 +303,7 @@ class ObservationEncoder(nn.Module):
         return mean, std
 
     def _compute_conditioning_dim(self) -> int:
-        if self.use_pcd:
-            pcd_cfg = self.config.observation_encoder.pcd
-            per_step = self.robot_state_dim + int(pcd_cfg.embed_dim)
-            return per_step * int(self.config.n_obs_steps)
-        per_step_dim = self.robot_state_dim + self.text_dim + self.visual_feature_dim * self.num_cameras
-        return int(per_step_dim * int(self.config.n_obs_steps))
+        return int(self.token_dim * int(self.config.n_obs_steps))
 
     def _apply_preprocessing(self, images: Tensor) -> Tensor:
         images = images.to(dtype=torch.float32)
@@ -323,7 +320,7 @@ class ObservationEncoder(nn.Module):
         )
         return images
 
-    def encode(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+    def encode_tokens(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
         if self.use_pcd:
             pcd = batch[OBS_PCD]
             obs_state = batch[OBS_STATE]
@@ -332,7 +329,7 @@ class ObservationEncoder(nn.Module):
             pcd = pcd.clone()
             pcd[..., :3] -= norm_center
             obs_tokens = self.pcd_encoder(pcd, obs_state)  # (B, T_obs, embed+state)
-            return obs_tokens.flatten(start_dim=1)
+            return obs_tokens
 
         obs_state = batch[OBS_STATE]
         batch_size, n_obs_steps = obs_state.shape[:2]
@@ -372,5 +369,7 @@ class ObservationEncoder(nn.Module):
             text_features = text_features.unsqueeze(1).expand(-1, n_obs_steps, -1)
             conditioning_feats.append(text_features)
 
-        combined = torch.cat(conditioning_feats, dim=-1)
-        return combined.flatten(start_dim=1)
+        return torch.cat(conditioning_feats, dim=-1)
+
+    def encode(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+        return self.encode_tokens(batch).flatten(start_dim=1)

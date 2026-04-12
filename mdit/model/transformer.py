@@ -361,12 +361,7 @@ class DiffusionTransformer(nn.Module):
             nn.GELU(),
         )
 
-        # Project raw conditioning (can be very large, e.g. 6174 for RGB mode) down to
-        # hidden_size so that each adaLN_modulation layer sees a compact, fixed-dim signal.
-        # Without this, adaLN_modulation is Linear(6430, 3072) = 19.7M params/block and the
-        # timestep signal (256 dims) gets drowned out by obs features (6174 dims).
-        self.cond_proj = nn.Linear(conditioning_dim, self.hidden_size)
-        self.cond_dim = self.timestep_embed_dim + self.hidden_size
+        self.cond_dim = self.timestep_embed_dim + conditioning_dim
 
         # Project action dimensions to hidden size
         self.input_proj = nn.Linear(self.action_dim, self.hidden_size)
@@ -425,11 +420,7 @@ class DiffusionTransformer(nn.Module):
         _, seq_len, _ = x.shape
 
         timestep_features = self.time_mlp(timestep)  # (B, timestep_embed_dim)
-
-        # Compress raw conditioning to hidden_size before concatenating with timestep.
-        # Prevents obs features (can be 6000+ dims) from overwhelming the timestep signal.
-        projected_cond = self.cond_proj(conditioning_vec)  # (B, hidden_size)
-        cond_features = torch.cat([timestep_features, projected_cond], dim=-1)  # (B, cond_dim)
+        cond_features = torch.cat([timestep_features, conditioning_vec], dim=-1)  # (B, cond_dim)
 
         # Project action sequence to hidden dimension
         hidden_seq = self.input_proj(x)  # (B, T, hidden_size)
@@ -446,3 +437,38 @@ class DiffusionTransformer(nn.Module):
         output = self.output_proj(hidden_seq)  # (B, T, action_dim)
 
         return output
+
+
+class PDITDiffusionTransformer(nn.Module):
+    """Adapter that reuses PDIT's DiT trajectory backbone inside MDIT training/eval loops."""
+
+    def __init__(self, config, cond_token_dim: int):
+        super().__init__()
+        from pdit.model.backbones.dit import DiTTrajectoryBackbone
+
+        hidden_dim = int(config.transformer.hidden_dim)
+        pdit_cfg = config.pdit_backbone
+        self.backbone = DiTTrajectoryBackbone(
+            input_dim=int(config.action_dim),
+            output_dim=int(config.action_dim),
+            cond_dim=int(cond_token_dim),
+            horizon=int(config.horizon),
+            time_dim=int(config.transformer.diffusion_step_embed_dim),
+            hidden_dim=hidden_dim,
+            num_blocks=int(config.transformer.num_layers),
+            dropout=float(config.transformer.dropout),
+            dim_feedforward=int(pdit_cfg.dim_feedforward),
+            nhead=int(config.transformer.num_heads),
+            activation=str(pdit_cfg.activation),
+            debug_finiteness=bool(pdit_cfg.debug_finiteness),
+            final_layer_zero_init=bool(pdit_cfg.final_layer_zero_init),
+            decoder_condition_mode=str(pdit_cfg.decoder_condition_mode),
+        )
+
+    def forward(self, x: Tensor, timestep: Tensor, conditioning_vec: Tensor) -> Tensor:
+        if conditioning_vec.ndim != 3:
+            raise ValueError(
+                "PDITDiffusionTransformer expects conditioning tokens with shape (B, T_obs, D), "
+                f"got {tuple(conditioning_vec.shape)}."
+            )
+        return self.backbone(x, timestep, conditioning_vec)

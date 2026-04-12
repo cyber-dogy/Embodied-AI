@@ -66,6 +66,15 @@ class PcdEncoderConfig:
 
 
 @dataclass
+class PDITBackboneConfig:
+    dim_feedforward: int = 2048
+    activation: str = "gelu"
+    debug_finiteness: bool = True
+    final_layer_zero_init: bool = False
+    decoder_condition_mode: str = "mean_pool"
+
+
+@dataclass
 class ObservationEncoderConfig:
     vision: VisionEncoderConfig = field(default_factory=VisionEncoderConfig)
     text: TextEncoderConfig = field(default_factory=TextEncoderConfig)
@@ -90,9 +99,11 @@ class MDITExperimentConfig:
     action_dim: int = 10
     camera_names: tuple[str, ...] = ("front", "wrist", "overhead")
     use_pcd: bool = False
+    pcd_transformer_variant: str = "mdit"
     task_text_mode: str = "template"
     task_text_override: str | None = None
     observation_encoder: ObservationEncoderConfig = field(default_factory=ObservationEncoderConfig)
+    pdit_backbone: PDITBackboneConfig = field(default_factory=PDITBackboneConfig)
     transformer: TransformerConfig = field(default_factory=TransformerConfig)
     objective: FlowMatchingConfig = field(default_factory=FlowMatchingConfig)
     normalization_mode: NormalizationMode = NormalizationMode.MIN_MAX
@@ -184,6 +195,10 @@ class MDITExperimentConfig:
             raise ValueError("offline_eval_ckpt_every_epochs must be >= 0.")
         if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
             raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
+        if str(self.pcd_transformer_variant) not in {"mdit", "pdit"}:
+            raise ValueError("pcd_transformer_variant must be one of {'mdit', 'pdit'}.")
+        if str(self.pcd_transformer_variant) == "pdit" and not bool(self.use_pcd):
+            raise ValueError("pcd_transformer_variant='pdit' requires use_pcd=true.")
 
     @property
     def ckpt_dir(self) -> Path:

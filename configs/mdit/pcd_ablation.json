@@ -2,6 +2,7 @@
   "extends": "faithful_baseline.json",
   "run_name": "unplug_charger_mdit_pcd_ablation_v1",
   "use_pcd": true,
+  "pcd_transformer_variant": "mdit",
   "camera_names": [],
   "observation_encoder": {
     "pcd": {
@@ -15,6 +16,6 @@
   },
   "wandb_enable": true,
   "wandb_project": "autodl-unplug-charger-mdit",
-  "wandb_mode": "online",
+  "wandb_mode": "offline",
   "wandb_entity": null
 }

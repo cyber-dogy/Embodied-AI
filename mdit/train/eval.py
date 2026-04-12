@@ -42,31 +42,18 @@ def evaluate_model_on_loader(
 ) -> dict[str, float] | None:
     model.eval()
     metrics_list: list[dict[str, float]] = []
-    # Fix random state so noise/timestep sampling is identical every epoch.
-    # Without this, valid loss has high variance across epochs even on a converged model,
-    # making it an unreliable training signal.
-    cpu_rng_state = torch.get_rng_state()
-    cuda_rng_states = torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
-    torch.manual_seed(0)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(0)
-    try:
-        with torch.inference_mode():
-            for batch_idx, batch_cpu in enumerate(loader):
-                if max_batches is not None and batch_idx >= max_batches:
-                    break
-                batch = move_batch_to_device(batch_cpu)
-                with get_autocast_context(cfg.use_amp):
-                    loss, loss_dict = model(batch)
-                row = {"loss_total": float(loss.detach().cpu())}
-                if loss_dict is not None:
-                    for key, value in loss_dict.items():
-                        row[key] = float(value.detach().cpu())
-                metrics_list.append(row)
-    finally:
-        torch.set_rng_state(cpu_rng_state)
-        if cuda_rng_states is not None:
-            torch.cuda.set_rng_state_all(cuda_rng_states)
+    with torch.inference_mode():
+        for batch_idx, batch_cpu in enumerate(loader):
+            if max_batches is not None and batch_idx >= max_batches:
+                break
+            batch = move_batch_to_device(batch_cpu)
+            with get_autocast_context(cfg.use_amp):
+                loss, loss_dict = model(batch)
+            row = {"loss_total": float(loss.detach().cpu())}
+            if loss_dict is not None:
+                for key, value in loss_dict.items():
+                    row[key] = float(value.detach().cpu())
+            metrics_list.append(row)
     if not metrics_list:
         return None
     summary = summarize_metrics(metrics_list)
@@ -109,11 +96,11 @@ def run_success_rate_eval(
     env = RLBenchEnv(
         task_name=cfg.task_name,
         voxel_size=0.01,
-        n_points=2048,
-        use_pc_color=False,
+        n_points=int(cfg.observation_encoder.pcd.n_points) if cfg.use_pcd else 2048,
+        use_pc_color=bool(cfg.observation_encoder.pcd.use_color) if cfg.use_pcd else False,
         headless=headless,
         vis=False,
-        obs_mode="rgb",
+        obs_mode="pcd" if cfg.use_pcd else "rgb",
         responsive_ui=True,
         disable_task_validation=True,
     )
