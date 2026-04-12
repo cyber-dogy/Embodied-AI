@@ -1,13 +1,15 @@
 """Full observation encoder assembling FiLM + HistoryEncoder + Text + Transformer fusion.
 
 This is the core architectural distinction from MDIT:
-- MDIT: frozen CLIP ViT per camera -> flat concatenation across obs steps -> conditioning vec
-- LeLaN: FiLM(current frame, text) + EfficientNet(all frames) -> Transformer self-attention fusion
+- MDIT: separate CLIP ViT per camera -> flat concatenation across obs steps -> conditioning vec
+- LeLaN: FiLM(current frame, text) + EfficientNet(all frames) per camera (independent weights)
+         -> Transformer self-attention fusion
 
 Key differences:
 - Condition injection: FiLM (feature-level affine) vs MDIT's AdaLN-Zero (norm-level modulation)
 - Temporal fusion: Transformer encoder with sinusoidal PE vs MDIT's flat concatenation
 - Positional encoding: Sinusoidal (fixed) vs MDIT's learned absolute or RoPE
+- Vision encoders: Independent per camera (not shared), trainable at 0.1x LR
 """
 from __future__ import annotations
 
@@ -44,9 +46,12 @@ class SinusoidalPositionalEncoding(nn.Module):
 class ObservationEncoder(nn.Module):
     """Encodes multi-camera observations with FiLM + history + Transformer fusion.
 
-    Per camera:
-      1. Current frame (last obs step) -> FiLMNetwork(text) -> compress -> 1 token
-      2. All obs steps -> HistoryEncoder(EfficientNet) -> n_obs_steps tokens
+    Each camera gets its OWN independent FiLM encoder and history encoder
+    (not shared weights), matching mdit's use_separate_encoder_per_camera=True.
+
+    Per camera (independent weights):
+      1. Current frame (last obs step) -> FiLMNetwork_i(text) -> compress_i -> 1 token
+      2. All obs steps -> HistoryEncoder_i(EfficientNet) -> n_obs_steps tokens
       3. Total: (n_obs_steps + 1) tokens per camera
 
     All camera tokens -> Sinusoidal PE -> TransformerEncoder -> mean pool
@@ -64,33 +69,43 @@ class ObservationEncoder(nn.Module):
         fusion_dim = int(config.fusion_transformer.hidden_dim)
         self.fusion_dim = fusion_dim
 
-        # Text encoder (frozen CLIP)
+        # Text encoder (frozen CLIP) — shared across cameras (text is camera-independent)
         text_model = str(config.text_encoder.model)
         self.text_encoder = CLIPTextEncoder(model_name=text_model, projection_dim=fusion_dim)
         text_raw_dim = self.text_encoder.text_embed_dim
 
-        # FiLM vision encoder for current frame (conditioned on raw CLIP text features)
-        self.film_encoder = FiLMNetwork(
-            num_res_blocks=int(config.film.num_res_blocks),
-            num_channels=int(config.film.num_channels),
-            text_dim=text_raw_dim,
-            use_coord_conv=bool(config.film.use_coord_conv),
-        )
+        # Per-camera independent FiLM encoders (NOT shared)
+        self.film_encoders = nn.ModuleList()
+        self.film_compresses = nn.ModuleList()
+        for _ in range(self.num_cameras):
+            film_enc = FiLMNetwork(
+                num_res_blocks=int(config.film.num_res_blocks),
+                num_channels=int(config.film.num_channels),
+                text_dim=text_raw_dim,
+                use_coord_conv=bool(config.film.use_coord_conv),
+            )
+            self.film_encoders.append(film_enc)
 
-        # Compute FiLM output dim by running a dummy forward pass
+        # Compute FiLM output dim by running a dummy forward pass on the first encoder
         with torch.no_grad():
             dummy_img = torch.zeros(1, 3, 224, 224)
             dummy_text = torch.zeros(1, text_raw_dim)
-            film_out = self.film_encoder(dummy_img, dummy_text)
+            film_out = self.film_encoders[0](dummy_img, dummy_text)
             self._film_feature_dim = film_out.shape[1]
-        self.film_compress = nn.Linear(self._film_feature_dim, fusion_dim)
 
-        # History encoder (EfficientNet for all obs frames)
-        self.history_encoder = HistoryEncoder(
-            backbone=str(config.history_encoder.backbone),
-            encoding_dim=fusion_dim,
-            features_per_group=int(config.history_encoder.features_per_group),
-        )
+        for _ in range(self.num_cameras):
+            self.film_compresses.append(nn.Linear(self._film_feature_dim, fusion_dim))
+
+        # Per-camera independent history encoders (NOT shared)
+        self.history_encoders = nn.ModuleList()
+        for _ in range(self.num_cameras):
+            self.history_encoders.append(
+                HistoryEncoder(
+                    backbone=str(config.history_encoder.backbone),
+                    encoding_dim=fusion_dim,
+                    features_per_group=int(config.history_encoder.features_per_group),
+                )
+            )
 
         # Image preprocessing
         self._setup_preprocessing()
@@ -166,10 +181,10 @@ class ObservationEncoder(nn.Module):
         for cam_idx in range(self.num_cameras):
             cam_images = images[:, :, cam_idx]  # (B, n_obs, C, H, W)
 
-            # --- History tokens: all obs steps through EfficientNet ---
+            # --- History tokens: all obs steps through per-camera EfficientNet ---
             history_flat = einops.rearrange(cam_images, "b s c h w -> (b s) c h w")
             history_flat = self._preprocess_images(history_flat)
-            history_tokens = self.history_encoder(history_flat)
+            history_tokens = self.history_encoders[cam_idx](history_flat)
             history_tokens = einops.rearrange(
                 history_tokens, "(b s) d -> b s d", b=batch_size, s=self.n_obs_steps
             )
@@ -178,8 +193,8 @@ class ObservationEncoder(nn.Module):
             # --- FiLM token: current frame (last obs step) conditioned on text ---
             current_frame = cam_images[:, -1]  # (B, C, H, W)
             current_frame = self._preprocess_images(current_frame)
-            film_feat = self.film_encoder(current_frame, raw_text_feat)
-            film_token = self.film_compress(film_feat).unsqueeze(1)  # (B, 1, fusion_dim)
+            film_feat = self.film_encoders[cam_idx](current_frame, raw_text_feat)
+            film_token = self.film_compresses[cam_idx](film_feat).unsqueeze(1)  # (B, 1, fusion_dim)
             all_tokens.append(film_token)
 
         # (B, total_tokens, fusion_dim)

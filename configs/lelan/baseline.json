@@ -8,7 +8,7 @@
   "resume_from_latest": false,
   "n_obs_steps": 3,
   "horizon": 32,
-  "n_action_steps": 16,
+  "n_action_steps": 1,
   "robot_state_dim": 10,
   "action_dim": 10,
   "camera_names": ["front", "wrist", "overhead", "left_shoulder", "right_shoulder"],

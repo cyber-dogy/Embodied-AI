@@ -102,15 +102,16 @@ class LeLaNPolicy(nn.Module):
     def get_optim_params(self) -> list[dict[str, Any]]:
         """Separate parameters into groups with different learning rates.
 
-        FiLM encoder and history encoder get 0.1x LR (pretrained/sensitive).
-        Everything else (DiT, fusion transformer, projections) at full LR.
+        Per-camera vision encoders (FiLM, EfficientNet, compress projections)
+        get 0.1x LR. Everything else (DiT, fusion transformer, text projection)
+        at full LR.
         """
         non_vision_params = []
         vision_params = []
         for name, param in self.named_parameters():
             if not param.requires_grad:
                 continue
-            if "film_encoder" in name or "history_encoder" in name:
+            if "film_encoder" in name or "history_encoder" in name or "film_compress" in name:
                 vision_params.append(param)
             else:
                 non_vision_params.append(param)
