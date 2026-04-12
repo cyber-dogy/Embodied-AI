@@ -246,6 +246,49 @@ python scripts/eval_mdit_checkpoint.py \
 
 
 
+寝室本地测评：
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase audit-only \
+  --run-dir ckpt/$RUN_NAME \
+  --eval-episodes 20 \
+  --audit-timeout-sec 7200 \
+  --headless \
+  --show-progress
+
+开仿真界面，可视化看 1 个 episode：
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_all_500/epochs/epoch_0300.pt \
+  --episodes 1 \
+  --max-steps 200 \
+  --seed 1234 \
+  --no-headless \
+  --show-progress \
+  --device cuda
+
+单个 ckpt 做 100 个 episode 评估：
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_all_500/epochs/epoch_0300.pt \
+  --episodes 100 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --device cuda
+
 ```
 
 ```bash
