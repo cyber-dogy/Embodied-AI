@@ -10,6 +10,7 @@ imageio
 spatialmath-python
 diffusers==0.24.0
 huggingface_hub==0.25.2
+efficientnet-pytorch==0.7.1
 timm==0.9.16
 transformers==4.46.3
 wandb

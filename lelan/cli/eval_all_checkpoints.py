@@ -27,11 +27,43 @@ except ImportError:  # pragma: no cover
     tqdm = None
 
 
+def _parse_override_value(raw: str):
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        lowered = raw.strip().lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+        return raw
+
+
+def _parse_config_overrides(items: list[str] | None) -> dict[str, object] | None:
+    if not items:
+        return None
+    overrides: dict[str, object] = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"Invalid --set override {item!r}. Expected KEY=VALUE.")
+        key = key.strip()
+        if not key:
+            raise SystemExit(f"Invalid --set override {item!r}. Empty key.")
+        overrides[key] = _parse_override_value(value)
+    return overrides
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate all LeLaN checkpoints and reuse cached results when available."
     )
-    parser.add_argument("--ckpt-epochs-dir", type=Path, required=True, help="Directory containing epoch_XXXX.pt.")
+    parser.add_argument(
+        "--ckpt-epochs-dir",
+        type=Path,
+        required=True,
+        help="Directory containing epoch_XXXX.pt. Can point to either epochs/ or eval_ckpts/.",
+    )
     parser.add_argument("--results-json", type=Path, required=True, help="Where to save cached evaluation results.")
     parser.add_argument("--episodes", type=int, default=100, help="Episodes per checkpoint.")
     parser.add_argument("--seed", type=int, default=1234, help="Evaluation seed.")
@@ -63,6 +95,12 @@ def parse_args() -> argparse.Namespace:
         help="Ignore cache and reevaluate every checkpoint.",
     )
     parser.add_argument("--limit", type=int, default=None, help="Optional limit on checkpoints.")
+    parser.add_argument(
+        "--prefer-ema",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Load EMA weights when available (default: true).",
+    )
     parser.add_argument("--plot-path", type=Path, default=None, help="Optional success-rate plot output.")
     parser.add_argument(
         "--plot-figsize",
@@ -83,6 +121,14 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=1800,
         help="Timeout for each isolated checkpoint evaluation subprocess.",
+    )
+    parser.add_argument(
+        "--set",
+        dest="config_overrides",
+        action="append",
+        default=None,
+        metavar="KEY=VALUE",
+        help="Override checkpoint config fields for evaluation, e.g. --set n_action_steps=8.",
     )
     return parser.parse_args()
 
@@ -117,11 +163,19 @@ def discover_checkpoints(
     *,
     include_special: bool,
 ) -> list[dict[str, Any]]:
-    if not epochs_dir.exists():
-        raise FileNotFoundError(f"Checkpoint epochs dir does not exist: {epochs_dir}")
+    resolved_dir = epochs_dir
+    sibling_eval_dir = epochs_dir.parent / "eval_ckpts"
+    if not resolved_dir.exists():
+        if epochs_dir.name == "epochs" and sibling_eval_dir.exists():
+            resolved_dir = sibling_eval_dir
+        else:
+            raise FileNotFoundError(f"Checkpoint dir does not exist: {epochs_dir}")
+    if not any(resolved_dir.glob("*.pt")) and epochs_dir.name == "epochs" and sibling_eval_dir.exists():
+        if any(sibling_eval_dir.glob("*.pt")):
+            resolved_dir = sibling_eval_dir
 
     records: list[dict[str, Any]] = []
-    for ckpt_path in sorted(epochs_dir.glob("*.pt")):
+    for ckpt_path in sorted(resolved_dir.glob("*.pt")):
         records.append(
             {
                 "label": ckpt_path.stem,
@@ -132,7 +186,7 @@ def discover_checkpoints(
         )
 
     if include_special:
-        run_dir = epochs_dir.parent
+        run_dir = resolved_dir.parent
         for name in ("best_valid.pt", "best_success.pt", "latest.pt"):
             ckpt_path = run_dir / name
             if ckpt_path.exists():
@@ -160,9 +214,19 @@ def save_cached_results(path: Path, results: dict[str, Any]) -> None:
     path.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def make_cache_key(ckpt_path: Path, *, episodes: int, max_steps: int, seed: int) -> str:
+def make_cache_key(
+    ckpt_path: Path,
+    *,
+    episodes: int,
+    max_steps: int,
+    seed: int,
+    prefer_ema: bool = True,
+    config_overrides: dict[str, Any] | None = None,
+) -> str:
+    override_text = json.dumps(config_overrides or {}, sort_keys=True, ensure_ascii=False)
     return (
         f"{ckpt_path.resolve()}::episodes={int(episodes)}::max_steps={int(max_steps)}::seed={int(seed)}"
+        f"::ema={prefer_ema}::overrides={override_text}"
     )
 
 
@@ -177,6 +241,8 @@ def _run_eval_subprocess(
     headless: bool,
     show_progress: bool,
     timeout_sec: int,
+    prefer_ema: bool = True,
+    config_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ckpt_path = Path(record["path"]).resolve()
     with tempfile.TemporaryDirectory(prefix="lelan-eval-") as tmpdir:
@@ -198,9 +264,12 @@ def _run_eval_subprocess(
             str(output_json),
             "--headless" if headless else "--no-headless",
             "--show-progress" if show_progress else "--no-show-progress",
+            "--prefer-ema" if prefer_ema else "--no-prefer-ema",
         ]
         if device is not None:
             cmd.extend(["--device", str(device)])
+        for key, value in (config_overrides or {}).items():
+            cmd.extend(["--set", f"{key}={json.dumps(value, ensure_ascii=False)}"])
         subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, timeout=max(1, int(timeout_sec)))
         result = json.loads(output_json.read_text(encoding="utf-8"))
         return {
@@ -225,6 +294,8 @@ def eval_single_checkpoint(
     headless: bool,
     show_progress: bool,
     heartbeat_every: int,
+    prefer_ema: bool = True,
+    config_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from lelan.train.eval import load_model_for_eval, run_success_rate_eval
 
@@ -241,8 +312,9 @@ def eval_single_checkpoint(
             ckpt_root=ckpt_path.parents[1],
             heartbeat_every=heartbeat_every,
             device=device,
+            config_overrides=config_overrides,
         )
-        model, _ = load_model_for_eval(cfg, record["path"], payload=payload)
+        model, _ = load_model_for_eval(cfg, record["path"], payload=payload, prefer_ema=prefer_ema)
         started_at = time.perf_counter()
         summary = run_success_rate_eval(
             model,
@@ -291,6 +363,7 @@ def maybe_plot(results: dict[str, Any], plot_path: Path | None, figsize: tuple[f
 
 def main() -> int:
     args = parse_args()
+    config_overrides = _parse_config_overrides(args.config_overrides)
     records = discover_checkpoints(args.ckpt_epochs_dir.expanduser().resolve(), include_special=bool(args.include_special))
     if args.limit is not None:
         records = records[: int(args.limit)]
@@ -304,6 +377,8 @@ def main() -> int:
             episodes=int(args.episodes),
             max_steps=int(args.max_steps),
             seed=int(args.seed),
+            prefer_ema=bool(args.prefer_ema),
+            config_overrides=config_overrides,
         )
         if (not args.force_reeval) and cache_key in cached:
             continue
@@ -318,6 +393,8 @@ def main() -> int:
                 headless=bool(args.headless),
                 show_progress=bool(args.show_progress),
                 timeout_sec=int(args.per_checkpoint_timeout_sec),
+                prefer_ema=bool(args.prefer_ema),
+                config_overrides=config_overrides,
             )
         else:
             result = eval_single_checkpoint(
@@ -329,6 +406,8 @@ def main() -> int:
                 headless=bool(args.headless),
                 show_progress=bool(args.show_progress),
                 heartbeat_every=int(args.heartbeat_every),
+                prefer_ema=bool(args.prefer_ema),
+                config_overrides=config_overrides,
             )
         cached[cache_key] = result
         save_cached_results(args.results_json.expanduser().resolve(), cached)
@@ -339,15 +418,7 @@ def main() -> int:
         None if args.plot_path is None else args.plot_path.expanduser().resolve(),
         tuple(float(v) for v in args.plot_figsize),
     )
-
-    best_row = None
-    for row in cached.values():
-        if row.get("success_rate") is None:
-            continue
-        if best_row is None or float(row["success_rate"]) > float(best_row["success_rate"]):
-            best_row = row
-
-    print(json.dumps({"num_results": len(cached), "best": best_row}, indent=2, ensure_ascii=False))
+    print(json.dumps(cached, indent=2, ensure_ascii=False))
     return 0
 
 

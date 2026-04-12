@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+import subprocess
 import unittest
 from unittest import mock
 import json
@@ -14,6 +15,7 @@ from mdit.config import MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
 from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
 from mdit.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
+from mdit.train.eval import run_success_rate_eval_subprocess
 from research.mdit_trial_runner import (
     MDITTrialRequest,
     _load_trial_request,
@@ -177,6 +179,61 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
                 [{"epoch": 5, "success_rate": 0.35, "num_episodes": 20}],
             )
             self.assertEqual(restored["wandb_run_id"], "wandb-resume-id")
+
+    def test_success_eval_subprocess_reads_output_json(self) -> None:
+        cfg = MDITExperimentConfig(device="cpu", eval_step_heartbeat_every=17)
+
+        def _fake_run(cmd, cwd, check, capture_output, text, timeout):
+            self.assertTrue(check)
+            self.assertTrue(capture_output)
+            self.assertTrue(text)
+            self.assertEqual(timeout, 321)
+            self.assertIn("eval_mdit_checkpoint.py", str(cmd[1]))
+            output_json = Path(cmd[cmd.index("--output-json") + 1])
+            output_json.write_text(
+                json.dumps(
+                    {
+                        "success_rate": 0.45,
+                        "mean_steps": 12.0,
+                        "num_episodes": 20,
+                        "episode_records": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return mock.Mock(stdout="eval summary\n", stderr="", returncode=0)
+
+        with mock.patch("mdit.train.eval.subprocess.run", side_effect=_fake_run):
+            result = run_success_rate_eval_subprocess(
+                "/tmp/epoch_0100.pt",
+                cfg,
+                num_episodes=20,
+                max_steps=200,
+                timeout_sec=321,
+                show_progress=False,
+            )
+
+        self.assertEqual(result["success_rate"], 0.45)
+        self.assertEqual(result["num_episodes"], 20)
+
+    def test_success_eval_subprocess_surfaces_subprocess_failure(self) -> None:
+        cfg = MDITExperimentConfig(device="cpu")
+        error = subprocess.CalledProcessError(
+            139,
+            ["python", "eval_mdit_checkpoint.py"],
+            output="Error: signal 11\nQMutex: destroying locked mutex\n",
+            stderr="",
+        )
+
+        with mock.patch("mdit.train.eval.subprocess.run", side_effect=error):
+            with self.assertRaisesRegex(RuntimeError, "exit code 139"):
+                run_success_rate_eval_subprocess(
+                    "/tmp/epoch_0100.pt",
+                    cfg,
+                    num_episodes=20,
+                    max_steps=200,
+                    show_progress=False,
+                )
 
     def test_predict_action_selects_configured_camera_subset(self) -> None:
         policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)

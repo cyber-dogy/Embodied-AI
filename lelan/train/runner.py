@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import logging
 import math
 import time
 from typing import Any
@@ -10,7 +12,6 @@ import torch
 from common.runtime import set_device, set_seeds
 from lelan.config import LeLaNExperimentConfig, config_to_dict, save_config
 from lelan.data import compute_dataset_stats, save_stats
-from lelan.model.model import EMA
 from .builders import (
     build_dataloaders,
     build_grad_scaler,
@@ -20,9 +21,32 @@ from .builders import (
     get_autocast_context,
     move_batch_to_device,
 )
-from .checkpoints import load_resume_state, save_checkpoint
-from .checkpoints import finish_wandb_run, init_wandb_run
-from .eval import evaluate_model_on_loader, compute_sample_metric, make_progress_iter, summarize_for_json, write_summary_json
+from .checkpoints import (
+    build_ema_model,
+    finish_wandb_run,
+    init_wandb_run,
+    load_resume_state,
+    save_checkpoint,
+    update_ema_model,
+)
+from .eval import (
+    compute_sample_metric,
+    evaluate_model_on_loader,
+    make_progress_iter,
+    run_success_rate_eval,
+    summarize_for_json,
+    write_summary_json,
+)
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _write_success_eval_history(cfg: LeLaNExperimentConfig, history: list[dict[str, Any]]) -> None:
+    cfg.success_eval_path.write_text(
+        json.dumps(history, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
 
 
 def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
@@ -31,6 +55,8 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
     set_seeds(cfg.seed)
     cfg.ckpt_dir.mkdir(parents=True, exist_ok=True)
     cfg.periodic_ckpt_dir.mkdir(parents=True, exist_ok=True)
+    if int(cfg.offline_eval_ckpt_every_epochs) > 0:
+        cfg.offline_eval_ckpt_dir.mkdir(parents=True, exist_ok=True)
     save_config(cfg)
 
     dataset_train, dataset_valid, dataloader_train, dataloader_valid = build_dataloaders(cfg)
@@ -47,12 +73,14 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
     if resume_state["dataset_stats"] is not None:
         dataset_stats = resume_state["dataset_stats"]
 
-    # EMA
-    ema = EMA(model, decay=float(cfg.ema_decay)) if cfg.use_ema else None
+    ema_model = build_ema_model(model, cfg.use_ema)
+    if ema_model is not None and resume_state["ema_state_dict"] is not None:
+        ema_model.load_state_dict(resume_state["ema_state_dict"])
 
     train_loss_history = resume_state["train_loss_history"]
     valid_loss_history = resume_state["valid_loss_history"]
     epoch_summaries = resume_state["epoch_summaries"]
+    success_eval_history = resume_state["success_eval_history"]
     best_metric = resume_state["best_metric"]
     best_epoch = resume_state["best_epoch"]
     best_success_rate = resume_state["best_success_rate"]
@@ -62,8 +90,6 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
     run_started_at = time.perf_counter()
 
     sample_batch_cpu = next(iter(dataloader_train))
-
-    # Gradient explosion tracking
     nan_streak = 0
     max_nan_streak = 5
 
@@ -84,7 +110,6 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
                     loss, loss_dict = model(batch)
                     scaled_loss = loss / max(1, cfg.grad_accum_steps)
 
-                # Gradient explosion guard: skip NaN/Inf losses
                 if not math.isfinite(float(loss.detach().cpu())):
                     nan_streak += 1
                     if nan_streak >= max_nan_streak:
@@ -104,10 +129,7 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
                 if should_step:
                     if cfg.grad_clip_norm is not None:
                         scaler.unscale_(optimizer)
-                        grad_norm = torch.nn.utils.clip_grad_norm_(
-                            model.parameters(), float(cfg.grad_clip_norm)
-                        )
-                        # Skip step if grad norm is NaN/Inf (scaler handles this too)
+                        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), float(cfg.grad_clip_norm))
                         if not math.isfinite(float(grad_norm)):
                             scaler.update()
                             optimizer.zero_grad(set_to_none=True)
@@ -117,8 +139,7 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
                     optimizer.zero_grad(set_to_none=True)
                     scheduler.step()
                     global_step += 1
-                    if ema is not None:
-                        ema.update(model)
+                    update_ema_model(ema_model, model, cfg.ema_decay)
 
                 raw_loss = float(loss.detach().cpu())
                 epoch_losses.append(raw_loss)
@@ -143,30 +164,71 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
             train_loss_history.append(train_summary["loss_total"])
 
             valid_summary = None
+            eval_model = ema_model if ema_model is not None else model
             if ((epoch + 1) % max(1, cfg.val_every_epochs)) == 0:
-                # Apply EMA weights for validation
-                ema_backup = None
-                if ema is not None:
-                    ema_backup = ema.apply(model)
-                valid_summary = evaluate_model_on_loader(model, dataloader_valid, cfg)
-                if ema is not None and ema_backup is not None:
-                    ema.restore(model, ema_backup)
+                valid_summary = evaluate_model_on_loader(eval_model, dataloader_valid, cfg)
             valid_loss_history.append(None if valid_summary is None else valid_summary["loss_total"])
 
             sample_summary = None
             if valid_summary is not None:
                 try:
                     sample_summary = {
-                        "train_action_mse_error": compute_sample_metric(model, sample_batch_cpu, cfg),
+                        "train_action_mse_error": compute_sample_metric(eval_model, sample_batch_cpu, cfg),
                     }
-                except Exception:
-                    pass
+                except Exception as exc:
+                    LOGGER.warning("compute_sample_metric failed: %s", exc)
+
+            success_summary = None
+            success_record = None
+            should_run_success_eval = (
+                bool(cfg.enable_success_rate_eval)
+                and int(cfg.success_selection_every_epochs) > 0
+                and int(cfg.success_selection_episodes) > 0
+                and ((epoch + 1) % int(cfg.success_selection_every_epochs)) == 0
+            )
+            if should_run_success_eval:
+                try:
+                    success_summary = run_success_rate_eval(
+                        eval_model,
+                        cfg,
+                        num_episodes=int(cfg.success_selection_episodes),
+                        max_steps=int(cfg.success_max_steps),
+                        headless=True,
+                        show_progress=True,
+                        progress_desc=f"lelan success epoch {epoch + 1}",
+                    )
+                    success_rate = float(success_summary["success_rate"])
+                    if best_success_rate is None or success_rate > best_success_rate:
+                        best_success_rate = success_rate
+                        best_success_epoch = int(epoch)
+                except Exception as exc:  # pragma: no cover - RLBench runtime issues
+                    LOGGER.warning("success-rate eval failed at epoch %s: %s", epoch + 1, exc)
+                    success_record = {
+                        "epoch": int(epoch + 1),
+                        "success_rate": None,
+                        "mean_steps": None,
+                        "num_episodes": int(cfg.success_selection_episodes),
+                        "checkpoint_path": None,
+                        "error": str(exc),
+                        "deleted_periodic_ckpt": False,
+                    }
+            elif (
+                int(cfg.success_selection_every_epochs) > 0
+                and int(cfg.success_selection_episodes) > 0
+                and ((epoch + 1) % int(cfg.success_selection_every_epochs)) == 0
+            ):
+                LOGGER.debug(
+                    "Skipping success-rate eval at epoch %s because enable_success_rate_eval=%s.",
+                    epoch + 1,
+                    cfg.enable_success_rate_eval,
+                )
 
             epoch_row = {
                 "epoch": int(epoch),
                 "train": train_summary,
                 "valid": valid_summary,
                 "sample": sample_summary,
+                "success_eval": summarize_for_json(success_summary),
             }
             epoch_summaries.append(epoch_row)
 
@@ -177,26 +239,98 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
                     best_epoch = int(epoch)
 
             ckpt_kwargs = dict(
-                cfg=cfg, model=model, optimizer=optimizer, scheduler=scheduler,
+                cfg=cfg,
+                model=model,
+                ema_model=ema_model,
+                optimizer=optimizer,
+                scheduler=scheduler,
                 scaler=scaler,
-                dataset_stats=dataset_stats, epoch=epoch, global_step=global_step,
-                best_metric=best_metric, best_epoch=best_epoch,
-                best_success_rate=best_success_rate, best_success_epoch=best_success_epoch,
-                train_loss_history=train_loss_history, valid_loss_history=valid_loss_history,
+                dataset_stats=dataset_stats,
+                epoch=epoch,
+                global_step=global_step,
+                best_metric=best_metric,
+                best_epoch=best_epoch,
+                best_success_rate=best_success_rate,
+                best_success_epoch=best_success_epoch,
+                train_loss_history=train_loss_history,
+                valid_loss_history=valid_loss_history,
                 epoch_summaries=epoch_summaries,
-                checkpoint_payload_mode=cfg.checkpoint_payload_mode,
                 wandb_run_id=None if wandb_run is None else wandb_run.id,
+                success_eval_history=success_eval_history,
             )
 
             if cfg.save_latest_ckpt:
-                save_checkpoint(cfg.latest_ckpt_path, **ckpt_kwargs)
+                save_checkpoint(
+                    cfg.latest_ckpt_path,
+                    checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                    **ckpt_kwargs,
+                )
 
             if cfg.save_best_valid_ckpt and best_epoch == epoch:
-                save_checkpoint(cfg.best_ckpt_path, **ckpt_kwargs)
+                save_checkpoint(
+                    cfg.best_ckpt_path,
+                    checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                    **ckpt_kwargs,
+                )
 
+            periodic_path = None
             if int(cfg.checkpoint_every_epochs) > 0 and ((epoch + 1) % int(cfg.checkpoint_every_epochs)) == 0:
                 periodic_path = cfg.periodic_ckpt_dir / f"epoch_{epoch + 1:04d}.pt"
-                save_checkpoint(periodic_path, **ckpt_kwargs)
+                save_checkpoint(
+                    periodic_path,
+                    checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                    **ckpt_kwargs,
+                )
+
+            should_save_offline_eval_ckpt = (
+                not bool(cfg.enable_success_rate_eval)
+                and int(cfg.offline_eval_ckpt_every_epochs) > 0
+                and ((epoch + 1) % int(cfg.offline_eval_ckpt_every_epochs)) == 0
+            )
+            if should_save_offline_eval_ckpt:
+                offline_eval_path = cfg.offline_eval_ckpt_dir / f"epoch_{epoch + 1:04d}.pt"
+                save_checkpoint(
+                    offline_eval_path,
+                    checkpoint_payload_mode=cfg.offline_eval_ckpt_payload_mode,
+                    **ckpt_kwargs,
+                )
+
+            if success_summary is not None:
+                success_record = {
+                    "epoch": int(epoch + 1),
+                    "success_rate": float(success_summary["success_rate"]),
+                    "mean_steps": float(success_summary["mean_steps"]),
+                    "num_episodes": int(success_summary["num_episodes"]),
+                    "checkpoint_path": None if periodic_path is None else str(periodic_path),
+                    "error": None,
+                    "deleted_periodic_ckpt": False,
+                }
+                success_eval_history.append(success_record)
+                _write_success_eval_history(cfg, success_eval_history)
+                if best_success_epoch == epoch:
+                    save_checkpoint(
+                        cfg.best_success_ckpt_path,
+                        checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                        **ckpt_kwargs,
+                    )
+                if (
+                    periodic_path is not None
+                    and cfg.delete_periodic_ckpts_after_success_eval
+                    and periodic_path.exists()
+                ):
+                    periodic_path.unlink()
+                    success_record["deleted_periodic_ckpt"] = True
+                    _write_success_eval_history(cfg, success_eval_history)
+            elif success_record is not None:
+                success_eval_history.append(success_record)
+                _write_success_eval_history(cfg, success_eval_history)
+
+            if success_record is not None and cfg.save_latest_ckpt:
+                save_checkpoint(
+                    cfg.latest_ckpt_path,
+                    checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                    **ckpt_kwargs,
+                )
 
             if wandb_run is not None:
                 payload = {
@@ -209,11 +343,32 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
                         payload[f"valid/{key}"] = value
                 if sample_summary is not None:
                     payload.update({f"sample/{key}": value for key, value in sample_summary.items()})
+                if success_summary is not None:
+                    payload["success_select/success_rate"] = float(success_summary["success_rate"])
+                    payload["success_select/mean_steps"] = float(success_summary["mean_steps"])
+                    payload["success_select/num_episodes"] = int(success_summary["num_episodes"])
                 wandb_run.log(payload, step=global_step)
                 wandb_run.summary["best_metric"] = best_metric
                 wandb_run.summary["best_epoch"] = best_epoch
                 wandb_run.summary["best_success_rate"] = best_success_rate
                 wandb_run.summary["best_success_epoch"] = best_success_epoch
+
+        final_eval = None
+        if (not bool(cfg.enable_success_rate_eval)) and int(cfg.standard_eval_episodes) > 0:
+            LOGGER.warning(
+                "Skipping standard eval because enable_success_rate_eval is disabled. "
+                "Set enable_success_rate_eval=true to run RLBench evaluation during training."
+            )
+        elif int(cfg.standard_eval_episodes) > 0:
+            final_eval = run_success_rate_eval(
+                ema_model if ema_model is not None else model,
+                cfg,
+                num_episodes=int(cfg.standard_eval_episodes),
+                max_steps=int(cfg.success_max_steps),
+                headless=True,
+                show_progress=True,
+                progress_desc="lelan standard eval",
+            )
 
         wall_clock_hours = (time.perf_counter() - run_started_at) / 3600.0
         summary = {
@@ -231,13 +386,15 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
             "train_loss_last": train_loss_history[-1] if train_loss_history else None,
             "valid_loss_last": valid_loss_history[-1] if valid_loss_history else None,
             "epoch_summaries": epoch_summaries[-5:],
-            "final_standard_eval": summarize_for_json(None),
+            "success_eval_history": success_eval_history[-10:],
+            "final_standard_eval": summarize_for_json(final_eval),
             "wall_clock_hours": wall_clock_hours,
             "dataset_sizes": {
                 "train": len(dataset_train),
                 "valid": len(dataset_valid),
             },
         }
+        _write_success_eval_history(cfg, success_eval_history)
         write_summary_json(cfg, summary)
         return summary
     finally:

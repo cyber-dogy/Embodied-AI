@@ -34,7 +34,7 @@ python -m pip install \
   "torchvision==${TORCHVISION_VERSION}" \
   "torchaudio==${TORCHAUDIO_VERSION}"
 
-echo "[4/5] Installing core MDIT dependencies"
+echo "[4/5] Installing core MDIT/LeLaN dependencies"
 python -m pip install -r "${REPO_ROOT}/requirements.txt"
 python -m pip install -e "${REPO_ROOT}"
 
@@ -55,5 +55,5 @@ echo "Environment ready."
 echo "Suggested smoke checks:"
 echo "  conda activate ${ENV_NAME}"
 echo "  python -c 'import torch; print(torch.__version__, torch.cuda.is_available())'"
-echo "  python -c 'import timm, transformers; print(timm.__version__, transformers.__version__)'"
+echo "  python -c 'import timm, transformers, efficientnet_pytorch; print(timm.__version__, transformers.__version__, \"efficientnet_ok\")'"
 echo "  python -m unittest discover -s tests -v"

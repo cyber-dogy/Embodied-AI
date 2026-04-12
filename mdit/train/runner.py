@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -26,7 +27,7 @@ from .eval import (
     compute_sample_metric,
     evaluate_model_on_loader,
     make_progress_iter,
-    run_success_rate_eval,
+    run_success_rate_eval_subprocess,
     summarize_for_json,
     write_summary_json,
 )
@@ -40,6 +41,53 @@ def _write_success_eval_history(cfg: MDITExperimentConfig, history: list[dict[st
         json.dumps(history, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+
+
+def _save_temporary_success_eval_checkpoint(
+    cfg: MDITExperimentConfig,
+    *,
+    model: torch.nn.Module,
+    ema_model: torch.nn.Module | None,
+    optimizer: torch.optim.Optimizer,
+    scheduler,
+    scaler,
+    dataset_stats: dict[str, Any],
+    epoch: int,
+    global_step: int,
+    best_metric: float | None,
+    best_epoch: int | None,
+    best_success_rate: float | None,
+    best_success_epoch: int | None,
+    train_loss_history: list[float],
+    valid_loss_history: list[float | None],
+    epoch_summaries: list[dict[str, Any]],
+    wandb_run_id: str | None,
+    success_eval_history: list[dict[str, Any]],
+) -> Path:
+    temp_path = cfg.ckpt_dir / f".success_eval_epoch_{epoch + 1:04d}.pt"
+    save_checkpoint(
+        temp_path,
+        cfg=cfg,
+        model=model,
+        ema_model=ema_model,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        scaler=scaler,
+        dataset_stats=dataset_stats,
+        epoch=epoch,
+        global_step=global_step,
+        best_metric=best_metric,
+        best_epoch=best_epoch,
+        best_success_rate=best_success_rate,
+        best_success_epoch=best_success_epoch,
+        train_loss_history=train_loss_history,
+        valid_loss_history=valid_loss_history,
+        epoch_summaries=epoch_summaries,
+        checkpoint_payload_mode="lightweight",
+        wandb_run_id=wandb_run_id,
+        success_eval_history=success_eval_history,
+    )
+    return temp_path
 
 
 def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
@@ -164,15 +212,36 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 and ((epoch + 1) % int(cfg.success_selection_every_epochs)) == 0
             )
             if should_run_success_eval:
+                success_eval_ckpt_path = _save_temporary_success_eval_checkpoint(
+                    cfg,
+                    model=model,
+                    ema_model=ema_model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    dataset_stats=dataset_stats,
+                    epoch=epoch,
+                    global_step=global_step,
+                    best_metric=best_metric,
+                    best_epoch=best_epoch,
+                    best_success_rate=best_success_rate,
+                    best_success_epoch=best_success_epoch,
+                    train_loss_history=train_loss_history,
+                    valid_loss_history=valid_loss_history,
+                    epoch_summaries=epoch_summaries,
+                    wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
+                )
                 try:
-                    success_summary = run_success_rate_eval(
-                        eval_model,
+                    success_summary = run_success_rate_eval_subprocess(
+                        success_eval_ckpt_path,
                         cfg,
                         num_episodes=int(cfg.success_selection_episodes),
                         max_steps=int(cfg.success_max_steps),
                         headless=True,
                         show_progress=True,
                         progress_desc=f"mdit success epoch {epoch + 1}",
+                        timeout_sec=int(cfg.success_eval_timeout_sec),
                     )
                     success_rate = float(success_summary["success_rate"])
                     if best_success_rate is None or success_rate > best_success_rate:
@@ -190,6 +259,9 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         "error": str(exc),
                         "deleted_periodic_ckpt": False,
                     }
+                finally:
+                    if success_eval_ckpt_path.exists():
+                        success_eval_ckpt_path.unlink()
             elif (
                 int(cfg.success_selection_every_epochs) > 0
                 and int(cfg.success_selection_episodes) > 0
@@ -420,15 +492,49 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 "Set enable_success_rate_eval=true to run RLBench evaluation during training."
             )
         elif int(cfg.standard_eval_episodes) > 0:
-            final_eval = run_success_rate_eval(
-                ema_model if ema_model is not None else model,
-                cfg,
-                num_episodes=int(cfg.standard_eval_episodes),
-                max_steps=int(cfg.success_max_steps),
-                headless=True,
-                show_progress=True,
-                progress_desc="mdit standard eval",
+            final_eval_ckpt_path = (
+                cfg.latest_ckpt_path if cfg.save_latest_ckpt and cfg.latest_ckpt_path.exists() else None
             )
+            created_temp_final_eval_ckpt = False
+            if final_eval_ckpt_path is None:
+                final_eval_ckpt_path = _save_temporary_success_eval_checkpoint(
+                    cfg,
+                    model=model,
+                    ema_model=ema_model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    dataset_stats=dataset_stats,
+                    epoch=cfg.train_epochs - 1,
+                    global_step=global_step,
+                    best_metric=best_metric,
+                    best_epoch=best_epoch,
+                    best_success_rate=best_success_rate,
+                    best_success_epoch=best_success_epoch,
+                    train_loss_history=train_loss_history,
+                    valid_loss_history=valid_loss_history,
+                    epoch_summaries=epoch_summaries,
+                    wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
+                )
+                created_temp_final_eval_ckpt = True
+            try:
+                final_eval = run_success_rate_eval_subprocess(
+                    final_eval_ckpt_path,
+                    cfg,
+                    num_episodes=int(cfg.standard_eval_episodes),
+                    max_steps=int(cfg.success_max_steps),
+                    headless=True,
+                    show_progress=True,
+                    progress_desc="mdit standard eval",
+                    timeout_sec=int(cfg.success_eval_timeout_sec),
+                )
+            except Exception as exc:  # pragma: no cover - RLBench runtime issues
+                LOGGER.warning("final standard eval failed: %s", exc)
+                final_eval = None
+            finally:
+                if created_temp_final_eval_ckpt and final_eval_ckpt_path.exists():
+                    final_eval_ckpt_path.unlink()
 
         wall_clock_hours = (time.perf_counter() - run_started_at) / 3600.0
         summary = {

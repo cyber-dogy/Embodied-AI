@@ -118,6 +118,7 @@ class MDITExperimentConfig:
     success_selection_every_epochs: int = 0
     success_selection_episodes: int = 0
     success_max_steps: int = 200
+    success_eval_timeout_sec: int = 7200
     standard_eval_episodes: int = 0
     eval_step_heartbeat_every: int = 50
     smooth_actions: bool = False
@@ -160,6 +161,8 @@ class MDITExperimentConfig:
             raise ValueError("success_selection_every_epochs must be >= 0.")
         if int(self.success_selection_episodes) < 0:
             raise ValueError("success_selection_episodes must be >= 0.")
+        if int(self.success_eval_timeout_sec) < 0:
+            raise ValueError("success_eval_timeout_sec must be >= 0.")
         if int(self.standard_eval_episodes) < 0:
             raise ValueError("standard_eval_episodes must be >= 0.")
         if int(self.offline_eval_ckpt_every_epochs) < 0:

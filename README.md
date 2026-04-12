@@ -77,6 +77,120 @@ pip install -e .
 pip install -r requirements_eval.txt
 ```
 
+## LeLaN 自动 Autoresearch
+
+LeLaN 当前推荐直接用：
+
+- 配置：`configs/lelan/obs3_rgb5_a8_gate100.json`
+- 执行文档：[docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md)
+- 研究记录目录：[docs/lelan/research/README.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/lelan/research/README.md)
+
+### 训练
+
+```bash
+tmux new -s lelan_a8
+
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate lelan_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_lelan_rgb5_obs3_a8_500"
+
+python scripts/run_lelan_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/lelan/obs3_rgb5_a8_gate100.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --eval-episodes 20 \
+  --device cuda \
+  --experiment-name lelan_rgb5_obs3_a8_500 \
+  --run-name "$RUN_NAME" \
+  --description "LeLaN 5RGB obs3 a8 500ep" \
+  --headless \
+  --show-progress
+```
+
+### 续训
+
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate lelan_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_lelan_rgb5_obs3_a8_500"
+
+python scripts/run_lelan_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/lelan/obs3_rgb5_a8_gate100.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --eval-episodes 20 \
+  --device cuda \
+  --experiment-name lelan_rgb5_obs3_a8_500 \
+  --run-name "$RUN_NAME" \
+  --description "resume LeLaN 5RGB obs3 a8" \
+  --headless \
+  --show-progress \
+  --set resume_from_latest=true \
+  --set save_latest_ckpt=true \
+  --set checkpoint_payload_mode="full"
+```
+
+### audit-only
+
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate lelan_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_lelan_rgb5_obs3_a8_500"
+
+python scripts/run_lelan_autoresearch_trial.py \
+  --phase audit-only \
+  --run-dir ckpt/$RUN_NAME \
+  --eval-episodes 20 \
+  --audit-timeout-sec 10800 \
+  --headless \
+  --show-progress
+```
+
+### 本地单 ckpt 评估
+
+```bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_lelan_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_lelan_rgb5_obs3_a8_500/epochs/epoch_0100.pt \
+  --episodes 20 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+```
+
+### 本地 all ckpt 评估
+
+```bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_lelan_all_checkpoints.py \
+  --ckpt-epochs-dir ckpt/unplug_charger_lelan_rgb5_obs3_a8_500/epochs \
+  --results-json ckpt/unplug_charger_lelan_rgb5_obs3_a8_500/eval_results/all_ckpts.json \
+  --episodes 20 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+```
+
 ## 从零训练
 
 ### 从0开始跑5RGB-MDIT（5RGB + 每相机独立 encoder + 全量训练）：
@@ -86,6 +200,8 @@ pip install -r requirements_eval.txt
 开启tmux:
 
 tmux new -s mdit_rgb5_sep_all
+tmux kill-session -t mdit_rgb5_sep_all && tmux new -s mdit_rgb5_sep_all
+
 
 
 开始训练：
@@ -185,8 +301,8 @@ python scripts/eval_mdit_checkpoint.py \
   --show-progress
 ```
 
-
 ### 寝室本地离线测评：
+
 ```
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate pfp_env
@@ -260,6 +376,7 @@ python scripts/eval_mdit_checkpoint.py \
 ## AutoDL远程训练指令
 
 ### 云端训练：全量微调 5 独立 ViT，带 100epoch success eval
+
 ```
 tmux new -s mdit_rgb5_sep_all
 
@@ -430,7 +547,6 @@ python scripts/eval_mdit_checkpoint.py \
 
 ```
 
-
 ### 云端训练：Last block微调 5RGB + obs3 + separate encoder + last_block + n_action_steps=8
 
 ```
@@ -587,16 +703,6 @@ python scripts/eval_mdit_checkpoint.py \
   --device cuda
 
 ```
-
-
-
-
-
-
-
-
-
-
 
 ## 换SSH设备跟踪训练进度
 

@@ -1,0 +1,47 @@
+{
+  "extends": "lelan/baseline.json",
+  "run_name": "unplug_charger_lelan_obs3_rgb5_a8_gate100",
+  "n_obs_steps": 3,
+  "horizon": 32,
+  "n_action_steps": 8,
+  "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
+  "batch_size": 8,
+  "grad_accum_steps": 1,
+  "num_workers": 8,
+  "use_amp": true,
+  "save_latest_ckpt": true,
+  "save_best_valid_ckpt": true,
+  "checkpoint_payload_mode": "full",
+  "enable_success_rate_eval": true,
+  "success_selection_every_epochs": 100,
+  "success_selection_episodes": 20,
+  "smooth_actions": true,
+  "command_mode": "first",
+  "position_alpha": 0.35,
+  "rotation_alpha": 0.25,
+  "max_position_step": 0.03,
+  "gripper_open_threshold": 0.6,
+  "gripper_close_threshold": 0.4,
+  "wandb_enable": true,
+  "wandb_mode": "online",
+  "wandb_resume": true,
+  "objective": {
+    "objective_name": "flow_matching",
+    "sigma_min": 0.001,
+    "num_integration_steps": 25,
+    "integration_method": "euler",
+    "timestep_sampling": {
+      "strategy_name": "beta",
+      "s": 0.999,
+      "alpha": 1.5,
+      "beta": 1.0
+    }
+  },
+  "fusion_transformer": {
+    "hidden_dim": 512,
+    "num_heads": 4,
+    "num_layers": 2,
+    "ff_dim_factor": 4,
+    "dropout": 0.1
+  }
+}

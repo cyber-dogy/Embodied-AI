@@ -9,10 +9,11 @@ if __name__ == "__main__":
     raise SystemExit(
         dispatch_line_entrypoint(
             tool_name="scripts/run_autoresearch_trial.py",
-            description="Dispatch to the PDIT or MDIT autoresearch trial CLI.",
+            description="Dispatch to the PDIT, MDIT, or LeLaN autoresearch trial CLI.",
             targets={
                 "pdit": "pdit.cli.run_autoresearch_trial:main",
                 "mdit": "mdit.cli.run_autoresearch_trial:main",
+                "lelan": "lelan.cli.run_autoresearch_trial:main",
             },
         )
     )

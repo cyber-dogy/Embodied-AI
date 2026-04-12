@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import json
+import logging
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 from typing import Any
 
 import numpy as np
@@ -8,7 +13,7 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch.utils.data import DataLoader
 
-from common.runtime import set_device
+from common.runtime import PROJECT_ROOT, set_device
 from mdit.config import MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
 from .builders import build_policy, get_autocast_context, move_batch_to_device
@@ -17,6 +22,8 @@ try:
     from tqdm.auto import tqdm
 except ImportError:  # pragma: no cover
     tqdm = None
+
+LOGGER = logging.getLogger(__name__)
 
 
 def summarize_metrics(metrics: list[dict[str, float]]) -> dict[str, float]:
@@ -168,6 +175,113 @@ def run_success_rate_eval(
         "num_episodes": len(records),
         "episode_records": records,
     }
+
+
+def _build_success_eval_subprocess_cmd(
+    ckpt_path: Path,
+    cfg: MDITExperimentConfig,
+    *,
+    num_episodes: int,
+    max_steps: int,
+    headless: bool,
+    show_progress: bool,
+    output_json_path: Path,
+) -> list[str]:
+    cmd = [
+        sys.executable,
+        str(PROJECT_ROOT / "scripts" / "eval_mdit_checkpoint.py"),
+        "--ckpt-path",
+        str(Path(ckpt_path).expanduser().resolve()),
+        "--episodes",
+        str(int(num_episodes)),
+        "--max-steps",
+        str(int(max_steps)),
+        "--output-json",
+        str(Path(output_json_path).expanduser().resolve()),
+        "--device",
+        str(cfg.device),
+        "--heartbeat-every",
+        str(int(cfg.eval_step_heartbeat_every)),
+        "--prefer-ema",
+    ]
+    cmd.append("--headless" if bool(headless) else "--no-headless")
+    cmd.append("--show-progress" if bool(show_progress) else "--no-show-progress")
+    return cmd
+
+
+def _tail_subprocess_output(stdout: str | None, stderr: str | None, *, max_lines: int = 40) -> str:
+    lines: list[str] = []
+    for chunk in (stdout, stderr):
+        if not chunk:
+            continue
+        lines.extend(str(chunk).splitlines())
+    if not lines:
+        return ""
+    tail = lines[-max_lines:]
+    return "\n".join(tail)
+
+
+def run_success_rate_eval_subprocess(
+    ckpt_path,
+    cfg: MDITExperimentConfig,
+    *,
+    num_episodes: int,
+    max_steps: int,
+    headless: bool = True,
+    show_progress: bool = True,
+    progress_desc: str = "mdit-eval",
+    timeout_sec: int | None = None,
+) -> dict[str, Any]:
+    ckpt_path = Path(ckpt_path).expanduser().resolve()
+    with tempfile.TemporaryDirectory(prefix="mdit_success_eval_") as tmp_dir:
+        output_json_path = Path(tmp_dir) / "result.json"
+        cmd = _build_success_eval_subprocess_cmd(
+            ckpt_path,
+            cfg,
+            num_episodes=num_episodes,
+            max_steps=max_steps,
+            headless=headless,
+            show_progress=show_progress,
+            output_json_path=output_json_path,
+        )
+        LOGGER.info(
+            "Starting isolated MDIT success eval subprocess for %s using checkpoint %s",
+            progress_desc,
+            ckpt_path,
+        )
+        try:
+            completed = subprocess.run(
+                cmd,
+                cwd=PROJECT_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=None if timeout_sec in (None, 0) else int(timeout_sec),
+            )
+        except subprocess.TimeoutExpired as exc:
+            tail = _tail_subprocess_output(exc.stdout, exc.stderr)
+            detail = (
+                f"Timed out after {int(timeout_sec)}s while running isolated success eval"
+                if timeout_sec not in (None, 0)
+                else "Timed out while running isolated success eval"
+            )
+            if tail:
+                detail = f"{detail}. Tail:\n{tail}"
+            raise RuntimeError(detail) from exc
+        except subprocess.CalledProcessError as exc:
+            tail = _tail_subprocess_output(exc.stdout, exc.stderr)
+            detail = f"Isolated success eval subprocess failed with exit code {exc.returncode}"
+            if tail:
+                detail = f"{detail}. Tail:\n{tail}"
+            raise RuntimeError(detail) from exc
+
+        if show_progress and completed.stdout:
+            print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n")
+        if not output_json_path.exists():
+            raise RuntimeError(
+                f"Isolated success eval finished without producing output JSON: {output_json_path}"
+            )
+        return json.loads(output_json_path.read_text(encoding="utf-8"))
 
 
 def summarize_for_json(summary: dict[str, Any] | None) -> dict[str, Any] | None:

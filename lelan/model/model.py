@@ -11,39 +11,11 @@ from torch import Tensor
 from common.runtime import get_device
 from lelan.config import LeLaNExperimentConfig
 from lelan.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_STATE, TASK
+from .action_postprocess import postprocess_robot_state_command
 from .objectives import FlowMatchingObjective
 from .observation_encoder import ObservationEncoder
 from .transformer import DiffusionTransformer
 from .utils import NormalizationMode, normalize_tensor, populate_queues, unnormalize_tensor
-
-
-class EMA:
-    """Exponential Moving Average of model parameters."""
-
-    def __init__(self, model: nn.Module, decay: float = 0.999) -> None:
-        self.decay = decay
-        self.shadow = {name: param.data.clone() for name, param in model.named_parameters() if param.requires_grad}
-
-    @torch.no_grad()
-    def update(self, model: nn.Module) -> None:
-        for name, param in model.named_parameters():
-            if param.requires_grad and name in self.shadow:
-                self.shadow[name].mul_(self.decay).add_(param.data, alpha=1 - self.decay)
-
-    def apply(self, model: nn.Module) -> dict[str, Tensor]:
-        """Apply EMA weights and return backup of original weights."""
-        backup = {}
-        for name, param in model.named_parameters():
-            if param.requires_grad and name in self.shadow:
-                backup[name] = param.data.clone()
-                param.data.copy_(self.shadow[name])
-        return backup
-
-    def restore(self, model: nn.Module, backup: dict[str, Tensor]) -> None:
-        """Restore original weights from backup."""
-        for name, param in model.named_parameters():
-            if name in backup:
-                param.data.copy_(backup[name])
 
 
 class LeLaNPolicy(nn.Module):
@@ -200,8 +172,28 @@ class LeLaNPolicy(nn.Module):
         self._queues = populate_queues(self._queues, batch)
         if len(self._queues[ACTION]) == 0:
             action_chunk = self.predict_action_chunk(batch)
-            self._queues[ACTION].extend(action_chunk.transpose(0, 1))
+            if str(self.config.command_mode) == "first":
+                self._queues[ACTION].extend(action_chunk.transpose(0, 1))
+            else:
+                self._queues[ACTION].append(self._select_runtime_action_from_chunk(action_chunk))
         return self._queues[ACTION].popleft()
+
+    def _select_runtime_action_from_chunk(self, action_chunk: Tensor) -> Tensor:
+        if action_chunk.ndim != 3:
+            raise ValueError(f"Expected action chunk with shape (B,T,D), got {tuple(action_chunk.shape)}")
+        horizon_len = int(action_chunk.shape[1])
+        mode = str(self.config.command_mode).lower()
+        if mode == "first":
+            return action_chunk[:, 0]
+        if mode == "horizon_index":
+            index = int(np.clip(int(self.config.horizon_index), 0, max(0, horizon_len - 1)))
+            return action_chunk[:, index]
+        if mode == "mean_first_n":
+            count = int(np.clip(int(self.config.average_first_n), 1, horizon_len))
+            reduced = action_chunk[:, :count].mean(dim=1)
+            reduced[..., 9] = (action_chunk[:, :count, 9].mean(dim=1) >= 0.5).to(reduced.dtype)
+            return reduced
+        raise ValueError(f"Unsupported command_mode: {self.config.command_mode}")
 
     def predict_action(
         self,
@@ -224,4 +216,14 @@ class LeLaNPolicy(nn.Module):
             }
         )
         action = self.unnormalize_action(action)
-        return action.squeeze(0).detach().cpu().numpy()
+        action_np = action.squeeze(0).detach().cpu().numpy().astype(np.float32, copy=False)
+        return postprocess_robot_state_command(
+            np.asarray(robot_state, dtype=np.float32),
+            action_np,
+            enabled=bool(self.config.smooth_actions),
+            position_alpha=float(self.config.position_alpha),
+            rotation_alpha=float(self.config.rotation_alpha),
+            max_position_step=self.config.max_position_step,
+            gripper_open_threshold=float(self.config.gripper_open_threshold),
+            gripper_close_threshold=float(self.config.gripper_close_threshold),
+        )
