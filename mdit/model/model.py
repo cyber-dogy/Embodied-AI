@@ -11,6 +11,7 @@ from torch import Tensor
 from common.runtime import get_device
 from mdit.config import MDITExperimentConfig
 from mdit.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_STATE, TASK
+from .action_postprocess import postprocess_robot_state_command
 from .objectives import FlowMatchingObjective
 from .observation_encoder import ObservationEncoder
 from .transformer import DiffusionTransformer
@@ -162,8 +163,28 @@ class MultiTaskDiTPolicy(nn.Module):
         self._queues = populate_queues(self._queues, batch)
         if len(self._queues[ACTION]) == 0:
             action_chunk = self.predict_action_chunk(batch)
-            self._queues[ACTION].extend(action_chunk.transpose(0, 1))
+            if str(self.config.command_mode) == "first":
+                self._queues[ACTION].extend(action_chunk.transpose(0, 1))
+            else:
+                self._queues[ACTION].append(self._select_runtime_action_from_chunk(action_chunk))
         return self._queues[ACTION].popleft()
+
+    def _select_runtime_action_from_chunk(self, action_chunk: Tensor) -> Tensor:
+        if action_chunk.ndim != 3:
+            raise ValueError(f"Expected action chunk with shape (B,T,D), got {tuple(action_chunk.shape)}")
+        horizon_len = int(action_chunk.shape[1])
+        mode = str(self.config.command_mode).lower()
+        if mode == "first":
+            return action_chunk[:, 0]
+        if mode == "horizon_index":
+            index = int(np.clip(int(self.config.horizon_index), 0, max(0, horizon_len - 1)))
+            return action_chunk[:, index]
+        if mode == "mean_first_n":
+            count = int(np.clip(int(self.config.average_first_n), 1, horizon_len))
+            reduced = action_chunk[:, :count].mean(dim=1)
+            reduced[..., 9] = (action_chunk[:, :count, 9].mean(dim=1) >= 0.5).to(reduced.dtype)
+            return reduced
+        raise ValueError(f"Unsupported command_mode: {self.config.command_mode}")
 
     def predict_action(
         self,
@@ -186,4 +207,14 @@ class MultiTaskDiTPolicy(nn.Module):
             }
         )
         action = self.unnormalize_action(action)
-        return action.squeeze(0).detach().cpu().numpy()
+        action_np = action.squeeze(0).detach().cpu().numpy().astype(np.float32, copy=False)
+        return postprocess_robot_state_command(
+            np.asarray(robot_state, dtype=np.float32),
+            action_np,
+            enabled=bool(self.config.smooth_actions),
+            position_alpha=float(self.config.position_alpha),
+            rotation_alpha=float(self.config.rotation_alpha),
+            max_position_step=self.config.max_position_step,
+            gripper_open_threshold=float(self.config.gripper_open_threshold),
+            gripper_close_threshold=float(self.config.gripper_close_threshold),
+        )

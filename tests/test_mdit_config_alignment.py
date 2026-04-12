@@ -111,6 +111,9 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.checkpoint_payload_mode, "full")
         self.assertTrue(cfg.save_latest_ckpt)
         self.assertTrue(cfg.save_best_valid_ckpt)
+        self.assertEqual(cfg.success_selection_every_epochs, 100)
+        self.assertEqual(cfg.success_selection_episodes, 20)
+        self.assertTrue(cfg.smooth_actions)
 
     def test_clip_alignment_keeps_vision_trainable_and_text_encoder_frozen(self) -> None:
         with mock.patch.dict(

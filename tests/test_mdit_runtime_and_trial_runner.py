@@ -6,6 +6,7 @@ import unittest
 from unittest import mock
 import json
 
+import numpy as np
 import torch
 
 import _bootstrap  # noqa: F401
@@ -125,6 +126,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
                 epoch_summaries=[{"epoch": 4, "train": {"loss_total": 0.25}}],
                 checkpoint_payload_mode="full",
                 wandb_run_id="wandb-resume-id",
+                success_eval_history=[{"epoch": 5, "success_rate": 0.35, "num_episodes": 20}],
             )
 
             restored = load_resume_state(cfg, model, optimizer, scheduler, scaler)
@@ -137,6 +139,10 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             self.assertEqual(restored["train_loss_history"], [1.0, 0.5, 0.25])
             self.assertEqual(restored["valid_loss_history"], [0.8, 0.4, 0.3])
             self.assertEqual(restored["epoch_summaries"], [{"epoch": 4, "train": {"loss_total": 0.25}}])
+            self.assertEqual(
+                restored["success_eval_history"],
+                [{"epoch": 5, "success_rate": 0.35, "num_episodes": 20}],
+            )
             self.assertEqual(restored["wandb_run_id"], "wandb-resume-id")
 
     def test_predict_action_selects_configured_camera_subset(self) -> None:
@@ -234,6 +240,67 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         self.assertTrue(torch.all(first == 1.0))
         self.assertTrue(torch.all(second == 2.0))
         self.assertEqual(len(policy._queues[ACTION]), 0)
+
+    def test_select_action_uses_mean_first_n_without_queueing_full_chunk(self) -> None:
+        policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
+        policy.config = MDITExperimentConfig(
+            n_obs_steps=3,
+            n_action_steps=4,
+            command_mode="mean_first_n",
+            average_first_n=2,
+        )
+        policy.reset()
+        call_values: list[int] = []
+
+        def _predict_action_chunk(batch):
+            del batch
+            call_values.append(len(call_values) + 1)
+            chunk = torch.zeros(1, 4, 10)
+            chunk[:, 0] = 1.0
+            chunk[:, 1] = 3.0
+            chunk[:, 0, 9] = 0.2
+            chunk[:, 1, 9] = 0.8
+            return chunk
+
+        policy.predict_action_chunk = _predict_action_chunk
+        batch = {
+            OBS_STATE: torch.zeros(1, 10),
+            OBS_IMAGES: torch.zeros(1, 5, 3, 4, 4),
+            TASK: ["demo"],
+        }
+
+        first = policy.select_action(batch)
+        second = policy.select_action(batch)
+
+        self.assertEqual(call_values, [1, 2])
+        self.assertEqual(tuple(first.shape), (1, 10))
+        self.assertEqual(float(first[0, 0]), 2.0)
+        self.assertEqual(float(first[0, 9]), 1.0)
+        self.assertEqual(float(second[0, 0]), 2.0)
+        self.assertEqual(len(policy._queues[ACTION]), 0)
+
+    def test_predict_action_postprocesses_rotation_and_gripper(self) -> None:
+        policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
+        policy.config = MDITExperimentConfig(
+            camera_names=("front", "wrist", "overhead"),
+            smooth_actions=False,
+            gripper_open_threshold=0.6,
+            gripper_close_threshold=0.4,
+        )
+        policy.select_action = lambda batch: torch.tensor([[0.1, 0.2, 0.3, 2.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.5]])
+        policy.unnormalize_action = lambda action: action
+
+        obs = torch.zeros(5, 4, 4, 3, dtype=torch.uint8)
+        robot_state = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0], dtype=np.float32)
+
+        with mock.patch("mdit.model.model.get_device", return_value=torch.device("cpu")):
+            action = policy.predict_action(obs.numpy(), robot_state, task_text="demo")
+
+        self.assertEqual(tuple(action.shape), (10,))
+        self.assertAlmostEqual(float(np.linalg.norm(action[3:6])), 1.0, places=5)
+        self.assertAlmostEqual(float(np.linalg.norm(action[6:9])), 1.0, places=5)
+        self.assertAlmostEqual(float(np.dot(action[3:6], action[6:9])), 0.0, places=5)
+        self.assertEqual(float(action[9]), 0.0)
 
     def test_select_best_success_prefers_periodic_checkpoint_on_ties(self) -> None:
         periodic = {

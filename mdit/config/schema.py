@@ -98,6 +98,7 @@ class MDITExperimentConfig:
     checkpoint_payload_mode: str = "full"
     audit_include_special_ckpts: bool = True
     delete_screening_ckpts_after_audit: bool = False
+    delete_periodic_ckpts_after_success_eval: bool = False
     lr_scheduler_name: str = "cosine"
     lr_warmup_steps: int = 500
 
@@ -111,8 +112,20 @@ class MDITExperimentConfig:
     wandb_mode: str = "disabled"
     wandb_resume: bool = False
 
+    success_selection_every_epochs: int = 0
+    success_selection_episodes: int = 0
     success_max_steps: int = 200
+    standard_eval_episodes: int = 0
     eval_step_heartbeat_every: int = 50
+    smooth_actions: bool = False
+    command_mode: str = "first"
+    horizon_index: int = 0
+    average_first_n: int = 1
+    position_alpha: float = 0.35
+    rotation_alpha: float = 0.25
+    max_position_step: float | None = 0.03
+    gripper_open_threshold: float = 0.6
+    gripper_close_threshold: float = 0.4
 
     def __post_init__(self) -> None:
         self.train_data_path = Path(self.train_data_path)
@@ -132,6 +145,18 @@ class MDITExperimentConfig:
             raise ValueError(
                 "checkpoint_payload_mode must be either 'full' or 'lightweight'."
             )
+        if str(self.command_mode) not in {"first", "horizon_index", "mean_first_n"}:
+            raise ValueError(
+                "command_mode must be one of {'first', 'horizon_index', 'mean_first_n'}."
+            )
+        if int(self.success_selection_every_epochs) < 0:
+            raise ValueError("success_selection_every_epochs must be >= 0.")
+        if int(self.success_selection_episodes) < 0:
+            raise ValueError("success_selection_episodes must be >= 0.")
+        if int(self.standard_eval_episodes) < 0:
+            raise ValueError("standard_eval_episodes must be >= 0.")
+        if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
+            raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
 
     @property
     def ckpt_dir(self) -> Path:
@@ -156,6 +181,10 @@ class MDITExperimentConfig:
     @property
     def summary_path(self) -> Path:
         return self.ckpt_dir / "summary.json"
+
+    @property
+    def success_eval_path(self) -> Path:
+        return self.ckpt_dir / "success_eval_history.json"
 
     @property
     def audit_report_path(self) -> Path:

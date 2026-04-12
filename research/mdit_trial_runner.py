@@ -250,6 +250,12 @@ def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
         cfg.save_best_valid_ckpt = False
     if "checkpoint_payload_mode" not in overrides:
         cfg.checkpoint_payload_mode = "lightweight"
+    if "success_selection_every_epochs" not in overrides:
+        cfg.success_selection_every_epochs = int(request.checkpoint_every)
+    if "success_selection_episodes" not in overrides:
+        cfg.success_selection_episodes = int(request.eval_episodes)
+    if "standard_eval_episodes" not in overrides:
+        cfg.standard_eval_episodes = 0
     cfg.audit_include_special_ckpts = False
     cfg.delete_screening_ckpts_after_audit = int(request.stage_epochs) < 500
     if request.run_name:
@@ -649,21 +655,33 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
         _write_trial_request(run_dir, resolved_request)
         keep_paths = _build_train_keep_paths(run_dir, cfg)
         _prune_run_dir(run_dir, keep_paths)
+        skip_offline_audit = bool(cfg.delete_periodic_ckpts_after_success_eval)
+        best_success_rate = summary.get("best_success_rate")
+        best_success_epoch = summary.get("best_success_epoch")
+        best_success_path = cfg.best_success_ckpt_path if cfg.best_success_ckpt_path.exists() else None
         output = {
             "line": "mdit",
             "phase": "train_only",
             "experiment_name": request.experiment_name,
             "description": request.description,
-            "trial_score": None,
-            "pending_offline_audit": True,
-            "offline_audit_command": _build_offline_audit_command(run_dir),
-            "success_20": None,
-            "success_100": None,
+            "trial_score": None if best_success_rate is None else float(best_success_rate),
+            "pending_offline_audit": not skip_offline_audit,
+            "offline_audit_command": None if skip_offline_audit else _build_offline_audit_command(run_dir),
+            "success_20": (
+                None
+                if best_success_rate is None or int(request.eval_episodes) < 20
+                else float(best_success_rate)
+            ),
+            "success_100": (
+                None
+                if best_success_rate is None or int(request.eval_episodes) < 100
+                else float(best_success_rate)
+            ),
             "collapse_detected": False,
             "collapse_reasons": [],
-            "best_ckpt_path": None,
-            "best_success_rate": None,
-            "best_success_epoch": None,
+            "best_ckpt_path": None if best_success_path is None else str(best_success_path),
+            "best_success_rate": None if best_success_rate is None else float(best_success_rate),
+            "best_success_epoch": None if best_success_epoch is None else int(best_success_epoch),
             "best_valid_ckpt_path": None,
             "kept_ckpt_paths": _collect_kept_ckpt_paths(keep_paths),
             "run_name": cfg.run_name,

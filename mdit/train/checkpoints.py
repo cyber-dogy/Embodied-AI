@@ -81,7 +81,9 @@ def build_checkpoint_payload(
     epoch_summaries: list[dict[str, Any]],
     checkpoint_payload_mode: str,
     wandb_run_id: str | None,
+    success_eval_history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    success_eval_history = list(success_eval_history or [])
     payload = {
         "cfg": config_to_dict(cfg),
         "line": "mdit",
@@ -97,6 +99,7 @@ def build_checkpoint_payload(
         "best_success_epoch": best_success_epoch,
         "wandb_run_id": wandb_run_id,
         "epoch_summary": None if not epoch_summaries else dict(epoch_summaries[-1]),
+        "latest_success_eval": None if not success_eval_history else dict(success_eval_history[-1]),
     }
     if str(checkpoint_payload_mode) != "lightweight":
         payload.update(
@@ -107,6 +110,7 @@ def build_checkpoint_payload(
                 "train_loss_history": list(train_loss_history),
                 "valid_loss_history": list(valid_loss_history),
                 "epoch_summaries": list(epoch_summaries),
+                "success_eval_history": success_eval_history,
             }
         )
     return payload
@@ -133,6 +137,7 @@ def save_checkpoint(
     epoch_summaries: list[dict[str, Any]],
     checkpoint_payload_mode: str,
     wandb_run_id: str | None,
+    success_eval_history: list[dict[str, Any]] | None = None,
 ) -> None:
     payload = build_checkpoint_payload(
         cfg=cfg,
@@ -151,6 +156,7 @@ def save_checkpoint(
         train_loss_history=train_loss_history,
         valid_loss_history=valid_loss_history,
         epoch_summaries=epoch_summaries,
+        success_eval_history=success_eval_history,
         checkpoint_payload_mode=checkpoint_payload_mode,
         wandb_run_id=wandb_run_id,
     )
@@ -177,6 +183,7 @@ def load_resume_state(
             "train_loss_history": [],
             "valid_loss_history": [],
             "epoch_summaries": [],
+            "success_eval_history": [],
             "wandb_run_id": None,
             "ema_state_dict": None,
         }
@@ -206,6 +213,7 @@ def load_resume_state(
         "train_loss_history": list(payload.get("train_loss_history") or []),
         "valid_loss_history": list(payload.get("valid_loss_history") or []),
         "epoch_summaries": list(payload.get("epoch_summaries") or []),
+        "success_eval_history": list(payload.get("success_eval_history") or []),
         "wandb_run_id": payload.get("wandb_run_id"),
         "ema_state_dict": payload.get("ema_state_dict"),
     }

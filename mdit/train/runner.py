@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import logging
 import time
 from typing import Any
 
@@ -20,7 +22,24 @@ from .builders import (
 )
 from .checkpoints import build_ema_model, load_resume_state, save_checkpoint, update_ema_model
 from .checkpoints import finish_wandb_run, init_wandb_run
-from .eval import evaluate_model_on_loader, compute_sample_metric, make_progress_iter, summarize_for_json, write_summary_json
+from .eval import (
+    compute_sample_metric,
+    evaluate_model_on_loader,
+    make_progress_iter,
+    run_success_rate_eval,
+    summarize_for_json,
+    write_summary_json,
+)
+
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _write_success_eval_history(cfg: MDITExperimentConfig, history: list[dict[str, Any]]) -> None:
+    cfg.success_eval_path.write_text(
+        json.dumps(history, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
 
 
 def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
@@ -53,6 +72,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
     train_loss_history = resume_state["train_loss_history"]
     valid_loss_history = resume_state["valid_loss_history"]
     epoch_summaries = resume_state["epoch_summaries"]
+    success_eval_history = resume_state["success_eval_history"]
     best_metric = resume_state["best_metric"]
     best_epoch = resume_state["best_epoch"]
     best_success_rate = resume_state["best_success_rate"]
@@ -130,14 +150,49 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         "train_action_mse_error": compute_sample_metric(eval_model, sample_batch_cpu, cfg),
                     }
                 except Exception as exc:
-                    import logging
-                    logging.getLogger(__name__).warning("compute_sample_metric failed: %s", exc)
+                    LOGGER.warning("compute_sample_metric failed: %s", exc)
+
+            success_summary = None
+            success_record = None
+            should_run_success_eval = (
+                int(cfg.success_selection_every_epochs) > 0
+                and int(cfg.success_selection_episodes) > 0
+                and ((epoch + 1) % int(cfg.success_selection_every_epochs)) == 0
+            )
+            if should_run_success_eval:
+                try:
+                    success_summary = run_success_rate_eval(
+                        eval_model,
+                        cfg,
+                        num_episodes=int(cfg.success_selection_episodes),
+                        max_steps=int(cfg.success_max_steps),
+                        headless=True,
+                        show_progress=True,
+                        progress_desc=f"mdit success epoch {epoch + 1}",
+                    )
+                    success_rate = float(success_summary["success_rate"])
+                    if best_success_rate is None or success_rate > best_success_rate:
+                        best_success_rate = success_rate
+                        best_success_epoch = int(epoch)
+                except Exception as exc:  # pragma: no cover - RLBench runtime issues
+                    LOGGER.warning("success-rate eval failed at epoch %s: %s", epoch + 1, exc)
+                    success_summary = None
+                    success_record = {
+                        "epoch": int(epoch + 1),
+                        "success_rate": None,
+                        "mean_steps": None,
+                        "num_episodes": int(cfg.success_selection_episodes),
+                        "checkpoint_path": None,
+                        "error": str(exc),
+                        "deleted_periodic_ckpt": False,
+                    }
 
             epoch_row = {
                 "epoch": int(epoch),
                 "train": train_summary,
                 "valid": valid_summary,
                 "sample": sample_summary,
+                "success_eval": summarize_for_json(success_summary),
             }
             epoch_summaries.append(epoch_row)
 
@@ -168,6 +223,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     epoch_summaries=epoch_summaries,
                     checkpoint_payload_mode=cfg.checkpoint_payload_mode,
                     wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
                 )
 
             if cfg.save_best_valid_ckpt and best_epoch == epoch:
@@ -191,8 +247,10 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     epoch_summaries=epoch_summaries,
                     checkpoint_payload_mode=cfg.checkpoint_payload_mode,
                     wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
                 )
 
+            periodic_path = None
             if int(cfg.checkpoint_every_epochs) > 0 and ((epoch + 1) % int(cfg.checkpoint_every_epochs)) == 0:
                 periodic_path = cfg.periodic_ckpt_dir / f"epoch_{epoch + 1:04d}.pt"
                 save_checkpoint(
@@ -215,6 +273,78 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     epoch_summaries=epoch_summaries,
                     checkpoint_payload_mode=cfg.checkpoint_payload_mode,
                     wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
+                )
+
+            if success_summary is not None:
+                success_record = {
+                    "epoch": int(epoch + 1),
+                    "success_rate": float(success_summary["success_rate"]),
+                    "mean_steps": float(success_summary["mean_steps"]),
+                    "num_episodes": int(success_summary["num_episodes"]),
+                    "checkpoint_path": None if periodic_path is None else str(periodic_path),
+                    "error": None,
+                    "deleted_periodic_ckpt": False,
+                }
+                success_eval_history.append(success_record)
+                _write_success_eval_history(cfg, success_eval_history)
+                if best_success_epoch == epoch:
+                    save_checkpoint(
+                        cfg.best_success_ckpt_path,
+                        cfg=cfg,
+                        model=model,
+                        ema_model=ema_model,
+                        optimizer=optimizer,
+                        scheduler=scheduler,
+                        scaler=scaler,
+                        dataset_stats=dataset_stats,
+                        epoch=epoch,
+                        global_step=global_step,
+                        best_metric=best_metric,
+                        best_epoch=best_epoch,
+                        best_success_rate=best_success_rate,
+                        best_success_epoch=best_success_epoch,
+                        train_loss_history=train_loss_history,
+                        valid_loss_history=valid_loss_history,
+                        epoch_summaries=epoch_summaries,
+                        checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                        wandb_run_id=None if wandb_run is None else wandb_run.id,
+                        success_eval_history=success_eval_history,
+                    )
+                if (
+                    periodic_path is not None
+                    and cfg.delete_periodic_ckpts_after_success_eval
+                    and periodic_path.exists()
+                ):
+                    periodic_path.unlink()
+                    success_record["deleted_periodic_ckpt"] = True
+                    _write_success_eval_history(cfg, success_eval_history)
+            elif success_record is not None:
+                success_eval_history.append(success_record)
+                _write_success_eval_history(cfg, success_eval_history)
+
+            if success_record is not None and cfg.save_latest_ckpt:
+                save_checkpoint(
+                    cfg.latest_ckpt_path,
+                    cfg=cfg,
+                    model=model,
+                    ema_model=ema_model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    dataset_stats=dataset_stats,
+                    epoch=epoch,
+                    global_step=global_step,
+                    best_metric=best_metric,
+                    best_epoch=best_epoch,
+                    best_success_rate=best_success_rate,
+                    best_success_epoch=best_success_epoch,
+                    train_loss_history=train_loss_history,
+                    valid_loss_history=valid_loss_history,
+                    epoch_summaries=epoch_summaries,
+                    checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                    wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
                 )
 
             if wandb_run is not None:
@@ -228,11 +358,27 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         payload[f"valid/{key}"] = value
                 if sample_summary is not None:
                     payload.update({f"sample/{key}": value for key, value in sample_summary.items()})
+                if success_summary is not None:
+                    payload["success_select/success_rate"] = float(success_summary["success_rate"])
+                    payload["success_select/mean_steps"] = float(success_summary["mean_steps"])
+                    payload["success_select/num_episodes"] = int(success_summary["num_episodes"])
                 wandb_run.log(payload, step=global_step)
                 wandb_run.summary["best_metric"] = best_metric
                 wandb_run.summary["best_epoch"] = best_epoch
                 wandb_run.summary["best_success_rate"] = best_success_rate
                 wandb_run.summary["best_success_epoch"] = best_success_epoch
+
+        final_eval = None
+        if int(cfg.standard_eval_episodes) > 0:
+            final_eval = run_success_rate_eval(
+                ema_model if ema_model is not None else model,
+                cfg,
+                num_episodes=int(cfg.standard_eval_episodes),
+                max_steps=int(cfg.success_max_steps),
+                headless=True,
+                show_progress=True,
+                progress_desc="mdit standard eval",
+            )
 
         wall_clock_hours = (time.perf_counter() - run_started_at) / 3600.0
         summary = {
@@ -250,13 +396,15 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
             "train_loss_last": train_loss_history[-1] if train_loss_history else None,
             "valid_loss_last": valid_loss_history[-1] if valid_loss_history else None,
             "epoch_summaries": epoch_summaries[-5:],
-            "final_standard_eval": summarize_for_json(None),
+            "success_eval_history": success_eval_history[-10:],
+            "final_standard_eval": summarize_for_json(final_eval),
             "wall_clock_hours": wall_clock_hours,
             "dataset_sizes": {
                 "train": len(dataset_train),
                 "valid": len(dataset_valid),
             },
         }
+        _write_success_eval_history(cfg, success_eval_history)
         write_summary_json(cfg, summary)
         return summary
     finally:
