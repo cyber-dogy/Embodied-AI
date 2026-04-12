@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from abc import ABC, abstractmethod
 
 import einops
@@ -8,7 +9,8 @@ import torch.nn as nn
 import torchvision
 from torch import Tensor
 
-from mdit.constants import OBS_IMAGES, OBS_STATE, TASK
+from mdit.constants import OBS_IMAGES, OBS_PCD, OBS_STATE, TASK
+from pdit.model.encoders.pointnet.pointnet import PointNetfeat
 
 
 def _default_clip_mean() -> tuple[float, float, float]:
@@ -122,6 +124,62 @@ def create_vision_encoder(config) -> BaseVisionEncoder:
     )
 
 
+class PointNetObsTokenEncoder(nn.Module):
+    """PointNet-based observation encoder matching PDIT's implementation exactly."""
+
+    def __init__(
+        self,
+        embed_dim: int,
+        input_channels: int,
+        input_transform: bool,
+        use_group_norm: bool = False,
+    ) -> None:
+        super().__init__()
+        assert input_channels in [3, 6], "Input channels must be 3 or 6"
+        self.embed_dim = int(embed_dim)
+        from common.torch_utils import replace_submodules
+        self.backbone = nn.Sequential(
+            PointNetfeat(input_channels, input_transform),
+            nn.Mish(),
+            nn.Linear(1024, 512),
+            nn.Mish(),
+            nn.Linear(512, embed_dim),
+        )
+        if use_group_norm:
+            self.backbone = replace_submodules(
+                root_module=self.backbone,
+                predicate=lambda x: isinstance(x, nn.BatchNorm1d),
+                func=lambda x: nn.GroupNorm(
+                    num_groups=x.num_features // 16,
+                    num_channels=x.num_features,
+                ),
+            )
+
+    def forward(self, pcd: Tensor, robot_state_obs: Tensor) -> Tensor:
+        """
+        Args:
+            pcd: (B, T_obs, P, C) point cloud tensor
+            robot_state_obs: (B, T_obs, state_dim) robot state tensor
+        Returns:
+            (B, T_obs, embed_dim + state_dim) per-timestep observation tokens
+        """
+        batch_size, n_obs_steps, n_points, channels = pcd.shape
+        flat_pcd = pcd.float().reshape(batch_size * n_obs_steps, n_points, channels).permute(0, 2, 1)
+        flat_robot_state = robot_state_obs.float().reshape(batch_size * n_obs_steps, -1)
+
+        # PointNet Conv1d+BatchNorm is prone to non-finite outputs under fp16 autocast
+        autocast_off = (
+            torch.autocast(device_type=flat_pcd.device.type, enabled=False)
+            if flat_pcd.device.type in {"cuda", "cpu"}
+            else contextlib.nullcontext()
+        )
+        with autocast_off:
+            encoded_pcd = self.backbone(flat_pcd)
+
+        obs_tokens = torch.cat([encoded_pcd, flat_robot_state], dim=-1)
+        return obs_tokens.reshape(batch_size, n_obs_steps, -1)
+
+
 class CLIPTextEncoder(nn.Module):
     def __init__(self, model_name: str, projection_dim: int) -> None:
         super().__init__()
@@ -152,39 +210,67 @@ class ObservationEncoder(nn.Module):
     def __init__(self, config) -> None:
         super().__init__()
         self.config = config
-        vision_config = config.observation_encoder.vision
-        self.camera_names = list(config.camera_names)
-        self.num_cameras = len(self.camera_names)
         self.robot_state_dim = int(config.robot_state_dim)
-        self.text_dim = int(config.transformer.hidden_dim)
+        self.use_pcd = bool(config.use_pcd)
 
-        self._setup_preprocessing(vision_config)
-
-        if self.num_cameras > 0:
-            if bool(vision_config.use_separate_encoder_per_camera):
-                self.vision_encoders = nn.ModuleList(
-                    [create_vision_encoder(vision_config) for _ in self.camera_names]
-                )
-                self.vision_encoder = None
-                vision_probe = self.vision_encoders[0]
-            else:
-                self.vision_encoder = create_vision_encoder(vision_config)
-                self.vision_encoders = None
-                vision_probe = self.vision_encoder
-            mean, std = self._resolve_image_stats(vision_probe)
-            self.register_buffer("_img_mean", torch.tensor(mean).view(1, 3, 1, 1), persistent=False)
-            self.register_buffer("_img_std", torch.tensor(std).view(1, 3, 1, 1), persistent=False)
-            feature_c, feature_h, feature_w = vision_probe.get_output_shape()
-            self.visual_feature_dim = int(feature_c * feature_h * feature_w)
-        else:
+        if self.use_pcd:
+            pcd_cfg = config.observation_encoder.pcd
+            input_channels = 6 if bool(pcd_cfg.use_color) else 3
+            self.pcd_encoder = PointNetObsTokenEncoder(
+                embed_dim=int(pcd_cfg.embed_dim),
+                input_channels=input_channels,
+                input_transform=bool(pcd_cfg.input_transform),
+                use_group_norm=bool(pcd_cfg.use_group_norm),
+            )
+            norm_center = tuple(float(v) for v in pcd_cfg.norm_center)
+            self.register_buffer(
+                "_pcd_norm_center",
+                torch.tensor(norm_center, dtype=torch.float32),
+                persistent=False,
+            )
+            # Unused in PCD mode
             self.vision_encoder = None
             self.vision_encoders = None
+            self.text_encoder = None
             self.visual_feature_dim = 0
-            self.register_buffer("_img_mean", torch.tensor(_default_clip_mean()).view(1, 3, 1, 1), persistent=False)
-            self.register_buffer("_img_std", torch.tensor(_default_clip_std()).view(1, 3, 1, 1), persistent=False)
+            self.text_dim = 0
+            self.num_cameras = 0
+            self.camera_names = []
+        else:
+            vision_config = config.observation_encoder.vision
+            self.camera_names = list(config.camera_names)
+            self.num_cameras = len(self.camera_names)
+            self.text_dim = int(config.transformer.hidden_dim)
+            self.pcd_encoder = None
 
-        text_model_name = str(config.observation_encoder.text.model)
-        self.text_encoder = CLIPTextEncoder(model_name=text_model_name, projection_dim=self.text_dim)
+            self._setup_preprocessing(vision_config)
+
+            if self.num_cameras > 0:
+                if bool(vision_config.use_separate_encoder_per_camera):
+                    self.vision_encoders = nn.ModuleList(
+                        [create_vision_encoder(vision_config) for _ in self.camera_names]
+                    )
+                    self.vision_encoder = None
+                    vision_probe = self.vision_encoders[0]
+                else:
+                    self.vision_encoder = create_vision_encoder(vision_config)
+                    self.vision_encoders = None
+                    vision_probe = self.vision_encoder
+                mean, std = self._resolve_image_stats(vision_probe)
+                self.register_buffer("_img_mean", torch.tensor(mean).view(1, 3, 1, 1), persistent=False)
+                self.register_buffer("_img_std", torch.tensor(std).view(1, 3, 1, 1), persistent=False)
+                feature_c, feature_h, feature_w = vision_probe.get_output_shape()
+                self.visual_feature_dim = int(feature_c * feature_h * feature_w)
+            else:
+                self.vision_encoder = None
+                self.vision_encoders = None
+                self.visual_feature_dim = 0
+                self.register_buffer("_img_mean", torch.tensor(_default_clip_mean()).view(1, 3, 1, 1), persistent=False)
+                self.register_buffer("_img_std", torch.tensor(_default_clip_std()).view(1, 3, 1, 1), persistent=False)
+
+            text_model_name = str(config.observation_encoder.text.model)
+            self.text_encoder = CLIPTextEncoder(model_name=text_model_name, projection_dim=self.text_dim)
+
         self.conditioning_dim = self._compute_conditioning_dim()
 
     def _setup_preprocessing(self, vision_config) -> None:
@@ -215,6 +301,10 @@ class ObservationEncoder(nn.Module):
         return mean, std
 
     def _compute_conditioning_dim(self) -> int:
+        if self.use_pcd:
+            pcd_cfg = self.config.observation_encoder.pcd
+            per_step = self.robot_state_dim + int(pcd_cfg.embed_dim)
+            return per_step * int(self.config.n_obs_steps)
         per_step_dim = self.robot_state_dim + self.text_dim + self.visual_feature_dim * self.num_cameras
         return int(per_step_dim * int(self.config.n_obs_steps))
 
@@ -234,6 +324,16 @@ class ObservationEncoder(nn.Module):
         return images
 
     def encode(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
+        if self.use_pcd:
+            pcd = batch[OBS_PCD]
+            obs_state = batch[OBS_STATE]
+            # Normalize xyz by subtracting scene center
+            norm_center = self._pcd_norm_center.to(device=pcd.device, dtype=pcd.dtype)
+            pcd = pcd.clone()
+            pcd[..., :3] -= norm_center
+            obs_tokens = self.pcd_encoder(pcd, obs_state)  # (B, T_obs, embed+state)
+            return obs_tokens.flatten(start_dim=1)
+
         obs_state = batch[OBS_STATE]
         batch_size, n_obs_steps = obs_state.shape[:2]
         conditioning_feats = [obs_state]

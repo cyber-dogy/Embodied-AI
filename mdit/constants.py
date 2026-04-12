@@ -3,6 +3,7 @@ from __future__ import annotations
 
 OBS_IMAGES = "observation.images"
 OBS_STATE = "observation.state"
+OBS_PCD = "observation.pcd"
 ACTION = "action"
 TASK = "task"
 

@@ -53,9 +53,23 @@ class TextEncoderConfig:
 
 
 @dataclass
+class PcdEncoderConfig:
+    n_points: int = 2048
+    use_color: bool = False
+    input_transform: bool = False
+    use_group_norm: bool = False
+    embed_dim: int = 256
+    norm_center: tuple[float, float, float] = (0.4, 0.0, 1.4)
+
+    def __post_init__(self) -> None:
+        self.norm_center = tuple(float(v) for v in self.norm_center)
+
+
+@dataclass
 class ObservationEncoderConfig:
     vision: VisionEncoderConfig = field(default_factory=VisionEncoderConfig)
     text: TextEncoderConfig = field(default_factory=TextEncoderConfig)
+    pcd: PcdEncoderConfig = field(default_factory=PcdEncoderConfig)
 
 
 @dataclass
@@ -75,6 +89,7 @@ class MDITExperimentConfig:
     robot_state_dim: int = 10
     action_dim: int = 10
     camera_names: tuple[str, ...] = ("front", "wrist", "overhead")
+    use_pcd: bool = False
     task_text_mode: str = "template"
     task_text_override: str | None = None
     observation_encoder: ObservationEncoderConfig = field(default_factory=ObservationEncoderConfig)
