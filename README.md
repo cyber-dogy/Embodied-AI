@@ -79,75 +79,16 @@ pip install -r requirements_eval.txt
 
 ## 从零训练
 
-推荐直接用两阶段工作流。
-
-从0开始跑5RGB-MDIT（share+全量）：
-
-```bash
-source /opt/miniconda3/etc/profile.d/conda.sh
-conda activate mdit_env
-cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
-
-RUN_NAME="unplug_charger_mdit_rgb5_flowmatch_pditfirst_500__$(date +%Y%m%d_%H%M%S)"
-
-python scripts/run_mdit_autoresearch_trial.py \
-  --phase train-only \
-  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
-  --stage-epochs 500 \
-  --checkpoint-every 100 \
-  --device cuda \
-  --experiment-name obs3_rgb5_flowmatch_pditfirst_500 \
-  --run-name "$RUN_NAME" \
-  --description "5RGB obs3 flow-matching mdit aligned to pdit first-action semantics" \
-  --set batch_size=16 \
-  --set num_workers=8 \
-  --set use_amp=true\
-  --set grad_accum_steps=1 \
-  --set resume_from_latest=false
+### 从0开始跑5RGB-MDIT（5RGB + 每相机独立 encoder + 全量训练）：
 
 ```
 
-断点续训：
+开启tmux:
 
-```bash
-source /opt/miniconda3/etc/profile.d/conda.sh
-conda activate mdit_env
-cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
-
-RUN_NAME="<SAME_RUN_NAME>"
-BATCH=<CALIBRATED_BATCH>
-
-python scripts/run_mdit_autoresearch_trial.py \
-  --phase train-only \
-  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
-  --stage-epochs 500 \
-  --checkpoint-every 100 \
-  --device cuda \
-  --experiment-name obs3_rgb5_flowmatch_pditfirst_500 \
-  --run-name "$RUN_NAME" \
-  --description "resume 5RGB obs3 flow-matching mdit aligned to pdit first-action semantics" \
-  --set batch_size=16 \
-  --set num_workers=8 \
-  --set grad_accum_steps=1 \
-  --set resume_from_latest=true
-```
-
-训练完成后，单独做成功率审计：
-
-```bash
-python scripts/run_autoresearch_trial.py \
-  --phase audit-only \
-  --run-dir ckpt/<run_name> \
-  --eval-episodes 20 \
-  --audit-timeout-sec 10800 \
-  --headless
-```
-
-从0开始跑5RGB-MDIT（5RGB + 每相机独立 encoder + last_block 微调）：
-
-```
-#全量微调5独立Vit测试
 tmux new -s mdit_rgb5_sep_all
+
+
+开始训练：
 
 source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate mdit_env
@@ -177,9 +118,7 @@ RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
   --set save_latest_ckpt=true\
   --set checkpoint_payload_mode=full
 
-
-
-
+断点续训：
 
 source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate mdit_env
@@ -210,6 +149,7 @@ RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
   --set resume_from_latest=true
 
 跑起来后如果要脱离 tmux：
+
 Ctrl-b d
 
 之后重连：
@@ -243,10 +183,11 @@ python scripts/eval_mdit_checkpoint.py \
   --max-steps 200 \
   --headless \
   --show-progress
+```
 
 
-
-寝室本地测评：
+### 寝室本地离线测评：
+```
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate pfp_env
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
@@ -292,9 +233,6 @@ QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
   --set gripper_open_threshold=0.6 \
   --set gripper_close_threshold=0.4
 
-
-
-
 单个 ckpt 做 100 个 episode 评估：
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate pfp_env
@@ -319,78 +257,346 @@ python scripts/eval_mdit_checkpoint.py \
 
 ```
 
-```bash
-source /opt/miniconda3/etc/profile.d/conda.sh
-conda activate mdit_env
-cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+## AutoDL远程训练指令
 
-RUN_NAME="unplug_charger_mdit_rgb5_sep_last_500__$(date +%Y%m%d_%H%M%S)"
-
-python scripts/run_mdit_autoresearch_trial.py \
-  --phase train-only \
-  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
-  --stage-epochs 500 \
-  --checkpoint-every 100 \
-  --device cuda \
-  --experiment-name obs3_rgb5_sep_last_500 \
-  --run-name "$RUN_NAME" \
-  --description "5RGB separate encoders last-block finetune 500ep" \
-  --set batch_size=8 \
-  --set num_workers=8 \
-  --set grad_accum_steps=1 \
-  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
-  --set observation_encoder.vision.train_mode=\"last_block\" \
-  --set observation_encoder.vision.lr_multiplier=0.1 \
-  --set resume_from_latest=false
-
+### 云端训练：全量微调 5 独立 ViT，带 100epoch success eval
 ```
+tmux new -s mdit_rgb5_sep_all
 
-断点续训：
-
-```bash
 source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate mdit_env
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
 
-RUN_NAME="<SAME_RUN_NAME>"
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
 
-python scripts/run_mdit_autoresearch_trial.py \
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
   --phase train-only \
-  --config configs/mdit/obs3_rgb5_flowmatch_pdit_first.json \
+  --config configs/mdit/obs3_rgb5_sep_lastblock_a8_gate100.json \
   --stage-epochs 500 \
   --checkpoint-every 100 \
+  --eval-episodes 20 \
   --device cuda \
-  --experiment-name obs3_rgb5_sep_last_500 \
+  --experiment-name obs3_rgb5_sep_all_500 \
   --run-name "$RUN_NAME" \
-  --description "resume 5RGB separate encoders last-block finetune" \
+  --description "5RGB separate encoders all finetune 500ep with success gate" \
+  --headless \
+  --show-progress \
   --set batch_size=8 \
   --set num_workers=8 \
   --set grad_accum_steps=1 \
   --set observation_encoder.vision.use_separate_encoder_per_camera=true \
-  --set observation_encoder.vision.train_mode=\"last_block\" \
+  --set observation_encoder.vision.train_mode="all" \
   --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set observation_encoder.vision.resize_shape=[240,240] \
+  --set n_action_steps=8 \
+  --set objective.sigma_min=0.001 \
+  --set objective.num_integration_steps=25 \
+  --set enable_success_rate_eval=true \
+  --set success_selection_every_epochs=100 \
+  --set success_selection_episodes=20 \
+  --set resume_from_latest=false \
+  --set save_latest_ckpt=true \
+  --set checkpoint_payload_mode="full"
+
+
+云端断点续训
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
+
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_sep_lastblock_a8_gate100.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --eval-episodes 20 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_all_500 \
+  --run-name "$RUN_NAME" \
+  --description "resume 5RGB separate encoders all finetune" \
+  --headless \
+  --show-progress \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode="all" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set observation_encoder.vision.resize_shape=[240,240] \
+  --set n_action_steps=8 \
+  --set objective.sigma_min=0.001 \
+  --set objective.num_integration_steps=25 \
+  --set enable_success_rate_eval=true \
+  --set success_selection_every_epochs=100 \
+  --set success_selection_episodes=20 \
+  --set save_latest_ckpt=true \
+  --set checkpoint_payload_mode="full" \
   --set resume_from_latest=true
 
-```
+tmux 脱离 / 重连
+Ctrl-b d
+tmux attach -t mdit_rgb5_sep_all
 
-训练完成后，单独做成功率审计：
-
-```bash
+云端 audit-only
 source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate mdit_env
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
 
-RUN_DIR="ckpt/<RUN_NAME>"
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
 
-python scripts/run_mdit_autoresearch_trial.py \
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
   --phase audit-only \
-  --run-dir "$RUN_DIR" \
+  --run-dir ckpt/$RUN_NAME \
   --eval-episodes 20 \
   --audit-timeout-sec 7200 \
   --headless \
   --show-progress
 
+单独测一个 ckpt
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
+
+python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/$RUN_NAME/epochs/epoch_0100.pt \
+  --episodes 20 \
+  --max-steps 200 \
+  --heartbeat-every 50 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+
+寝室本地批量测评
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_mdit_all_checkpoints.py \
+  --ckpt-epochs-dir ckpt/unplug_charger_mdit_rgb5_sep_all_500/epochs \
+  --results-json ckpt/unplug_charger_mdit_rgb5_sep_all_500/eval_results/all_ckpts__n_action_steps_8.json \
+  --episodes 20 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+开仿真界面看 1 个 episode
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_all_500/epochs/epoch_0300.pt \
+  --episodes 1 \
+  --max-steps 200 \
+  --seed 1234 \
+  --no-headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+单个 ckpt 做 100 episode 评估
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_all_500/epochs/epoch_0300.pt \
+  --episodes 100 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+如果你要评估的是“旧的 n_action_steps=1 老 ckpt”，那就在评估命令后面补这一段 override：
+  --set n_action_steps=8 \
+  --set smooth_actions=true \
+  --set command_mode="first" \
+  --set position_alpha=0.35 \
+  --set rotation_alpha=0.25 \
+  --set max_position_step=0.03 \
+  --set gripper_open_threshold=0.6 \
+  --set gripper_close_threshold=0.4
+
 ```
+
+
+### 云端训练：Last block微调 5RGB + obs3 + separate encoder + last_block + n_action_steps=8
+
+```
+
+tmux new -s mdit_rgb5_sep_last
+
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_last_a8_500"
+
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_sep_lastblock_a8_gate100.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --eval-episodes 20 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_last_a8_500 \
+  --run-name "$RUN_NAME" \
+  --description "5RGB separate encoders last_block finetune a8 500ep" \
+  --headless \
+  --show-progress \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode="last_block" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set observation_encoder.vision.resize_shape=[240,240] \
+  --set n_action_steps=8 \
+  --set objective.sigma_min=0.001 \
+  --set objective.num_integration_steps=25 \
+  --set enable_success_rate_eval=true \
+  --set success_selection_every_epochs=100 \
+  --set success_selection_episodes=20 \
+  --set resume_from_latest=false \
+  --set save_latest_ckpt=true \
+  --set checkpoint_payload_mode="full"
+
+云端断点续训
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_last_a8_500"
+
+/home/gjw/.conda/envs/mdit_env/bin/python scripts/run_mdit_autoresearch_trial.py \
+  --phase train-only \
+  --config configs/mdit/obs3_rgb5_sep_lastblock_a8_gate100.json \
+  --stage-epochs 500 \
+  --checkpoint-every 100 \
+  --eval-episodes 20 \
+  --device cuda \
+  --experiment-name obs3_rgb5_sep_last_a8_500 \
+  --run-name "$RUN_NAME" \
+  --description "resume 5RGB separate encoders last_block finetune a8" \
+  --headless \
+  --show-progress \
+  --set batch_size=8 \
+  --set num_workers=8 \
+  --set grad_accum_steps=1 \
+  --set observation_encoder.vision.use_separate_encoder_per_camera=true \
+  --set observation_encoder.vision.train_mode="last_block" \
+  --set observation_encoder.vision.lr_multiplier=0.1 \
+  --set observation_encoder.vision.resize_shape=[240,240] \
+  --set n_action_steps=8 \
+  --set objective.sigma_min=0.001 \
+  --set objective.num_integration_steps=25 \
+  --set enable_success_rate_eval=true \
+  --set success_selection_every_epochs=100 \
+  --set success_selection_episodes=20 \
+  --set save_latest_ckpt=true \
+  --set checkpoint_payload_mode="full" \
+  --set resume_from_latest=true
+
+
+audit-only
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+RUN_NAME="unplug_charger_mdit_rgb5_sep_last_a8_500"
+
+python scripts/run_mdit_autoresearch_trial.py \
+  --phase audit-only \
+  --run-dir ckpt/$RUN_NAME \
+  --eval-episodes 20 \
+  --audit-timeout-sec 7200 \
+  --headless \
+  --show-progress
+
+单个 ckpt 评估
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_last_a8_500/epochs/epoch_0100.pt \
+  --episodes 20 \
+  --max-steps 200 \
+  --heartbeat-every 50 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+本地批量评估
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_mdit_all_checkpoints.py \
+  --ckpt-epochs-dir ckpt/unplug_charger_mdit_rgb5_sep_last_a8_500/epochs \
+  --results-json ckpt/unplug_charger_mdit_rgb5_sep_last_a8_500/eval_results/all_ckpts__n_action_steps_8.json \
+  --episodes 20 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+本地开界面看 1 个 episode
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_last_a8_500/epochs/epoch_0300.pt \
+  --episodes 1 \
+  --max-steps 200 \
+  --seed 1234 \
+  --no-headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+
+本地单个 ckpt，100 episode
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate pfp_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_mdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_mdit_rgb5_sep_last_a8_500/epochs/epoch_0300.pt \
+  --episodes 100 \
+  --max-steps 200 \
+  --seed 1234 \
+  --headless \
+  --show-progress \
+  --prefer-ema \
+  --device cuda
+
+```
+
+
+
+
+
+
+
+
+
+
 
 ## 换SSH设备跟踪训练进度
 

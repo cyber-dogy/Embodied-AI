@@ -10,6 +10,8 @@ imageio
 spatialmath-python
 diffusers==0.24.0
 huggingface_hub==0.25.2
+timm==0.9.16
+transformers==4.46.3
 wandb
 tqdm
 ipykernel

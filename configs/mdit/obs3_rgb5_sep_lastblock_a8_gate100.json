@@ -1,0 +1,66 @@
+{
+  "extends": "mdit/faithful_baseline.json",
+  "run_name": "unplug_charger_mdit_rgb5_sep_lastblock_a8_gate100",
+  "n_obs_steps": 3,
+  "horizon": 32,
+  "n_action_steps": 8,
+  "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
+  "batch_size": 8,
+  "grad_accum_steps": 1,
+  "num_workers": 8,
+  "use_amp": true,
+  "save_latest_ckpt": true,
+  "save_best_valid_ckpt": true,
+  "checkpoint_payload_mode": "full",
+  "enable_success_rate_eval": true,
+  "success_selection_every_epochs": 100,
+  "success_selection_episodes": 20,
+  "smooth_actions": true,
+  "command_mode": "first",
+  "horizon_index": 0,
+  "average_first_n": 1,
+  "position_alpha": 0.35,
+  "rotation_alpha": 0.25,
+  "max_position_step": 0.03,
+  "gripper_open_threshold": 0.6,
+  "gripper_close_threshold": 0.4,
+  "wandb_enable": true,
+  "wandb_mode": "online",
+  "wandb_resume": true,
+  "observation_encoder": {
+    "vision": {
+      "backbone": "vit_base_patch16_clip_224.openai",
+      "use_separate_encoder_per_camera": true,
+      "lr_multiplier": 0.1,
+      "resize_shape": [240, 240],
+      "crop_shape": [224, 224],
+      "crop_is_random": true,
+      "train_mode": "last_block"
+    },
+    "text": {
+      "model": "openai/clip-vit-base-patch16"
+    }
+  },
+  "transformer": {
+    "hidden_dim": 512,
+    "num_layers": 6,
+    "num_heads": 8,
+    "dropout": 0.1,
+    "use_positional_encoding": true,
+    "diffusion_step_embed_dim": 256,
+    "use_rope": false,
+    "rope_base": 10000.0
+  },
+  "objective": {
+    "objective_name": "flow_matching",
+    "sigma_min": 0.001,
+    "num_integration_steps": 25,
+    "integration_method": "euler",
+    "timestep_sampling": {
+      "strategy_name": "beta",
+      "s": 0.999,
+      "alpha": 1.5,
+      "beta": 1.0
+    }
+  }
+}

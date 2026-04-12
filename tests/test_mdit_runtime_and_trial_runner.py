@@ -15,13 +15,46 @@ from mdit.model.model import MultiTaskDiTPolicy
 from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
 from mdit.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
 from research.mdit_trial_runner import (
+    MDITTrialRequest,
     _load_trial_request,
     _materialize_best_success_checkpoint,
+    _prepare_cfg,
     _select_best_success_record,
 )
 
 
 class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
+    def test_prepare_cfg_disables_rlbench_runtime_when_success_eval_is_off(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "train_data_path": str(Path(tmp_dir)),
+                        "valid_data_path": str(Path(tmp_dir)),
+                        "enable_success_rate_eval": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            request = MDITTrialRequest(
+                config_path=config_path,
+                stage_epochs=100,
+                checkpoint_every=100,
+                eval_episodes=20,
+                config_overrides={"enable_success_rate_eval": False},
+            )
+
+            cfg = _prepare_cfg(request)
+
+        self.assertFalse(cfg.enable_success_rate_eval)
+        self.assertEqual(cfg.checkpoint_every_epochs, 0)
+        self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 100)
+        self.assertEqual(cfg.success_selection_every_epochs, 0)
+        self.assertEqual(cfg.success_selection_episodes, 0)
+        self.assertTrue(cfg.save_latest_ckpt)
+        self.assertEqual(cfg.checkpoint_payload_mode, "full")
+
     def test_lightweight_checkpoint_omits_resume_state(self) -> None:
         cfg = MDITExperimentConfig()
         model = torch.nn.Linear(4, 2)

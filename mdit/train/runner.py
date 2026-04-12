@@ -48,6 +48,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
     set_seeds(cfg.seed)
     cfg.ckpt_dir.mkdir(parents=True, exist_ok=True)
     cfg.periodic_ckpt_dir.mkdir(parents=True, exist_ok=True)
+    if int(cfg.offline_eval_ckpt_every_epochs) > 0:
+        cfg.offline_eval_ckpt_dir.mkdir(parents=True, exist_ok=True)
     save_config(cfg)
 
     dataset_train, dataset_valid, dataloader_train, dataloader_valid = build_dataloaders(cfg)
@@ -155,6 +157,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
             success_summary = None
             success_record = None
             should_run_success_eval = (
+                bool(cfg.enable_success_rate_eval)
+                and
                 int(cfg.success_selection_every_epochs) > 0
                 and int(cfg.success_selection_episodes) > 0
                 and ((epoch + 1) % int(cfg.success_selection_every_epochs)) == 0
@@ -186,6 +190,16 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         "error": str(exc),
                         "deleted_periodic_ckpt": False,
                     }
+            elif (
+                int(cfg.success_selection_every_epochs) > 0
+                and int(cfg.success_selection_episodes) > 0
+                and ((epoch + 1) % int(cfg.success_selection_every_epochs)) == 0
+            ):
+                LOGGER.debug(
+                    "Skipping success-rate eval at epoch %s because enable_success_rate_eval=%s.",
+                    epoch + 1,
+                    cfg.enable_success_rate_eval,
+                )
 
             epoch_row = {
                 "epoch": int(epoch),
@@ -272,6 +286,37 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     valid_loss_history=valid_loss_history,
                     epoch_summaries=epoch_summaries,
                     checkpoint_payload_mode=cfg.checkpoint_payload_mode,
+                    wandb_run_id=None if wandb_run is None else wandb_run.id,
+                    success_eval_history=success_eval_history,
+                )
+
+            offline_eval_path = None
+            should_save_offline_eval_ckpt = (
+                not bool(cfg.enable_success_rate_eval)
+                and int(cfg.offline_eval_ckpt_every_epochs) > 0
+                and ((epoch + 1) % int(cfg.offline_eval_ckpt_every_epochs)) == 0
+            )
+            if should_save_offline_eval_ckpt:
+                offline_eval_path = cfg.offline_eval_ckpt_dir / f"epoch_{epoch + 1:04d}.pt"
+                save_checkpoint(
+                    offline_eval_path,
+                    cfg=cfg,
+                    model=model,
+                    ema_model=ema_model,
+                    optimizer=optimizer,
+                    scheduler=scheduler,
+                    scaler=scaler,
+                    dataset_stats=dataset_stats,
+                    epoch=epoch,
+                    global_step=global_step,
+                    best_metric=best_metric,
+                    best_epoch=best_epoch,
+                    best_success_rate=best_success_rate,
+                    best_success_epoch=best_success_epoch,
+                    train_loss_history=train_loss_history,
+                    valid_loss_history=valid_loss_history,
+                    epoch_summaries=epoch_summaries,
+                    checkpoint_payload_mode=cfg.offline_eval_ckpt_payload_mode,
                     wandb_run_id=None if wandb_run is None else wandb_run.id,
                     success_eval_history=success_eval_history,
                 )
@@ -369,7 +414,12 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 wandb_run.summary["best_success_epoch"] = best_success_epoch
 
         final_eval = None
-        if int(cfg.standard_eval_episodes) > 0:
+        if (not bool(cfg.enable_success_rate_eval)) and int(cfg.standard_eval_episodes) > 0:
+            LOGGER.warning(
+                "Skipping standard eval because enable_success_rate_eval is disabled. "
+                "Set enable_success_rate_eval=true to run RLBench evaluation during training."
+            )
+        elif int(cfg.standard_eval_episodes) > 0:
             final_eval = run_success_rate_eval(
                 ema_model if ema_model is not None else model,
                 cfg,

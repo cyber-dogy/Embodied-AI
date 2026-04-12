@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=PROJECT_ROOT / "configs" / "mdit" / "faithful_baseline.json",
+        default=PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_sep_lastblock_a8_gate100.json",
         help="Base config JSON path.",
     )
     parser.add_argument(

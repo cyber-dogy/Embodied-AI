@@ -1,9 +1,6 @@
 # Optional evaluation dependencies.
 # Install this only when you want to run RLBench success selection / rollout eval.
-#
-# RLBench and PyRep are not regular PyPI-only dependencies in many environments.
-# AutoDL users should typically prepare a separate RLBench-capable environment
-# or install from the official source instructions.
+# These packages are pinned to the revisions already validated in this repo.
 
-rlbench
-pyrep
+PyRep @ git+https://github.com/stepjam/PyRep.git@8f420be8064b1970aae18a9cfbc978dfb15747ef
+rlbench @ git+https://github.com/stepjam/RLBench.git@02720bba4c73fe02eb75df946b8791b806028a9d

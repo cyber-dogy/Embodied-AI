@@ -204,7 +204,7 @@ class MDITAutoresearchLoopTest(unittest.TestCase):
         )
 
         self.assertEqual(decision["decision_state"], "switch")
-        self.assertIn("0.25", decision["decision_reason"])
+        self.assertIn("0.45", decision["decision_reason"])
 
     def test_watch_investigates_midrange_epoch_100(self) -> None:
         decision = _decide_watch_action(
@@ -215,7 +215,7 @@ class MDITAutoresearchLoopTest(unittest.TestCase):
                     "episodes": 20,
                     "kind": "periodic",
                     "status": "ok",
-                    "success_rate": 0.32,
+                    "success_rate": 0.48,
                     "mean_steps": 170.0,
                 }
             ],

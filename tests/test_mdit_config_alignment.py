@@ -90,6 +90,9 @@ class MDITConfigAlignmentTest(unittest.TestCase):
     def test_default_vision_train_mode_is_all(self) -> None:
         cfg = MDITExperimentConfig()
         self.assertEqual(cfg.observation_encoder.vision.train_mode, "all")
+        self.assertEqual(cfg.n_action_steps, 8)
+        self.assertTrue(cfg.enable_success_rate_eval)
+        self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
 
     def test_obs3_rgb5_flowmatch_pdit_first_config_loads_expected_values(self) -> None:
         cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_flowmatch_pdit_first.json")
@@ -111,6 +114,24 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.checkpoint_payload_mode, "full")
         self.assertTrue(cfg.save_latest_ckpt)
         self.assertTrue(cfg.save_best_valid_ckpt)
+        self.assertEqual(cfg.success_selection_every_epochs, 100)
+        self.assertEqual(cfg.success_selection_episodes, 20)
+        self.assertTrue(cfg.smooth_actions)
+
+    def test_obs3_rgb5_sep_lastblock_a8_gate100_config_loads_expected_values(self) -> None:
+        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_sep_lastblock_a8_gate100.json")
+
+        self.assertEqual(cfg.n_obs_steps, 3)
+        self.assertEqual(cfg.horizon, 32)
+        self.assertEqual(cfg.n_action_steps, 8)
+        self.assertEqual(
+            cfg.camera_names,
+            ("right_shoulder", "left_shoulder", "overhead", "front", "wrist"),
+        )
+        self.assertTrue(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
+        self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
+        self.assertEqual(tuple(cfg.observation_encoder.vision.resize_shape), (240, 240))
+        self.assertTrue(cfg.enable_success_rate_eval)
         self.assertEqual(cfg.success_selection_every_epochs, 100)
         self.assertEqual(cfg.success_selection_episodes, 20)
         self.assertTrue(cfg.smooth_actions)

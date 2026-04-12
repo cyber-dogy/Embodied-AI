@@ -71,7 +71,7 @@ class MDITExperimentConfig:
 
     n_obs_steps: int = 3
     horizon: int = 32
-    n_action_steps: int = 16
+    n_action_steps: int = 8
     robot_state_dim: int = 10
     action_dim: int = 10
     camera_names: tuple[str, ...] = ("front", "wrist", "overhead")
@@ -96,6 +96,9 @@ class MDITExperimentConfig:
     ema_enable: bool = True
     ema_decay: float = 0.9993
     checkpoint_payload_mode: str = "full"
+    enable_success_rate_eval: bool = True
+    offline_eval_ckpt_every_epochs: int = 0
+    offline_eval_ckpt_payload_mode: str = "lightweight"
     audit_include_special_ckpts: bool = True
     delete_screening_ckpts_after_audit: bool = False
     delete_periodic_ckpts_after_success_eval: bool = False
@@ -145,6 +148,10 @@ class MDITExperimentConfig:
             raise ValueError(
                 "checkpoint_payload_mode must be either 'full' or 'lightweight'."
             )
+        if str(self.offline_eval_ckpt_payload_mode) not in {"full", "lightweight"}:
+            raise ValueError(
+                "offline_eval_ckpt_payload_mode must be either 'full' or 'lightweight'."
+            )
         if str(self.command_mode) not in {"first", "horizon_index", "mean_first_n"}:
             raise ValueError(
                 "command_mode must be one of {'first', 'horizon_index', 'mean_first_n'}."
@@ -155,6 +162,8 @@ class MDITExperimentConfig:
             raise ValueError("success_selection_episodes must be >= 0.")
         if int(self.standard_eval_episodes) < 0:
             raise ValueError("standard_eval_episodes must be >= 0.")
+        if int(self.offline_eval_ckpt_every_epochs) < 0:
+            raise ValueError("offline_eval_ckpt_every_epochs must be >= 0.")
         if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
             raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
 
@@ -165,6 +174,10 @@ class MDITExperimentConfig:
     @property
     def periodic_ckpt_dir(self) -> Path:
         return self.ckpt_dir / "epochs"
+
+    @property
+    def offline_eval_ckpt_dir(self) -> Path:
+        return self.ckpt_dir / "eval_ckpts"
 
     @property
     def latest_ckpt_path(self) -> Path:

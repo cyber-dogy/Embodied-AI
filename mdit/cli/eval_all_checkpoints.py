@@ -58,7 +58,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate all faithful MDIT checkpoints and reuse cached results when available."
     )
-    parser.add_argument("--ckpt-epochs-dir", type=Path, required=True, help="Directory containing epoch_XXXX.pt.")
+    parser.add_argument(
+        "--ckpt-epochs-dir",
+        type=Path,
+        required=True,
+        help="Directory containing epoch_XXXX.pt. Can point to either epochs/ or eval_ckpts/.",
+    )
     parser.add_argument("--results-json", type=Path, required=True, help="Where to save cached evaluation results.")
     parser.add_argument("--episodes", type=int, default=100, help="Episodes per checkpoint.")
     parser.add_argument("--seed", type=int, default=1234, help="Evaluation seed.")
@@ -158,11 +163,19 @@ def discover_checkpoints(
     *,
     include_special: bool,
 ) -> list[dict[str, Any]]:
-    if not epochs_dir.exists():
-        raise FileNotFoundError(f"Checkpoint epochs dir does not exist: {epochs_dir}")
+    resolved_dir = epochs_dir
+    sibling_eval_dir = epochs_dir.parent / "eval_ckpts"
+    if not resolved_dir.exists():
+        if epochs_dir.name == "epochs" and sibling_eval_dir.exists():
+            resolved_dir = sibling_eval_dir
+        else:
+            raise FileNotFoundError(f"Checkpoint dir does not exist: {epochs_dir}")
+    if not any(resolved_dir.glob("*.pt")) and epochs_dir.name == "epochs" and sibling_eval_dir.exists():
+        if any(sibling_eval_dir.glob("*.pt")):
+            resolved_dir = sibling_eval_dir
 
     records: list[dict[str, Any]] = []
-    for ckpt_path in sorted(epochs_dir.glob("*.pt")):
+    for ckpt_path in sorted(resolved_dir.glob("*.pt")):
         records.append(
             {
                 "label": ckpt_path.stem,
@@ -173,7 +186,7 @@ def discover_checkpoints(
         )
 
     if include_special:
-        run_dir = epochs_dir.parent
+        run_dir = resolved_dir.parent
         for name in ("best_valid.pt", "best_success.pt", "latest.pt"):
             ckpt_path = run_dir / name
             if ckpt_path.exists():

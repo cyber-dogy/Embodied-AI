@@ -15,18 +15,19 @@ from typing import Any
 import torch
 
 from common.runtime import PROJECT_ROOT
-from mdit.config import MDITExperimentConfig, apply_config_overrides, load_config
+from mdit.config import MDITExperimentConfig, apply_config_overrides, config_to_dict, load_config
 from mdit.train.runner import train_experiment
 
 
 DEFAULT_COLLAPSE_THRESHOLDS: dict[int, float] = {
-    100: 0.55,
-    300: 0.65,
-    500: 0.68,
+    100: 0.45,
+    300: 0.55,
+    500: 0.60,
 }
 DEFAULT_DROP_TOLERANCE = 0.10
 RESULTS_TSV_HEADER = "experiment\tcommit\tmetric\tstatus\tdescription\n"
 TRIAL_REQUEST_FILENAME = "mdit_trial_request.json"
+EXPERIMENT_MANIFEST_FILENAME = "experiment_manifest.json"
 
 
 @dataclass(slots=True)
@@ -126,6 +127,10 @@ def _trial_request_path(run_dir: Path) -> Path:
     return run_dir / TRIAL_REQUEST_FILENAME
 
 
+def _experiment_manifest_path(run_dir: Path) -> Path:
+    return run_dir / EXPERIMENT_MANIFEST_FILENAME
+
+
 def _trial_request_to_dict(request: MDITTrialRequest) -> dict[str, Any]:
     payload = asdict(request)
     for key in ("config_path", "ckpt_root", "data_root"):
@@ -148,6 +153,97 @@ def _trial_request_from_dict(payload: dict[str, Any]) -> MDITTrialRequest:
 
 def _write_trial_request(run_dir: Path, request: MDITTrialRequest) -> Path:
     return _write_json(_trial_request_path(run_dir), _trial_request_to_dict(request))
+
+
+def _current_commit(repo_root: Path) -> str:
+    try:
+        return (
+            subprocess.run(
+                ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            .stdout.strip()
+        )
+    except Exception:
+        return "unknown"
+
+
+def _config_diff(base_cfg: MDITExperimentConfig, resolved_cfg: MDITExperimentConfig) -> dict[str, dict[str, Any]]:
+    base_payload = config_to_dict(base_cfg)
+    resolved_payload = config_to_dict(resolved_cfg)
+    diff: dict[str, dict[str, Any]] = {}
+    for key, resolved_value in resolved_payload.items():
+        base_value = base_payload.get(key)
+        if base_value != resolved_value:
+            diff[key] = {"from": base_value, "to": resolved_value}
+    return diff
+
+
+def _build_change_summary(base_cfg: MDITExperimentConfig, resolved_cfg: MDITExperimentConfig) -> list[str]:
+    summary: list[str] = []
+    if base_cfg.observation_encoder.vision.train_mode != resolved_cfg.observation_encoder.vision.train_mode:
+        summary.append(
+            "vision train_mode: "
+            f"{base_cfg.observation_encoder.vision.train_mode} -> "
+            f"{resolved_cfg.observation_encoder.vision.train_mode}"
+        )
+    if int(base_cfg.n_action_steps) != int(resolved_cfg.n_action_steps):
+        summary.append(f"n_action_steps: {int(base_cfg.n_action_steps)} -> {int(resolved_cfg.n_action_steps)}")
+    if bool(base_cfg.enable_success_rate_eval) != bool(resolved_cfg.enable_success_rate_eval):
+        if bool(resolved_cfg.enable_success_rate_eval):
+            summary.append("success eval: disabled -> enabled in-train")
+        else:
+            summary.append(
+                "success eval: enabled in-train -> disabled in-train, "
+                f"save eval_ckpt every {int(resolved_cfg.offline_eval_ckpt_every_epochs)} epochs"
+            )
+    elif not bool(resolved_cfg.enable_success_rate_eval) and int(resolved_cfg.offline_eval_ckpt_every_epochs) > 0:
+        summary.append(
+            f"success eval: disabled in-train, save eval_ckpt every {int(resolved_cfg.offline_eval_ckpt_every_epochs)} epochs"
+        )
+    if bool(base_cfg.observation_encoder.vision.use_separate_encoder_per_camera) != bool(
+        resolved_cfg.observation_encoder.vision.use_separate_encoder_per_camera
+    ):
+        summary.append(
+            "separate vision encoders: "
+            f"{bool(base_cfg.observation_encoder.vision.use_separate_encoder_per_camera)} -> "
+            f"{bool(resolved_cfg.observation_encoder.vision.use_separate_encoder_per_camera)}"
+        )
+    if tuple(base_cfg.camera_names) != tuple(resolved_cfg.camera_names):
+        summary.append(f"camera_names: {list(base_cfg.camera_names)} -> {list(resolved_cfg.camera_names)}")
+    if float(base_cfg.optimizer_lr) != float(resolved_cfg.optimizer_lr):
+        summary.append(f"optimizer_lr: {base_cfg.optimizer_lr} -> {resolved_cfg.optimizer_lr}")
+    if float(base_cfg.transformer.dropout) != float(resolved_cfg.transformer.dropout):
+        summary.append(f"transformer.dropout: {base_cfg.transformer.dropout} -> {resolved_cfg.transformer.dropout}")
+    return summary
+
+
+def _write_experiment_manifest(
+    run_dir: Path,
+    *,
+    request: MDITTrialRequest,
+    base_cfg: MDITExperimentConfig,
+    resolved_cfg: MDITExperimentConfig,
+    resolved_request: MDITTrialRequest,
+) -> Path:
+    payload = {
+        "line": "mdit",
+        "created_at": datetime.now().isoformat(timespec="seconds"),
+        "git_commit": _current_commit(PROJECT_ROOT),
+        "base_config_path": str(Path(request.config_path).expanduser().resolve()),
+        "base_config": config_to_dict(base_cfg),
+        "resolved_config": config_to_dict(resolved_cfg),
+        "config_overrides": dict(request.config_overrides or {}),
+        "config_diff": _config_diff(base_cfg, resolved_cfg),
+        "trial_request": _trial_request_to_dict(resolved_request),
+        "enable_success_rate_eval": bool(resolved_cfg.enable_success_rate_eval),
+        "save_offline_eval_ckpt": int(resolved_cfg.offline_eval_ckpt_every_epochs) > 0,
+        "offline_eval_ckpt_every_epochs": int(resolved_cfg.offline_eval_ckpt_every_epochs),
+        "change_summary": _build_change_summary(base_cfg, resolved_cfg),
+    }
+    return _write_json(_experiment_manifest_path(run_dir), payload)
 
 
 def _load_trial_request(run_dir: Path) -> MDITTrialRequest:
@@ -177,7 +273,7 @@ def _infer_legacy_trial_request(run_dir: Path) -> MDITTrialRequest:
         )
 
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    epoch_paths = _collect_periodic_ckpts(run_dir)
+    epoch_paths = _collect_periodic_ckpts(run_dir) + _collect_offline_eval_ckpts(run_dir)
     periodic_epochs = sorted(
         int(path.stem.split("_")[-1])
         for path in epoch_paths
@@ -230,6 +326,7 @@ def _build_offline_audit_command(run_dir: Path) -> str:
 def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
     cfg = load_config(request.config_path)
     cfg = apply_config_overrides(cfg, request.config_overrides)
+    overrides = request.config_overrides or {}
     if request.data_root is not None:
         task_root = request.data_root.expanduser().resolve() / cfg.task_name
         cfg.train_data_path = task_root / "train"
@@ -239,21 +336,32 @@ def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
     if request.device is not None:
         cfg.device = str(request.device)
     cfg.train_epochs = int(request.stage_epochs)
-    cfg.checkpoint_every_epochs = int(request.checkpoint_every)
-    # Only apply defaults if not already set via config overrides
-    overrides = request.config_overrides or {}
+    if "checkpoint_every_epochs" not in overrides:
+        cfg.checkpoint_every_epochs = int(request.checkpoint_every) if bool(cfg.enable_success_rate_eval) else 0
     if "resume_from_latest" not in overrides:
         cfg.resume_from_latest = False
     if "save_latest_ckpt" not in overrides:
-        cfg.save_latest_ckpt = False
+        cfg.save_latest_ckpt = True
     if "save_best_valid_ckpt" not in overrides:
         cfg.save_best_valid_ckpt = False
     if "checkpoint_payload_mode" not in overrides:
-        cfg.checkpoint_payload_mode = "lightweight"
-    if "success_selection_every_epochs" not in overrides:
-        cfg.success_selection_every_epochs = int(request.checkpoint_every)
-    if "success_selection_episodes" not in overrides:
-        cfg.success_selection_episodes = int(request.eval_episodes)
+        cfg.checkpoint_payload_mode = "full"
+    if "offline_eval_ckpt_payload_mode" not in overrides:
+        cfg.offline_eval_ckpt_payload_mode = "lightweight"
+    if bool(cfg.enable_success_rate_eval):
+        if "success_selection_every_epochs" not in overrides:
+            cfg.success_selection_every_epochs = int(request.checkpoint_every)
+        if "success_selection_episodes" not in overrides:
+            cfg.success_selection_episodes = int(request.eval_episodes)
+        if "offline_eval_ckpt_every_epochs" not in overrides:
+            cfg.offline_eval_ckpt_every_epochs = 0
+    else:
+        if "success_selection_every_epochs" not in overrides:
+            cfg.success_selection_every_epochs = 0
+        if "success_selection_episodes" not in overrides:
+            cfg.success_selection_episodes = 0
+        if "offline_eval_ckpt_every_epochs" not in overrides:
+            cfg.offline_eval_ckpt_every_epochs = int(request.checkpoint_every)
     if "standard_eval_episodes" not in overrides:
         cfg.standard_eval_episodes = 0
     cfg.audit_include_special_ckpts = False
@@ -285,6 +393,22 @@ def _collect_periodic_ckpts(run_dir: Path) -> list[Path]:
     return sorted((run_dir / "epochs").glob("epoch_*.pt"))
 
 
+def _collect_offline_eval_ckpts(run_dir: Path) -> list[Path]:
+    return sorted((run_dir / "eval_ckpts").glob("epoch_*.pt"))
+
+
+def _resolve_audit_checkpoint_dir(run_dir: Path) -> Path:
+    epochs_dir = run_dir / "epochs"
+    eval_ckpt_dir = run_dir / "eval_ckpts"
+    if any(epochs_dir.glob("epoch_*.pt")):
+        return epochs_dir
+    if any(eval_ckpt_dir.glob("epoch_*.pt")):
+        return eval_ckpt_dir
+    if epochs_dir.exists():
+        return epochs_dir
+    return eval_ckpt_dir
+
+
 def _estimate_audit_timeout_sec(
     *,
     run_dir: Path,
@@ -293,6 +417,8 @@ def _estimate_audit_timeout_sec(
     requested_timeout_sec: int,
 ) -> int:
     periodic_ckpts = len(_collect_periodic_ckpts(run_dir))
+    if periodic_ckpts <= 0:
+        periodic_ckpts = len(_collect_offline_eval_ckpts(run_dir))
     if periodic_ckpts <= 0:
         periodic_ckpts = max(1, int(stage_epochs) // max(1, int(checkpoint_every)))
     estimated_timeout = periodic_ckpts * 900 + 300
@@ -315,13 +441,14 @@ def _run_checkpoint_audit(
 ) -> Path:
     results_json = run_dir / "audit_raw_results.json"
     plot_path = run_dir / "audit_success_rate.png"
+    ckpt_dir = _resolve_audit_checkpoint_dir(run_dir)
     if results_json.exists():
         results_json.unlink()
     cmd = [
         sys.executable,
         str(PROJECT_ROOT / "scripts" / "eval_mdit_all_checkpoints.py"),
         "--ckpt-epochs-dir",
-        str(run_dir / "epochs"),
+        str(ckpt_dir),
         "--results-json",
         str(results_json),
         "--episodes",
@@ -539,9 +666,7 @@ def _trial_score(
 ) -> float:
     if collapse_detected or best_record is None:
         return -1.0
-    if int(stage_epochs) >= 500 and int(eval_episodes) < 100:
-        return -1.0
-    if int(stage_epochs) < 500 and int(eval_episodes) < 20:
+    if int(eval_episodes) < 20:
         return -1.0
     return float(best_record["success_rate"])
 
@@ -580,12 +705,17 @@ def _build_train_keep_paths(run_dir: Path, cfg: MDITExperimentConfig) -> list[Pa
         cfg.summary_path,
         cfg.dataset_stats_path,
         _trial_request_path(run_dir),
+        _experiment_manifest_path(run_dir),
+        cfg.success_eval_path,
         *_collect_periodic_ckpts(run_dir),
+        *_collect_offline_eval_ckpts(run_dir),
     ]
     if cfg.save_latest_ckpt:
         keep_paths.append(cfg.latest_ckpt_path)
     if cfg.save_best_valid_ckpt:
         keep_paths.append(cfg.best_ckpt_path)
+    if cfg.best_success_ckpt_path.exists():
+        keep_paths.append(cfg.best_success_ckpt_path)
     return [path for path in keep_paths if path.exists()]
 
 
@@ -643,6 +773,7 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
         raise ValueError("stage_epochs must be >= checkpoint_every.")
 
     repo_root = PROJECT_ROOT
+    base_cfg = load_config(request.config_path)
     cfg = _prepare_cfg(request)
     resolved_request = _resolved_request(request, cfg)
     ckpt_root = cfg.ckpt_root.resolve()
@@ -651,11 +782,19 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
     try:
         if not cfg.resume_from_latest:
             _clean_existing_run_dir(run_dir, ckpt_root)
-        summary = train_experiment(cfg)
+        run_dir.mkdir(parents=True, exist_ok=True)
         _write_trial_request(run_dir, resolved_request)
+        _write_experiment_manifest(
+            run_dir,
+            request=request,
+            base_cfg=base_cfg,
+            resolved_cfg=cfg,
+            resolved_request=resolved_request,
+        )
+        summary = train_experiment(cfg)
         keep_paths = _build_train_keep_paths(run_dir, cfg)
         _prune_run_dir(run_dir, keep_paths)
-        skip_offline_audit = bool(cfg.delete_periodic_ckpts_after_success_eval)
+        skip_offline_audit = bool(cfg.enable_success_rate_eval and cfg.delete_periodic_ckpts_after_success_eval)
         best_success_rate = summary.get("best_success_rate")
         best_success_epoch = summary.get("best_success_epoch")
         best_success_path = cfg.best_success_ckpt_path if cfg.best_success_ckpt_path.exists() else None
@@ -687,6 +826,9 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
             "run_name": cfg.run_name,
             "run_dir": str(run_dir),
             "audit_report_path": None,
+            "experiment_manifest_path": (
+                str(_experiment_manifest_path(run_dir)) if _experiment_manifest_path(run_dir).exists() else None
+            ),
             "summary_path": str(cfg.summary_path) if cfg.summary_path.exists() else None,
             "error_type": None,
             "train_summary": summary,
@@ -774,7 +916,7 @@ def finalize_mdit_autoresearch_trial(
         collapse_detected, collapse_reasons, collapse_checks = False, [], []
     best_record = _select_best_success_record(records)
     best_ckpt_path = None
-    if int(request.stage_epochs) >= 500:
+    if best_record is not None:
         best_ckpt_path = _materialize_best_success_checkpoint(run_dir, best_record)
     score = _trial_score(
         best_record,
@@ -786,10 +928,10 @@ def finalize_mdit_autoresearch_trial(
     success_20 = None
     success_100 = None
     if best_record is not None:
+        if int(request.eval_episodes) >= 20:
+            success_20 = float(best_record["success_rate"])
         if int(request.eval_episodes) >= 100:
             success_100 = float(best_record["success_rate"])
-        elif int(request.eval_episodes) >= 20:
-            success_20 = float(best_record["success_rate"])
 
     audit_report = {
         "line": "mdit",
@@ -814,14 +956,13 @@ def finalize_mdit_autoresearch_trial(
         run_dir / "dataset_stats.json",
         run_dir / "audit_report.json",
         _trial_request_path(run_dir),
+        _experiment_manifest_path(run_dir),
+        run_dir / "success_eval_history.json",
     ]
-    if int(request.stage_epochs) >= 500:
-        keep_paths.extend(
-            [
-                run_dir / "best_success.pt",
-                *_keep_epoch_paths(periodic_records),
-            ]
-        )
+    keep_paths.extend(_keep_epoch_paths(periodic_records))
+    keep_paths.extend(_collect_offline_eval_ckpts(run_dir))
+    if (run_dir / "best_success.pt").exists():
+        keep_paths.append(run_dir / "best_success.pt")
     keep_paths = [path for path in keep_paths if path.exists()]
 
     if collapse_detected and request.cleanup_failed:
@@ -850,6 +991,9 @@ def finalize_mdit_autoresearch_trial(
         "run_name": run_dir.name,
         "run_dir": str(run_dir),
         "audit_report_path": str(run_dir / "audit_report.json") if (run_dir / "audit_report.json").exists() else None,
+        "experiment_manifest_path": (
+            str(_experiment_manifest_path(run_dir)) if _experiment_manifest_path(run_dir).exists() else None
+        ),
         "summary_path": str(run_dir / "summary.json") if (run_dir / "summary.json").exists() else None,
         "error_type": None,
     }

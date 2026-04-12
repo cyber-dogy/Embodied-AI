@@ -30,56 +30,51 @@ class SearchSpec:
 
 
 DEFAULT_BASELINE = SearchSpec(
-    name="obs3_amp_baseline_100",
+    name="rgb5_sep_lastblock_a8_lr2e5_100",
     stage_epochs=100,
     eval_episodes=20,
-    description="obs3 + amp baseline",
-    overrides={"n_obs_steps": 3, "use_amp": True},
+    description="5RGB + obs3 + separate encoders + last_block + n_action_steps=8 baseline",
+    overrides={
+        "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
+        "n_obs_steps": 3,
+        "horizon": 32,
+        "n_action_steps": 8,
+        "use_amp": True,
+        "observation_encoder.vision.use_separate_encoder_per_camera": True,
+        "observation_encoder.vision.train_mode": "last_block",
+        "observation_encoder.vision.resize_shape": [240, 240],
+        "objective.sigma_min": 0.001,
+        "objective.num_integration_steps": 25,
+        "smooth_actions": True,
+        "command_mode": "first",
+        "position_alpha": 0.35,
+        "rotation_alpha": 0.25,
+        "max_position_step": 0.03,
+        "gripper_open_threshold": 0.6,
+        "gripper_close_threshold": 0.4,
+    },
 )
 
 DEFAULT_CANDIDATES: tuple[SearchSpec, ...] = (
     SearchSpec(
-        name="layers8_obs3_amp_100",
+        name="rgb5_sep_lastblock_a8_lr1p5e5_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="obs3 + amp + deeper transformer",
-        overrides={"n_obs_steps": 3, "use_amp": True, "transformer.num_layers": 8},
-    ),
-    SearchSpec(
-        name="rope_obs3_amp_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="obs3 + amp + rotary position encoding",
-        overrides={"n_obs_steps": 3, "use_amp": True, "transformer.use_rope": True},
-    ),
-    SearchSpec(
-        name="uniform_t_obs3_amp_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="obs3 + amp + uniform FM timestep sampling",
+        description="5RGB + obs3 + separate encoders + last_block + n_action_steps=8 + lower lr",
         overrides={
-            "n_obs_steps": 3,
-            "use_amp": True,
-            "objective.timestep_sampling.strategy_name": "uniform",
+            **DEFAULT_BASELINE.overrides,
+            "optimizer_lr": 1.5e-5,
         },
     ),
     SearchSpec(
-        name="vision_last_block_obs3_amp_100",
+        name="rgb5_sep_lastblock_a8_dropout0_100",
         stage_epochs=100,
         eval_episodes=20,
-        description="obs3 + amp + unfreeze last vision block",
+        description="5RGB + obs3 + separate encoders + last_block + n_action_steps=8 + dropout=0.0",
         overrides={
-            "n_obs_steps": 3,
-            "use_amp": True,
-            "observation_encoder.vision.train_mode": "last_block",
+            **DEFAULT_BASELINE.overrides,
+            "transformer.dropout": 0.0,
         },
-    ),
-    SearchSpec(
-        name="lr3e5_obs3_amp_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="obs3 + amp + higher learning rate",
-        overrides={"n_obs_steps": 3, "use_amp": True, "optimizer_lr": 3.0e-5},
     ),
 )
 
@@ -669,22 +664,28 @@ def _decide_watch_action(
     success_100 = success_by_epoch.get(100)
     success_200 = success_by_epoch.get(200)
 
-    if success_100 is not None and success_100 < 0.25:
+    if success_100 is not None and success_100 < 0.45:
         return {
             "decision_state": "switch",
-            "decision_reason": f"epoch 100 success@20={success_100:.3f} is below the 0.25 switch threshold.",
+            "decision_reason": f"epoch 100 success@20={success_100:.3f} is below the 0.45 gate.",
         }
-    if success_100 is not None and success_100 < 0.40 and latest_epoch < 200:
+    if success_100 is not None and success_100 < 0.55 and latest_epoch < 300:
         return {
             "decision_state": "investigate",
-            "decision_reason": f"epoch 100 success@20={success_100:.3f}; continuing to epoch 200 before switching.",
+            "decision_reason": f"epoch 100 success@20={success_100:.3f}; continue to epoch 300 and require >= 0.55.",
         }
-    if success_200 is not None:
+    success_300 = success_by_epoch.get(300)
+    if success_300 is not None and success_300 < 0.55:
+        return {
+            "decision_state": "switch",
+            "decision_reason": f"epoch 300 success@20={success_300:.3f} is below the 0.55 gate.",
+        }
+    if success_200 is not None and latest_epoch < 300:
         best_first_two = max(value for value in (success_100, success_200) if value is not None)
-        if best_first_two < 0.40:
+        if best_first_two < 0.45:
             return {
-                "decision_state": "switch",
-                "decision_reason": f"best(success@20@100, success@20@200)={best_first_two:.3f} is below 0.40.",
+                "decision_state": "investigate",
+                "decision_reason": f"best(success@20@100, success@20@200)={best_first_two:.3f}; wait for epoch 300 gate.",
             }
 
     best_success = max(float(row["success_rate"]) for row in periodic)
@@ -815,7 +816,7 @@ def run_mdit_attached_watch(
     state["intermediate_eval_episodes"] = int(intermediate_eval_episodes)
     state["final_eval_episodes"] = int(final_eval_episodes)
     state["investigation_priorities"] = [
-        "Compare horizon=32 and n_action_steps=16 against the original multitask_dit_policy defaults (~100 / ~24).",
+        "Compare horizon=32 and n_action_steps=8 against the original multitask_dit_policy defaults (~100 / ~24).",
         "Verify the 5-camera ordering and tensor layout match RLBenchEnv output ordering.",
         "Verify n_obs_steps=3 observation flattening and text conditioning stay aligned between train and eval.",
         "Check predict_action / action-chunk slicing against the training target window.",
@@ -1276,6 +1277,7 @@ def run_mdit_autoresearch_loop(
         summary.setdefault("baseline", None)
         summary.setdefault("candidates", [])
         summary.setdefault("promoted", [])
+        summary.setdefault("mid_runs", [])
         summary.setdefault("deep_runs", [])
         summary.setdefault("winner", None)
     else:
@@ -1286,6 +1288,7 @@ def run_mdit_autoresearch_loop(
             "baseline": None,
             "candidates": [],
             "promoted": [],
+            "mid_runs": [],
             "deep_runs": [],
             "winner": None,
         }
@@ -1350,17 +1353,65 @@ def run_mdit_autoresearch_loop(
         summary["candidates"] = candidate_results
         _write_json(summary_path, summary)
 
-    promoted = _choose_top_specs(candidate_results, limit=2)
+    screening_results = [baseline_result, *candidate_results]
+    gate_100_pass = [
+        row
+        for row in screening_results
+        if row.get("success_20") is not None and float(row["success_20"]) >= 0.45
+    ]
+    promoted = _choose_top_specs(gate_100_pass, limit=2) if gate_100_pass else []
     summary["promoted"] = promoted
     _write_json(summary_path, summary)
 
-    deep_results: list[dict[str, Any]] = []
+    mid_results: list[dict[str, Any]] = []
     for row in promoted:
+        spec = SearchSpec(
+            name=f"{row['experiment_name']}_mid300",
+            stage_epochs=300,
+            eval_episodes=20,
+            description=f"300-epoch gate run from {row['experiment_name']}",
+            overrides=dict(row.get("overrides", {})),
+        )
+        existing_result = _find_existing_result(
+            summary.get("mid_runs"),
+            experiment_name=spec.name,
+            stage_epochs=spec.stage_epochs,
+            eval_episodes=spec.eval_episodes,
+        )
+        if existing_result is None:
+            existing_result = _find_existing_trial_record(
+                experiment_name=spec.name,
+                stage_epochs=spec.stage_epochs,
+                eval_episodes=spec.eval_episodes,
+            )
+        if existing_result is not None:
+            result = dict(existing_result)
+        else:
+            result = run_search_spec(
+                spec,
+                config_path=config_path,
+                device=device,
+                headless=headless,
+                show_progress=show_progress,
+                cleanup_failed=cleanup_failed,
+                audit_timeout_sec=max(int(audit_timeout_sec), 10800),
+                ckpt_root=ckpt_root,
+                data_root=data_root,
+            )
+        mid_results.append(result)
+        summary["mid_runs"] = mid_results
+        _write_json(summary_path, summary)
+
+    deep_seeds = [
+        row for row in mid_results if row.get("success_20") is not None and float(row["success_20"]) >= 0.55
+    ]
+    deep_results: list[dict[str, Any]] = []
+    for row in deep_seeds:
         spec = SearchSpec(
             name=f"{row['experiment_name']}_deep500",
             stage_epochs=500,
-            eval_episodes=100,
-            description=f"deep run from {row['experiment_name']}",
+            eval_episodes=20,
+            description=f"500-epoch gate run from {row['experiment_name']}",
             overrides=dict(row.get("overrides", {})),
         )
         existing_result = _find_existing_result(
@@ -1397,8 +1448,10 @@ def run_mdit_autoresearch_loop(
 
     if deep_results:
         summary["winner"] = max(deep_results, key=_score_key)
+    elif mid_results:
+        summary["winner"] = max(mid_results, key=_score_key)
     elif candidate_results:
-        summary["winner"] = max(candidate_results, key=_score_key)
+        summary["winner"] = max(screening_results, key=_score_key)
     else:
         summary["winner"] = baseline_result
     summary["finished_at"] = time.strftime("%Y-%m-%d %H:%M:%S")

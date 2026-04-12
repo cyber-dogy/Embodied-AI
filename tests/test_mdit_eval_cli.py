@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import tempfile
+from pathlib import Path
 import unittest
 from unittest import mock
 
 import _bootstrap  # noqa: F401
+from mdit.cli.eval_all_checkpoints import discover_checkpoints
 from mdit.cli.eval_checkpoint import _should_reexec_under_xvfb, build_episode_analysis
+from mdit.cli.shared import payload_cfg_to_experiment_cfg
 
 
 class MDITEvalCliTest(unittest.TestCase):
@@ -48,6 +52,34 @@ class MDITEvalCliTest(unittest.TestCase):
         self.assertEqual(analysis["failure_step_buckets"]["at_horizon"], 1)
         self.assertIn("planner_or_simulator_rejecting_many_predicted_actions", analysis["likely_causes"])
         self.assertIn("some_rollouts_exhaust_the_horizon_without_finishing", analysis["likely_causes"])
+
+    def test_discover_checkpoints_falls_back_to_eval_ckpts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            run_dir = Path(tmp_dir) / "run"
+            eval_dir = run_dir / "eval_ckpts"
+            eval_dir.mkdir(parents=True, exist_ok=True)
+            (eval_dir / "epoch_0100.pt").write_bytes(b"stub")
+
+            records = discover_checkpoints(run_dir / "epochs", include_special=False)
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["label"], "epoch_0100")
+        self.assertEqual(records[0]["epoch"], 100)
+
+    def test_payload_cfg_to_experiment_cfg_restores_new_defaults_for_old_payloads(self) -> None:
+        payload_cfg = {
+            "run_name": "legacy",
+            "task_name": "unplug_charger",
+            "train_data_path": "/tmp/train",
+            "valid_data_path": "/tmp/valid",
+            "n_action_steps": 1,
+        }
+
+        cfg = payload_cfg_to_experiment_cfg(payload_cfg, ckpt_root=Path("/tmp/ckpt"))
+
+        self.assertTrue(cfg.enable_success_rate_eval)
+        self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
+        self.assertEqual(cfg.offline_eval_ckpt_payload_mode, "lightweight")
 
 
 if __name__ == "__main__":
