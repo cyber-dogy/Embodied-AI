@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 import unittest
 from unittest import mock
+import json
 
 import torch
 
@@ -12,7 +13,11 @@ from mdit.config import MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
 from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
 from mdit.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
-from research.mdit_trial_runner import _materialize_best_success_checkpoint, _select_best_success_record
+from research.mdit_trial_runner import (
+    _load_trial_request,
+    _materialize_best_success_checkpoint,
+    _select_best_success_record,
+)
 
 
 class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
@@ -26,6 +31,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         payload = build_checkpoint_payload(
             cfg=cfg,
             model=model,
+            ema_model=None,
             optimizer=optimizer,
             scheduler=scheduler,
             scaler=scaler,
@@ -67,6 +73,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
                 cfg.latest_ckpt_path,
                 cfg=cfg,
                 model=model,
+                ema_model=None,
                 optimizer=optimizer,
                 scheduler=scheduler,
                 scaler=scaler,
@@ -102,6 +109,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
                 cfg.latest_ckpt_path,
                 cfg=cfg,
                 model=model,
+                ema_model=None,
                 optimizer=optimizer,
                 scheduler=scheduler,
                 scaler=scaler,
@@ -275,6 +283,37 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             payload = torch.load(out_path, map_location="cpu")
             self.assertEqual(payload["best_success_rate"], 0.25)
             self.assertEqual(payload["best_success_epoch"], 11)
+
+    def test_load_trial_request_falls_back_to_legacy_run_dir_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            run_dir = Path(tmp_dir) / "unplug_charger_mdit_rgb5_sep_all_500"
+            epochs_dir = run_dir / "epochs"
+            epochs_dir.mkdir(parents=True)
+            (run_dir / "config.json").write_text(
+                json.dumps(
+                    {
+                        "run_name": "unplug_charger_mdit_rgb5_sep_all_500",
+                        "ckpt_root": str(run_dir.parent),
+                        "device": "cuda",
+                        "seed": 1234,
+                        "train_epochs": 100,
+                        "checkpoint_every_epochs": 100,
+                        "success_max_steps": 200,
+                        "eval_step_heartbeat_every": 50,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            torch.save({"completed_epoch": 299}, epochs_dir / "epoch_0300.pt")
+
+            request = _load_trial_request(run_dir)
+
+            self.assertEqual(request.run_name, "unplug_charger_mdit_rgb5_sep_all_500")
+            self.assertEqual(request.stage_epochs, 500)
+            self.assertEqual(request.checkpoint_every, 100)
+            self.assertEqual(request.eval_episodes, 20)
+            self.assertEqual(request.device, "cuda")
+            self.assertFalse(request.cleanup_failed)
 
 
 if __name__ == "__main__":

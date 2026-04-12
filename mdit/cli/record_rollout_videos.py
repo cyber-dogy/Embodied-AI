@@ -117,7 +117,8 @@ def record_rollout_videos(args: argparse.Namespace) -> dict:
             model.reset()
             descriptions = env.reset()
             instruction = env.get_task_instruction(
-                override_text=cfg.task_text_override if cfg.task_text_mode == "override" else None
+                override_text=cfg.task_text_override if cfg.task_text_mode == "override" else None,
+                use_env_descriptions=cfg.task_text_mode != "template",
             )
             success = False
             steps = 0

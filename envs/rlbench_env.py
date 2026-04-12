@@ -151,9 +151,14 @@ class RLBenchEnv(BaseEnv):
         os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", root)
 
         if headless:
-            # The old Qt runtime bundled with CoppeliaSim 4.1 can still try to
-            # resolve the X11 backend unless we pin an offscreen platform.
-            os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+            # On workstations with a live X11 display, forcing "offscreen"
+            # can crash CoppeliaSim while creating the OpenGL context for
+            # vision sensors. Prefer xcb there; fall back to offscreen/xvfb
+            # only when no display server is available.
+            if os.environ.get("DISPLAY"):
+                os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
+            else:
+                os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
         else:
             # Force the native X11 backend for the old bundled Qt runtime.
             os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
@@ -256,10 +261,15 @@ class RLBenchEnv(BaseEnv):
     def get_task_descriptions(self) -> list[str]:
         return list(self.last_descriptions)
 
-    def get_task_instruction(self, override_text: str | None = None) -> str:
+    def get_task_instruction(
+        self,
+        override_text: str | None = None,
+        *,
+        use_env_descriptions: bool = True,
+    ) -> str:
         return choose_instruction(
             task_name=self.task_name,
-            descriptions=self.last_descriptions,
+            descriptions=self.last_descriptions if use_env_descriptions else None,
             override_text=override_text,
         )
 

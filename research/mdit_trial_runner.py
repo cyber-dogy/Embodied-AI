@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 import json
 import os
 from datetime import datetime
+import re
 import shlex
 import shutil
 import subprocess
@@ -151,9 +152,67 @@ def _write_trial_request(run_dir: Path, request: MDITTrialRequest) -> Path:
 
 def _load_trial_request(run_dir: Path) -> MDITTrialRequest:
     path = _trial_request_path(run_dir)
-    if not path.exists():
-        raise FileNotFoundError(f"MDIT trial request manifest not found: {path}")
-    return _trial_request_from_dict(json.loads(path.read_text(encoding="utf-8")))
+    if path.exists():
+        return _trial_request_from_dict(json.loads(path.read_text(encoding="utf-8")))
+    return _infer_legacy_trial_request(run_dir)
+
+
+def _infer_stage_epochs_from_run_dir_name(run_dir: Path) -> int | None:
+    match = re.search(r"_(\d+)$", run_dir.name)
+    if match is None:
+        return None
+    try:
+        value = int(match.group(1))
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
+def _infer_legacy_trial_request(run_dir: Path) -> MDITTrialRequest:
+    config_path = run_dir / "config.json"
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"MDIT trial request manifest not found: {_trial_request_path(run_dir)} "
+            f"and legacy config.json is also missing: {config_path}"
+        )
+
+    payload = json.loads(config_path.read_text(encoding="utf-8"))
+    epoch_paths = _collect_periodic_ckpts(run_dir)
+    periodic_epochs = sorted(
+        int(path.stem.split("_")[-1])
+        for path in epoch_paths
+        if path.stem.startswith("epoch_") and path.stem.split("_")[-1].isdigit()
+    )
+    inferred_stage_epochs = max(
+        [
+            int(payload.get("train_epochs") or 0),
+            int(payload.get("checkpoint_every_epochs") or 0),
+            max(periodic_epochs, default=0),
+            _infer_stage_epochs_from_run_dir_name(run_dir) or 0,
+        ]
+    )
+    checkpoint_every = int(payload.get("checkpoint_every_epochs") or 100)
+    max_steps = int(payload.get("success_max_steps") or 200)
+    heartbeat_every = int(payload.get("eval_step_heartbeat_every") or 50)
+
+    return MDITTrialRequest(
+        config_path=PROJECT_ROOT / "configs" / "mdit" / "faithful_baseline.json",
+        stage_epochs=max(1, inferred_stage_epochs),
+        checkpoint_every=max(1, checkpoint_every),
+        eval_episodes=20,
+        eval_seed=int(payload.get("seed") or 1234),
+        device=payload.get("device"),
+        ckpt_root=Path(payload["ckpt_root"]).expanduser().resolve() if payload.get("ckpt_root") else run_dir.parent,
+        data_root=None,
+        run_name=str(payload.get("run_name") or run_dir.name),
+        experiment_name="legacy_audit_only",
+        description="Legacy audit-only request inferred from run_dir/config.json.",
+        max_steps=max(1, max_steps),
+        heartbeat_every=max(1, heartbeat_every),
+        headless=True,
+        show_progress=True,
+        cleanup_failed=False,
+    )
 
 
 def _build_offline_audit_command(run_dir: Path) -> str:
