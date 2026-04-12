@@ -251,15 +251,24 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate pfp_env
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
 
-RUN_NAME="unplug_charger_mdit_rgb5_sep_all_500"
-
-python scripts/run_mdit_autoresearch_trial.py \
-  --phase audit-only \
-  --run-dir ckpt/$RUN_NAME \
-  --eval-episodes 20 \
-  --audit-timeout-sec 7200 \
+python scripts/eval_mdit_all_checkpoints.py \
+  --ckpt-epochs-dir ckpt/unplug_charger_mdit_rgb5_sep_all_500/epochs \
+  --results-json ckpt/unplug_charger_mdit_rgb5_sep_all_500/eval_results/all_ckpts__n_action_steps_8.json \
+  --episodes 20 \
+  --max-steps 200 \
+  --seed 1234 \
   --headless \
-  --show-progress
+  --show-progress \
+  --device cuda \
+  --set n_action_steps=16 \
+  --set smooth_actions=true \
+  --set command_mode="first" \
+  --set position_alpha=0.35 \
+  --set rotation_alpha=0.25 \
+  --set max_position_step=0.03 \
+  --set gripper_open_threshold=0.6 \
+  --set gripper_close_threshold=0.4
+
 
 开仿真界面，可视化看 1 个 episode：
 source ~/miniconda3/etc/profile.d/conda.sh
@@ -273,7 +282,18 @@ QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --no-headless \
   --show-progress \
-  --device cuda
+  --device cuda \
+  --set n_action_steps=16 \
+  --set smooth_actions=true \
+  --set command_mode="first" \
+  --set position_alpha=0.35 \
+  --set rotation_alpha=0.25 \
+  --set max_position_step=0.03 \
+  --set gripper_open_threshold=0.6 \
+  --set gripper_close_threshold=0.4
+
+
+
 
 单个 ckpt 做 100 个 episode 评估：
 source ~/miniconda3/etc/profile.d/conda.sh
@@ -287,7 +307,15 @@ python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --headless \
   --show-progress \
-  --device cuda
+  --device cuda \
+  --set n_action_steps=16 \
+  --set smooth_actions=true \
+  --set command_mode="first" \
+  --set position_alpha=0.35 \
+  --set rotation_alpha=0.25 \
+  --set max_position_step=0.03 \
+  --set gripper_open_threshold=0.6 \
+  --set gripper_close_threshold=0.4
 
 ```
 

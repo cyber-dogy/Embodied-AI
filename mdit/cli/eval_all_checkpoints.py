@@ -27,6 +27,33 @@ except ImportError:  # pragma: no cover
     tqdm = None
 
 
+def _parse_override_value(raw: str):
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        lowered = raw.strip().lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+        return raw
+
+
+def _parse_config_overrides(items: list[str] | None) -> dict[str, object] | None:
+    if not items:
+        return None
+    overrides: dict[str, object] = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"Invalid --set override {item!r}. Expected KEY=VALUE.")
+        key = key.strip()
+        if not key:
+            raise SystemExit(f"Invalid --set override {item!r}. Empty key.")
+        overrides[key] = _parse_override_value(value)
+    return overrides
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate all faithful MDIT checkpoints and reuse cached results when available."
@@ -89,6 +116,14 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=1800,
         help="Timeout for each isolated checkpoint evaluation subprocess.",
+    )
+    parser.add_argument(
+        "--set",
+        dest="config_overrides",
+        action="append",
+        default=None,
+        metavar="KEY=VALUE",
+        help="Override checkpoint config fields for evaluation, e.g. --set n_action_steps=8.",
     )
     return parser.parse_args()
 
@@ -166,10 +201,19 @@ def save_cached_results(path: Path, results: dict[str, Any]) -> None:
     path.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def make_cache_key(ckpt_path: Path, *, episodes: int, max_steps: int, seed: int, prefer_ema: bool = True) -> str:
+def make_cache_key(
+    ckpt_path: Path,
+    *,
+    episodes: int,
+    max_steps: int,
+    seed: int,
+    prefer_ema: bool = True,
+    config_overrides: dict[str, Any] | None = None,
+) -> str:
+    override_text = json.dumps(config_overrides or {}, sort_keys=True, ensure_ascii=False)
     return (
         f"{ckpt_path.resolve()}::episodes={int(episodes)}::max_steps={int(max_steps)}::seed={int(seed)}"
-        f"::ema={prefer_ema}"
+        f"::ema={prefer_ema}::overrides={override_text}"
     )
 
 
@@ -185,6 +229,7 @@ def _run_eval_subprocess(
     show_progress: bool,
     timeout_sec: int,
     prefer_ema: bool = True,
+    config_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ckpt_path = Path(record["path"]).resolve()
     with tempfile.TemporaryDirectory(prefix="mdit-eval-") as tmpdir:
@@ -210,6 +255,8 @@ def _run_eval_subprocess(
         ]
         if device is not None:
             cmd.extend(["--device", str(device)])
+        for key, value in (config_overrides or {}).items():
+            cmd.extend(["--set", f"{key}={json.dumps(value, ensure_ascii=False)}"])
         subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, timeout=max(1, int(timeout_sec)))
         result = json.loads(output_json.read_text(encoding="utf-8"))
         return {
@@ -235,6 +282,7 @@ def eval_single_checkpoint(
     show_progress: bool,
     heartbeat_every: int,
     prefer_ema: bool = True,
+    config_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from mdit.train.eval import load_model_for_eval, run_success_rate_eval
 
@@ -251,6 +299,7 @@ def eval_single_checkpoint(
             ckpt_root=ckpt_path.parents[1],
             heartbeat_every=heartbeat_every,
             device=device,
+            config_overrides=config_overrides,
         )
         model, _ = load_model_for_eval(cfg, record["path"], payload=payload, prefer_ema=prefer_ema)
         started_at = time.perf_counter()
@@ -301,6 +350,7 @@ def maybe_plot(results: dict[str, Any], plot_path: Path | None, figsize: tuple[f
 
 def main() -> int:
     args = parse_args()
+    config_overrides = _parse_config_overrides(args.config_overrides)
     records = discover_checkpoints(args.ckpt_epochs_dir.expanduser().resolve(), include_special=bool(args.include_special))
     if args.limit is not None:
         records = records[: int(args.limit)]
@@ -315,6 +365,7 @@ def main() -> int:
             max_steps=int(args.max_steps),
             seed=int(args.seed),
             prefer_ema=bool(args.prefer_ema),
+            config_overrides=config_overrides,
         )
         if (not args.force_reeval) and cache_key in cached:
             continue
@@ -330,6 +381,7 @@ def main() -> int:
                 show_progress=bool(args.show_progress),
                 timeout_sec=int(args.per_checkpoint_timeout_sec),
                 prefer_ema=bool(args.prefer_ema),
+                config_overrides=config_overrides,
             )
         else:
             result = eval_single_checkpoint(
@@ -342,6 +394,7 @@ def main() -> int:
                 show_progress=bool(args.show_progress),
                 heartbeat_every=int(args.heartbeat_every),
                 prefer_ema=bool(args.prefer_ema),
+                config_overrides=config_overrides,
             )
         cached[cache_key] = result
         save_cached_results(args.results_json.expanduser().resolve(), cached)

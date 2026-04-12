@@ -103,6 +103,33 @@ def build_episode_analysis_path(output_json_path: Path) -> Path:
     return output_json_path.with_name(f"{output_json_path.stem}__analysis.json")
 
 
+def _parse_override_value(raw: str):
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        lowered = raw.strip().lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+        return raw
+
+
+def _parse_config_overrides(items: list[str] | None) -> dict[str, object] | None:
+    if not items:
+        return None
+    overrides: dict[str, object] = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"Invalid --set override {item!r}. Expected KEY=VALUE.")
+        key = key.strip()
+        if not key:
+            raise SystemExit(f"Invalid --set override {item!r}. Empty key.")
+        overrides[key] = _parse_override_value(value)
+    return overrides
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run faithful MDIT RLBench checkpoint evaluation in a standalone Python process."
@@ -153,6 +180,14 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help="Load EMA weights when available (default: true).",
     )
+    parser.add_argument(
+        "--set",
+        dest="config_overrides",
+        action="append",
+        default=None,
+        metavar="KEY=VALUE",
+        help="Override a checkpoint config field for evaluation, e.g. --set n_action_steps=8.",
+    )
     return parser.parse_args()
 
 
@@ -200,6 +235,7 @@ def main() -> int:
         ckpt_root=ckpt_root,
         device=args.device,
         heartbeat_every=args.heartbeat_every,
+        config_overrides=_parse_config_overrides(args.config_overrides),
     )
     set_seeds(eval_seed)
 
