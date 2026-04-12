@@ -361,7 +361,12 @@ class DiffusionTransformer(nn.Module):
             nn.GELU(),
         )
 
-        self.cond_dim = self.timestep_embed_dim + conditioning_dim
+        # Project raw conditioning (can be very large, e.g. 6174 for RGB mode) down to
+        # hidden_size so that each adaLN_modulation layer sees a compact, fixed-dim signal.
+        # Without this, adaLN_modulation is Linear(6430, 3072) = 19.7M params/block and the
+        # timestep signal (256 dims) gets drowned out by obs features (6174 dims).
+        self.cond_proj = nn.Linear(conditioning_dim, self.hidden_size)
+        self.cond_dim = self.timestep_embed_dim + self.hidden_size
 
         # Project action dimensions to hidden size
         self.input_proj = nn.Linear(self.action_dim, self.hidden_size)
@@ -397,11 +402,14 @@ class DiffusionTransformer(nn.Module):
 
     def _initialize_weights(self):
         """
-        Zero-initializing the final linear layer of adaLN_modulation in each block improves training stability
+        Zero-initializing the final linear layer of adaLN_modulation in each block improves training stability.
+        Also zero-initialize output_proj so the model outputs zero velocity at init (DiT reference practice).
         """
         for block in self.transformer_blocks:
             nn.init.constant_(block.adaLN_modulation[-1].weight, 0)
             nn.init.constant_(block.adaLN_modulation[-1].bias, 0)
+        nn.init.constant_(self.output_proj.weight, 0)
+        nn.init.constant_(self.output_proj.bias, 0)
 
     def forward(self, x: Tensor, timestep: Tensor, conditioning_vec: Tensor) -> Tensor:
         """Predict noise to remove from noisy actions.
@@ -418,7 +426,10 @@ class DiffusionTransformer(nn.Module):
 
         timestep_features = self.time_mlp(timestep)  # (B, timestep_embed_dim)
 
-        cond_features = torch.cat([timestep_features, conditioning_vec], dim=-1)  # (B, cond_dim)
+        # Compress raw conditioning to hidden_size before concatenating with timestep.
+        # Prevents obs features (can be 6000+ dims) from overwhelming the timestep signal.
+        projected_cond = self.cond_proj(conditioning_vec)  # (B, hidden_size)
+        cond_features = torch.cat([timestep_features, projected_cond], dim=-1)  # (B, cond_dim)
 
         # Project action sequence to hidden dimension
         hidden_seq = self.input_proj(x)  # (B, T, hidden_size)
