@@ -77,8 +77,8 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
 ## 状态跟踪
 
 - [x] 分支1 (lr2e5) - ✅ 完成, success@20=0.2, **FAILED**
-- [ ] 分支2 (lr1p5e5) - 等待
-- [ ] 分支3 (dropout0) - 等待
+- [x] 分支2 (lr1p5e5) - ✅ 完成, success@20=0.1, **FAILED**
+- [ ] 分支3 (dropout0) - 🟢 训练中
 
 ## 结论与下一步
 

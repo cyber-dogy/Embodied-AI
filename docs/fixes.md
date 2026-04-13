@@ -359,3 +359,13 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 **结果**：
 后续不再把 `mdit/pcd_ablation_pdit_transformer` 误称为“PDIT 成功配方复现版”。
 所有“成功配方消融”都应默认指向真正的 `pdit` 主线。
+
+---
+
+### 2026-04-13 · `pdit` · 成功配方为什么明显强于当前 `mdit`
+
+这次确认后，真正跑出高成功率的是完整 `pdit` 主线，而不是把 `pdit` backbone 塞进 `mdit` 训练栈的那条消融。成功版 `pdit` 的关键参数是：`obs3 + pcd(2048 points) + pred32`，训练侧 `lr=1e-4`、`betas=[0.9,0.95]`、`train_use_amp=false`、`batch_size=32`、`grad_accum_steps=2`、`ema=0.9993`，策略侧 `fm_num_k_infer=10`、`fm_flow_schedule="exp"`、`fm_snr_sampler="uniform"`；模型侧是 `hidden_dim=512`、`time_dim=256`、`num_blocks=6`、`nhead=8`、`ff=2048`、`dropout=0.1`、`decoder_condition_mode="mean_pool"`。
+
+它和当前 `mdit` 的关键差异不在“入口名字”，而在 transformer 的条件路径：`pdit` 的 `DiTTrajectoryBackbone` 保留条件 token，并走 encoder-decoder 式的条件编码与解码；当前 `mdit` 的 `DiffusionTransformer` 则把观测条件展平成一个大向量，与时间嵌入拼接后通过 AdaLN 调制整层。前者更接近“条件作为序列参与建模”，后者更接近“条件作为全局调制信号”。在点云任务上，这个差异会直接影响条件信息是否被稳定保留下来，而不只是影响 loss 形状。
+
+结果上，`pdit` 文档里已经验证到 `epoch_0100 success_rate = 0.90`，后续 `epoch_0500 = 0.95`，再做 `100 episodes` 复核仍有 `0.85`；而当前这轮 `mdit` 主线的 `100 epoch` 审计只有 `0.0 ~ 0.2`。因此，原版 `pdit` 更强的根本原因应记为：它跑通的是“完整且彼此匹配的 PDIT 系统”，包括点云输入、token 级条件路径、对应的 FM/优化配置、EMA 与离线 success 选模；`batch_size=32` 只是当时设备下的一个实现值，不是成功的决定性原因。
