@@ -1,5 +1,5 @@
 #!/bin/bash
-RUN_DIR="/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_pdittoken_last_a8_100"
+RUN_DIR="/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_shared_lastblock_pdittoken_obs2_a16_100"
 SUMMARY="$RUN_DIR/summary.json"
 SUCCESS_HIST="$RUN_DIR/success_eval_history.json"
 EPOCH_CKPT="$RUN_DIR/epochs/epoch_0100.pt"

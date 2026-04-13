@@ -30,53 +30,42 @@ class SearchSpec:
 
 
 DEFAULT_BASELINE = SearchSpec(
-    name="rgb5_sep_lastblock_a8_lr2e5_100",
+    name="rgb5_shared_lastblock_pdittoken_obs2_a16_lr2e5_100",
     stage_epochs=100,
     eval_episodes=20,
-    description="5RGB + obs3 + separate encoders + last_block + n_action_steps=8 baseline",
+    description="5RGB + text + last_block + shared encoder + obs2 + action16 + PDIT token path baseline",
     overrides={
         "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
-        "n_obs_steps": 3,
+        "n_obs_steps": 2,
         "horizon": 32,
-        "n_action_steps": 8,
-        "use_amp": True,
-        "observation_encoder.vision.use_separate_encoder_per_camera": True,
+        "n_action_steps": 16,
+        "use_amp": False,
+        "transformer_variant": "pdit",
+        "observation_encoder.vision.use_separate_encoder_per_camera": False,
         "observation_encoder.vision.train_mode": "last_block",
-        "observation_encoder.vision.resize_shape": [240, 240],
-        "objective.sigma_min": 0.001,
-        "objective.num_integration_steps": 25,
-        "smooth_actions": True,
+        "observation_encoder.vision.resize_shape": [224, 224],
+        "batch_size": 8,
+        "grad_accum_steps": 4,
+        "num_workers": 8,
+        "optimizer_lr": 2e-5,
+        "optimizer_betas": [0.95, 0.999],
+        "optimizer_weight_decay": 0.0,
+        "objective.sigma_min": 0.0,
+        "objective.num_integration_steps": 50,
+        "objective.loss_weights": {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0},
+        "smooth_actions": False,
         "command_mode": "first",
         "position_alpha": 0.35,
         "rotation_alpha": 0.25,
         "max_position_step": 0.03,
         "gripper_open_threshold": 0.6,
         "gripper_close_threshold": 0.4,
+        "pdit_backbone.final_layer_zero_init": True,
+        "pdit_backbone.decoder_condition_mode": "mean_pool",
     },
 )
 
-DEFAULT_CANDIDATES: tuple[SearchSpec, ...] = (
-    SearchSpec(
-        name="rgb5_sep_lastblock_a8_lr1p5e5_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="5RGB + obs3 + separate encoders + last_block + n_action_steps=8 + lower lr",
-        overrides={
-            **DEFAULT_BASELINE.overrides,
-            "optimizer_lr": 1.5e-5,
-        },
-    ),
-    SearchSpec(
-        name="rgb5_sep_lastblock_a8_dropout0_100",
-        stage_epochs=100,
-        eval_episodes=20,
-        description="5RGB + obs3 + separate encoders + last_block + n_action_steps=8 + dropout=0.0",
-        overrides={
-            **DEFAULT_BASELINE.overrides,
-            "transformer.dropout": 0.0,
-        },
-    ),
-)
+DEFAULT_CANDIDATES: tuple[SearchSpec, ...] = ()
 
 DEFAULT_WATCH_POLL_SEC = 60
 DEFAULT_SWITCH_BATCH_SIZE = 144

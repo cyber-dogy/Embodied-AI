@@ -440,8 +440,6 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 
 ---
 
-
-
 ### 2026-04-13 19:45:25 +0800 · `autoresearch/execution` · v2 screening 全分支未过 0.45 闸门，且训练进程存在"僵尸启动"现象
 
 **问题**：
@@ -465,3 +463,30 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 
 - v2 分支结果已全部写入 `results.tsv` 与研究文档，标记为 FAILED
 - PDIT token-conditioned 主线当前已在 `mdit_pdittoken_100` session 中正常训练（epoch 2+，GPU 20.7GB，5.24 it/s）
+
+---
+
+### 2026-04-13 20:03:04 +0800 · `docs/fixes.md` + `docs/mdit/research/*` + `docs/mdit/2026-04-12-*` · MDIT faithful 基线优于后续 `rgb5+last_block` 分支的原因分析
+
+问题：后续 `rgb5_sep_lastblock_a8_*` 分支成功率显著低于前面的 faithful 较好基线，但这件事很容易被误写成“因为改成了 `5RGB + last_block`”。实际核对现存 run 配置后，后续分支并不是单变量对照，而是同时改了 `obs_steps`、`n_action_steps`、视觉冻结/微调方式、shared/separate encoder、AMP、有效 batch、FM 积分设置、优化器超参和 rollout 平滑等多项关键因素。
+
+修改：固定更新三条解释口径并写入执行文档与独立分析文档：
+
+- 对 `MDIT faithful` 内部对比，较好基线更像“更保守、更适配旧 MDIT 全局 AdaLN 条件路径的 recipe”，不是运气
+- 对后续 `5RGB + last_block` 分支，不允许再写成“只改了 5RGB+last_block，所以它更差”
+- 对整个项目的大结论，`PDIT` 的高成功率主要来自结构 + FM 训练栈 + success-based 选模链路共同作用，不是纯运气
+
+结果：后续研究记录和 autoresearch 执行口径现在会明确区分两层问题：
+
+- `MDIT faithful` 为什么相对更稳：更像保守 recipe 更适配旧架构
+- 为什么项目里真正高成功率的是 `PDIT`：更像 `PDIT` 的结构与整套链路更强，而且结果可复现，不是偶然
+
+---
+
+### 2026-04-13 22:31:29 +0800 · `configs/mdit/*` + `research/mdit_autoresearch_loop.py` + `docs/mdit/*` · 主线从 `obs3+a8+separate+AMP` 回锚到 `obs2+a16+shared+AMP off`
+
+问题：此前主线同时混入了多项并非用户最开始明确要求的高影响改动，包括 `obs3`、`a8`、separate encoder、AMP、更快 FM 设置与 rollout 平滑。这会让 `5RGB + last_block` 的结论被大量 recipe 漂移污染，也容易再次把旧 RGB 条件路径拖回“超大条件导致模型失败”的区域。
+
+修改：本轮把默认主线固定回更接近成功锚点的 recipe：`obs2 + action16 + shared encoder + use_amp=false + grad_accum_steps=4 + sigma_min=0.0 + integration_steps=50 + weight_decay=0.0`，同时保留用户明确要坚持的 `5RGB + text + last_block`，并继续保留 `PDIT` token-conditioned 条件路径、gripper loss 对齐修复、planning/runtime error 分桶和 success eval CPU fallback。新增唯一主线配置 `rgb5_shared_lastblock_pdittoken_obs2_a16_gate100.json`，autoresearch 默认 baseline 与执行手册也全部切到这条线；显存探测脚本被显式禁用，防止低智 agent 陷入 batch size 循环。
+
+结果：新的默认主线不再是“在旧高漂移 recipe 上继续加复杂度”，而是“成功锚点约束下的最可能成功状态”。这不是放弃 `5RGB + last_block`，而是把它们放回更稳的训练栈里，并通过 token-conditioned 路径避免再次走回超大 flatten conditioning vector 的失败模式。

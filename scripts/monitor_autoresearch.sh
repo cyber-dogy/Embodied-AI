@@ -26,7 +26,7 @@ ps aux | grep "run_mdit_autoresearch_trial" | grep -v grep | wc -l | xargs -I {}
 # 检查 ckpt 目录
 echo ""
 echo "【CKPT 目录】"
-for dir in /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_sep_lastblock_a8_*__20260412*; do
+for dir in /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_shared_lastblock_pdittoken_obs2_a16*; do
     if [ -d "$dir" ]; then
         run_name=$(basename "$dir")
         echo ""

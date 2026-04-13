@@ -150,6 +150,26 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.pdit_backbone.decoder_condition_mode, "mean_pool")
         self.assertEqual(cfg.objective.loss_weights, {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0})
 
+    def test_rgb5_shared_lastblock_pdittoken_obs2_a16_gate100_config_loads_expected_values(self) -> None:
+        cfg = load_config(
+            PROJECT_ROOT / "configs" / "mdit" / "rgb5_shared_lastblock_pdittoken_obs2_a16_gate100.json"
+        )
+
+        self.assertEqual(cfg.transformer_variant, "pdit")
+        self.assertEqual(cfg.n_obs_steps, 2)
+        self.assertEqual(cfg.n_action_steps, 16)
+        self.assertFalse(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
+        self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
+        self.assertEqual(tuple(cfg.observation_encoder.vision.resize_shape), (224, 224))
+        self.assertFalse(cfg.use_amp)
+        self.assertEqual(cfg.grad_accum_steps, 4)
+        self.assertFalse(cfg.smooth_actions)
+        self.assertEqual(cfg.optimizer_betas, (0.95, 0.999))
+        self.assertEqual(cfg.optimizer_weight_decay, 0.0)
+        self.assertEqual(cfg.objective.sigma_min, 0.0)
+        self.assertEqual(cfg.objective.num_integration_steps, 50)
+        self.assertEqual(cfg.objective.loss_weights, {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0})
+
     def test_pcd_ablation_pdit_transformer_config_maps_legacy_alias(self) -> None:
         cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "pcd_ablation_pdit_transformer.json")
 

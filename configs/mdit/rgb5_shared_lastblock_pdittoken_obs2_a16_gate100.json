@@ -1,0 +1,69 @@
+{
+  "extends": "mdit/faithful_baseline.json",
+  "run_name": "unplug_charger_mdit_rgb5_shared_lastblock_pdittoken_obs2_a16_gate100",
+  "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
+  "n_obs_steps": 2,
+  "horizon": 32,
+  "n_action_steps": 16,
+  "transformer_variant": "pdit",
+  "batch_size": 8,
+  "grad_accum_steps": 4,
+  "num_workers": 8,
+  "use_amp": false,
+  "save_latest_ckpt": true,
+  "save_best_valid_ckpt": true,
+  "checkpoint_payload_mode": "full",
+  "enable_success_rate_eval": true,
+  "success_selection_every_epochs": 100,
+  "success_selection_episodes": 20,
+  "smooth_actions": false,
+  "command_mode": "first",
+  "horizon_index": 0,
+  "average_first_n": 1,
+  "position_alpha": 0.35,
+  "rotation_alpha": 0.25,
+  "max_position_step": 0.03,
+  "gripper_open_threshold": 0.6,
+  "gripper_close_threshold": 0.4,
+  "wandb_enable": true,
+  "wandb_mode": "online",
+  "wandb_resume": true,
+  "observation_encoder": {
+    "vision": {
+      "backbone": "vit_base_patch16_clip_224.openai",
+      "use_separate_encoder_per_camera": false,
+      "lr_multiplier": 0.1,
+      "resize_shape": [224, 224],
+      "crop_shape": [224, 224],
+      "crop_is_random": true,
+      "train_mode": "last_block"
+    },
+    "text": {
+      "model": "openai/clip-vit-base-patch16"
+    }
+  },
+  "objective": {
+    "objective_name": "flow_matching",
+    "sigma_min": 0.0,
+    "num_integration_steps": 50,
+    "integration_method": "euler",
+    "timestep_sampling": {
+      "strategy_name": "beta",
+      "s": 0.999,
+      "alpha": 1.5,
+      "beta": 1.0
+    },
+    "loss_weights": {
+      "xyz": 1.0,
+      "rot6d": 1.0,
+      "grip": 1.0
+    }
+  },
+  "pdit_backbone": {
+    "final_layer_zero_init": true,
+    "decoder_condition_mode": "mean_pool"
+  },
+  "optimizer_lr": 2e-5,
+  "optimizer_betas": [0.95, 0.999],
+  "optimizer_weight_decay": 0.0
+}
