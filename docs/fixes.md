@@ -3,8 +3,8 @@
 ## 【Agent 必读规则】
 
 **每个 agent 在修改本项目代码前必须先读此文件。**
-每次发现 bug、做出修改、观察到实验结果后，必须在本文件追加一条记录。
-格式：日期 · 文件 · 问题 · 修改 · 结果。只记关键信息，禁止大段粘贴无关代码。
+每次发现 bug、做出修改、观察到实验结果后，必须在本文件末尾追加一条记录。
+格式固定为：`YYYY-MM-DD HH:MM:SS ±TZ · 文件 · 问题 · 修改 · 结果`。必须带完整时间戳。只记关键信息，禁止大段粘贴无关代码。
 
 ---
 
@@ -200,29 +200,6 @@ nn.init.constant_(self.output_proj.bias, 0)
 3. `rgb5_sep_lastblock_a8_dropout0_100_v2` (dropout=0.0)
 
 **结果**：待观察 (100 epoch 后评估)
-
----
-
-### 2026-04-13 · `envs/rlbench_env.py` + `mdit/cli/eval_checkpoint.py` · 评估把规划失败误记为 simulator runtime error
-
-**问题**：
-`PDIT token` 早期 checkpoint 的 20ep 评估里，18/20 被记成 `simulator_runtime_error`，错误文本实际是
-`The call failed on the V-REP side. Return value: -1`。这类错误更像规划/动作执行失败，不是 CoppeliaSim 真崩溃。
-旧实现里 `RLBenchEnv._step_safe()` 对 `RuntimeError` 直接 `terminate=True`，导致本可插值回退的 episode 被过早打成硬失败；
-评估摘要又把这类错误直接归入 `simulator_runtime_error`，进一步放大误判。
-
-**修改**：
-
-- `envs/rlbench_env.py`
-  - 对 `V-REP/CoppeliaSim side + return value -1` 这类 `RuntimeError` 改为走和 `IKError/InvalidActionError` 一样的插值回退路径
-  - 仅把真正未识别的 `RuntimeError` 继续记为 `simulator runtime error`
-- `mdit/cli/eval_checkpoint.py`
-  - 新增 `planning_runtime_error` 分桶
-  - 不再把 `V-REP side -1` 直接算进 `simulator_runtime_error`
-  - `likely_causes` 改为区分 `planner_rejecting_many_predicted_actions` 和 `true_simulator_runtime_failures_dominate`
-
-**结果**：
-评估记录现在能区分“规划器大量拒绝动作”和“仿真器真崩了”。后续看到大量 `planning_runtime_error` 时，应先怀疑策略动作不可执行，不要再直接解读成 simulator 本身异常。
 
 ---
 
@@ -427,3 +404,34 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 - valid 汇总新增 `grip_mean_pred`、`grip_mean_target`、`grip_deadband_ratio`、`grip_binary_acc`、`grip_transition_acc`
 
 结果：后续训练里，`grip` 不再因为维度少而在总目标中被低权重；同时 autoresearch 能直接判断模型是不是学成了“中间值夹爪”，而不是只看 `loss_total` 猜。
+
+---
+
+### 2026-04-13 19:24:26 +0800 · `docs/fixes.md` · 修复记录规则更新
+
+问题：此前有记录按主题插入在历史段落中间，时间粒度也不够细，审计时不容易按真实发生顺序追踪。
+
+修改：从这条开始固定执行两条规则：
+
+- 所有新记录必须写完整时间戳
+- 所有新记录只能在 `fixes.md` 尾部追加，不能插入旧记录之间
+
+结果：后续修复记录将按时间顺序单向增长，便于你和 autoresearch 直接审计。
+
+---
+
+### 2026-04-13 19:25:24 +0800 · `envs/rlbench_env.py` + `mdit/cli/eval_checkpoint.py` · 评估把规划失败误记为 simulator runtime error
+
+问题：`PDIT token` 早期 checkpoint 的 20ep 评估里，18/20 被记成 `simulator_runtime_error`，错误文本实际是 `The call failed on the V-REP side. Return value: -1`。这类错误更像规划/动作执行失败，不是 CoppeliaSim 真崩溃。旧实现里 `RLBenchEnv._step_safe()` 对 `RuntimeError` 直接 `terminate=True`，导致本可插值回退的 episode 被过早打成硬失败；评估摘要又把这类错误直接归入 `simulator_runtime_error`，进一步放大误判。
+
+修改：
+
+- `envs/rlbench_env.py`
+  - 对 `V-REP/CoppeliaSim side + return value -1` 这类 `RuntimeError` 改为走和 `IKError/InvalidActionError` 一样的插值回退路径
+  - 仅把真正未识别的 `RuntimeError` 继续记为 `simulator runtime error`
+- `mdit/cli/eval_checkpoint.py`
+  - 新增 `planning_runtime_error` 分桶
+  - 不再把 `V-REP side -1` 直接算进 `simulator_runtime_error`
+  - `likely_causes` 改为区分 `planner_rejecting_many_predicted_actions` 和 `true_simulator_runtime_failures_dominate`
+
+结果：评估记录现在能区分“规划器大量拒绝动作”和“仿真器真崩了”。后续看到大量 `planning_runtime_error` 时，应先怀疑策略动作不可执行，不要再直接解读成 simulator 本身异常。
