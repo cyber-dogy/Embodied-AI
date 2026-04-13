@@ -323,41 +323,77 @@ class RLBenchEnv(BaseEnv):
         try:
             _, reward, terminate = self.task.step(action)
         except RuntimeError as e:
+            if self._is_recoverable_planning_runtime_error(e):
+                reward, terminate = self._retry_with_interpolated_action(
+                    action,
+                    recursion_depth=recursion_depth,
+                    error_text=f"planning runtime error: {e}",
+                    log_prefix="RLBench planning runtime fallback",
+                )
+                if reward:
+                    self.last_step_error = None
+                return reward, terminate
             self.last_step_error = f"simulator runtime error: {e}"
             if self.log_invalid_action_errors:
                 print(f"RLBench simulator error: {e}")
             return 0.0, True
         except (IKError, InvalidActionError) as e:
-            self.last_step_error = str(e)
-            if self.log_invalid_action_errors and recursion_depth == 0:
-                print(f"RLBench planning fallback: {e}")
-            if self.last_obs is None or getattr(self.last_obs, "gripper_pose", None) is None:
-                return 0.0, True
-
-            last_pose = np.asarray(self.last_obs.gripper_pose, dtype=np.float32)
-            if last_pose.shape[0] < 7 or not np.all(np.isfinite(last_pose[:7])):
-                return 0.0, True
-
-            cur_position = self.last_obs.gripper_pose[:3]
-            des_position = action[:3]
-            new_position = cur_position + (des_position - cur_position) * 0.25
-
-            cur_quat = self.last_obs.gripper_pose[3:]
-            cur_quat = np.array([cur_quat[3], cur_quat[0], cur_quat[1], cur_quat[2]])
-            des_quat = action[3:7]
-            des_quat = np.array([des_quat[3], des_quat[0], des_quat[1], des_quat[2]])
-            try:
-                new_quat = sm.qslerp(cur_quat, des_quat, 0.25, shortest=True)
-            except Exception as interp_error:
-                self.last_step_error = f"{self.last_step_error}; interpolation failed: {interp_error}"
-                if self.log_invalid_action_errors:
-                    print(f"RLBench interpolation error: {interp_error}")
-                return 0.0, True
-            new_quat = np.array([new_quat[1], new_quat[2], new_quat[3], new_quat[0]])
-
-            new_action = np.concatenate([new_position, new_quat, action[-1:]])
-            reward, terminate = self._step_safe(new_action, recursion_depth + 1)
+            reward, terminate = self._retry_with_interpolated_action(
+                action,
+                recursion_depth=recursion_depth,
+                error_text=str(e),
+                log_prefix="RLBench planning fallback",
+            )
+            if reward:
+                self.last_step_error = None
         return reward, terminate
+
+    @staticmethod
+    def _is_recoverable_planning_runtime_error(error: Exception | str) -> bool:
+        lowered = str(error).strip().lower()
+        return (
+            "v-rep side" in lowered and "return value: -1" in lowered
+        ) or (
+            "coppeliasim side" in lowered and "return value: -1" in lowered
+        )
+
+    def _retry_with_interpolated_action(
+        self,
+        action: np.ndarray,
+        *,
+        recursion_depth: int,
+        error_text: str,
+        log_prefix: str,
+    ) -> tuple[float, bool]:
+        self.last_step_error = error_text
+        if self.log_invalid_action_errors and recursion_depth == 0:
+            print(f"{log_prefix}: {error_text}")
+        if self.last_obs is None or getattr(self.last_obs, "gripper_pose", None) is None:
+            return 0.0, True
+
+        last_pose = np.asarray(self.last_obs.gripper_pose, dtype=np.float32)
+        if last_pose.shape[0] < 7 or not np.all(np.isfinite(last_pose[:7])):
+            return 0.0, True
+
+        cur_position = self.last_obs.gripper_pose[:3]
+        des_position = action[:3]
+        new_position = cur_position + (des_position - cur_position) * 0.25
+
+        cur_quat = self.last_obs.gripper_pose[3:]
+        cur_quat = np.array([cur_quat[3], cur_quat[0], cur_quat[1], cur_quat[2]])
+        des_quat = action[3:7]
+        des_quat = np.array([des_quat[3], des_quat[0], des_quat[1], des_quat[2]])
+        try:
+            new_quat = sm.qslerp(cur_quat, des_quat, 0.25, shortest=True)
+        except Exception as interp_error:
+            self.last_step_error = f"{self.last_step_error}; interpolation failed: {interp_error}"
+            if self.log_invalid_action_errors:
+                print(f"RLBench interpolation error: {interp_error}")
+            return 0.0, True
+        new_quat = np.array([new_quat[1], new_quat[2], new_quat[3], new_quat[0]])
+
+        new_action = np.concatenate([new_position, new_quat, action[-1:]])
+        return self._step_safe(new_action, recursion_depth + 1)
 
     def get_obs(self) -> tuple[np.ndarray, ...]:
         obs_rlbench = self.task.get_observation()

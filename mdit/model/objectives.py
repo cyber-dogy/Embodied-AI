@@ -42,6 +42,29 @@ class BaseObjective(ABC):
         self.config = config
         self.action_dim = action_dim
         self.horizon = horizon
+        self.loss_weights = self._resolve_loss_weights()
+
+    def _resolve_loss_weights(self) -> dict[str, float]:
+        weights = getattr(self.config, "loss_weights", None)
+        if weights is None:
+            return {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0}
+        return {
+            "xyz": float(weights.get("xyz", 1.0)),
+            "rot6d": float(weights.get("rot6d", 1.0)),
+            "grip": float(weights.get("grip", 1.0)),
+        }
+
+    def _combine_component_losses(
+        self,
+        loss_xyz: Tensor,
+        loss_rot6d: Tensor,
+        loss_grip: Tensor,
+    ) -> Tensor:
+        return (
+            self.loss_weights["xyz"] * loss_xyz
+            + self.loss_weights["rot6d"] * loss_rot6d
+            + self.loss_weights["grip"] * loss_grip
+        )
 
     @abstractmethod
     def compute_loss(
@@ -138,12 +161,16 @@ class DiffusionObjective(BaseObjective):
             valid_actions = ~batch["action_is_pad"]  # (B, T)
             loss = loss * valid_actions.unsqueeze(-1)
 
+        loss_xyz = loss[..., :3].mean()
+        loss_rot6d = loss[..., 3:9].mean()
+        loss_grip = loss[..., 9:].mean()
+        total_loss = self._combine_component_losses(loss_xyz, loss_rot6d, loss_grip)
         loss_dict = {
-            "loss_xyz": loss[..., :3].mean(),
-            "loss_rot6d": loss[..., 3:9].mean(),
-            "loss_grip": loss[..., 9:].mean(),
+            "loss_xyz": loss_xyz,
+            "loss_rot6d": loss_rot6d,
+            "loss_grip": loss_grip,
         }
-        return loss.mean(), loss_dict
+        return total_loss, loss_dict
 
     def conditional_sample(self, model: nn.Module, batch_size: int, conditioning_vec: Tensor) -> Tensor:
         device = next(model.parameters()).device
@@ -223,12 +250,16 @@ class FlowMatchingObjective(BaseObjective):
             valid_mask = ~batch["action_is_pad"]  # (B, T)
             loss = loss * valid_mask.unsqueeze(-1)  # (B, T, D)
 
+        loss_xyz = loss[..., :3].mean()
+        loss_rot6d = loss[..., 3:9].mean()
+        loss_grip = loss[..., 9:].mean()
+        total_loss = self._combine_component_losses(loss_xyz, loss_rot6d, loss_grip)
         loss_dict = {
-            "loss_xyz": loss[..., :3].mean(),
-            "loss_rot6d": loss[..., 3:9].mean(),
-            "loss_grip": loss[..., 9:].mean(),
+            "loss_xyz": loss_xyz,
+            "loss_rot6d": loss_rot6d,
+            "loss_grip": loss_grip,
         }
-        return loss.mean(), loss_dict
+        return total_loss, loss_dict
 
     def conditional_sample(self, model: nn.Module, batch_size: int, conditioning_vec: Tensor) -> Tensor:
         """Generate actions by integrating the learned velocity field via ODE.

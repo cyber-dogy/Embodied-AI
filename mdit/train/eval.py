@@ -34,6 +34,39 @@ def summarize_metrics(metrics: list[dict[str, float]]) -> dict[str, float]:
     return summary
 
 
+def compute_grip_diagnostics_from_actions(
+    pred_actions: torch.Tensor,
+    target_actions: torch.Tensor,
+    cfg: MDITExperimentConfig,
+) -> dict[str, float]:
+    pred_grip = pred_actions[..., 9]
+    target_grip = target_actions[..., 9]
+    pred_binary = pred_grip >= 0.5
+    target_binary = target_grip >= 0.5
+    transition_mask = torch.zeros_like(target_binary, dtype=torch.bool)
+    if target_binary.shape[-1] > 1:
+        transition_mask[..., 1:] = target_binary[..., 1:] != target_binary[..., :-1]
+
+    transition_frames = int(transition_mask.sum().detach().cpu())
+    if transition_frames > 0:
+        transition_acc = float((pred_binary[transition_mask] == target_binary[transition_mask]).float().mean().cpu())
+    else:
+        transition_acc = 0.0
+
+    deadband_ratio = (
+        (pred_grip > float(cfg.gripper_close_threshold)) & (pred_grip < float(cfg.gripper_open_threshold))
+    ).float().mean()
+
+    return {
+        "grip_mean_pred": float(pred_grip.mean().detach().cpu()),
+        "grip_mean_target": float(target_grip.mean().detach().cpu()),
+        "grip_deadband_ratio": float(deadband_ratio.detach().cpu()),
+        "grip_binary_acc": float((pred_binary == target_binary).float().mean().detach().cpu()),
+        "grip_transition_acc": float(transition_acc),
+        "grip_transition_frames": float(transition_frames),
+    }
+
+
 def evaluate_model_on_loader(
     model: MultiTaskDiTPolicy,
     loader: DataLoader,
@@ -42,6 +75,7 @@ def evaluate_model_on_loader(
 ) -> dict[str, float] | None:
     model.eval()
     metrics_list: list[dict[str, float]] = []
+    grip_diag_rows: list[dict[str, float]] = []
     with torch.inference_mode():
         for batch_idx, batch_cpu in enumerate(loader):
             if max_batches is not None and batch_idx >= max_batches:
@@ -54,9 +88,19 @@ def evaluate_model_on_loader(
                 for key, value in loss_dict.items():
                     row[key] = float(value.detach().cpu())
             metrics_list.append(row)
+            if batch_idx < 8:
+                with get_autocast_context(cfg.use_amp):
+                    pred_actions = model._generate_action_chunk(batch)
+                pred_actions = model.unnormalize_action(pred_actions)
+                target_actions = batch["action"][
+                    :, model.config.n_obs_steps - 1 : model.config.n_obs_steps - 1 + model.config.n_action_steps
+                ]
+                grip_diag_rows.append(compute_grip_diagnostics_from_actions(pred_actions, target_actions, cfg))
     if not metrics_list:
         return None
     summary = summarize_metrics(metrics_list)
+    if grip_diag_rows:
+        summary.update(summarize_metrics(grip_diag_rows))
     summary["num_batches"] = len(metrics_list)
     return summary
 

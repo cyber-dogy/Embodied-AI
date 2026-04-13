@@ -63,6 +63,23 @@
 - `output_proj` 零初始化是重要 bug，但不是根因
 - `lr=1.5e-5` 那条分支曾因评估 `OOM` 失真，不能当作结构结论
 - 现在要验证的是“把 RGB 条件路径改成 token-conditioned 之后，是否明显优于当前 `success@20 ≈ 0.2` 的基线”
+- `valid/loss_total` 小幅回升不等于新的指标 bug
+- `valid/loss_grip` 异常与低成功率高度相关，后续必须单独记录
+
+## 2.1 当前关于 grip 的固定判断
+
+当前 `MDIT` 的另一个关键问题是 loss 聚合方式与成功版 `PDIT` 不一致：
+
+- 旧 `MDIT` 训练里把 10 维动作统一平均
+- `grip` 只有 1 维，因此在总目标里被低权重
+- 成功版 `PDIT` 使用的是 `xyz / rot6d / grip` 分项加权求和
+
+本轮固定认定：
+
+- `grip` 是当前最脆弱也最关键的维度
+- 本轮修复第一优先级是让 `MDIT` 的 FM loss 聚合方式对齐 `PDIT`
+- 不改 `0.6 / 0.4` 后处理阈值
+- 不把 `grip` 换成 BCE / focal loss
 
 ## 3. 固定默认值
 
@@ -79,6 +96,7 @@
 - `optimizer_lr = 2e-5`
 - `objective.sigma_min = 0.001`
 - `objective.num_integration_steps = 25`
+- `objective.loss_weights = {xyz: 1.0, rot6d: 1.0, grip: 1.0}`
 - `smooth_actions = true`
 - `command_mode = "first"`
 - `position_alpha = 0.35`
@@ -264,6 +282,9 @@ python scripts/eval_mdit_checkpoint.py \
 - `audit-only` 必须生成 `audit_report.json`
 - 训练内 success eval 必须更新 `success_eval_history.json`
 - `wandb` 中必须有 success 曲线
+- 失败分析里必须区分：
+  - `planning_runtime_error`
+  - `simulator_runtime_error`
 
 每轮必须检查这些文件存在：
 
@@ -283,6 +304,21 @@ python scripts/eval_mdit_checkpoint.py \
 - `initial_device = "cuda"` 或对应原设备
 
 若某轮只有 `wandb` 曲线，没有本地 JSON 记录，视为该轮不合格。
+
+评估错误解释固定为：
+
+- `planning_runtime_error`：更像规划器/动作执行侧拒绝预测动作，不等于 simulator 真崩溃
+- `simulator_runtime_error`：才表示更接近真实的仿真侧 runtime 异常
+- 如果 `planning_runtime_error` 很高，优先怀疑策略输出不可执行，不要直接判成“评估脚本坏了”或“CoppeliaSim 崩了”
+
+后续 autoresearch 汇报时，除了 `success@20`，还必须同时记录：
+
+- `valid/loss_grip`
+- `valid/grip_deadband_ratio`
+- `valid/grip_transition_acc`
+- `valid/grip_binary_acc`
+- `failure_error_buckets.planning_runtime_error`
+- `failure_error_buckets.simulator_runtime_error`
 
 ## 8. 磁盘与检查点清理规则
 
@@ -356,6 +392,7 @@ python scripts/eval_mdit_checkpoint.py \
 - 旧的全局 AdaLN 条件路径仍在被误用
 - success-based 选模没有真正执行
 - rollout 配置与训练 recipe 不一致
+- 评估记录里的 `planning_runtime_error` 很高，说明大量动作被规划器拒绝
 
 默认不要第一时间归因为 `PDIT backbone` 本身失败。
 
@@ -376,3 +413,9 @@ autoresearch 本轮只允许执行这条主线：
 
 - 拿到一个有效的 `success@20`
 - 判断 token-conditioned 条件路径是否显著好于当前 `success@20 ≈ 0.2` 的旧基线
+
+同时必须确认：
+
+- `valid/loss_grip` 是否较旧基线更稳定
+- `valid/grip_deadband_ratio` 是否下降
+- `valid/grip_transition_acc` 是否明显高于旧基线

@@ -92,6 +92,7 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.observation_encoder.vision.train_mode, "all")
         self.assertEqual(cfg.n_action_steps, 8)
         self.assertEqual(cfg.transformer_variant, "mdit")
+        self.assertIsNone(cfg.objective.loss_weights)
         self.assertTrue(cfg.enable_success_rate_eval)
         self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
 
@@ -147,6 +148,7 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
         self.assertTrue(cfg.pdit_backbone.final_layer_zero_init)
         self.assertEqual(cfg.pdit_backbone.decoder_condition_mode, "mean_pool")
+        self.assertEqual(cfg.objective.loss_weights, {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0})
 
     def test_pcd_ablation_pdit_transformer_config_maps_legacy_alias(self) -> None:
         cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "pcd_ablation_pdit_transformer.json")
@@ -165,6 +167,19 @@ class MDITConfigAlignmentTest(unittest.TestCase):
                     "pcd_transformer_variant": "pdit",
                 }
             )
+
+    def test_objective_loss_weights_validate_keys_and_values(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with self.assertRaisesRegex(ValueError, "unsupported keys"):
+                config_from_dict(
+                    {
+                        "train_data_path": tmp_dir,
+                        "valid_data_path": tmp_dir,
+                        "objective": {
+                            "loss_weights": {"bad": 1.0},
+                        },
+                    }
+                ).validate()
 
     def test_clip_alignment_keeps_vision_trainable_and_text_encoder_frozen(self) -> None:
         with mock.patch.dict(

@@ -78,11 +78,31 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
 
 - [x] 分支1 (lr2e5) - ✅ 完成, success@20=0.2, **FAILED**
 - [x] 分支2 (lr1p5e5) - ✅ 完成, success@20=0.1, **FAILED**
-- [ ] 分支3 (dropout0) - 🟢 训练中
+- [x] 分支3 (dropout0) - ❌ 已终止 (用户停止)
 
 ## 结论与下一步
 
-⏳ 等待所有3条分支完成 100 epoch 训练并评估 success@20。
+### v2 筛选分支最终结果
+
+| 分支 | success@20 | 闸门(0.45) | 结论 |
+|------|------------|-----------|------|
+| lr2e5_v2 | 0.2 | ❌ FAILED | 修复output_proj后从0.0提升到0.2，但仍远低于闸门 |
+| lr1p5e5_v2 | 0.1 | ❌ FAILED | 更低学习率效果更差 |
+| dropout0_v2 | N/A | N/A | 训练中被终止 |
+
+### 关键发现
+
+1. **output_proj 零初始化修复有效**: 从 0.0 → 0.2 提升证明修复有效
+2. **但AdaLN全局条件路径存在根本问题**: 即使修复后仍无法突破 0.45 闸门
+3. **lr=1.5e-5 不优于 lr=2e-5**: 更低学习率导致更差性能
+
+### 主线切换决策
+
+根据执行计划 [docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md](../2026-04-12-mdit-autoresearch-execution-plan-zh.md) 第1节:
+
+> 本轮唯一主线改为: `rgb5_pdittoken_lastblock_a8_lr2e5_100`
+
+**v2 分支已证明旧 AdaLN 路径无法达到目标**，现全面转向 **PDIT token-conditioned 路径**。
 
 ---
 
@@ -122,3 +142,23 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
 **闸门决策**: 0.2 < 0.45 → 停止分支，不续训到 300 epoch
 
 **下一步**: 继续分支2 (lr=1.5e-5)
+
+---
+
+### 2026-04-13 17:40 - v2 筛选全部分支完成
+
+**最终状态更新**
+
+| 分支 | Epoch | success@20 | 闸门状态 | 动作 |
+|------|-------|------------|---------|------|
+| lr2e5_v2 | 100 | 0.2 | ❌ FAILED | 停止，不续训 |
+| lr1p5e5_v2 | 100 | 0.1 | ❌ FAILED | 停止，不续训 |
+| dropout0_v2 | ~10 | N/A | N/A | 已终止 |
+
+**已执行操作**:
+1. ✅ 所有分支 audit report 已生成
+2. ✅ success_eval_history.json 已记录
+3. ✅ results.tsv 已更新
+4. ✅ 研究文档已更新
+
+**结论**: AdaLN 全局条件路径验证完成，确认无法达到 0.45 闸门。现全面转向 PDIT token-conditioned 路径。

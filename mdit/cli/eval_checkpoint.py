@@ -45,7 +45,11 @@ def _normalize_error_label(error: str | None) -> str:
     if not text:
         return "none"
     lowered = text.lower()
-    if "v-rep side" in lowered or "simulator runtime error" in lowered:
+    if "planning runtime error" in lowered:
+        return "planning_runtime_error"
+    if ("v-rep side" in lowered or "coppeliasim side" in lowered) and "return value: -1" in lowered:
+        return "planning_runtime_error"
+    if "simulator runtime error" in lowered:
         return "simulator_runtime_error"
     if "invalid predicted action" in lowered:
         return "invalid_predicted_action"
@@ -72,9 +76,16 @@ def build_episode_analysis(result: dict) -> dict:
         "at_horizon": sum(1 for steps in failure_steps if steps == max_steps and max_steps > 0),
     }
     likely_causes: list[str] = []
+    planning_failures = (
+        int(error_buckets.get("planning_runtime_error", 0))
+        + int(error_buckets.get("planning_recursion_limit", 0))
+        + int(error_buckets.get("invalid_predicted_action", 0))
+    )
     runtime_failures = int(error_buckets.get("simulator_runtime_error", 0))
+    if planning_failures >= max(2, len(failure_records) // 2):
+        likely_causes.append("planner_rejecting_many_predicted_actions")
     if runtime_failures >= max(2, len(failure_records) // 2):
-        likely_causes.append("planner_or_simulator_rejecting_many_predicted_actions")
+        likely_causes.append("true_simulator_runtime_failures_dominate")
     if failure_step_buckets["lt_20"] >= max(3, len(failure_records) // 4):
         likely_causes.append("many_failures_happen_very_early_in_rollout")
     if failure_step_buckets["at_horizon"] > 0:

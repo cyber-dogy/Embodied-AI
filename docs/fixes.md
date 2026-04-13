@@ -203,6 +203,29 @@ nn.init.constant_(self.output_proj.bias, 0)
 
 ---
 
+### 2026-04-13 · `envs/rlbench_env.py` + `mdit/cli/eval_checkpoint.py` · 评估把规划失败误记为 simulator runtime error
+
+**问题**：
+`PDIT token` 早期 checkpoint 的 20ep 评估里，18/20 被记成 `simulator_runtime_error`，错误文本实际是
+`The call failed on the V-REP side. Return value: -1`。这类错误更像规划/动作执行失败，不是 CoppeliaSim 真崩溃。
+旧实现里 `RLBenchEnv._step_safe()` 对 `RuntimeError` 直接 `terminate=True`，导致本可插值回退的 episode 被过早打成硬失败；
+评估摘要又把这类错误直接归入 `simulator_runtime_error`，进一步放大误判。
+
+**修改**：
+
+- `envs/rlbench_env.py`
+  - 对 `V-REP/CoppeliaSim side + return value -1` 这类 `RuntimeError` 改为走和 `IKError/InvalidActionError` 一样的插值回退路径
+  - 仅把真正未识别的 `RuntimeError` 继续记为 `simulator runtime error`
+- `mdit/cli/eval_checkpoint.py`
+  - 新增 `planning_runtime_error` 分桶
+  - 不再把 `V-REP side -1` 直接算进 `simulator_runtime_error`
+  - `likely_causes` 改为区分 `planner_rejecting_many_predicted_actions` 和 `true_simulator_runtime_failures_dominate`
+
+**结果**：
+评估记录现在能区分“规划器大量拒绝动作”和“仿真器真崩了”。后续看到大量 `planning_runtime_error` 时，应先怀疑策略动作不可执行，不要再直接解读成 simulator 本身异常。
+
+---
+
 ### 2026-04-13 · `mdit/` 全链路 · 新增 PCD transformer 消融开关（`mdit` vs `pdit`）
 
 **问题**：
@@ -387,3 +410,20 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 之前 `success@20` screening 里存在一个会污染结论的问题：训练本身可能正常，但训练后隔离评估子进程在 GPU 上加载 ckpt 时 `CUDA OOM`，最后被误看成“模型失败”。这次把行为固定成：先按原 device 跑一次 isolated eval，如果报 `CUDA out of memory`，自动重试一次 `--device cpu`，并把 `device_used`、`cpu_fallback`、`initial_device` 写进 `success_eval_history.json`；如果 CPU fallback 也失败，错误文本里也必须明确显示“先 OOM，后 CPU fallback 失败”。
 
 结果：后续 autoresearch 的 `100 epoch` 结果里，可以区分“模型真的差”和“评估进程在 GPU 上 OOM”。这能避免再把无效负样本写进研究结论，也让 `wandb` 和本地 JSON 记录保持一致。
+
+---
+
+### 2026-04-13 · `mdit/model/objectives.py` + `mdit/train/eval.py` · grip 不是切片 bug，真正问题是 loss 聚合方式低估了 gripper
+
+这次重新检查 `valid/loss_total` 回升和 `valid/loss_grip` 异常后，确认当前重点不是“valid 代码算错了”。`evaluate_model_on_loader()` 仍保持原版随机采样 noise/t 的语义，所以 `valid/loss_total` 小幅回升本身不应直接当 bug；真正危险的是 `valid/loss_grip` 单独变差，而任务 `unplug_charger` 又对夹爪开合时机高度敏感。
+
+代码层的关键差异在于：旧 `MDIT` 的 Flow Matching loss 是 10 维直接平均，因此 `grip` 只有 1 维，在总目标里天然被稀释到约 10%；成功版 `PDIT` 则是先分别算 `loss_xyz / loss_rot6d / loss_grip`，再按组件加权求和，默认三项同级。结合当前数据分布（gripper 打开帧约占 75%~80%，真实开关切换仅约 1.6%~1.9%），旧 `MDIT` 非常容易学成“夹爪中间值”或静态偏置，而 rollout 时又会被 `0.6 / 0.4` hysteresis 强行离散，最后直接拖低 success。
+
+这轮修复固定为：
+
+- `FlowMatchingObjective` 不再返回 10 维统一均值
+- 改成按 `xyz / rot6d / grip` 分项加权求和
+- 默认权重显式对齐 `PDIT`：`{xyz: 1.0, rot6d: 1.0, grip: 1.0}`
+- valid 汇总新增 `grip_mean_pred`、`grip_mean_target`、`grip_deadband_ratio`、`grip_binary_acc`、`grip_transition_acc`
+
+结果：后续训练里，`grip` 不再因为维度少而在总目标中被低权重；同时 autoresearch 能直接判断模型是不是学成了“中间值夹爪”，而不是只看 `loss_total` 猜。

@@ -22,6 +22,13 @@ class FlowMatchingConfig:
     num_integration_steps: int = 50
     integration_method: str = "euler"
     timestep_sampling: TimestepSamplingConfig = field(default_factory=TimestepSamplingConfig)
+    loss_weights: dict[str, float] | None = None
+
+    def __post_init__(self) -> None:
+        if self.loss_weights is not None:
+            self.loss_weights = {
+                str(key): float(value) for key, value in self.loss_weights.items()
+            }
 
 
 @dataclass
@@ -201,6 +208,16 @@ class MDITExperimentConfig:
             raise ValueError("offline_eval_ckpt_every_epochs must be >= 0.")
         if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
             raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
+        if self.objective.loss_weights is not None:
+            allowed_loss_keys = {"xyz", "rot6d", "grip"}
+            unknown_keys = set(self.objective.loss_weights) - allowed_loss_keys
+            if unknown_keys:
+                raise ValueError(
+                    f"objective.loss_weights contains unsupported keys: {sorted(unknown_keys)}."
+                )
+            for key, value in self.objective.loss_weights.items():
+                if float(value) < 0.0:
+                    raise ValueError(f"objective.loss_weights[{key!r}] must be >= 0.")
         if str(self.transformer_variant) not in {"mdit", "pdit"}:
             raise ValueError("transformer_variant must be one of {'mdit', 'pdit'}.")
         if self.pcd_transformer_variant is not None and str(self.pcd_transformer_variant) != str(self.transformer_variant):

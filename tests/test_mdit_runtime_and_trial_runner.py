@@ -6,13 +6,16 @@ import subprocess
 import unittest
 from unittest import mock
 import json
+import types
 
 import numpy as np
 import torch
 
 import _bootstrap  # noqa: F401
-from mdit.config import MDITExperimentConfig
+from envs.rlbench_env import RLBenchEnv
+from mdit.config import FlowMatchingConfig, MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
+from mdit.model.objectives import FlowMatchingObjective
 from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
 from mdit.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
 from mdit.train.eval import run_success_rate_eval_subprocess
@@ -26,6 +29,62 @@ from research.mdit_trial_runner import (
 
 
 class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
+    def test_rlbench_env_recovers_vrep_runtime_errors_via_interpolation(self) -> None:
+        env = RLBenchEnv.__new__(RLBenchEnv)
+        env.log_invalid_action_errors = False
+        env.last_obs = types.SimpleNamespace(
+            gripper_pose=np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0], dtype=np.float32)
+        )
+        env.last_step_error = None
+        call_actions: list[np.ndarray] = []
+
+        def _task_step(action):
+            call_actions.append(np.asarray(action, dtype=np.float32))
+            if len(call_actions) == 1:
+                raise RuntimeError("The call failed on the V-REP side. Return value: -1")
+            return None, 0.0, False
+
+        env.task = types.SimpleNamespace(step=_task_step)
+
+        reward, terminate = RLBenchEnv._step_safe(
+            env,
+            np.array([0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0], dtype=np.float32),
+        )
+
+        self.assertEqual(len(call_actions), 2)
+        self.assertEqual(reward, 0.0)
+        self.assertFalse(terminate)
+        self.assertEqual(env.last_step_error, "planning runtime error: The call failed on the V-REP side. Return value: -1")
+
+    def test_flow_matching_total_loss_uses_component_weights(self) -> None:
+        objective = FlowMatchingObjective(
+            FlowMatchingConfig(loss_weights={"xyz": 1.0, "rot6d": 2.0, "grip": 3.0}),
+            action_dim=10,
+            horizon=4,
+        )
+
+        class _ZeroModel(torch.nn.Module):
+            def forward(self, x_t, t, conditioning_vec):
+                del t, conditioning_vec
+                return torch.zeros_like(x_t)
+
+        batch = {
+            "action": torch.ones(2, 4, 10, dtype=torch.float32),
+        }
+
+        with mock.patch.object(objective, "_sample_timesteps", return_value=torch.zeros(2)), mock.patch(
+            "mdit.model.objectives.torch.randn_like",
+            return_value=torch.zeros_like(batch["action"]),
+        ):
+            loss, loss_dict = objective.compute_loss(
+                _ZeroModel(),
+                batch,
+                conditioning_vec=torch.zeros(2, 8),
+            )
+
+        expected = loss_dict["loss_xyz"] + 2.0 * loss_dict["loss_rot6d"] + 3.0 * loss_dict["loss_grip"]
+        self.assertTrue(torch.allclose(loss, expected))
+
     def test_prepare_cfg_disables_rlbench_runtime_when_success_eval_is_off(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             config_path = Path(tmp_dir) / "config.json"
