@@ -6,7 +6,7 @@
     "dim_feedforward": 2048,
     "activation": "gelu",
     "debug_finiteness": true,
-    "final_layer_zero_init": false,
+    "final_layer_zero_init": true,
     "decoder_condition_mode": "mean_pool"
   }
 }

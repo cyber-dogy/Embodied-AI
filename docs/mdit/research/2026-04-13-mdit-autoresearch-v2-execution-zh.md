@@ -76,7 +76,7 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
 
 ## 状态跟踪
 
-- [ ] 分支1 (lr2e5) - 训练中
+- [x] 分支1 (lr2e5) - ✅ 完成, success@20=0.2, **FAILED**
 - [ ] 分支2 (lr1p5e5) - 等待
 - [ ] 分支3 (dropout0) - 等待
 
@@ -100,3 +100,25 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
 **预计完成时间**: 
 - 每条分支约 5-6 小时
 - 总计约 15-18 小时
+
+---
+
+### 2026-04-13 07:30 - 分支 1 完成评估
+
+**状态**: FAILED - 未通过 100 epoch 闸门
+
+| 指标 | 数值 |
+|------|------|
+| 完成 Epochs | 100 |
+| success@20 | 0.2 (4/20) |
+| 平均步数 | 166.3 |
+| 训练耗时 | ~5.5 小时 |
+
+**对比修复前后**:
+- 修复前 (bug 版本): success@20 = 0.0
+- 修复后 (output_proj 零初始化): success@20 = 0.2
+- 提升: +0.2，但仍低于 0.45 阈值
+
+**闸门决策**: 0.2 < 0.45 → 停止分支，不续训到 300 epoch
+
+**下一步**: 继续分支2 (lr=1.5e-5)

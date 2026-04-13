@@ -70,7 +70,7 @@ class PDITBackboneConfig:
     dim_feedforward: int = 2048
     activation: str = "gelu"
     debug_finiteness: bool = True
-    final_layer_zero_init: bool = False
+    final_layer_zero_init: bool = True
     decoder_condition_mode: str = "mean_pool"
 
 

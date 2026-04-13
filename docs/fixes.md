@@ -219,3 +219,50 @@ nn.init.constant_(self.output_proj.bias, 0)
 **结果**：
 可在同一训练命令体系下通过单开关完成 PCD transformer 消融。
 已做 smoke test：`pcd_ablation_pdit_transformer.json` 可正常前向计算 loss。
+
+---
+
+### 2026-04-13 · `mdit/train/eval.py` · valid loss 仍使用随机 noise/t，epoch 间不可直接比较
+
+**问题**：
+当前 `evaluate_model_on_loader()` 直接调用 `model(batch)`，Flow Matching 会再次随机采样 `noise` 和 `t`。
+这会让同一模型对同一 valid 集两次计算得到不同 loss，容易把“指标抖动”误判成“训练反弹”。
+
+**修改**：
+- 新增 `validation_seed` 配置项，默认 `0`
+- valid 评估时固定 `torch` RNG，并在结束后恢复 CPU/CUDA RNG state
+- 这样 valid 的噪声目标在不同 epoch 间可比，但不会污染训练阶段的随机数流
+
+**结果**：
+valid loss 现在可作为跨 epoch 的稳定对比信号；训练采样随机性保持不变。
+
+---
+
+### 2026-04-13 · `mdit/config/schema.py` + `configs/mdit/pcd_ablation_pdit_transformer.json` · PCD 切到 PDIT backbone 时未默认启用 final layer zero-init
+
+**问题**：
+虽然 `mdit` 主干已经补了 `output_proj` 零初始化，但 `pcd_transformer_variant="pdit"` 这条消融线仍默认
+`final_layer_zero_init=false`。这和 PDIT autoresearch 已验证有效的结构设定不一致，会让消融结果掺入额外变量。
+
+**修改**：
+- `PDITBackboneConfig.final_layer_zero_init` 默认值改为 `True`
+- `configs/mdit/pcd_ablation_pdit_transformer.json` 同步改为 `true`
+
+**结果**：
+PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后续结果更可解释。
+
+---
+
+### 2026-04-13 · `mdit/train/eval.py` · 回滚 deterministic valid loss（恢复原版 MDIT / PDIT 评估语义）
+
+**问题**：
+此前为了让 valid loss 跨 epoch 可比，给 `evaluate_model_on_loader()` 加了固定随机种子。
+实际验证后，这会让 valid 曲线异常平滑，不再反映原版 MDIT / PDIT 的随机噪声评估行为。
+
+**修改**：
+- 删除 `validation_seed`
+- 删除 valid 阶段固定 RNG / 恢复 RNG state 的逻辑
+- 恢复为每次 eval 都随机采样 noise 和 timestep
+
+**结果**：
+当前 valid 评估重新与原版 MDIT / PDIT 行为对齐；后续不再把 deterministic valid 当作默认方案。

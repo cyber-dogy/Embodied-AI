@@ -136,6 +136,13 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.success_selection_episodes, 20)
         self.assertTrue(cfg.smooth_actions)
 
+    def test_pcd_ablation_pdit_transformer_config_enables_final_layer_zero_init(self) -> None:
+        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "pcd_ablation_pdit_transformer.json")
+
+        self.assertTrue(cfg.use_pcd)
+        self.assertEqual(cfg.pcd_transformer_variant, "pdit")
+        self.assertTrue(cfg.pdit_backbone.final_layer_zero_init)
+
     def test_clip_alignment_keeps_vision_trainable_and_text_encoder_frozen(self) -> None:
         with mock.patch.dict(
             sys.modules,

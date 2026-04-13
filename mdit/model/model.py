@@ -145,7 +145,7 @@ class MultiTaskDiTPolicy(nn.Module):
         return normalized
 
     def _encode_conditioning(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
-        if self._pcd_transformer_variant == "pdit":
+        if str(getattr(self, "_pcd_transformer_variant", "mdit")).lower() == "pdit":
             return self.observation_encoder.encode_tokens(batch)
         return self.observation_encoder.encode(batch)
 
