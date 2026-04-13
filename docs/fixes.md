@@ -407,6 +407,8 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 
 ---
 
+---
+
 ### 2026-04-13 19:24:26 +0800 · `docs/fixes.md` · 修复记录规则更新
 
 问题：此前有记录按主题插入在历史段落中间，时间粒度也不够细，审计时不容易按真实发生顺序追踪。
@@ -435,3 +437,31 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
   - `likely_causes` 改为区分 `planner_rejecting_many_predicted_actions` 和 `true_simulator_runtime_failures_dominate`
 
 结果：评估记录现在能区分“规划器大量拒绝动作”和“仿真器真崩了”。后续看到大量 `planning_runtime_error` 时，应先怀疑策略动作不可执行，不要再直接解读成 simulator 本身异常。
+
+---
+
+
+
+### 2026-04-13 19:45:25 +0800 · `autoresearch/execution` · v2 screening 全分支未过 0.45 闸门，且训练进程存在"僵尸启动"现象
+
+**问题**：
+
+1. **v2 筛选结论**：3 条 100 epoch 分支全部失败，最高 success@20 仅 0.2，确认 AdaLN 全局条件路径即使修复 `output_proj` 零初始化后也无法突破 0.45 闸门：
+
+   - `rgb5_sep_lastblock_a8_lr2e5_100_v2`：0.2（从 bug 版的 0.0 提升，但仍远低于阈值）
+   - `rgb5_sep_lastblock_a8_lr1p5e5_100_v2`：0.1（更低 lr 效果更差）
+   - `rgb5_sep_lastblock_a8_dropout0_100_v2`：训练中因用户干预终止
+2. **训练进程"僵尸启动"**：在启动 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 正式训练时，曾出现进程 PID 存在（CPU 占 25-73%）、但 **GPU 显存未分配**、**不写 checkpoint**、**tmux pane 无任何训练进度输出** 的状态。若不及时发现并杀死该进程，会造成显存空闲但训练无限挂起的假象。
+
+**修改/结论**：
+
+- 所有 v2 分支停止续训到 300 epoch，按执行计划清理周期性 ckpt，仅保留结论文件
+- 本轮唯一主线全面切至 `rgb5_pdittoken_lastblock_a8_lr2e5_100`（PDIT token-conditioned 路径）
+- **启动训练后必须双重确认**：
+  1. `nvidia-smi` 中 Python 进程已占用显存
+  2. `ckpt/<run>/epochs/` 目录开始产生写入，或 tmux 出现 `mdit train epoch N:` 进度条
+
+**结果**：
+
+- v2 分支结果已全部写入 `results.tsv` 与研究文档，标记为 FAILED
+- PDIT token-conditioned 主线当前已在 `mdit_pdittoken_100` session 中正常训练（epoch 2+，GPU 20.7GB，5.24 it/s）

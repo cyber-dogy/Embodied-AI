@@ -15,6 +15,7 @@
 - 不允许把 `lr/dropout` 重新当作本轮第一优先级
 - 不允许把 `best_valid.pt` 当作主选模依据
 - 不允许跳过 `tmux`
+- 不允许做显存探测或自动调 `batch_size`
 
 所有训练必须放在 `tmux` 后台。所有筛选必须以 `success@20` 为准。
 
@@ -66,6 +67,41 @@
 - `valid/loss_total` 小幅回升不等于新的指标 bug
 - `valid/loss_grip` 异常与低成功率高度相关，后续必须单独记录
 
+## 2.2 关于 faithful 基线与后续 `5RGB + last_block` 分支的固定解释规则
+
+后续 `rgb5_sep_lastblock_a8_*` 分支相对较好 faithful 基线，**不是单变量对照**。
+
+执行 agent 在解释结果时必须固定写清楚：
+
+- 后续低成功率不能写成“因为改成了 `5RGB + last_block`”
+- 更准确的表述是：在旧 `MDIT` 全局 AdaLN 条件路径下，多项高影响因素同时变化后，训练稳定性与 rollout 质量一起下降
+
+必须同时提及的变化项：
+
+- `n_obs_steps: 2 -> 3`
+- `n_action_steps: 16 -> 8`
+- `vision.train_mode: frozen -> last_block`
+- `vision.use_separate_encoder_per_camera: false -> true`
+- `use_amp: false -> true`
+- 有效 batch 从更接近 `32` 降到 `8`
+- `sigma_min: 0.0 -> 0.001`
+- `num_integration_steps: 50 -> 25`
+- `optimizer_betas: [0.95,0.999] -> [0.9,0.999]`
+- `optimizer_weight_decay: 0.0 -> 1e-4`
+- `resize_shape: 224 -> 240`
+- rollout 侧叠加 `smooth_actions=true`
+
+执行 agent 固定禁止这样写：
+
+- “验证了 `last_block` 一定更差”
+- “验证了 `5RGB` 一定更差”
+- “faithful 基线更好只是运气”
+
+执行 agent 必须使用这条固定口径：
+
+- 对旧 `MDIT` 来说，较好 faithful 基线更像是“更保守、更适配旧架构的 recipe”
+- 对整个项目来说，真正高成功率主线仍然是 `PDIT`，而且是结构 + FM 训练栈 + 选模链路共同作用的结果，不是运气
+
 ## 2.1 当前关于 grip 的固定判断
 
 当前 `MDIT` 的另一个关键问题是 loss 聚合方式与成功版 `PDIT` 不一致：
@@ -94,6 +130,7 @@
 - `vision.train_mode = "last_block"`
 - `vision.resize_shape = [240, 240]`
 - `optimizer_lr = 2e-5`
+- `batch_size = 8`
 - `objective.sigma_min = 0.001`
 - `objective.num_integration_steps = 25`
 - `objective.loss_weights = {xyz: 1.0, rot6d: 1.0, grip: 1.0}`
@@ -110,6 +147,14 @@
 - `pdit_backbone.decoder_condition_mode = "mean_pool"`
 
 如果命令行 override 与上表冲突，除非本文档明确允许，否则视为错误命令。
+
+关于 batch size 的固定规则：
+
+- 本轮默认 `batch_size=8`
+- 不做显存探测
+- 不允许 agent 自己循环尝试 `6/8/10/12/...`
+- 只有用户明确要求时，才允许把 `batch_size` 手动改到 `10`
+- 如果 `batch_size=8` 都 OOM，直接停止并汇报，不允许 agent 自行继续降配试探
 
 ## 4. 固定配置文件
 
@@ -204,6 +249,7 @@ python scripts/run_mdit_autoresearch_trial.py \
 ```
 
 显存探测只允许改 `batch_size`，其他不动。
+本轮禁止显存探测。执行 agent 直接使用 `batch_size=8` 启动；只有用户明确点名要求时才可手动改为 `10`。
 
 ### 6.2 续训命令
 
