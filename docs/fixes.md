@@ -162,8 +162,33 @@ valid 计算行为与原版 MDIT 对齐，不再强制 deterministic。
 - 临时规避：评估命令使用 `--no-prefer-ema`，避免加载劣化的 `ema_state_dict`。
 
 **结果**：
-`--no-prefer-ema` 下 `epoch_0100` 评估不再出现“几乎全是 error=yes”的模式（5ep 快测：`success_rate=0.2`，多数失败为跑满 horizon 而非仿真侧异常）。
+`--no-prefer-ema` 下 `epoch_0100` 评估不再出现”几乎全是 error=yes”的模式（5ep 快测：`success_rate=0.2`，多数失败为跑满 horizon 而非仿真侧异常）。
 后续待做：调整 EMA 更新策略（重点检查 BN running stats 处理）。
+
+---
+
+### 2026-04-13 · `mdit/model/transformer.py` · output_proj 零初始化修复验证 (autoresearch)
+
+**问题**：
+之前的 screening 分支 (`rgb5_sep_lastblock_a8_lr2e5_100`) 使用 bug 版本代码训练 (commit `105a050`)，
+该版本缺少 `output_proj` 的零初始化，导致：
+- 100 epoch 训练完成，train_loss=0.00116
+- 但 success@20 = 0.0（完全失败）
+
+**修复验证**：
+当前代码 (commit `28adab6`) 已包含修复：
+```python
+nn.init.constant_(self.output_proj.weight, 0)
+nn.init.constant_(self.output_proj.bias, 0)
+```
+
+**重新训练**：
+使用修复后的代码重新启动3条 screening 分支：
+1. `rgb5_sep_lastblock_a8_lr2e5_100_v2` (基线)
+2. `rgb5_sep_lastblock_a8_lr1p5e5_100_v2` (lr=1.5e-5)
+3. `rgb5_sep_lastblock_a8_dropout0_100_v2` (dropout=0.0)
+
+**结果**：待观察 (100 epoch 后评估)
 
 ---
 

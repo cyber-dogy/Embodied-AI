@@ -1,0 +1,14 @@
+{
+  "recommended_batch_size": 8,
+  "vram_gb": 22.97,
+  "stable": true,
+  "all_results": [
+    {"batch_size": 24, "vram_gb": null, "stable": false, "note": "OOM"},
+    {"batch_size": 20, "vram_gb": null, "stable": false, "note": "OOM"},
+    {"batch_size": 16, "vram_gb": null, "stable": false, "note": "OOM"},
+    {"batch_size": 12, "vram_gb": null, "stable": false, "note": "OOM"},
+    {"batch_size": 8, "vram_gb": 22.97, "stable": true, "note": "success"}
+  ],
+  "timestamp": "2026-04-12 19:02:00",
+  "note": "5RGB + obs3 + separate_encoder + last_block 配置下，batch_size=8 是 24GB 显存下的最大稳定值"
+}
