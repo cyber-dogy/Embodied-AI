@@ -179,8 +179,9 @@ def run_success_rate_eval(
 
 def _build_success_eval_subprocess_cmd(
     ckpt_path: Path,
-    cfg: MDITExperimentConfig,
     *,
+    device: str,
+    heartbeat_every: int,
     num_episodes: int,
     max_steps: int,
     headless: bool,
@@ -199,9 +200,9 @@ def _build_success_eval_subprocess_cmd(
         "--output-json",
         str(Path(output_json_path).expanduser().resolve()),
         "--device",
-        str(cfg.device),
+        str(device),
         "--heartbeat-every",
-        str(int(cfg.eval_step_heartbeat_every)),
+        str(int(heartbeat_every)),
         "--prefer-ema",
     ]
     cmd.append("--headless" if bool(headless) else "--no-headless")
@@ -209,35 +210,29 @@ def _build_success_eval_subprocess_cmd(
     return cmd
 
 
-def _tail_subprocess_output(stdout: str | None, stderr: str | None, *, max_lines: int = 40) -> str:
-    lines: list[str] = []
-    for chunk in (stdout, stderr):
-        if not chunk:
-            continue
-        lines.extend(str(chunk).splitlines())
-    if not lines:
-        return ""
-    tail = lines[-max_lines:]
-    return "\n".join(tail)
+def _is_cuda_oom_error(error_text: str) -> bool:
+    lowered = str(error_text).lower()
+    return "out of memory" in lowered or "cudaerrormemoryallocation" in lowered
 
 
-def run_success_rate_eval_subprocess(
-    ckpt_path,
+def _run_success_rate_eval_subprocess_once(
+    ckpt_path: Path,
     cfg: MDITExperimentConfig,
     *,
+    device: str,
     num_episodes: int,
     max_steps: int,
-    headless: bool = True,
-    show_progress: bool = True,
-    progress_desc: str = "mdit-eval",
-    timeout_sec: int | None = None,
+    headless: bool,
+    show_progress: bool,
+    progress_desc: str,
+    timeout_sec: int | None,
 ) -> dict[str, Any]:
-    ckpt_path = Path(ckpt_path).expanduser().resolve()
     with tempfile.TemporaryDirectory(prefix="mdit_success_eval_") as tmp_dir:
         output_json_path = Path(tmp_dir) / "result.json"
         cmd = _build_success_eval_subprocess_cmd(
             ckpt_path,
-            cfg,
+            device=device,
+            heartbeat_every=int(cfg.eval_step_heartbeat_every),
             num_episodes=num_episodes,
             max_steps=max_steps,
             headless=headless,
@@ -245,9 +240,10 @@ def run_success_rate_eval_subprocess(
             output_json_path=output_json_path,
         )
         LOGGER.info(
-            "Starting isolated MDIT success eval subprocess for %s using checkpoint %s",
+            "Starting isolated MDIT success eval subprocess for %s using checkpoint %s on %s",
             progress_desc,
             ckpt_path,
+            device,
         )
         try:
             completed = subprocess.run(
@@ -281,7 +277,79 @@ def run_success_rate_eval_subprocess(
             raise RuntimeError(
                 f"Isolated success eval finished without producing output JSON: {output_json_path}"
             )
-        return json.loads(output_json_path.read_text(encoding="utf-8"))
+        payload = json.loads(output_json_path.read_text(encoding="utf-8"))
+        payload["device_used"] = str(device)
+        payload["cpu_fallback"] = False
+        return payload
+
+
+def _tail_subprocess_output(stdout: str | None, stderr: str | None, *, max_lines: int = 40) -> str:
+    lines: list[str] = []
+    for chunk in (stdout, stderr):
+        if not chunk:
+            continue
+        lines.extend(str(chunk).splitlines())
+    if not lines:
+        return ""
+    tail = lines[-max_lines:]
+    return "\n".join(tail)
+
+
+def run_success_rate_eval_subprocess(
+    ckpt_path,
+    cfg: MDITExperimentConfig,
+    *,
+    num_episodes: int,
+    max_steps: int,
+    headless: bool = True,
+    show_progress: bool = True,
+    progress_desc: str = "mdit-eval",
+    timeout_sec: int | None = None,
+) -> dict[str, Any]:
+    ckpt_path = Path(ckpt_path).expanduser().resolve()
+    requested_device = str(cfg.device)
+    try:
+        return _run_success_rate_eval_subprocess_once(
+            ckpt_path,
+            cfg,
+            device=requested_device,
+            num_episodes=num_episodes,
+            max_steps=max_steps,
+            headless=headless,
+            show_progress=show_progress,
+            progress_desc=progress_desc,
+            timeout_sec=timeout_sec,
+        )
+    except RuntimeError as exc:
+        if requested_device.startswith("cuda") and _is_cuda_oom_error(str(exc)):
+            LOGGER.warning(
+                "MDIT success eval hit CUDA OOM on %s for %s; retrying once on cpu.",
+                requested_device,
+                progress_desc,
+            )
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            try:
+                retry_result = _run_success_rate_eval_subprocess_once(
+                    ckpt_path,
+                    cfg,
+                    device="cpu",
+                    num_episodes=num_episodes,
+                    max_steps=max_steps,
+                    headless=headless,
+                    show_progress=show_progress,
+                    progress_desc=f"{progress_desc} (cpu fallback)",
+                    timeout_sec=timeout_sec,
+                )
+            except RuntimeError as retry_exc:
+                raise RuntimeError(
+                    f"MDIT success eval failed on {requested_device} with CUDA OOM, "
+                    f"then cpu fallback also failed: {retry_exc}"
+                ) from retry_exc
+            retry_result["cpu_fallback"] = True
+            retry_result["initial_device"] = requested_device
+            return retry_result
+        raise
 
 
 def summarize_for_json(summary: dict[str, Any] | None) -> dict[str, Any] | None:

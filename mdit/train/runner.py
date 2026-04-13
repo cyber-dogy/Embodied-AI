@@ -256,6 +256,9 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         "mean_steps": None,
                         "num_episodes": int(cfg.success_selection_episodes),
                         "checkpoint_path": None,
+                        "device_used": None,
+                        "cpu_fallback": "cpu fallback" in str(exc).lower(),
+                        "initial_device": str(cfg.device),
                         "error": str(exc),
                         "deleted_periodic_ckpt": False,
                     }
@@ -400,6 +403,9 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     "mean_steps": float(success_summary["mean_steps"]),
                     "num_episodes": int(success_summary["num_episodes"]),
                     "checkpoint_path": None if periodic_path is None else str(periodic_path),
+                    "device_used": success_summary.get("device_used"),
+                    "cpu_fallback": bool(success_summary.get("cpu_fallback", False)),
+                    "initial_device": success_summary.get("initial_device"),
                     "error": None,
                     "deleted_periodic_ckpt": False,
                 }
@@ -479,6 +485,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     payload["success_select/success_rate"] = float(success_summary["success_rate"])
                     payload["success_select/mean_steps"] = float(success_summary["mean_steps"])
                     payload["success_select/num_episodes"] = int(success_summary["num_episodes"])
+                    payload["success_select/cpu_fallback"] = float(bool(success_summary.get("cpu_fallback", False)))
                 wandb_run.log(payload, step=global_step)
                 wandb_run.summary["best_metric"] = best_metric
                 wandb_run.summary["best_epoch"] = best_epoch

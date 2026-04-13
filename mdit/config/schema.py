@@ -99,7 +99,8 @@ class MDITExperimentConfig:
     action_dim: int = 10
     camera_names: tuple[str, ...] = ("front", "wrist", "overhead")
     use_pcd: bool = False
-    pcd_transformer_variant: str = "mdit"
+    transformer_variant: str = "mdit"
+    pcd_transformer_variant: str | None = None
     task_text_mode: str = "template"
     task_text_override: str | None = None
     observation_encoder: ObservationEncoderConfig = field(default_factory=ObservationEncoderConfig)
@@ -163,6 +164,11 @@ class MDITExperimentConfig:
         self.ckpt_root = Path(self.ckpt_root)
         self.camera_names = tuple(str(name) for name in self.camera_names)
         self.optimizer_betas = tuple(float(beta) for beta in self.optimizer_betas)
+        self.transformer_variant = str(self.transformer_variant)
+        if self.pcd_transformer_variant is not None:
+            self.pcd_transformer_variant = str(self.pcd_transformer_variant)
+            if self.transformer_variant == "mdit":
+                self.transformer_variant = self.pcd_transformer_variant
         if not isinstance(self.normalization_mode, NormalizationMode):
             self.normalization_mode = NormalizationMode(str(self.normalization_mode))
 
@@ -195,10 +201,13 @@ class MDITExperimentConfig:
             raise ValueError("offline_eval_ckpt_every_epochs must be >= 0.")
         if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
             raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
-        if str(self.pcd_transformer_variant) not in {"mdit", "pdit"}:
-            raise ValueError("pcd_transformer_variant must be one of {'mdit', 'pdit'}.")
-        if str(self.pcd_transformer_variant) == "pdit" and not bool(self.use_pcd):
-            raise ValueError("pcd_transformer_variant='pdit' requires use_pcd=true.")
+        if str(self.transformer_variant) not in {"mdit", "pdit"}:
+            raise ValueError("transformer_variant must be one of {'mdit', 'pdit'}.")
+        if self.pcd_transformer_variant is not None and str(self.pcd_transformer_variant) != str(self.transformer_variant):
+            raise ValueError(
+                "Legacy pcd_transformer_variant conflicts with transformer_variant. "
+                "Use transformer_variant as the canonical field."
+            )
 
     @property
     def ckpt_dir(self) -> Path:

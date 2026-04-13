@@ -212,6 +212,9 @@ class ObservationEncoder(nn.Module):
         self.config = config
         self.robot_state_dim = int(config.robot_state_dim)
         self.use_pcd = bool(config.use_pcd)
+        self.transformer_variant = str(
+            getattr(config, "transformer_variant", getattr(config, "pcd_transformer_variant", "mdit"))
+        ).lower()
 
         if self.use_pcd:
             pcd_cfg = config.observation_encoder.pcd
@@ -232,6 +235,9 @@ class ObservationEncoder(nn.Module):
             self.vision_encoder = None
             self.vision_encoders = None
             self.text_encoder = None
+            self.state_token_proj = None
+            self.vision_token_proj = None
+            self.text_token_proj = None
             self.visual_feature_dim = 0
             self.text_dim = 0
             self.num_cameras = 0
@@ -271,7 +277,19 @@ class ObservationEncoder(nn.Module):
 
             text_model_name = str(config.observation_encoder.text.model)
             self.text_encoder = CLIPTextEncoder(model_name=text_model_name, projection_dim=self.text_dim)
-            self.token_dim = self.robot_state_dim + self.text_dim + self.visual_feature_dim * self.num_cameras
+            hidden_dim = int(config.transformer.hidden_dim)
+            self.state_token_proj = nn.Linear(self.robot_state_dim, hidden_dim)
+            self.vision_token_proj = (
+                None if self.visual_feature_dim <= 0 else nn.Linear(self.visual_feature_dim, hidden_dim)
+            )
+            if self.text_dim == hidden_dim:
+                self.text_token_proj = nn.Identity()
+            else:
+                self.text_token_proj = nn.Linear(self.text_dim, hidden_dim)
+            if self.transformer_variant == "pdit":
+                self.token_dim = hidden_dim
+            else:
+                self.token_dim = self.robot_state_dim + self.text_dim + self.visual_feature_dim * self.num_cameras
 
         self.conditioning_dim = self._compute_conditioning_dim()
 
@@ -303,7 +321,45 @@ class ObservationEncoder(nn.Module):
         return mean, std
 
     def _compute_conditioning_dim(self) -> int:
+        if self.use_pcd:
+            return int(self.token_dim * int(self.config.n_obs_steps))
+        if self.transformer_variant == "pdit":
+            return int(self.token_dim * self._num_condition_tokens())
         return int(self.token_dim * int(self.config.n_obs_steps))
+
+    def _num_condition_tokens(self) -> int:
+        if self.use_pcd:
+            return int(self.config.n_obs_steps)
+        token_count = int(self.config.n_obs_steps) * (1 + int(self.num_cameras))
+        if self.text_encoder is not None:
+            token_count += 1
+        return token_count
+
+    def _encode_rgb_camera_features(self, images: Tensor, batch_size: int, n_obs_steps: int) -> Tensor | None:
+        if self.num_cameras <= 0:
+            return None
+
+        if self.vision_encoders is not None:
+            camera_features = []
+            for cam_idx in range(self.num_cameras):
+                cam_images = images[:, :, cam_idx]
+                cam_images = einops.rearrange(cam_images, "b s c h w -> (b s) c h w")
+                cam_images = self._apply_preprocessing(cam_images)
+                cam_features = self.vision_encoders[cam_idx](cam_images).flatten(start_dim=1)
+                cam_features = einops.rearrange(cam_features, "(b s) f -> b s f", b=batch_size, s=n_obs_steps)
+                camera_features.append(cam_features)
+            return torch.stack(camera_features, dim=2)
+
+        flat_images = einops.rearrange(images, "b s n c h w -> (b s n) c h w")
+        flat_images = self._apply_preprocessing(flat_images)
+        flat_features = self.vision_encoder(flat_images).flatten(start_dim=1)
+        return einops.rearrange(
+            flat_features,
+            "(b s n) f -> b s n f",
+            b=batch_size,
+            s=n_obs_steps,
+            n=self.num_cameras,
+        )
 
     def _apply_preprocessing(self, images: Tensor) -> Tensor:
         images = images.to(dtype=torch.float32)
@@ -333,42 +389,36 @@ class ObservationEncoder(nn.Module):
 
         obs_state = batch[OBS_STATE]
         batch_size, n_obs_steps = obs_state.shape[:2]
-        conditioning_feats = [obs_state]
-
+        camera_features = None
         if self.num_cameras > 0:
             images = batch[OBS_IMAGES]
             if images.ndim == 5:
                 images = images.unsqueeze(1)
-
-            if self.vision_encoders is not None:
-                camera_features = []
-                for cam_idx in range(self.num_cameras):
-                    cam_images = images[:, :, cam_idx]
-                    cam_images = einops.rearrange(cam_images, "b s c h w -> (b s) c h w")
-                    cam_images = self._apply_preprocessing(cam_images)
-                    cam_features = self.vision_encoders[cam_idx](cam_images).flatten(start_dim=1)
-                    cam_features = einops.rearrange(cam_features, "(b s) f -> b s f", b=batch_size, s=n_obs_steps)
-                    camera_features.append(cam_features)
-                conditioning_feats.append(torch.cat(camera_features, dim=-1))
-            else:
-                flat_images = einops.rearrange(images, "b s n c h w -> (b s n) c h w")
-                flat_images = self._apply_preprocessing(flat_images)
-                flat_features = self.vision_encoder(flat_images).flatten(start_dim=1)
-                img_features = einops.rearrange(
-                    flat_features,
-                    "(b s n) f -> b s (n f)",
-                    b=batch_size,
-                    s=n_obs_steps,
-                    n=self.num_cameras,
-                )
-                conditioning_feats.append(img_features)
+            camera_features = self._encode_rgb_camera_features(images, batch_size, n_obs_steps)
 
         task = batch.get(TASK)
+
+        if self.transformer_variant == "pdit":
+            state_tokens = self.state_token_proj(obs_state.float())
+            if camera_features is not None and self.vision_token_proj is not None:
+                vision_tokens = self.vision_token_proj(camera_features.float())
+                per_step_tokens = torch.cat([state_tokens.unsqueeze(2), vision_tokens], dim=2)
+            else:
+                per_step_tokens = state_tokens.unsqueeze(2)
+            cond_tokens = einops.rearrange(per_step_tokens, "b s n d -> b (s n) d")
+            if task is not None:
+                text_features = self.text_encoder(task)
+                text_token = self.text_token_proj(text_features).unsqueeze(1)
+                cond_tokens = torch.cat([cond_tokens, text_token], dim=1)
+            return cond_tokens
+
+        conditioning_feats = [obs_state]
+        if camera_features is not None:
+            conditioning_feats.append(camera_features.flatten(start_dim=2))
         if task is not None:
             text_features = self.text_encoder(task)
             text_features = text_features.unsqueeze(1).expand(-1, n_obs_steps, -1)
             conditioning_feats.append(text_features)
-
         return torch.cat(conditioning_feats, dim=-1)
 
     def encode(self, batch: dict[str, Tensor | list[str]]) -> Tensor:

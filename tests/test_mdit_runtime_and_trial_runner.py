@@ -215,6 +215,56 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
 
         self.assertEqual(result["success_rate"], 0.45)
         self.assertEqual(result["num_episodes"], 20)
+        self.assertEqual(result["device_used"], "cpu")
+        self.assertFalse(result["cpu_fallback"])
+
+    def test_success_eval_subprocess_retries_on_cpu_after_cuda_oom(self) -> None:
+        cfg = MDITExperimentConfig(device="cuda", eval_step_heartbeat_every=17)
+        seen_devices: list[str] = []
+
+        def _fake_run(cmd, cwd, check, capture_output, text, timeout):
+            del cwd, check, capture_output, text, timeout
+            device = cmd[cmd.index("--device") + 1]
+            seen_devices.append(device)
+            if device == "cuda":
+                raise subprocess.CalledProcessError(
+                    1,
+                    cmd,
+                    output="torch.cuda.OutOfMemoryError: CUDA out of memory",
+                    stderr="",
+                )
+            output_json = Path(cmd[cmd.index("--output-json") + 1])
+            output_json.write_text(
+                json.dumps(
+                    {
+                        "success_rate": 0.55,
+                        "mean_steps": 18.0,
+                        "num_episodes": 20,
+                        "episode_records": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return mock.Mock(stdout="cpu eval summary\n", stderr="", returncode=0)
+
+        with mock.patch("mdit.train.eval.subprocess.run", side_effect=_fake_run), mock.patch(
+            "mdit.train.eval.torch.cuda.is_available",
+            return_value=False,
+        ):
+            result = run_success_rate_eval_subprocess(
+                "/tmp/epoch_0100.pt",
+                cfg,
+                num_episodes=20,
+                max_steps=200,
+                timeout_sec=321,
+                show_progress=False,
+            )
+
+        self.assertEqual(seen_devices, ["cuda", "cpu"])
+        self.assertEqual(result["success_rate"], 0.55)
+        self.assertEqual(result["device_used"], "cpu")
+        self.assertTrue(result["cpu_fallback"])
+        self.assertEqual(result["initial_device"], "cuda")
 
     def test_success_eval_subprocess_surfaces_subprocess_failure(self) -> None:
         cfg = MDITExperimentConfig(device="cpu")

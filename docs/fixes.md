@@ -369,3 +369,21 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 它和当前 `mdit` 的关键差异不在“入口名字”，而在 transformer 的条件路径：`pdit` 的 `DiTTrajectoryBackbone` 保留条件 token，并走 encoder-decoder 式的条件编码与解码；当前 `mdit` 的 `DiffusionTransformer` 则把观测条件展平成一个大向量，与时间嵌入拼接后通过 AdaLN 调制整层。前者更接近“条件作为序列参与建模”，后者更接近“条件作为全局调制信号”。在点云任务上，这个差异会直接影响条件信息是否被稳定保留下来，而不只是影响 loss 形状。
 
 结果上，`pdit` 文档里已经验证到 `epoch_0100 success_rate = 0.90`，后续 `epoch_0500 = 0.95`，再做 `100 episodes` 复核仍有 `0.85`；而当前这轮 `mdit` 主线的 `100 epoch` 审计只有 `0.0 ~ 0.2`。因此，原版 `pdit` 更强的根本原因应记为：它跑通的是“完整且彼此匹配的 PDIT 系统”，包括点云输入、token 级条件路径、对应的 FM/优化配置、EMA 与离线 success 选模；`batch_size=32` 只是当时设备下的一个实现值，不是成功的决定性原因。
+
+---
+
+### 2026-04-13 · `mdit/config/*` + `mdit/model/*` · RGB 主线直接切到 PDIT 条件路径
+
+当前 `MDIT` 的主要问题已经不再记录为“继续扫 `lr/dropout`”，而是记录为“`RGB+TEXT+obs3` 在旧主干里先被压成全局向量，再只通过 AdaLN 调制动作序列，条件 token 结构丢失”。因此这轮代码不再做 bottleneck 试探，而是直接保留 `5RGB + obs3 + last_block + text + a8`，新增统一开关 `transformer_variant`，让 RGB 主线也能走 `PDIT` 风格的 token-conditioned encoder-decoder 路径。
+
+实现上，`ObservationEncoder.encode_tokens()` 的 RGB 分支现在会输出真正的条件 token 序列：每个 `obs step` 固定产出 `1 x robot_state token + 5 x camera token`，整个样本额外追加 `1 x text token`，当前主线总 token 数固定为 `3 * 6 + 1 = 19`。`MultiTaskDiTPolicy` 在 `transformer_variant="pdit"` 时不再要求 `use_pcd=true`，而是直接复用 `PDITDiffusionTransformer` 与现有 `pdit.model.backbones.dit.DiTTrajectoryBackbone`；`pdit_backbone.final_layer_zero_init=true`、`decoder_condition_mode="mean_pool"` 固定写进新的 `obs3_rgb5_pdittoken_lastblock_a8_gate100.json`。
+
+结果：现在可以在 **不改 5RGB / obs3 / last_block / text / a8** 的前提下，直接回答“问题是不是出在旧的 MDIT 条件路径”。后续 autoresearch 的首条主线固定为 `rgb5_pdittoken_lastblock_a8_lr2e5_100`，不再继续把 `rgb5_sep_lastblock_a8_lr2e5 / lr1p5e5 / dropout0` 当作主研究方向。
+
+---
+
+### 2026-04-13 · `mdit/train/eval.py` + `mdit/train/runner.py` · success eval GPU OOM 改为自动 CPU fallback 并写入记录
+
+之前 `success@20` screening 里存在一个会污染结论的问题：训练本身可能正常，但训练后隔离评估子进程在 GPU 上加载 ckpt 时 `CUDA OOM`，最后被误看成“模型失败”。这次把行为固定成：先按原 device 跑一次 isolated eval，如果报 `CUDA out of memory`，自动重试一次 `--device cpu`，并把 `device_used`、`cpu_fallback`、`initial_device` 写进 `success_eval_history.json`；如果 CPU fallback 也失败，错误文本里也必须明确显示“先 OOM，后 CPU fallback 失败”。
+
+结果：后续 autoresearch 的 `100 epoch` 结果里，可以区分“模型真的差”和“评估进程在 GPU 上 OOM”。这能避免再把无效负样本写进研究结论，也让 `wandb` 和本地 JSON 记录保持一致。

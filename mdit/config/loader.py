@@ -78,6 +78,29 @@ def _normalize_payload_paths(payload: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def _normalize_transformer_variant_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(payload)
+    has_new = "transformer_variant" in normalized
+    legacy_value = normalized.get("pcd_transformer_variant")
+    if legacy_value is None:
+        normalized.pop("pcd_transformer_variant", None)
+        return normalized
+
+    legacy_value = str(legacy_value)
+    if has_new:
+        new_value = str(normalized["transformer_variant"])
+        if new_value != legacy_value:
+            raise ValueError(
+                "Received conflicting transformer variant fields: "
+                f"transformer_variant={new_value!r} vs pcd_transformer_variant={legacy_value!r}."
+            )
+    else:
+        normalized["transformer_variant"] = legacy_value
+
+    normalized.pop("pcd_transformer_variant", None)
+    return normalized
+
+
 def _coerce_dataclass(field_type: Any, value: Any) -> Any:
     if value is None:
         return None
@@ -124,6 +147,7 @@ def save_config(cfg: MDITExperimentConfig, path: Path | None = None) -> Path:
 
 
 def config_from_dict(payload: dict[str, Any]) -> MDITExperimentConfig:
+    payload = _normalize_transformer_variant_payload(payload)
     type_hints = get_type_hints(MDITExperimentConfig)
     kwargs = {}
     for field in fields(MDITExperimentConfig):
@@ -137,6 +161,7 @@ def config_from_dict(payload: dict[str, Any]) -> MDITExperimentConfig:
 def load_config(path: str | Path) -> MDITExperimentConfig:
     config_path = Path(path).expanduser().resolve()
     payload = _compose_payload(config_path, _json_load(config_path))
+    payload = _normalize_transformer_variant_payload(payload)
     payload = _normalize_payload_paths(payload)
     return config_from_dict(payload)
 
@@ -150,7 +175,14 @@ def apply_config_overrides(
 
     payload = config_to_dict(cfg)
 
+    normalized_overrides: dict[str, Any] = {}
     for key, value in overrides.items():
+        mapped_key = "transformer_variant" if str(key) == "pcd_transformer_variant" else str(key)
+        if mapped_key in normalized_overrides and normalized_overrides[mapped_key] != value:
+            raise ValueError(f"Conflicting override values for {mapped_key!r}.")
+        normalized_overrides[mapped_key] = value
+
+    for key, value in normalized_overrides.items():
         cursor = payload
         parts = str(key).split(".")
         for part in parts[:-1]:

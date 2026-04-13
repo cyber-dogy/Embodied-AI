@@ -81,6 +81,34 @@ class MDITEvalCliTest(unittest.TestCase):
         self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
         self.assertEqual(cfg.offline_eval_ckpt_payload_mode, "lightweight")
 
+    def test_payload_cfg_to_experiment_cfg_maps_legacy_transformer_alias(self) -> None:
+        payload_cfg = {
+            "run_name": "legacy-pcd",
+            "task_name": "unplug_charger",
+            "train_data_path": "/tmp/train",
+            "valid_data_path": "/tmp/valid",
+            "use_pcd": True,
+            "pcd_transformer_variant": "pdit",
+        }
+
+        cfg = payload_cfg_to_experiment_cfg(payload_cfg, ckpt_root=Path("/tmp/ckpt"))
+
+        self.assertTrue(cfg.use_pcd)
+        self.assertEqual(cfg.transformer_variant, "pdit")
+
+    def test_payload_cfg_to_experiment_cfg_rejects_conflicting_transformer_fields(self) -> None:
+        payload_cfg = {
+            "run_name": "legacy-conflict",
+            "task_name": "unplug_charger",
+            "train_data_path": "/tmp/train",
+            "valid_data_path": "/tmp/valid",
+            "transformer_variant": "mdit",
+            "pcd_transformer_variant": "pdit",
+        }
+
+        with self.assertRaisesRegex(ValueError, "conflicting transformer variant fields"):
+            payload_cfg_to_experiment_cfg(payload_cfg, ckpt_root=Path("/tmp/ckpt"))
+
 
 if __name__ == "__main__":
     unittest.main()

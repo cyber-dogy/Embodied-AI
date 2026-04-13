@@ -13,7 +13,7 @@ import torch.nn as nn
 import zarr
 
 import _bootstrap  # noqa: F401
-from mdit.config import MDITExperimentConfig, load_config
+from mdit.config import MDITExperimentConfig, config_from_dict, load_config
 from mdit.constants import OBS_IMAGES
 from mdit.data.dataset import build_dataset
 from mdit.model.observation_encoder import CLIPEncoder, CLIPTextEncoder
@@ -91,6 +91,7 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         cfg = MDITExperimentConfig()
         self.assertEqual(cfg.observation_encoder.vision.train_mode, "all")
         self.assertEqual(cfg.n_action_steps, 8)
+        self.assertEqual(cfg.transformer_variant, "mdit")
         self.assertTrue(cfg.enable_success_rate_eval)
         self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
 
@@ -136,12 +137,34 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.success_selection_episodes, 20)
         self.assertTrue(cfg.smooth_actions)
 
-    def test_pcd_ablation_pdit_transformer_config_enables_final_layer_zero_init(self) -> None:
+    def test_obs3_rgb5_pdittoken_lastblock_a8_gate100_config_loads_expected_values(self) -> None:
+        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_pdittoken_lastblock_a8_gate100.json")
+
+        self.assertEqual(cfg.transformer_variant, "pdit")
+        self.assertEqual(cfg.n_obs_steps, 3)
+        self.assertEqual(cfg.n_action_steps, 8)
+        self.assertTrue(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
+        self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
+        self.assertTrue(cfg.pdit_backbone.final_layer_zero_init)
+        self.assertEqual(cfg.pdit_backbone.decoder_condition_mode, "mean_pool")
+
+    def test_pcd_ablation_pdit_transformer_config_maps_legacy_alias(self) -> None:
         cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "pcd_ablation_pdit_transformer.json")
 
         self.assertTrue(cfg.use_pcd)
-        self.assertEqual(cfg.pcd_transformer_variant, "pdit")
+        self.assertEqual(cfg.transformer_variant, "pdit")
         self.assertTrue(cfg.pdit_backbone.final_layer_zero_init)
+
+    def test_transformer_variant_conflict_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "conflicting transformer variant fields"):
+            config_from_dict(
+                {
+                    "train_data_path": "/tmp/train",
+                    "valid_data_path": "/tmp/valid",
+                    "transformer_variant": "mdit",
+                    "pcd_transformer_variant": "pdit",
+                }
+            )
 
     def test_clip_alignment_keeps_vision_trainable_and_text_encoder_frozen(self) -> None:
         with mock.patch.dict(

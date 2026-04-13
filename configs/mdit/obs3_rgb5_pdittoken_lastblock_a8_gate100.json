@@ -1,0 +1,9 @@
+{
+  "extends": "mdit/obs3_rgb5_sep_lastblock_a8_gate100.json",
+  "run_name": "unplug_charger_mdit_rgb5_pdittoken_lastblock_a8_gate100",
+  "transformer_variant": "pdit",
+  "pdit_backbone": {
+    "final_layer_zero_init": true,
+    "decoder_condition_mode": "mean_pool"
+  }
+}

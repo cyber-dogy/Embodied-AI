@@ -75,11 +75,18 @@ def parse_args() -> argparse.Namespace:
         help="Override a config field using JSON-parsed VALUE, e.g. --set transformer.dropout=0.0.",
     )
     parser.add_argument(
+        "--transformer-variant",
+        type=str,
+        choices=["mdit", "pdit"],
+        default=None,
+        help="Choose the MDIT DiT path or the token-conditioned PDIT-style backbone.",
+    )
+    parser.add_argument(
         "--pcd-transformer-variant",
         type=str,
         choices=["mdit", "pdit"],
         default=None,
-        help="When use_pcd=true, choose MDIT transformer or PDIT DiT backbone implementation.",
+        help="Legacy alias for --transformer-variant.",
     )
     return parser.parse_args()
 
@@ -119,10 +126,19 @@ def main() -> int:
         raise SystemExit("--run-dir is required for audit-only mode.")
 
     config_overrides = _parse_config_overrides(args.config_overrides)
+    if args.transformer_variant is not None and args.pcd_transformer_variant is not None:
+        if str(args.transformer_variant) != str(args.pcd_transformer_variant):
+            raise SystemExit(
+                "Conflicting transformer variant flags. Use --transformer-variant as the canonical option."
+            )
+    if args.transformer_variant is not None:
+        if config_overrides is None:
+            config_overrides = {}
+        config_overrides["transformer_variant"] = str(args.transformer_variant)
     if args.pcd_transformer_variant is not None:
         if config_overrides is None:
             config_overrides = {}
-        config_overrides["pcd_transformer_variant"] = str(args.pcd_transformer_variant)
+        config_overrides["transformer_variant"] = str(args.pcd_transformer_variant)
 
     request_kwargs = {
         "config_path": args.config.expanduser().resolve(),

@@ -183,6 +183,8 @@ def _config_diff(base_cfg: MDITExperimentConfig, resolved_cfg: MDITExperimentCon
 
 def _build_change_summary(base_cfg: MDITExperimentConfig, resolved_cfg: MDITExperimentConfig) -> list[str]:
     summary: list[str] = []
+    if str(base_cfg.transformer_variant) != str(resolved_cfg.transformer_variant):
+        summary.append(f"transformer_variant: {base_cfg.transformer_variant} -> {resolved_cfg.transformer_variant}")
     if base_cfg.observation_encoder.vision.train_mode != resolved_cfg.observation_encoder.vision.train_mode:
         summary.append(
             "vision train_mode: "
