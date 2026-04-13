@@ -357,5 +357,46 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 - 这两种实验的解释口径不同，结果绝不能混写在一起
 
 **结果**：
-后续不再把 `mdit/pcd_ablation_pdit_transformer` 误称为“PDIT 成功配方复现版”。
-所有“成功配方消融”都应默认指向真正的 `pdit` 主线。
+后续不再把 `mdit/pcd_ablation_pdit_transformer` 误称为”PDIT 成功配方复现版”。
+所有”成功配方消融”都应默认指向真正的 `pdit` 主线。
+
+---
+
+### 2026-04-13 · 消融实验 · PCD + MDIT Transformer vs PCD + PDIT DiT（100 epoch, bs=80）
+
+**实验**：
+- Exp A：`unplug_charger_mdit_pcd_mdit_transformer_100`（PCD + Text/CLIP + 因果Transformer）
+- Exp B：`unplug_charger_pdit_baseline_100_bs80`（PCD only + DiT backbone，完整 pdit 训练栈）
+
+**关键参数差异**：
+
+| 项目 | Exp A（MDIT Transformer） | Exp B（PDIT DiT） |
+|---|---|---|
+| backbone | 因果Transformer + positional encoding | DiT (adaLN 每层注入) |
+| FM 时间步 | beta(α=1.5, β=1.0) | exp(scale=4.0) + uniform SNR |
+| 推理步数 | 25 步（Euler） | 10 步 |
+| 训练数据 | 7773 train | 10573 train（+36%，混淆变量）|
+| 额外输入 | Text (CLIP) | 无 |
+| final_layer_zero_init | True | False |
+
+**结果**：
+- Exp A success_rate = **0.30**，mean_steps = 172.78，失败全部跑满 horizon（200步）
+- Exp B success_rate = **0.70**，mean_steps = 103.67，成功 episodes 平均 ~49 步完成
+
+**现象**：
+MDIT Transformer 在 PCD-only 条件下，策略可运行但动作无法收敛完成任务；PDIT DiT 用10步推理就获得70%成功率，流场更”直”、积分更稳。
+
+**根本原因分析**：
+1. **FM schedule 差异是主因**：PDIT 的 exp(scale=4.0) + uniform SNR 更均匀覆盖噪声区，产生更直的流场，10步就够；MDIT 的 beta 采样偏向低噪声区，高噪声段学习不足，推理积分容易偏。
+2. **adaLN vs mean_pool 条件注入**：DiT 在每层用时间步/条件调制 LayerNorm scale/shift，比 MDIT 的 mean_pool prefix 注入对时间步信号更直接有效。
+3. **数据量差异贡献有限**：+36% 数据最多贡献约 5–10 pp，无法解释 40 pp 的差距。
+
+**改进方向（MDIT RGB+text 线的下一步）**：
+
+> **必须同步做两件事，缺一不可**：
+> 1. 将 MDIT 的 transformer backbone 切换为 DiT（`pcd_transformer_variant=”pdit”`）
+> 2. 将 FM schedule 从 `beta(α=1.5,β=1.0)+25步` 改为 `exp(scale=4.0)+uniform SNR+10步`
+>
+> 仅换 backbone 不换 FM schedule，等价于”只做了一半”，实验设计仍有缺陷（当前 `pcd_ablation_pdit_transformer.json` 即为此陷阱）。
+
+**详细分析**：`docs/mdit/2026-04-13-pcd-transformer-ablation-mdit-vs-pdit.md`
