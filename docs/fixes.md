@@ -490,3 +490,35 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 修改：本轮把默认主线固定回更接近成功锚点的 recipe：`obs2 + action16 + shared encoder + use_amp=false + grad_accum_steps=4 + sigma_min=0.0 + integration_steps=50 + weight_decay=0.0`，同时保留用户明确要坚持的 `5RGB + text + last_block`，并继续保留 `PDIT` token-conditioned 条件路径、gripper loss 对齐修复、planning/runtime error 分桶和 success eval CPU fallback。新增唯一主线配置 `rgb5_shared_lastblock_pdittoken_obs2_a16_gate100.json`，autoresearch 默认 baseline 与执行手册也全部切到这条线；显存探测脚本被显式禁用，防止低智 agent 陷入 batch size 循环。
 
 结果：新的默认主线不再是“在旧高漂移 recipe 上继续加复杂度”，而是“成功锚点约束下的最可能成功状态”。这不是放弃 `5RGB + last_block`，而是把它们放回更稳的训练栈里，并通过 token-conditioned 路径避免再次走回超大 flatten conditioning vector 的失败模式。
+
+---
+
+### 2026-04-14 10:52:40 +0800 · `autoresearch/execution` · 旧 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 主线 100ep 成功率为 0 的原因复盘
+
+问题：旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 主线在 100 epoch 后 success@20=0.0，评估中 `planning_runtime_error=11`、`none=6`，mean_steps 接近上限，`loss_grip` 与 `grip_transition_acc` 极差。表面上看“像代码写错”，但结合已有修复与错误分桶，不支持“评估脚本坏了”的结论。
+
+结论（固定口径）：当前 0 成功率更像是 **recipe 过度复杂 + 旧主线偏离成功锚点** 导致的策略质量不足，而非评估链路或 simulator 本体 bug。`planning_runtime_error` 说明规划器拒绝大量动作，`none` 表示策略在仿真中长期无效但未触发 simulator error；`grip_transition_acc=0` 说明策略在关键开合时机上完全失效。已确认 `planning_runtime_error` 与 `simulator_runtime_error` 分桶正常、`V-REP side -1` 插值回退逻辑生效，因此该结果应被解释为“策略失败”，不是评估代码坏掉。
+
+处理：按执行计划终止该分支，并将主线回锚到 `obs2 + action16 + shared encoder + AMP off + faithful FM/optimizer` 的 `rgb5_shared_lastblock_pdittoken_obs2_a16_lr2e5_100`，保留 `gripper` loss 对齐修复与 PDIT token-conditioned 条件路径，作为当前“最可能成功状态”。
+
+---
+
+### 2026-04-14 10:35:09 +0800 · `autoresearch/execution` · 旧 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 主线评估完成，success@20=0.0，未过闸门，已清理
+
+**问题**：
+旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 主线已完成 100 epoch 训练与评估，success@20 = 0.0，远低于 0.45 闸门。评估显示：
+- 20/20  episodes 全部失败
+- mean_steps = 198.75（几乎跑满 horizon）
+- failure_error_buckets：`planning_runtime_error=11`，`none=6`，路径规划失败=2，recursion_limit=1
+- `likely_causes` 明确指向 `planner_rejecting_many_predicted_actions` 和 `policy_quality_is_currently_well_below_target`
+- valid/loss_grip = 0.953，grip_transition_acc = 0.0，说明 gripper 维度虽然 loss 聚合已对齐，但策略质量整体仍不足
+
+**修改/结论**：
+- 按执行计划，该分支停止续训到 300 epoch
+- 清理了周期性大 ckpt：`epochs/epoch_0100.pt`（~8.3GB）和 `best_success.pt`（~8.3GB）
+- 保留了结论文件：`config.json`、`summary.json`、`dataset_stats.json`、`experiment_manifest.json`、`success_eval_history.json`、`audit_report.json`、`latest.pt`
+- 评估记录已确认写盘，不只有 wandb 曲线
+- 结果已写入 `results.tsv`
+
+**结果**：
+旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 路径在此 recipe 下被证伪。autoresearch 现在全面切到新主线 `rgb5_shared_lastblock_pdittoken_obs2_a16_lr2e5_100`（`obs2+a16+shared+AMP off`）。
