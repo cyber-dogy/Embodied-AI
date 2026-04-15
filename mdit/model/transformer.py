@@ -448,6 +448,10 @@ class PDITDiffusionTransformer(nn.Module):
 
         hidden_dim = int(config.transformer.hidden_dim)
         pdit_cfg = config.pdit_backbone
+        # pos_emb_scale matches PDIT original fm_policy.py where timesteps are
+        # multiplied by pos_emb_scale=20 before passing to backbone.time_net().
+        # This ensures the TimeNetwork sees the same input range it was designed for.
+        self.pos_emb_scale = int(getattr(pdit_cfg, "pos_emb_scale", 20))
         self.backbone = DiTTrajectoryBackbone(
             input_dim=int(config.action_dim),
             output_dim=int(config.action_dim),
@@ -471,4 +475,4 @@ class PDITDiffusionTransformer(nn.Module):
                 "PDITDiffusionTransformer expects conditioning tokens with shape (B, T_obs, D), "
                 f"got {tuple(conditioning_vec.shape)}."
             )
-        return self.backbone(x, timestep, conditioning_vec)
+        return self.backbone(x, timestep * self.pos_emb_scale, conditioning_vec)
