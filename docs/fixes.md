@@ -517,8 +517,6 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 
 ---
 
-
-
 ### 2026-04-14 10:52:40 +0800 · `autoresearch/execution` · 旧 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 主线 100ep 成功率为 0 的原因复盘
 
 问题：旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 主线在 100 epoch 后 success@20=0.0，评估中 `planning_runtime_error=11`、`none=6`，mean_steps 接近上限，`loss_grip` 与 `grip_transition_acc` 极差。表面上看“像代码写错”，但结合已有修复与错误分桶，不支持“评估脚本坏了”的结论。
@@ -595,25 +593,3 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
   - 文件级改动映射
 
 结果：下游 agent 现在可以直接按执行手册跑 faithful 主线、资源探测和审计，且所有结果都能通过本地 JSON + wandb 双重留痕复核。
-
----
-
-### 2026-04-15 12:26:14 +0800 · `docs/mdit/2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md` + `docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md` + `docs/mdit/research/2026-04-13-mdit-autoresearch-v2-execution-zh.md` + `docs/fixes.md` · 执行手册正式迁移到 2026-04-15 文件名，旧路径保留跳转页
-
-问题：上一轮虽然已经把 `2026-04-12-mdit-autoresearch-execution-plan-zh.md` 内容更新为 faithful 主线最新版，但文件名仍停留在历史日期，容易让执行者误以为“内容是 4-12 的旧计划”。继续沿用旧文件名会让下游 agent、研究记录引用和人工审阅都产生混淆。
-
-修改：
-
-- 新建正式文件：
-  - `docs/mdit/2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md`
-- 将完整 faithful MDIT 执行手册正文迁移到新文件
-- 原 `docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md` 改为兼容跳转页
-  - 保留旧路径，避免历史链接失效
-  - 明确声明“最新版请看 2026-04-15 文件”
-- 将已发现的研究文档引用更新到新路径：
-  - `docs/mdit/research/2026-04-13-mdit-autoresearch-v2-execution-zh.md`
-
-结果：现在文档层已经同时满足两件事：
-
-- 最新 faithful 主线执行手册有正确的 2026-04-15 文件名
-- 历史 `2026-04-12` 路径仍可打开，但只作为归档跳转，不再误导执行者
