@@ -171,6 +171,12 @@ def ensure_mainline_train_config(cfg: MDITExperimentConfig) -> MDITExperimentCon
     return cfg
 
 
+def ensure_ablation_train_config(cfg: MDITExperimentConfig) -> MDITExperimentConfig:
+    """Validate config for ablation experiments (skips mainline-only restrictions)."""
+    cfg.validate()
+    return cfg
+
+
 def apply_config_overrides(
     cfg: MDITExperimentConfig,
     overrides: dict[str, Any] | None,

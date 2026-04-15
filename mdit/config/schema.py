@@ -21,6 +21,13 @@ class FlowMatchingConfig:
     sigma_min: float = 0.0
     num_integration_steps: int = 50
     integration_method: str = "euler"
+    # Flow schedule used during inference. "linear" uses a uniform time grid
+    # (MDIT default). "exp" uses get_timesteps("exp", ...) from common.fm,
+    # matching PDIT original inference (fm_policy.py with fm_flow_schedule="exp").
+    flow_schedule: str = "linear"
+    # Exponential decay scale, only used when flow_schedule="exp".
+    # Matches PDIT default fm_exp_scale=4.0.
+    fm_exp_scale: float = 4.0
     timestep_sampling: TimestepSamplingConfig = field(default_factory=TimestepSamplingConfig)
     loss_weights: dict[str, float] | None = None
 
@@ -84,6 +91,11 @@ class PDITBackboneConfig:
     debug_finiteness: bool = True
     final_layer_zero_init: bool = True
     decoder_condition_mode: str = "mean_pool"
+    # Timestep scale factor matching PDIT original (fm_policy.py pos_emb_scale=20).
+    # When transformer_variant="pdit", timesteps are multiplied by this value before
+    # being passed to DiTTrajectoryBackbone.time_net(), matching the original training
+    # regime where t∈[0,1] is scaled to [0, pos_emb_scale].
+    pos_emb_scale: int = 20
 
 
 @dataclass
