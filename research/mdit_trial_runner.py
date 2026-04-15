@@ -19,6 +19,7 @@ from mdit.config import (
     MDITExperimentConfig,
     apply_config_overrides,
     config_to_dict,
+    ensure_ablation_train_config,
     ensure_mainline_train_config,
     load_config,
 )
@@ -438,6 +439,9 @@ def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
     cfg.wandb_enable = True
     cfg.wandb_mode = "online"
     cfg.wandb_resume = True
+    _is_ablation = bool(cfg.use_pcd) or str(cfg.transformer_variant).lower() != "mdit"
+    if _is_ablation:
+        return ensure_ablation_train_config(cfg)
     return ensure_mainline_train_config(cfg)
 
 
