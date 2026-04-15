@@ -1,7 +1,6 @@
 import os
-import types
-import sys
 import time
+import types
 import warnings
 from functools import partial
 from os.path import join
@@ -61,6 +60,7 @@ class RLBenchEnv(BaseEnv):
         self.responsive_ui = responsive_ui
         self.log_invalid_action_errors = log_invalid_action_errors
         self.disable_task_validation = bool(disable_task_validation)
+        self._task_validation_disabled = False
         self._prepare_coppeliasim_env(headless=headless)
         # image_size=(128, 128)
         self.voxel_size = voxel_size
@@ -94,7 +94,8 @@ class RLBenchEnv(BaseEnv):
         )
         self._launch_environment(headless=headless)
         self.task = self.env.get_task(name_to_task_class(task_name))
-        self._configure_task_runtime()
+        if self.disable_task_validation:
+            self._disable_task_validation()
         self.robot_position = self.env._robot.arm.get_position()
         self.ws_aabb = o3d.geometry.AxisAlignedBoundingBox(
             min_bound=(self.robot_position[0] + 0.1, -0.65, self.robot_position[2] - 0.05),
@@ -130,7 +131,6 @@ class RLBenchEnv(BaseEnv):
 
     def _prepare_coppeliasim_env(self, headless: bool) -> None:
         """Ensure the Python process has the same launch env as the shell setup."""
-        self._guard_against_ipykernel()
         root = os.environ.get("COPPELIASIM_ROOT", os.path.expanduser("~/CoppeliaSim"))
         if not os.path.isdir(root):
             raise FileNotFoundError(
@@ -150,31 +150,9 @@ class RLBenchEnv(BaseEnv):
         # here as well so GUI mode does not depend on external shell state.
         os.environ.setdefault("QT_QPA_PLATFORM_PLUGIN_PATH", root)
 
-        if headless:
-            # On workstations with a live X11 display, forcing "offscreen"
-            # can crash CoppeliaSim while creating the OpenGL context for
-            # vision sensors. Prefer xcb there; fall back to offscreen/xvfb
-            # only when no display server is available.
-            if os.environ.get("DISPLAY"):
-                os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
-            else:
-                os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-        else:
+        if not headless:
             # Force the native X11 backend for the old bundled Qt runtime.
             os.environ.setdefault("QT_QPA_PLATFORM", "xcb")
-
-    def _guard_against_ipykernel(self) -> None:
-        if "ipykernel" not in sys.modules:
-            return
-        if os.environ.get("RLBENCH_ALLOW_IPYKERNEL", "").lower() in {"1", "true", "yes"}:
-            return
-        raise RuntimeError(
-            "Launching RLBench/CoppeliaSim inside an ipykernel/Jupyter process is unstable in "
-            "this environment and can crash the kernel with Qt thread errors. Run the "
-            "evaluation from a standalone Python process instead, e.g. "
-            "`python scripts/eval_checkpoint.py --ckpt-path ...`, or set "
-            "`RLBENCH_ALLOW_IPYKERNEL=1` if you want to bypass this guard."
-        )
 
     def _launch_environment(self, headless: bool) -> None:
         if headless:
@@ -238,8 +216,22 @@ class RLBenchEnv(BaseEnv):
 
         self.env._action_mode.arm_action_mode.set_control_mode(self.env._robot)
 
-    def _configure_task_runtime(self) -> None:
-        if not self.disable_task_validation:
+    def reset(self):
+        try:
+            descriptions, _ = self.task.reset()
+        except RuntimeError as error:
+            if not self._should_retry_reset_without_validation(error):
+                raise
+            self._disable_task_validation()
+            descriptions, _ = self.task.reset()
+        self.last_descriptions = list(descriptions or [])
+        return self.last_descriptions
+
+    def reset_rng(self):
+        return
+
+    def _disable_task_validation(self) -> None:
+        if self._task_validation_disabled:
             return
         task_impl = getattr(self.task, "_task", None)
         if task_impl is None:
@@ -249,14 +241,15 @@ class RLBenchEnv(BaseEnv):
             return None
 
         task_impl.validate = types.MethodType(_skip_validate, task_impl)
+        self._task_validation_disabled = True
 
-    def reset(self):
-        descriptions, _ = self.task.reset()
-        self.last_descriptions = list(descriptions or [])
-        return self.last_descriptions
-
-    def reset_rng(self):
-        return
+    def _should_retry_reset_without_validation(self, error: Exception | str) -> bool:
+        if self._task_validation_disabled:
+            return False
+        lowered = str(error).strip().lower()
+        if "return value: -1" not in lowered:
+            return False
+        return "v-rep side" in lowered or "coppeliasim side" in lowered
 
     def get_task_descriptions(self) -> list[str]:
         return list(self.last_descriptions)
@@ -323,77 +316,41 @@ class RLBenchEnv(BaseEnv):
         try:
             _, reward, terminate = self.task.step(action)
         except RuntimeError as e:
-            if self._is_recoverable_planning_runtime_error(e):
-                reward, terminate = self._retry_with_interpolated_action(
-                    action,
-                    recursion_depth=recursion_depth,
-                    error_text=f"planning runtime error: {e}",
-                    log_prefix="RLBench planning runtime fallback",
-                )
-                if reward:
-                    self.last_step_error = None
-                return reward, terminate
             self.last_step_error = f"simulator runtime error: {e}"
             if self.log_invalid_action_errors:
                 print(f"RLBench simulator error: {e}")
             return 0.0, True
         except (IKError, InvalidActionError) as e:
-            reward, terminate = self._retry_with_interpolated_action(
-                action,
-                recursion_depth=recursion_depth,
-                error_text=str(e),
-                log_prefix="RLBench planning fallback",
-            )
-            if reward:
-                self.last_step_error = None
+            self.last_step_error = str(e)
+            if self.log_invalid_action_errors and recursion_depth == 0:
+                print(f"RLBench planning fallback: {e}")
+            if self.last_obs is None or getattr(self.last_obs, "gripper_pose", None) is None:
+                return 0.0, True
+
+            last_pose = np.asarray(self.last_obs.gripper_pose, dtype=np.float32)
+            if last_pose.shape[0] < 7 or not np.all(np.isfinite(last_pose[:7])):
+                return 0.0, True
+
+            cur_position = self.last_obs.gripper_pose[:3]
+            des_position = action[:3]
+            new_position = cur_position + (des_position - cur_position) * 0.25
+
+            cur_quat = self.last_obs.gripper_pose[3:]
+            cur_quat = np.array([cur_quat[3], cur_quat[0], cur_quat[1], cur_quat[2]])
+            des_quat = action[3:7]
+            des_quat = np.array([des_quat[3], des_quat[0], des_quat[1], des_quat[2]])
+            try:
+                new_quat = sm.qslerp(cur_quat, des_quat, 0.25, shortest=True)
+            except Exception as interp_error:
+                self.last_step_error = f"{self.last_step_error}; interpolation failed: {interp_error}"
+                if self.log_invalid_action_errors:
+                    print(f"RLBench interpolation error: {interp_error}")
+                return 0.0, True
+            new_quat = np.array([new_quat[1], new_quat[2], new_quat[3], new_quat[0]])
+
+            new_action = np.concatenate([new_position, new_quat, action[-1:]])
+            reward, terminate = self._step_safe(new_action, recursion_depth + 1)
         return reward, terminate
-
-    @staticmethod
-    def _is_recoverable_planning_runtime_error(error: Exception | str) -> bool:
-        lowered = str(error).strip().lower()
-        return (
-            "v-rep side" in lowered and "return value: -1" in lowered
-        ) or (
-            "coppeliasim side" in lowered and "return value: -1" in lowered
-        )
-
-    def _retry_with_interpolated_action(
-        self,
-        action: np.ndarray,
-        *,
-        recursion_depth: int,
-        error_text: str,
-        log_prefix: str,
-    ) -> tuple[float, bool]:
-        self.last_step_error = error_text
-        if self.log_invalid_action_errors and recursion_depth == 0:
-            print(f"{log_prefix}: {error_text}")
-        if self.last_obs is None or getattr(self.last_obs, "gripper_pose", None) is None:
-            return 0.0, True
-
-        last_pose = np.asarray(self.last_obs.gripper_pose, dtype=np.float32)
-        if last_pose.shape[0] < 7 or not np.all(np.isfinite(last_pose[:7])):
-            return 0.0, True
-
-        cur_position = self.last_obs.gripper_pose[:3]
-        des_position = action[:3]
-        new_position = cur_position + (des_position - cur_position) * 0.25
-
-        cur_quat = self.last_obs.gripper_pose[3:]
-        cur_quat = np.array([cur_quat[3], cur_quat[0], cur_quat[1], cur_quat[2]])
-        des_quat = action[3:7]
-        des_quat = np.array([des_quat[3], des_quat[0], des_quat[1], des_quat[2]])
-        try:
-            new_quat = sm.qslerp(cur_quat, des_quat, 0.25, shortest=True)
-        except Exception as interp_error:
-            self.last_step_error = f"{self.last_step_error}; interpolation failed: {interp_error}"
-            if self.log_invalid_action_errors:
-                print(f"RLBench interpolation error: {interp_error}")
-            return 0.0, True
-        new_quat = np.array([new_quat[1], new_quat[2], new_quat[3], new_quat[0]])
-
-        new_action = np.concatenate([new_position, new_quat, action[-1:]])
-        return self._step_safe(new_action, recursion_depth + 1)
 
     def get_obs(self) -> tuple[np.ndarray, ...]:
         obs_rlbench = self.task.get_observation()

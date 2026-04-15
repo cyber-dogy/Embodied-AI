@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_mdit_autoresearch_trial.py", line 5, in <module>
+    from mdit.cli.run_autoresearch_trial import main
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/mdit/cli/run_autoresearch_trial.py", line 5, in <module>
+    bootstrap_local_cli_imports()
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/mdit/cli/_bootstrap.py", line 55, in bootstrap_local_cli_imports
+    importlib.import_module(name)
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/__init__.py", line 1, in <module>
+    from .trial_runner import finalize_autoresearch_trial, run_autoresearch_trial, train_autoresearch_trial
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/trial_runner.py", line 18, in <module>
+    from pdit.train.runner import train_experiment
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/pdit/train/__init__.py", line 4, in <module>
+    from .runner import train_experiment
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/pdit/train/runner.py", line 29, in <module>
+    from .eval import (
+ImportError: cannot import name 'make_progress_iter' from 'pdit.train.eval' (/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/pdit/train/eval.py)

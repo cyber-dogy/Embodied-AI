@@ -127,12 +127,11 @@ class MDITEvalCliTest(unittest.TestCase):
         analysis = build_episode_analysis(result)
 
         self.assertEqual(analysis["num_successes"], 1)
-        self.assertEqual(analysis["failure_error_buckets"]["planning_runtime_error"], 1)
-        self.assertEqual(analysis["failure_error_buckets"]["simulator_runtime_error"], 1)
+        self.assertEqual(analysis["failure_error_buckets"]["simulator_runtime_error"], 2)
         self.assertEqual(analysis["failure_error_buckets"]["invalid_predicted_action"], 1)
         self.assertEqual(analysis["failure_step_buckets"]["lt_20"], 2)
         self.assertEqual(analysis["failure_step_buckets"]["at_horizon"], 1)
-        self.assertIn("planner_rejecting_many_predicted_actions", analysis["likely_causes"])
+        self.assertIn("planner_or_simulator_rejecting_many_predicted_actions", analysis["likely_causes"])
         self.assertIn("some_rollouts_exhaust_the_horizon_without_finishing", analysis["likely_causes"])
 
     def test_discover_checkpoints_falls_back_to_eval_ckpts(self) -> None:

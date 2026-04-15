@@ -77,3 +77,4 @@ rgb_text_pdit_ablation_100	02bc489a2807015d9f417606c153aea784645063	-1.000000	tr
 pcd_mdit_100	ce4bb17	-	BLOCKED	PCD+MDIT-transformer 100ep: validate_mainline_training() rejected use_pcd=true
 rgb_text_pdit_100	02bc489	-	BLOCKED	5RGB+text+PDIT-transformer 100ep: validate_mainline_training() rejected transformer_variant=pdit
 rgb5_shared_lastblock_pdittoken_obs2_a16_100	36e847a	0.000000	FAILED	pdittoken obs2 a16 100ep, success@20=0.0 below 0.45 gate
+pcd_mdit_ablation	aead391fbfb502c93396410a27286df424d1ae61		trained_pending_audit	ablation pcd_mdit: PCD+MDIT-transformer+MDIT-FM bs32 100ep

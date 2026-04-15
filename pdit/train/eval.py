@@ -9,15 +9,14 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from common.runtime import set_device
+from common.rlbench_rollout import (
+    make_progress_iter,
+    run_success_rate_eval as run_shared_success_rate_eval,
+)
 from pdit.config import ExperimentConfig
 from envs import RLBenchEnv
 from .builders import build_policy, get_autocast_context, move_batch_to_device
 from .action_postprocess import select_robot_state_from_prediction, smooth_robot_state_command
-
-try:
-    from tqdm.auto import tqdm
-except ImportError:  # pragma: no cover
-    tqdm = None
 
 
 def summarize_metrics(metrics: list[dict[str, float]]) -> dict[str, float]:
@@ -72,12 +71,6 @@ def compute_sample_metric(model: torch.nn.Module, batch: tuple[Any, ...]) -> flo
     return float(F.mse_loss(pred_y, robot_state_pred).detach().cpu())
 
 
-def make_progress_iter(iterable, total=None, desc=None, enable=True):
-    if enable and tqdm is not None:
-        return tqdm(iterable, total=total, desc=desc, leave=False)
-    return iterable
-
-
 def run_success_rate_eval(
     model: torch.nn.Module,
     cfg: ExperimentConfig,
@@ -88,99 +81,50 @@ def run_success_rate_eval(
     show_progress: bool = True,
     progress_desc: str = "eval",
 ) -> dict[str, Any]:
-    env = RLBenchEnv(
-        task_name=cfg.task_name,
-        voxel_size=0.01,
-        n_points=int(cfg.n_points),
-        use_pc_color=bool(cfg.use_pc_color),
-        headless=headless,
-        vis=False,
-        obs_mode=cfg.obs_mode,
-        responsive_ui=True,
-    )
-    model.eval()
-    records = []
-    success_count = 0
     heartbeat_every = int(cfg.eval_step_heartbeat_every) if cfg.eval_step_heartbeat_every else None
-    episode_iter = make_progress_iter(
-        range(num_episodes),
-        total=num_episodes,
-        desc=progress_desc,
-        enable=show_progress,
-    )
-    use_tqdm_progress = show_progress and tqdm is not None and hasattr(episode_iter, "set_postfix")
-    try:
-        for episode_idx in episode_iter:
-            model.reset_obs()
-            descriptions = []
-            if show_progress:
-                print(f"{progress_desc}: episode={episode_idx} starting")
-            try:
-                descriptions = env.reset()
-                success = False
-                steps = 0
-                for step in range(max_steps):
-                    if show_progress and heartbeat_every is not None and step > 0 and step % heartbeat_every == 0:
-                        print(f"{progress_desc}: episode={episode_idx} heartbeat step={step}")
-                    robot_state, obs = env.get_obs()
-                    with torch.inference_mode():
-                        prediction = model.predict_action(obs, robot_state)
-                    predicted_robot_state = select_robot_state_from_prediction(
-                        prediction,
-                        mode=cfg.command_mode,
-                        horizon_index=cfg.horizon_index,
-                        average_first_n=cfg.average_first_n,
-                    )
-                    next_robot_state = smooth_robot_state_command(
-                        robot_state,
-                        predicted_robot_state,
-                        enabled=cfg.smooth_actions,
-                        position_alpha=cfg.position_alpha,
-                        rotation_alpha=cfg.rotation_alpha,
-                        max_position_step=cfg.max_position_step,
-                        gripper_open_threshold=cfg.gripper_open_threshold,
-                        gripper_close_threshold=cfg.gripper_close_threshold,
-                    )
-                    reward, terminate = env.step(next_robot_state)
-                    success = bool(reward)
-                    steps = step + 1
-                    if reward or terminate:
-                        break
-                error = env.last_step_error
-            except Exception as exc:
-                success = False
-                steps = 0
-                error = str(exc)
-            success_count += int(success)
-            record = {
-                "episode": int(episode_idx),
-                "success": bool(success),
-                "steps": int(steps),
-                "descriptions": descriptions,
-                "error": error,
-            }
-            records.append(record)
-            running_success = success_count / len(records)
-            if use_tqdm_progress:
-                episode_iter.set_postfix(
-                    success_rate=f"{running_success:.2f}",
-                    steps=steps,
-                    error="yes" if error else "no",
-                )
-            elif show_progress:
-                print(
-                    f"{progress_desc}: episode={episode_idx} success={success} "
-                    f"steps={steps} running_success_rate={running_success:.2f} error={error}"
-                )
-    finally:
-        env.close()
 
-    return {
-        "success_rate": success_count / max(1, num_episodes),
-        "mean_steps": float(np.mean([row["steps"] for row in records])) if records else 0.0,
-        "num_episodes": len(records),
-        "episode_records": records,
-    }
+    def make_env() -> RLBenchEnv:
+        return RLBenchEnv(
+            task_name=cfg.task_name,
+            voxel_size=0.01,
+            n_points=int(cfg.n_points),
+            use_pc_color=bool(cfg.use_pc_color),
+            headless=headless,
+            vis=False,
+            obs_mode=cfg.obs_mode,
+            responsive_ui=True,
+        )
+
+    def predict_command(obs: np.ndarray, robot_state: np.ndarray, _episode_context: Any) -> np.ndarray:
+        prediction = model.predict_action(obs, robot_state)
+        predicted_robot_state = select_robot_state_from_prediction(
+            prediction,
+            mode=cfg.command_mode,
+            horizon_index=cfg.horizon_index,
+            average_first_n=cfg.average_first_n,
+        )
+        return smooth_robot_state_command(
+            robot_state,
+            predicted_robot_state,
+            enabled=cfg.smooth_actions,
+            position_alpha=cfg.position_alpha,
+            rotation_alpha=cfg.rotation_alpha,
+            max_position_step=cfg.max_position_step,
+            gripper_open_threshold=cfg.gripper_open_threshold,
+            gripper_close_threshold=cfg.gripper_close_threshold,
+        )
+
+    return run_shared_success_rate_eval(
+        make_env=make_env,
+        model=model,
+        num_episodes=num_episodes,
+        max_steps=max_steps,
+        reset_model=model.reset_obs,
+        predict_command=predict_command,
+        show_progress=show_progress,
+        progress_desc=progress_desc,
+        heartbeat_every=heartbeat_every,
+    )
 
 
 def summarize_for_json(summary: dict[str, Any] | None) -> dict[str, Any] | None:

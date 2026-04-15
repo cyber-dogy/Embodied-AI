@@ -13,15 +13,14 @@ import torch
 import torch.nn.functional as F  # noqa: N812
 from torch.utils.data import DataLoader
 
+from common.rlbench_rollout import (
+    make_progress_iter,
+    run_success_rate_eval as run_shared_success_rate_eval,
+)
 from common.runtime import PROJECT_ROOT, set_device
 from mdit.config import MDITExperimentConfig
 from mdit.model.model import MultiTaskDiTPolicy
 from .builders import build_policy, get_autocast_context, move_batch_to_device
-
-try:
-    from tqdm.auto import tqdm
-except ImportError:  # pragma: no cover
-    tqdm = None
 
 LOGGER = logging.getLogger(__name__)
 
@@ -105,12 +104,6 @@ def evaluate_model_on_loader(
     return summary
 
 
-def make_progress_iter(iterable, total=None, desc=None, enable=True):
-    if enable and tqdm is not None:
-        return tqdm(iterable, total=total, desc=desc, leave=False)
-    return iterable
-
-
 def compute_sample_metric(
     model: MultiTaskDiTPolicy,
     batch_cpu: dict[str, Any],
@@ -151,83 +144,32 @@ def run_success_rate_eval(
 ) -> dict[str, Any]:
     from envs import RLBenchEnv
 
-    env = RLBenchEnv(**build_rlbench_env_kwargs(cfg, headless=headless))
-    model.eval()
-    records: list[dict[str, Any]] = []
-    success_count = 0
     heartbeat_every = int(cfg.eval_step_heartbeat_every) if cfg.eval_step_heartbeat_every else None
-    episode_iter = make_progress_iter(
-        range(num_episodes),
-        total=num_episodes,
-        desc=progress_desc,
-        enable=show_progress,
-    )
-    use_tqdm_progress = show_progress and tqdm is not None and hasattr(episode_iter, "set_postfix")
-    try:
-        for episode_idx in episode_iter:
-            model.reset()
-            descriptions = []
-            if show_progress:
-                print(f"{progress_desc}: episode={episode_idx} starting")
-            # Initialize before try so except never risks NameError even if
-            # env.last_step_error itself raises (edge case).
-            error: str | None = None
-            success = False
-            steps = 0
-            try:
-                descriptions = env.reset()
-                instruction = env.get_task_instruction(
-                    override_text=cfg.task_text_override if cfg.task_text_mode == "override" else None,
-                    use_env_descriptions=cfg.task_text_mode != "template",
-                )
-                for step in range(max_steps):
-                    if show_progress and heartbeat_every is not None and step > 0 and step % heartbeat_every == 0:
-                        print(f"{progress_desc}: episode={episode_idx} heartbeat step={step}")
-                    robot_state, obs = env.get_obs()
-                    with torch.inference_mode():
-                        action = model.predict_action(obs, robot_state, task_text=instruction)
-                    reward, terminate = env.step(action)
-                    success = bool(reward)
-                    steps = step + 1
-                    if reward or terminate:
-                        break
-                error = env.last_step_error
-            except Exception as exc:  # pragma: no cover - runtime env issues
-                success = False
-                # Intentionally do NOT reset `steps` here: preserve the actual step
-                # count reached before the exception so analysis buckets (lt_20,
-                # at_horizon, etc.) remain meaningful.
-                error = str(exc)
-            success_count += int(success)
-            record = {
-                "episode": int(episode_idx),
-                "success": bool(success),
-                "steps": int(steps),
-                "descriptions": descriptions,
-                "error": error,
-            }
-            records.append(record)
-            running_success = success_count / len(records)
-            if use_tqdm_progress:
-                episode_iter.set_postfix(
-                    success_rate=f"{running_success:.2f}",
-                    steps=steps,
-                    error="yes" if error else "no",
-                )
-            elif show_progress:
-                print(
-                    f"{progress_desc}: episode={episode_idx} success={success} "
-                    f"steps={steps} running_success_rate={running_success:.2f} error={error}"
-                )
-    finally:
-        env.close()
 
-    return {
-        "success_rate": success_count / max(1, num_episodes),
-        "mean_steps": float(np.mean([row["steps"] for row in records])) if records else 0.0,
-        "num_episodes": len(records),
-        "episode_records": records,
-    }
+    def make_env() -> RLBenchEnv:
+        return RLBenchEnv(**build_rlbench_env_kwargs(cfg, headless=headless))
+
+    def on_episode_start(env: RLBenchEnv, _descriptions: list[str]) -> str:
+        return env.get_task_instruction(
+            override_text=cfg.task_text_override if cfg.task_text_mode == "override" else None,
+            use_env_descriptions=cfg.task_text_mode != "template",
+        )
+
+    def predict_command(obs: np.ndarray, robot_state: np.ndarray, instruction: str) -> np.ndarray:
+        return model.predict_action(obs, robot_state, task_text=instruction)
+
+    return run_shared_success_rate_eval(
+        make_env=make_env,
+        model=model,
+        num_episodes=num_episodes,
+        max_steps=max_steps,
+        reset_model=model.reset,
+        predict_command=predict_command,
+        on_episode_start=on_episode_start,
+        show_progress=show_progress,
+        progress_desc=progress_desc,
+        heartbeat_every=heartbeat_every,
+    )
 
 
 def _build_success_eval_subprocess_cmd(

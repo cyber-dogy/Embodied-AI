@@ -1,26 +1,26 @@
 # 消融实验手动执行文档
 
-**日期**：2026-04-15  
-**分支**：`autoresearch/20260409-mdit`（所有代码已在主线，无需切换分支）  
-**机器**：RTX 5090 24GB，已安装 RLBench  
+**日期**：2026-04-15
+**分支**：`autoresearch/20260409-mdit`（所有代码已在主线，无需切换分支）
+**机器**：RTX 5090 24GB，已安装 RLBench
 **目标**：交叉验证 MDIT 0.2 低成功率根本原因
 
 ---
 
 ## 实验配置速查
 
-| 参数 | pcd_mdit | rgb_text_pdit |
-|---|---|---|
-| 输入 | PCD（PointNet 256d） | 5RGB + CLIP text |
-| Transformer | MDIT flat AdaLN-Zero | PDIT DiTTrajectoryBackbone |
-| FM 训练采样 | beta(1.5, 1.0) | uniform |
-| FM 推理 | 50步 均匀 Euler | 10步 exp-decay Euler |
-| Timestep 送入 backbone | t∈[0,1] | t×20∈[0,20] |
-| batch_size / grad_accum | 32 / 1 | 16 / 2 |
-| effective batch | 32 | 32 |
-| Success eval 触发 | 每20ep（→20,40,60,80,100） | 每20ep（→20,40,60,80,100） |
-| WandB | online | online |
-| config | `configs/ablation/pcd_mdit_100.json` | `configs/ablation/rgb_text_pdit_100.json` |
+| 参数                    | pcd_mdit                               | rgb_text_pdit                               |
+| ----------------------- | -------------------------------------- | ------------------------------------------- |
+| 输入                    | PCD（PointNet 256d）                   | 5RGB + CLIP text                            |
+| Transformer             | MDIT flat AdaLN-Zero                   | PDIT DiTTrajectoryBackbone                  |
+| FM 训练采样             | beta(1.5, 1.0)                         | uniform                                     |
+| FM 推理                 | 50步 均匀 Euler                        | 10步 exp-decay Euler                        |
+| Timestep 送入 backbone  | t∈[0,1]                               | t×20∈[0,20]                               |
+| batch_size / grad_accum | 32 / 1                                 | 16 / 2                                      |
+| effective batch         | 32                                     | 32                                          |
+| Success eval 触发       | 每20ep（→20,40,60,80,100）            | 每20ep（→20,40,60,80,100）                 |
+| WandB                   | online                                 | online                                      |
+| config                  | `configs/ablation/pcd_mdit_100.json` | `configs/ablation/rgb_text_pdit_100.json` |
 
 ---
 
@@ -48,6 +48,7 @@ for p in ['configs/ablation/pcd_mdit_100.json', 'configs/ablation/rgb_text_pdit_
 ```
 
 预期输出：
+
 ```
 OK configs/ablation/pcd_mdit_100.json
 OK configs/ablation/rgb_text_pdit_100.json
@@ -66,7 +67,7 @@ tmux new -s pcd_mdit
 ### 训练命令
 
 ```bash
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate mdit_env
+source /opt/miniconda3/etc/profile.d/conda.sh && conda activate mdit_env
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
 
 HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
@@ -81,6 +82,7 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
   --description "ablation pcd_mdit: PCD+MDIT-transformer+MDIT-FM bs32 100ep" \
   --headless \
   --show-progress \
+--set batch_size=16 \
   2>&1 | tee logs/run_pcd_mdit_100.log
 ```
 
@@ -285,21 +287,22 @@ git push origin autoresearch/20260409-mdit
 
 ## 决策矩阵
 
-| pcd_mdit@100ep | rgb_text_pdit@100ep | 诊断结论 | 下一步 |
-|---|---|---|---|
-| ≥ 0.60 | ≥ 0.60 | MDIT transformer 是根因，RGB 输入可用 | 主线改 `transformer_variant=pdit`，继续 RGB+PDIT 路线 |
-| ≥ 0.60 | < 0.30 | MDIT transformer 有问题 + RGB 是独立瓶颈 | 先换 transformer，再研究 RGB 增强（数据增广/更多相机） |
-| < 0.30 | ≥ 0.60 | MDIT transformer 问题（与输入无关） | 主线换 PDIT backbone，保留 RGB 输入 |
-| < 0.30 | < 0.30 | 问题不在 transformer，在训练配方 | 回主线做 LR / horizon / batch 消融 |
+| pcd_mdit@100ep | rgb_text_pdit@100ep | 诊断结论                                 | 下一步                                                  |
+| -------------- | ------------------- | ---------------------------------------- | ------------------------------------------------------- |
+| ≥ 0.60        | ≥ 0.60             | MDIT transformer 是根因，RGB 输入可用    | 主线改 `transformer_variant=pdit`，继续 RGB+PDIT 路线 |
+| ≥ 0.60        | < 0.30              | MDIT transformer 有问题 + RGB 是独立瓶颈 | 先换 transformer，再研究 RGB 增强（数据增广/更多相机）  |
+| < 0.30         | ≥ 0.60             | MDIT transformer 问题（与输入无关）      | 主线换 PDIT backbone，保留 RGB 输入                     |
+| < 0.30         | < 0.30              | 问题不在 transformer，在训练配方         | 回主线做 LR / horizon / batch 消融                      |
 
 ---
 
 ## WandB 观察指标
 
-项目：`autodl-unplug-charger-mdit`  
+项目：`autodl-unplug-charger-mdit`
 两个 run 名：`ablation_pcd_mdit_100` / `ablation_rgb_text_pdit_100`
 
 重点关注：
+
 - `train/loss_total` vs `valid/loss_total`（是否收敛/过拟合）
 - `success_rate`（每20ep，含ep40/80/100）
 - `valid/loss_grip` + `valid/grip_transition_acc`（夹爪是否学会）

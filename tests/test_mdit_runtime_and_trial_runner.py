@@ -43,6 +43,28 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         self.assertTrue(bool(env_kwargs["disable_task_validation"]))
         self.assertEqual(env_kwargs["obs_mode"], "rgb")
 
+    def test_rlbench_env_reset_retries_once_without_task_validation(self) -> None:
+        env = RLBenchEnv.__new__(RLBenchEnv)
+        env.last_descriptions = []
+        env.disable_task_validation = False
+        env._task_validation_disabled = False
+        task_impl = types.SimpleNamespace(validate=lambda: None)
+        reset_calls = {"count": 0}
+
+        def _reset():
+            reset_calls["count"] += 1
+            if reset_calls["count"] == 1:
+                raise RuntimeError("The call failed on the V-REP side. Return value: -1")
+            return ["unplug the charger"], None
+
+        env.task = types.SimpleNamespace(reset=_reset, _task=task_impl)
+
+        descriptions = RLBenchEnv.reset(env)
+
+        self.assertEqual(reset_calls["count"], 2)
+        self.assertTrue(env._task_validation_disabled)
+        self.assertEqual(descriptions, ["unplug the charger"])
+
     def test_experiment_manifest_marks_recipe_drift_when_locked_fields_are_overridden(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_path = Path(tmp_dir)
@@ -95,7 +117,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             any("recipe drift detected via overrides" in row for row in payload.get("change_summary", []))
         )
 
-    def test_rlbench_env_recovers_vrep_runtime_errors_via_interpolation(self) -> None:
+    def test_rlbench_env_treats_vrep_runtime_errors_as_simulator_runtime_errors(self) -> None:
         env = RLBenchEnv.__new__(RLBenchEnv)
         env.log_invalid_action_errors = False
         env.last_obs = types.SimpleNamespace(
@@ -117,10 +139,13 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             np.array([0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0], dtype=np.float32),
         )
 
-        self.assertEqual(len(call_actions), 2)
+        self.assertEqual(len(call_actions), 1)
         self.assertEqual(reward, 0.0)
-        self.assertFalse(terminate)
-        self.assertEqual(env.last_step_error, "planning runtime error: The call failed on the V-REP side. Return value: -1")
+        self.assertTrue(terminate)
+        self.assertEqual(
+            env.last_step_error,
+            "simulator runtime error: The call failed on the V-REP side. Return value: -1",
+        )
 
     def test_flow_matching_total_loss_uses_component_weights(self) -> None:
         objective = FlowMatchingObjective(
