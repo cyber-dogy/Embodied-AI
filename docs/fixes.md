@@ -749,3 +749,37 @@ except Exception as exc:
 ```
 
 **结果**：steps 现在反映实际执行步数，exception 发生在第150步时 steps=150 而非0。
+
+---
+
+### 2026-04-15 15:15:00 · 消融实验执行阻塞：ablation/pcd_mdit 与 ablation/rgb_text_pdit 无法启动
+
+**问题**：按 `docs/mdit/2026-04-15-ablation-pcd-mdit-vs-rgb-pdit-execution-plan.md` 启动两个消融实验时，`mdit/config/schema.py` 中的 `validate_mainline_training()` 立即抛出 `ValueError`：
+
+- `ablation/pcd_mdit`（`use_pcd=true`）：
+  ```
+  Faithful MDIT mainline training only supports RGB + text + MDIT raw weights.
+  Disable legacy options before training: use_pcd=true.
+  ```
+
+- `ablation/rgb_text_pdit`（`transformer_variant='pdit'`）：
+  ```
+  Faithful MDIT mainline training only supports RGB + text + MDIT raw weights.
+  Disable legacy options before training: transformer_variant='pdit'.
+  ```
+
+**根因**：`mdit/config/loader.py:170` 在加载任意训练配置时无条件调用 `cfg.validate_mainline_training()`。该验证函数将 `use_pcd=true` 和 `transformer_variant='pdit'` 视为 "legacy" 并强制拒绝，导致消融分支上合法的 PCD+MDIT 与 RGB+PDIT 实验无法运行。
+
+**影响**：
+- 消融实验计划无法在当前代码状态下执行
+- 无法通过交叉验证判断 MDIT 主线低成功率的根本原因是 transformer 结构还是输入模态
+
+**下一步**：
+- 方案 A：在 `validate_mainline_training()` 中增加白名单/环境变量开关，允许消融分支显式绕过验证
+- 方案 B：将验证逻辑从 `loader.py` 移回 `run_mdit_autoresearch_trial.py` 的主线入口，仅对 faithful 主线 screening 启用，不对 ablation/audit 启用
+- 方案 C：在消融分支上直接移除或弱化该验证（需代码改动）
+
+**记录数据**：
+- pcd_mdit 分支 commit: `ce4bb17`
+- rgb_text_pdit 分支 commit: `02bc489`
+- 两个实验均因 collapse 被 trial runner 自动清理，未生成有效 ckpt
