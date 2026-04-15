@@ -272,8 +272,25 @@ class FlowMatchingObjective(BaseObjective):
         # Start from random noise at t=0
         x = torch.randn((batch_size, self.horizon, self.action_dim), dtype=dtype, device=device)
 
-        # Time grid from 0 to 1
         num_steps = self.config.num_integration_steps
+        flow_schedule = str(getattr(self.config, "flow_schedule", "linear"))
+
+        if flow_schedule == "exp":
+            # PDIT-style inference: non-uniform exp-decay timestep schedule.
+            # Uses common.fm.get_timesteps matching pdit/policy/fm_policy.py infer_y().
+            from common.fm import get_timesteps
+            fm_exp_scale = float(getattr(self.config, "fm_exp_scale", 4.0))
+            t0, dt = get_timesteps("exp", num_steps, exp_scale=fm_exp_scale)
+            t0 = t0.to(device=device, dtype=dtype)
+            dt = dt.to(device=device, dtype=dtype)
+            for step_idx in range(num_steps):
+                t_batch = torch.full((batch_size,), t0[step_idx].item(), dtype=dtype, device=device)
+                with torch.no_grad():
+                    velocity = model(x, t_batch, conditioning_vec=conditioning_vec)
+                x = x + dt[step_idx].item() * velocity
+            return x
+
+        # Default: uniform time grid
         time_grid = torch.linspace(0, 1, num_steps + 1, device=device)
 
         # Integrate ODE using chosen method
