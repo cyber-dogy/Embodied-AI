@@ -16,12 +16,13 @@
   "observation_encoder": {
     "vision": {
       "backbone": "vit_base_patch16_clip_224.openai",
-      "use_separate_encoder_per_camera": false,
+      "use_separate_encoder_per_camera": true,
       "lr_multiplier": 0.1,
       "resize_shape": [224, 224],
       "crop_shape": [224, 224],
       "crop_is_random": true,
-      "train_mode": "last_block"
+      "train_mode": "last_block",
+      "num_unfreeze_blocks": 1
     },
     "text": {
       "model": "openai/clip-vit-base-patch16"

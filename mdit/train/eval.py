@@ -169,14 +169,17 @@ def run_success_rate_eval(
             descriptions = []
             if show_progress:
                 print(f"{progress_desc}: episode={episode_idx} starting")
+            # Initialize before try so except never risks NameError even if
+            # env.last_step_error itself raises (edge case).
+            error: str | None = None
+            success = False
+            steps = 0
             try:
                 descriptions = env.reset()
                 instruction = env.get_task_instruction(
                     override_text=cfg.task_text_override if cfg.task_text_mode == "override" else None,
                     use_env_descriptions=cfg.task_text_mode != "template",
                 )
-                success = False
-                steps = 0
                 for step in range(max_steps):
                     if show_progress and heartbeat_every is not None and step > 0 and step % heartbeat_every == 0:
                         print(f"{progress_desc}: episode={episode_idx} heartbeat step={step}")
@@ -191,7 +194,9 @@ def run_success_rate_eval(
                 error = env.last_step_error
             except Exception as exc:  # pragma: no cover - runtime env issues
                 success = False
-                steps = 0
+                # Intentionally do NOT reset `steps` here: preserve the actual step
+                # count reached before the exception so analysis buckets (lt_20,
+                # at_horizon, etc.) remain meaningful.
                 error = str(exc)
             success_count += int(success)
             record = {

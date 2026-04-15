@@ -52,6 +52,11 @@ class VisionEncoderConfig:
     crop_shape: tuple[int, int] | None = (224, 224)
     crop_is_random: bool = True
     train_mode: str = "all"
+    # Number of transformer blocks to unfreeze from the top when train_mode is
+    # "last_block" or "last_n_blocks".  Set to 1 for the original last-block-only
+    # behaviour; increase (e.g. 2 or 3) or switch train_mode to "all" when you
+    # want to open more of the encoder to gradient updates.
+    num_unfreeze_blocks: int = 1
 
 
 @dataclass

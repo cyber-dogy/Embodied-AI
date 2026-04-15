@@ -66,9 +66,23 @@ class CLIPEncoder(nn.Module, BaseVisionEncoder):
             num_classes=0,
         )
         self.embed_dim = int(self.model.embed_dim)
-        self._configure_train_mode(str(getattr(config, "train_mode", "all")).lower())
+        self._configure_train_mode(
+            str(getattr(config, "train_mode", "all")).lower(),
+            num_unfreeze_blocks=int(getattr(config, "num_unfreeze_blocks", 1)),
+        )
 
-    def _configure_train_mode(self, train_mode: str) -> None:
+    def _configure_train_mode(self, train_mode: str, num_unfreeze_blocks: int = 1) -> None:
+        """Set which parameters are trainable.
+
+        Args:
+            train_mode: One of:
+                "frozen"       – freeze the entire encoder
+                "all"          – unfreeze the entire encoder
+                "last_block"   – alias for last_n_blocks with num_unfreeze_blocks=1
+                "last_n_blocks"– unfreeze the top-N transformer blocks + final norm
+            num_unfreeze_blocks: Number of blocks from the top to unfreeze when
+                train_mode is "last_block" or "last_n_blocks".  Ignored for other modes.
+        """
         for param in self.model.parameters():
             param.requires_grad_(False)
 
@@ -78,13 +92,23 @@ class CLIPEncoder(nn.Module, BaseVisionEncoder):
             for param in self.model.parameters():
                 param.requires_grad_(True)
             return
-        if train_mode != "last_block":
-            raise ValueError(f"Unsupported vision train_mode: {train_mode}")
+        if train_mode not in ("last_block", "last_n_blocks"):
+            raise ValueError(
+                f"Unsupported vision train_mode: {train_mode!r}. "
+                "Choose from: 'frozen', 'all', 'last_block', 'last_n_blocks'."
+            )
+
+        n = int(max(1, num_unfreeze_blocks))
+
+        # timm ViTs expose blocks as nn.Sequential; other models use list or
+        # nn.ModuleList.  Accept all three to avoid silently falling back.
+        _BLOCK_CONTAINER_TYPES = (list, nn.ModuleList, nn.Sequential)
 
         blocks = getattr(self.model, "blocks", None)
-        if isinstance(blocks, (list, nn.ModuleList)) and len(blocks) > 0:
-            for param in blocks[-1].parameters():
-                param.requires_grad_(True)
+        if isinstance(blocks, _BLOCK_CONTAINER_TYPES) and len(blocks) > 0:
+            for block in list(blocks)[-n:]:
+                for param in block.parameters():
+                    param.requires_grad_(True)
             norm = getattr(self.model, "norm", None)
             if isinstance(norm, nn.Module):
                 for param in norm.parameters():
@@ -92,13 +116,14 @@ class CLIPEncoder(nn.Module, BaseVisionEncoder):
             return
 
         layers = getattr(self.model, "layers", None)
-        if isinstance(layers, (list, nn.ModuleList)) and len(layers) > 0:
-            last_layer = layers[-1]
-            if isinstance(last_layer, nn.Module):
-                for param in last_layer.parameters():
-                    param.requires_grad_(True)
+        if isinstance(layers, _BLOCK_CONTAINER_TYPES) and len(layers) > 0:
+            for layer in list(layers)[-n:]:
+                if isinstance(layer, nn.Module):
+                    for param in layer.parameters():
+                        param.requires_grad_(True)
             return
 
+        # Fallback: unfreeze everything if no standard block structure found
         for param in self.model.parameters():
             param.requires_grad_(True)
 
