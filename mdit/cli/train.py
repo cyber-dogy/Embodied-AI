@@ -17,7 +17,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=PROJECT_ROOT / "configs" / "mdit" / "faithful_baseline.json",
+        default=PROJECT_ROOT / "configs" / "mdit" / "rgb5_lastblock_faithful_obs2_h100_a24.json",
         help="Path to an MDIT training config JSON file.",
     )
     parser.add_argument("--run-name", type=str, default=None, help="Override run_name.")
@@ -109,8 +109,6 @@ def apply_train_overrides(cfg: MDITExperimentConfig, args: argparse.Namespace) -
         cfg.device = str(args.device)
     if args.enable_wandb is not None:
         cfg.wandb_enable = bool(args.enable_wandb)
-        if not cfg.wandb_enable and cfg.wandb_mode == "online":
-            cfg.wandb_mode = "disabled"
     if args.wandb_project is not None:
         cfg.wandb_project = str(args.wandb_project)
     if args.wandb_entity is not None:
@@ -134,6 +132,9 @@ def apply_train_overrides(cfg: MDITExperimentConfig, args: argparse.Namespace) -
             overrides = {}
         overrides["transformer_variant"] = str(args.pcd_transformer_variant)
     cfg = apply_config_overrides(cfg, overrides)
+    cfg.wandb_enable = True
+    cfg.wandb_mode = "online"
+    cfg.wandb_resume = True
     return cfg
 
 

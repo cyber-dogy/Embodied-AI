@@ -13,60 +13,51 @@ from mdit.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_PCD, OB
 
 
 @dataclass(frozen=True)
-class SequenceIndex:
-    buffer_start_idx: int
-    buffer_end_idx: int
-    sample_start_idx: int
-    sample_end_idx: int
+class EpisodeSampleIndex:
+    episode_start_idx: int
+    episode_end_idx: int
+    anchor_idx: int
 
 
-def _create_indices(
+def _build_episode_sample_indices(
     episode_ends: np.ndarray,
     *,
-    sequence_length: int,
-    pad_before: int,
-    pad_after: int = 0,
-) -> list[SequenceIndex]:
-    indices: list[SequenceIndex] = []
-    pad_before = min(max(int(pad_before), 0), sequence_length - 1)
-    pad_after = min(max(int(pad_after), 0), sequence_length - 1)
-
+    drop_n_last_frames: int,
+) -> list[EpisodeSampleIndex]:
+    indices: list[EpisodeSampleIndex] = []
     start_idx = 0
-    for episode_end in episode_ends:
+    for episode_end in np.asarray(episode_ends, dtype=np.int64):
         episode_end = int(episode_end)
         episode_length = episode_end - start_idx
-        min_start = -pad_before
-        max_start = episode_length - sequence_length + pad_after
-        for idx in range(min_start, max_start + 1):
-            buffer_start_idx = max(idx, 0) + start_idx
-            buffer_end_idx = min(idx + sequence_length, episode_length) + start_idx
-            start_offset = buffer_start_idx - (idx + start_idx)
-            end_offset = (idx + sequence_length + start_idx) - buffer_end_idx
-            sample_start_idx = start_offset
-            sample_end_idx = sequence_length - end_offset
+        usable_length = max(0, episode_length - int(drop_n_last_frames))
+        for offset in range(usable_length):
             indices.append(
-                SequenceIndex(
-                    buffer_start_idx=int(buffer_start_idx),
-                    buffer_end_idx=int(buffer_end_idx),
-                    sample_start_idx=int(sample_start_idx),
-                    sample_end_idx=int(sample_end_idx),
+                EpisodeSampleIndex(
+                    episode_start_idx=int(start_idx),
+                    episode_end_idx=int(episode_end),
+                    anchor_idx=int(start_idx + offset),
                 )
             )
         start_idx = episode_end
     return indices
 
 
-def _pad_sequence(sample: np.ndarray, sequence_length: int, index: SequenceIndex) -> np.ndarray:
-    if index.sample_start_idx == 0 and index.sample_end_idx == sequence_length:
-        return sample
+def _gather_episode_delta_sequence(
+    array,
+    sample_index: EpisodeSampleIndex,
+    delta_indices: np.ndarray,
+) -> np.ndarray:
+    episode_start = int(sample_index.episode_start_idx)
+    episode_end = int(sample_index.episode_end_idx)
+    episode_length = episode_end - episode_start
+    if episode_length <= 0:
+        raise ValueError(f"Invalid empty episode slice: start={episode_start}, end={episode_end}")
 
-    data = np.zeros((sequence_length,) + sample.shape[1:], dtype=sample.dtype)
-    if index.sample_start_idx > 0:
-        data[: index.sample_start_idx] = sample[0]
-    if index.sample_end_idx < sequence_length:
-        data[index.sample_end_idx :] = sample[-1]
-    data[index.sample_start_idx : index.sample_end_idx] = sample
-    return data
+    anchor_offset = int(sample_index.anchor_idx) - episode_start
+    rel_indices = anchor_offset + np.asarray(delta_indices, dtype=np.int64)
+    rel_indices = np.clip(rel_indices, 0, episode_length - 1)
+    abs_indices = rel_indices + episode_start
+    return np.asarray(array[abs_indices])
 
 
 class MDITRLBenchDataset(torch.utils.data.Dataset):
@@ -77,11 +68,11 @@ class MDITRLBenchDataset(torch.utils.data.Dataset):
         root = zarr.open_group(str(self.data_path), mode="r")
         self.robot_state = root["data"]["robot_state"]
         self.episode_ends = np.asarray(root["meta"]["episode_ends"], dtype=np.int64)
-        self.indices = _create_indices(
+        self.obs_delta_indices = np.asarray(cfg.observation_delta_indices, dtype=np.int64)
+        self.action_delta_indices = np.asarray(cfg.action_delta_indices, dtype=np.int64)
+        self.indices = _build_episode_sample_indices(
             self.episode_ends,
-            sequence_length=int(cfg.horizon),
-            pad_before=int(cfg.n_obs_steps) - 1,
-            pad_after=0,
+            drop_n_last_frames=int(cfg.drop_n_last_frames),
         )
 
         if cfg.use_pcd:
@@ -109,38 +100,32 @@ class MDITRLBenchDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx: int) -> dict[str, torch.Tensor | str]:
         index = self.indices[int(idx)]
-        robot_state = np.asarray(
-            self.robot_state[index.buffer_start_idx : index.buffer_end_idx],
+        obs_state = np.asarray(
+            _gather_episode_delta_sequence(self.robot_state, index, self.obs_delta_indices),
             dtype=np.float32,
         )
-        robot_state = _pad_sequence(robot_state, int(self.cfg.horizon), index)
+        robot_state = np.asarray(
+            _gather_episode_delta_sequence(self.robot_state, index, self.action_delta_indices),
+            dtype=np.float32,
+        )
 
         if self.cfg.use_pcd:
-            n_obs = int(self.cfg.n_obs_steps)
             n_points = int(self.cfg.observation_encoder.pcd.n_points)
             pcd = np.asarray(
-                self.pcd_xyz[index.buffer_start_idx : index.buffer_start_idx + n_obs],
+                _gather_episode_delta_sequence(self.pcd_xyz, index, self.obs_delta_indices),
                 dtype=np.float32,
             )
-            if pcd.shape[0] < n_obs:
-                # pad by repeating first frame at the front
-                pad_len = n_obs - pcd.shape[0]
-                pcd = np.concatenate([np.tile(pcd[:1], (pad_len, 1, 1)), pcd], axis=0)
-            # subsample points: pcd shape is (T, P_all, 3)
+            point_indices = slice(None)
             if pcd.shape[1] > n_points:
-                rand_idx = np.random.choice(pcd.shape[1], n_points, replace=False)
-                pcd = pcd[:, rand_idx, :]
+                point_indices = np.random.choice(pcd.shape[1], n_points, replace=False)
+            pcd = pcd[:, point_indices, :]
             if self.pcd_color is not None:
                 color = np.asarray(
-                    self.pcd_color[index.buffer_start_idx : index.buffer_start_idx + n_obs],
+                    _gather_episode_delta_sequence(self.pcd_color, index, self.obs_delta_indices),
                     dtype=np.float32,
                 )
-                if color.shape[0] < n_obs:
-                    pad_len = n_obs - color.shape[0]
-                    color = np.concatenate([np.tile(color[:1], (pad_len, 1, 1)), color], axis=0)
-                color = color[:, rand_idx, :] / 255.0
+                color = color[:, point_indices, :] / 255.0
                 pcd = np.concatenate([pcd, color], axis=-1)
-            obs_state = robot_state[: n_obs]
             return {
                 OBS_STATE: torch.from_numpy(obs_state.copy()),
                 OBS_PCD: torch.from_numpy(pcd.copy()),
@@ -148,13 +133,11 @@ class MDITRLBenchDataset(torch.utils.data.Dataset):
             }
         else:
             images = np.asarray(
-                self.images[index.buffer_start_idx : index.buffer_end_idx],
+                _gather_episode_delta_sequence(self.images, index, self.obs_delta_indices),
                 dtype=np.uint8,
             )
-            images = _pad_sequence(images, int(self.cfg.horizon), index)
             images = images[:, self.camera_indices]
-            obs_state = robot_state[: int(self.cfg.n_obs_steps)]
-            obs_images = images[: int(self.cfg.n_obs_steps)].transpose(0, 1, 4, 2, 3)
+            obs_images = images.transpose(0, 1, 4, 2, 3)
             return {
                 OBS_STATE: torch.from_numpy(obs_state.copy()),
                 OBS_IMAGES: torch.from_numpy(obs_images.copy()),

@@ -493,6 +493,32 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 
 ---
 
+### 2026-04-14 10:35:09 +0800 · `autoresearch/execution` · 旧 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 主线评估完成，success@20=0.0，未过闸门，已清理
+
+**问题**：
+旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 主线已完成 100 epoch 训练与评估，success@20 = 0.0，远低于 0.45 闸门。评估显示：
+
+- 20/20  episodes 全部失败
+- mean_steps = 198.75（几乎跑满 horizon）
+- failure_error_buckets：`planning_runtime_error=11`，`none=6`，路径规划失败=2，recursion_limit=1
+- `likely_causes` 明确指向 `planner_rejecting_many_predicted_actions` 和 `policy_quality_is_currently_well_below_target`
+- valid/loss_grip = 0.953，grip_transition_acc = 0.0，说明 gripper 维度虽然 loss 聚合已对齐，但策略质量整体仍不足
+
+**修改/结论**：
+
+- 按执行计划，该分支停止续训到 300 epoch
+- 清理了周期性大 ckpt：`epochs/epoch_0100.pt`（~8.3GB）和 `best_success.pt`（~8.3GB）
+- 保留了结论文件：`config.json`、`summary.json`、`dataset_stats.json`、`experiment_manifest.json`、`success_eval_history.json`、`audit_report.json`、`latest.pt`
+- 评估记录已确认写盘，不只有 wandb 曲线
+- 结果已写入 `results.tsv`
+
+**结果**：
+旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 路径在此 recipe 下被证伪。autoresearch 现在全面切到新主线 `rgb5_shared_lastblock_pdittoken_obs2_a16_lr2e5_100`（`obs2+a16+shared+AMP off`）。
+
+---
+
+
+
 ### 2026-04-14 10:52:40 +0800 · `autoresearch/execution` · 旧 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 主线 100ep 成功率为 0 的原因复盘
 
 问题：旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 主线在 100 epoch 后 success@20=0.0，评估中 `planning_runtime_error=11`、`none=6`，mean_steps 接近上限，`loss_grip` 与 `grip_transition_acc` 极差。表面上看“像代码写错”，但结合已有修复与错误分桶，不支持“评估脚本坏了”的结论。
@@ -503,22 +529,91 @@ PCD + PDIT-backbone 消融现在和 PDIT 的已验证稳定配置更一致；后
 
 ---
 
-### 2026-04-14 10:35:09 +0800 · `autoresearch/execution` · 旧 `rgb5_pdittoken_lastblock_a8_lr2e5_100` 主线评估完成，success@20=0.0，未过闸门，已清理
+### 2026-04-14 21:05:27 +0800 · `mdit/train/eval.py` + `mdit/model/action_postprocess.py` + `research/mdit_trial_runner.py` · 对齐 mdit/pdit 评估语义与推理语义，并新增 recipe 漂移告警
 
-**问题**：
-旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 主线已完成 100 epoch 训练与评估，success@20 = 0.0，远低于 0.45 闸门。评估显示：
-- 20/20  episodes 全部失败
-- mean_steps = 198.75（几乎跑满 horizon）
-- failure_error_buckets：`planning_runtime_error=11`，`none=6`，路径规划失败=2，recursion_limit=1
-- `likely_causes` 明确指向 `planner_rejecting_many_predicted_actions` 和 `policy_quality_is_currently_well_below_target`
-- valid/loss_grip = 0.953，grip_transition_acc = 0.0，说明 gripper 维度虽然 loss 聚合已对齐，但策略质量整体仍不足
+问题：主线已经回锚到 `rgb5_shared_lastblock_pdittoken_obs2_a16`，但 `mdit` 里仍存在两处和 `pdit` 不一致的执行语义：一是 success eval 路径把 `disable_task_validation` 写死为 `true`；二是 `smooth_actions=false` 时仍对 gripper 强制 hysteresis 离散。并且 autoresearch 之前缺少对“命令覆盖主线锁定字段”的显式告警，容易把漂移 run 误当主线结论。
 
-**修改/结论**：
-- 按执行计划，该分支停止续训到 300 epoch
-- 清理了周期性大 ckpt：`epochs/epoch_0100.pt`（~8.3GB）和 `best_success.pt`（~8.3GB）
-- 保留了结论文件：`config.json`、`summary.json`、`dataset_stats.json`、`experiment_manifest.json`、`success_eval_history.json`、`audit_report.json`、`latest.pt`
-- 评估记录已确认写盘，不只有 wandb 曲线
-- 结果已写入 `results.tsv`
+修改：新增 `rlbench_disable_task_validation` 配置项（默认 `false`）并在 `run_success_rate_eval()` 中透传到 `RLBenchEnv`；`postprocess_robot_state_command()` 改为仅在 `smooth_actions=true` 时执行 gripper hysteresis，`smooth_actions=false` 时保留 rot6d 正交化并直接使用原始 gripper 输出；`experiment_manifest.json` 新增 `recipe_drift` 与 `recipe_drift_details`，当覆盖 `batch_size / n_obs_steps / n_action_steps / observation_encoder.vision.train_mode` 时自动标记漂移并写明明细。
 
-**结果**：
-旧 `obs3+a8+separate+AMP` 的 PDIT token-conditioned 路径在此 recipe 下被证伪。autoresearch 现在全面切到新主线 `rgb5_shared_lastblock_pdittoken_obs2_a16_lr2e5_100`（`obs2+a16+shared+AMP off`）。
+结果：本轮先把“评估链路偏差”和“推理语义偏差”从结构问题中剥离，后续 gate 结果可以先判断策略质量而不是语义错位。带 `recipe_drift=true` 的实验默认不参与主线结论。
+
+---
+
+### 2026-04-15 11:51:34 +0800 · `mdit/config/*` + `mdit/data/dataset.py` + `mdit/model/*` + `mdit/train/*` + `mdit/cli/*` + `research/mdit_*` + `configs/mdit/*` + `tests/test_mdit*` · MDIT 主线回收为 faithful `text+5RGB+MDIT+FM`，并移除主线 EMA / PDIT / PCD 默认路径
+
+问题：现有 `mdit` 主线已经严重漂移，默认时间配方变成 `obs3/h32/a8`，训练里引入了原版没有的 `EMA`，success eval 子进程还默认 `--prefer-ema`，同时 `pdit/pcd` 与 faithful MDIT 语义混在同一条训练路径里，导致 `success=0` 时无法判断到底是策略崩了、评估坏了，还是 recipe 本身已经不是原版 MDIT。
+
+修改：
+
+- `mdit/config/schema.py`
+  - 默认值改回 `n_obs_steps=2`、`horizon=100`、`n_action_steps=24`
+  - `ema_enable=false`
+  - 新增 `drop_n_last_frames`、`observation_delta_indices`、`action_delta_indices`
+  - 新增 `validate_mainline_training()`，主线训练显式拒绝 `use_pcd=true / transformer_variant="pdit" / ema_enable=true`
+- `mdit/data/dataset.py`
+  - 采样切回 `anchor + delta_indices + drop_n_last_frames`
+  - 删除旧的整窗平铺取样语义
+- `mdit/model/observation_encoder.py` + `mdit/model/model.py`
+  - 主线 conditioning 固定为 faithful RGB+text MDIT
+  - legacy `pdit/pcd` 分支仅保留读取兼容，不再进入主线默认训练
+- `mdit/train/runner.py` + `mdit/train/eval.py` + `mdit/train/checkpoints.py`
+  - 主线 `valid`、`best_valid`、`success eval` 全部使用 raw model
+  - success eval 子进程默认传 `--no-prefer-ema`
+  - 新 checkpoint 默认不再保存空的 `ema_state_dict`
+- `mdit/cli/train.py` + `mdit/cli/run_autoresearch_trial.py` + `research/mdit_trial_runner.py`
+  - 默认配置切到 `configs/mdit/rgb5_lastblock_faithful_obs2_h100_a24.json`
+  - 主线 trial 强制 `wandb_enable=true`、`wandb_mode="online"`，缺 `wandb_run_id/url` 直接判无效
+- `research/mdit_autoresearch_loop.py`
+  - 默认 baseline 改为 faithful `rgb5_lastblock_faithful_obs2_h100_a24_100`
+  - 只保留 `bs8_acc4 / bs12_acc3 / bs16_acc2` 三个资源探测 spec
+- `configs/mdit/*`
+  - `faithful_baseline.json` 改成 exact-faithful 基座
+  - 新增唯一主线配置 `rgb5_lastblock_faithful_obs2_h100_a24.json`
+- `tests/test_mdit*`
+  - 更新默认值、raw/no-EMA 行为、mainline 校验与 autoresearch 行为断言
+
+结果：当前 `mdit` 主线已经收敛到“faithful RGB+text+MDIT+FM + raw eval + wandb online”的单义路径；legacy checkpoint 仍可显式 `--prefer-ema` 做只读审计，但不再污染主线结论。
+
+---
+
+### 2026-04-15 11:51:35 +0800 · `docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md` + `docs/fixes.md` · 执行手册切换到 faithful 主线，并补齐训练 / 评估 / 改进路径 / W&B / 资源探测口径
+
+问题：旧执行手册仍以 `rgb5_shared_lastblock_pdittoken_obs2_a16` 为唯一主线，且缺少新的 faithful 配置、raw/no-EMA 评估口径、wandb 强制留档规则、`bs=8/12/16` 资源探测接口，以及“结果差时先改哪里”的固定分流，已经不能直接指导当前代码。
+
+修改：
+
+- 把唯一主线改成 `configs/mdit/rgb5_lastblock_faithful_obs2_h100_a24.json`
+- 明确写入：
+  - 主线训练禁止 `pdit/pcd/EMA`
+  - 主线评估默认 `--no-prefer-ema`
+  - `wandb_run_id` + `wandb_run_url` 是有效 run 的必要条件
+  - `recipe_drift` 的锁定字段与判定口径
+  - `bs=8/12/16` 与 `grad_accum=4/3/2` 的唯一允许资源接口
+  - baseline / train-only / audit-only / 单 checkpoint / 全 checkpoint 的标准命令
+  - 100ep / 300ep / 500ep 闸门
+  - `planning_runtime_error` / `grip_transition_acc` / raw-vs-EMA / GPU 利用率四条固定排查分支
+  - 文件级改动映射
+
+结果：下游 agent 现在可以直接按执行手册跑 faithful 主线、资源探测和审计，且所有结果都能通过本地 JSON + wandb 双重留痕复核。
+
+---
+
+### 2026-04-15 12:26:14 +0800 · `docs/mdit/2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md` + `docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md` + `docs/mdit/research/2026-04-13-mdit-autoresearch-v2-execution-zh.md` + `docs/fixes.md` · 执行手册正式迁移到 2026-04-15 文件名，旧路径保留跳转页
+
+问题：上一轮虽然已经把 `2026-04-12-mdit-autoresearch-execution-plan-zh.md` 内容更新为 faithful 主线最新版，但文件名仍停留在历史日期，容易让执行者误以为“内容是 4-12 的旧计划”。继续沿用旧文件名会让下游 agent、研究记录引用和人工审阅都产生混淆。
+
+修改：
+
+- 新建正式文件：
+  - `docs/mdit/2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md`
+- 将完整 faithful MDIT 执行手册正文迁移到新文件
+- 原 `docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md` 改为兼容跳转页
+  - 保留旧路径，避免历史链接失效
+  - 明确声明“最新版请看 2026-04-15 文件”
+- 将已发现的研究文档引用更新到新路径：
+  - `docs/mdit/research/2026-04-13-mdit-autoresearch-v2-execution-zh.md`
+
+结果：现在文档层已经同时满足两件事：
+
+- 最新 faithful 主线执行手册有正确的 2026-04-15 文件名
+- 历史 `2026-04-12` 路径仍可打开，但只作为归档跳转，不再误导执行者

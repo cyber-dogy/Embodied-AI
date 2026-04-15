@@ -52,11 +52,14 @@ def postprocess_robot_state_command(
         command[3:9] = normalize_rot6d_np(blended_rot)
 
     predicted_gripper = float(predicted[9])
-    current_gripper = float(current[9])
-    if predicted_gripper >= float(gripper_open_threshold):
-        command[9] = 1.0
-    elif predicted_gripper <= float(gripper_close_threshold):
-        command[9] = 0.0
+    if enabled:
+        current_gripper = float(current[9])
+        if predicted_gripper >= float(gripper_open_threshold):
+            command[9] = 1.0
+        elif predicted_gripper <= float(gripper_close_threshold):
+            command[9] = 0.0
+        else:
+            command[9] = 1.0 if current_gripper >= 0.5 else 0.0
     else:
-        command[9] = 1.0 if current_gripper >= 0.5 else 0.0
+        command[9] = predicted_gripper
     return command.astype(np.float32)

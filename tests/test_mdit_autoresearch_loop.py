@@ -10,11 +10,36 @@ import _bootstrap  # noqa: F401
 from research.mdit_autoresearch_loop import (
     SearchSpec,
     _decide_watch_action,
+    _hydrate_result_recipe_drift,
     run_mdit_autoresearch_loop,
 )
 
 
 class MDITAutoresearchLoopTest(unittest.TestCase):
+    def test_hydrate_result_recipe_drift_reads_manifest_flag(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            manifest_path = tmp_path / "experiment_manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "recipe_drift": True,
+                        "recipe_drift_details": [{"key": "batch_size", "override_value": 16}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            hydrated = _hydrate_result_recipe_drift(
+                {
+                    "line": "mdit",
+                    "experiment_manifest_path": str(manifest_path),
+                }
+            )
+
+        self.assertTrue(bool(hydrated.get("recipe_drift")))
+        self.assertEqual(hydrated.get("recipe_drift_details")[0]["key"], "batch_size")
+
     def test_resume_skips_existing_baseline_and_candidates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)

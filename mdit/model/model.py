@@ -29,8 +29,8 @@ class MultiTaskDiTPolicy(nn.Module):
         self._transformer_variant = str(
             getattr(config, "transformer_variant", getattr(config, "pcd_transformer_variant", "mdit"))
         ).lower()
-        self._pcd_transformer_variant = self._transformer_variant
-        if self._transformer_variant == "pdit":
+        self._uses_legacy_pdit = self._transformer_variant == "pdit"
+        if self._uses_legacy_pdit:
             self.noise_predictor = PDITDiffusionTransformer(
                 config,
                 cond_token_dim=int(self.observation_encoder.token_dim),
@@ -146,7 +146,7 @@ class MultiTaskDiTPolicy(nn.Module):
         return normalized
 
     def _encode_conditioning(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
-        if str(getattr(self, "_transformer_variant", getattr(self, "_pcd_transformer_variant", "mdit"))).lower() == "pdit":
+        if bool(getattr(self, "_uses_legacy_pdit", False)):
             return self.observation_encoder.encode_tokens(batch)
         return self.observation_encoder.encode(batch)
 

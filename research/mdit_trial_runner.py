@@ -15,7 +15,13 @@ from typing import Any
 import torch
 
 from common.runtime import PROJECT_ROOT
-from mdit.config import MDITExperimentConfig, apply_config_overrides, config_to_dict, load_config
+from mdit.config import (
+    MDITExperimentConfig,
+    apply_config_overrides,
+    config_to_dict,
+    ensure_mainline_train_config,
+    load_config,
+)
 from mdit.train.runner import train_experiment
 
 
@@ -28,6 +34,15 @@ DEFAULT_DROP_TOLERANCE = 0.10
 RESULTS_TSV_HEADER = "experiment\tcommit\tmetric\tstatus\tdescription\n"
 TRIAL_REQUEST_FILENAME = "mdit_trial_request.json"
 EXPERIMENT_MANIFEST_FILENAME = "experiment_manifest.json"
+RECIPE_DRIFT_LOCKED_OVERRIDE_KEYS: tuple[str, ...] = (
+    "batch_size",
+    "grad_accum_steps",
+    "camera_names",
+    "n_obs_steps",
+    "horizon",
+    "n_action_steps",
+    "observation_encoder.vision.train_mode",
+)
 
 
 @dataclass(slots=True)
@@ -50,7 +65,7 @@ class MDITTrialRequest:
     show_progress: bool = True
     cleanup_failed: bool = True
     audit_timeout_sec: int = 1800
-    prefer_ema: bool = True
+    prefer_ema: bool = False
     collapse_thresholds: dict[int, float] | None = None
     collapse_drop_tolerance: float = DEFAULT_DROP_TOLERANCE
 
@@ -181,6 +196,43 @@ def _config_diff(base_cfg: MDITExperimentConfig, resolved_cfg: MDITExperimentCon
     return diff
 
 
+def _nested_payload_get(payload: dict[str, Any], dotted_key: str) -> tuple[bool, Any]:
+    cursor: Any = payload
+    for part in str(dotted_key).split("."):
+        if not isinstance(cursor, dict) or part not in cursor:
+            return False, None
+        cursor = cursor[part]
+    return True, cursor
+
+
+def _collect_recipe_drift_details(
+    *,
+    base_cfg: MDITExperimentConfig,
+    resolved_cfg: MDITExperimentConfig,
+    config_overrides: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    if not config_overrides:
+        return []
+
+    base_payload = config_to_dict(base_cfg)
+    resolved_payload = config_to_dict(resolved_cfg)
+    details: list[dict[str, Any]] = []
+    for key in sorted(config_overrides):
+        if str(key) not in RECIPE_DRIFT_LOCKED_OVERRIDE_KEYS:
+            continue
+        _, base_value = _nested_payload_get(base_payload, str(key))
+        _, resolved_value = _nested_payload_get(resolved_payload, str(key))
+        details.append(
+            {
+                "key": str(key),
+                "override_value": config_overrides[key],
+                "base_value": base_value,
+                "resolved_value": resolved_value,
+            }
+        )
+    return details
+
+
 def _build_change_summary(base_cfg: MDITExperimentConfig, resolved_cfg: MDITExperimentConfig) -> list[str]:
     summary: list[str] = []
     if str(base_cfg.transformer_variant) != str(resolved_cfg.transformer_variant):
@@ -230,6 +282,12 @@ def _write_experiment_manifest(
     resolved_cfg: MDITExperimentConfig,
     resolved_request: MDITTrialRequest,
 ) -> Path:
+    recipe_drift_details = _collect_recipe_drift_details(
+        base_cfg=base_cfg,
+        resolved_cfg=resolved_cfg,
+        config_overrides=dict(request.config_overrides or {}),
+    )
+    recipe_drift = bool(recipe_drift_details)
     payload = {
         "line": "mdit",
         "created_at": datetime.now().isoformat(timespec="seconds"),
@@ -243,8 +301,13 @@ def _write_experiment_manifest(
         "enable_success_rate_eval": bool(resolved_cfg.enable_success_rate_eval),
         "save_offline_eval_ckpt": int(resolved_cfg.offline_eval_ckpt_every_epochs) > 0,
         "offline_eval_ckpt_every_epochs": int(resolved_cfg.offline_eval_ckpt_every_epochs),
+        "recipe_drift": recipe_drift,
+        "recipe_drift_details": recipe_drift_details,
         "change_summary": _build_change_summary(base_cfg, resolved_cfg),
     }
+    if recipe_drift:
+        drift_keys = ", ".join(detail["key"] for detail in recipe_drift_details)
+        payload["change_summary"].append(f"recipe drift detected via overrides: {drift_keys}")
     return _write_json(_experiment_manifest_path(run_dir), payload)
 
 
@@ -294,7 +357,7 @@ def _infer_legacy_trial_request(run_dir: Path) -> MDITTrialRequest:
     heartbeat_every = int(payload.get("eval_step_heartbeat_every") or 50)
 
     return MDITTrialRequest(
-        config_path=PROJECT_ROOT / "configs" / "mdit" / "faithful_baseline.json",
+        config_path=PROJECT_ROOT / "configs" / "mdit" / "rgb5_lastblock_faithful_obs2_h100_a24.json",
         stage_epochs=max(1, inferred_stage_epochs),
         checkpoint_every=max(1, checkpoint_every),
         eval_episodes=20,
@@ -372,7 +435,10 @@ def _prepare_cfg(request: MDITTrialRequest) -> MDITExperimentConfig:
         cfg.run_name = str(request.run_name)
     else:
         cfg.run_name = _make_unique_run_name(cfg.run_name, request.experiment_name, request.stage_epochs)
-    return cfg
+    cfg.wandb_enable = True
+    cfg.wandb_mode = "online"
+    cfg.wandb_resume = True
+    return ensure_mainline_train_config(cfg)
 
 
 def _resolved_request(request: MDITTrialRequest, cfg: MDITExperimentConfig) -> MDITTrialRequest:
@@ -439,7 +505,7 @@ def _run_checkpoint_audit(
     show_progress: bool,
     timeout_sec: int,
     include_special: bool,
-    prefer_ema: bool = True,
+    prefer_ema: bool = False,
 ) -> Path:
     results_json = run_dir / "audit_raw_results.json"
     plot_path = run_dir / "audit_success_rate.png"
@@ -762,6 +828,8 @@ def _training_error_output(
         "run_dir": str(run_dir),
         "audit_report_path": None,
         "summary_path": None,
+        "recipe_drift": False,
+        "recipe_drift_details": [],
         "error_type": type(exc).__name__,
     }
 
@@ -786,14 +854,22 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
             _clean_existing_run_dir(run_dir, ckpt_root)
         run_dir.mkdir(parents=True, exist_ok=True)
         _write_trial_request(run_dir, resolved_request)
-        _write_experiment_manifest(
+        manifest_path = _write_experiment_manifest(
             run_dir,
             request=request,
             base_cfg=base_cfg,
             resolved_cfg=cfg,
             resolved_request=resolved_request,
         )
+        manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
         summary = train_experiment(cfg)
+        wandb_run_id = summary.get("wandb_run_id")
+        wandb_run_url = summary.get("wandb_run_url")
+        if not wandb_run_id or not wandb_run_url:
+            raise RuntimeError(
+                "Faithful MDIT train runs are invalid without online wandb records "
+                "(missing wandb_run_id or wandb_run_url)."
+            )
         keep_paths = _build_train_keep_paths(run_dir, cfg)
         _prune_run_dir(run_dir, keep_paths)
         skip_offline_audit = bool(cfg.enable_success_rate_eval and cfg.delete_periodic_ckpts_after_success_eval)
@@ -832,7 +908,11 @@ def train_mdit_autoresearch_trial(request: MDITTrialRequest, *, log_results: boo
                 str(_experiment_manifest_path(run_dir)) if _experiment_manifest_path(run_dir).exists() else None
             ),
             "summary_path": str(cfg.summary_path) if cfg.summary_path.exists() else None,
+            "recipe_drift": bool(manifest_payload.get("recipe_drift", False)),
+            "recipe_drift_details": list(manifest_payload.get("recipe_drift_details") or []),
             "error_type": None,
+            "wandb_run_id": str(wandb_run_id),
+            "wandb_run_url": str(wandb_run_url),
             "train_summary": summary,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
@@ -997,8 +1077,18 @@ def finalize_mdit_autoresearch_trial(
             str(_experiment_manifest_path(run_dir)) if _experiment_manifest_path(run_dir).exists() else None
         ),
         "summary_path": str(run_dir / "summary.json") if (run_dir / "summary.json").exists() else None,
+        "recipe_drift": False,
+        "recipe_drift_details": [],
         "error_type": None,
     }
+    manifest_path = _experiment_manifest_path(run_dir)
+    if manifest_path.exists():
+        try:
+            manifest_payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            manifest_payload = {}
+        output["recipe_drift"] = bool(manifest_payload.get("recipe_drift", False))
+        output["recipe_drift_details"] = list(manifest_payload.get("recipe_drift_details") or [])
     _record_trial_output(repo_root, run_name=run_dir.name, output=output, audit_report=audit_report)
     if log_results:
         _append_results_row(

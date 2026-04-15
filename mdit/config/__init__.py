@@ -1,4 +1,11 @@
-from .loader import apply_config_overrides, config_from_dict, config_to_dict, load_config, save_config
+from .loader import (
+    apply_config_overrides,
+    config_from_dict,
+    config_to_dict,
+    ensure_mainline_train_config,
+    load_config,
+    save_config,
+)
 from .schema import (
     FlowMatchingConfig,
     MDITExperimentConfig,
@@ -18,6 +25,7 @@ __all__ = [
     "apply_config_overrides",
     "config_from_dict",
     "config_to_dict",
+    "ensure_mainline_train_config",
     "load_config",
     "save_config",
 ]

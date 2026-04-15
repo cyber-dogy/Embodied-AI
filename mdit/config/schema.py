@@ -99,15 +99,16 @@ class MDITExperimentConfig:
     seed: int = 1234
     resume_from_latest: bool = False
 
-    n_obs_steps: int = 3
-    horizon: int = 32
-    n_action_steps: int = 8
+    n_obs_steps: int = 2
+    horizon: int = 100
+    n_action_steps: int = 24
     robot_state_dim: int = 10
     action_dim: int = 10
-    camera_names: tuple[str, ...] = ("front", "wrist", "overhead")
+    camera_names: tuple[str, ...] = ("right_shoulder", "left_shoulder", "overhead", "front", "wrist")
     use_pcd: bool = False
     transformer_variant: str = "mdit"
     pcd_transformer_variant: str | None = None
+    drop_n_last_frames: int | None = None
     task_text_mode: str = "template"
     task_text_override: str | None = None
     observation_encoder: ObservationEncoderConfig = field(default_factory=ObservationEncoderConfig)
@@ -127,7 +128,7 @@ class MDITExperimentConfig:
     print_every: int = 50
     save_latest_ckpt: bool = True
     save_best_valid_ckpt: bool = True
-    ema_enable: bool = True
+    ema_enable: bool = False
     ema_decay: float = 0.9993
     checkpoint_payload_mode: str = "full"
     enable_success_rate_eval: bool = True
@@ -155,6 +156,7 @@ class MDITExperimentConfig:
     success_eval_timeout_sec: int = 7200
     standard_eval_episodes: int = 0
     eval_step_heartbeat_every: int = 50
+    rlbench_disable_task_validation: bool = False
     smooth_actions: bool = False
     command_mode: str = "first"
     horizon_index: int = 0
@@ -172,6 +174,8 @@ class MDITExperimentConfig:
         self.camera_names = tuple(str(name) for name in self.camera_names)
         self.optimizer_betas = tuple(float(beta) for beta in self.optimizer_betas)
         self.transformer_variant = str(self.transformer_variant)
+        if self.drop_n_last_frames is None:
+            self.drop_n_last_frames = self.horizon - self.n_action_steps - self.n_obs_steps + 1
         if self.pcd_transformer_variant is not None:
             self.pcd_transformer_variant = str(self.pcd_transformer_variant)
             if self.transformer_variant == "mdit":
@@ -206,6 +210,8 @@ class MDITExperimentConfig:
             raise ValueError("standard_eval_episodes must be >= 0.")
         if int(self.offline_eval_ckpt_every_epochs) < 0:
             raise ValueError("offline_eval_ckpt_every_epochs must be >= 0.")
+        if int(self.drop_n_last_frames) < 0:
+            raise ValueError("drop_n_last_frames must be >= 0.")
         if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
             raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
         if self.objective.loss_weights is not None:
@@ -225,6 +231,30 @@ class MDITExperimentConfig:
                 "Legacy pcd_transformer_variant conflicts with transformer_variant. "
                 "Use transformer_variant as the canonical field."
             )
+
+    def validate_mainline_training(self) -> None:
+        self.validate()
+        legacy_fields: list[str] = []
+        if bool(self.use_pcd):
+            legacy_fields.append("use_pcd=true")
+        if str(self.transformer_variant).lower() != "mdit":
+            legacy_fields.append(f"transformer_variant={self.transformer_variant!r}")
+        if bool(self.ema_enable):
+            legacy_fields.append("ema_enable=true")
+        if legacy_fields:
+            joined = ", ".join(legacy_fields)
+            raise ValueError(
+                "Faithful MDIT mainline training only supports RGB + text + MDIT raw weights. "
+                f"Disable legacy options before training: {joined}."
+            )
+
+    @property
+    def observation_delta_indices(self) -> list[int]:
+        return list(range(1 - int(self.n_obs_steps), 1))
+
+    @property
+    def action_delta_indices(self) -> list[int]:
+        return list(range(1 - int(self.n_obs_steps), 1 - int(self.n_obs_steps) + int(self.horizon)))
 
     @property
     def ckpt_dir(self) -> Path:

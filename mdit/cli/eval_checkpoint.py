@@ -188,8 +188,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--prefer-ema",
         action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Load EMA weights when available (default: true).",
+        default=False,
+        help="Load EMA weights from legacy checkpoints when available (default: false).",
     )
     parser.add_argument(
         "--set",

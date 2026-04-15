@@ -215,6 +215,7 @@ class ObservationEncoder(nn.Module):
         self.transformer_variant = str(
             getattr(config, "transformer_variant", getattr(config, "pcd_transformer_variant", "mdit"))
         ).lower()
+        self._is_legacy_pdit = self.transformer_variant == "pdit"
 
         if self.use_pcd:
             pcd_cfg = config.observation_encoder.pcd
@@ -286,7 +287,7 @@ class ObservationEncoder(nn.Module):
                 self.text_token_proj = nn.Identity()
             else:
                 self.text_token_proj = nn.Linear(self.text_dim, hidden_dim)
-            if self.transformer_variant == "pdit":
+            if self._is_legacy_pdit:
                 self.token_dim = hidden_dim
             else:
                 self.token_dim = self.robot_state_dim + self.text_dim + self.visual_feature_dim * self.num_cameras
@@ -323,7 +324,7 @@ class ObservationEncoder(nn.Module):
     def _compute_conditioning_dim(self) -> int:
         if self.use_pcd:
             return int(self.token_dim * int(self.config.n_obs_steps))
-        if self.transformer_variant == "pdit":
+        if self._is_legacy_pdit:
             return int(self.token_dim * self._num_condition_tokens())
         return int(self.token_dim * int(self.config.n_obs_steps))
 
@@ -398,23 +399,12 @@ class ObservationEncoder(nn.Module):
 
         task = batch.get(TASK)
 
-        if self.transformer_variant == "pdit":
-            state_tokens = self.state_token_proj(obs_state.float())
-            if camera_features is not None and self.vision_token_proj is not None:
-                vision_tokens = self.vision_token_proj(camera_features.float())
-                per_step_tokens = torch.cat([state_tokens.unsqueeze(2), vision_tokens], dim=2)
-            else:
-                per_step_tokens = state_tokens.unsqueeze(2)
-            cond_tokens = einops.rearrange(per_step_tokens, "b s n d -> b (s n) d")
-            if task is not None:
-                text_features = self.text_encoder(task)
-                text_token = self.text_token_proj(text_features).unsqueeze(1)
-                cond_tokens = torch.cat([cond_tokens, text_token], dim=1)
-            return cond_tokens
+        if self._is_legacy_pdit:
+            return self._encode_legacy_pdit_tokens(obs_state, camera_features, task)
 
-        conditioning_feats = [obs_state]
+        conditioning_feats = [obs_state.float()]
         if camera_features is not None:
-            conditioning_feats.append(camera_features.flatten(start_dim=2))
+            conditioning_feats.append(camera_features.flatten(start_dim=2).float())
         if task is not None:
             text_features = self.text_encoder(task)
             text_features = text_features.unsqueeze(1).expand(-1, n_obs_steps, -1)
@@ -423,3 +413,22 @@ class ObservationEncoder(nn.Module):
 
     def encode(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
         return self.encode_tokens(batch).flatten(start_dim=1)
+
+    def _encode_legacy_pdit_tokens(
+        self,
+        obs_state: Tensor,
+        camera_features: Tensor | None,
+        task: Tensor | list[str] | None,
+    ) -> Tensor:
+        state_tokens = self.state_token_proj(obs_state.float())
+        if camera_features is not None and self.vision_token_proj is not None:
+            vision_tokens = self.vision_token_proj(camera_features.float())
+            per_step_tokens = torch.cat([state_tokens.unsqueeze(2), vision_tokens], dim=2)
+        else:
+            per_step_tokens = state_tokens.unsqueeze(2)
+        cond_tokens = einops.rearrange(per_step_tokens, "b s n d -> b (s n) d")
+        if task is not None:
+            text_features = self.text_encoder(task)
+            text_token = self.text_token_proj(text_features).unsqueeze(1)
+            cond_tokens = torch.cat([cond_tokens, text_token], dim=1)
+        return cond_tokens

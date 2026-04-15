@@ -13,10 +13,30 @@ from mdit.cli.eval_all_checkpoints import discover_checkpoints
 from mdit.cli.eval_checkpoint import _should_reexec_under_xvfb, build_episode_analysis
 from mdit.cli.shared import payload_cfg_to_experiment_cfg
 from mdit.config import MDITExperimentConfig
+from mdit.model.action_postprocess import postprocess_robot_state_command
 from mdit.train.eval import compute_grip_diagnostics_from_actions, evaluate_model_on_loader
 
 
 class MDITEvalCliTest(unittest.TestCase):
+    def test_postprocess_keeps_raw_gripper_when_smoothing_is_disabled(self) -> None:
+        current = torch.zeros(10, dtype=torch.float32).numpy()
+        predicted = torch.zeros(10, dtype=torch.float32).numpy()
+        predicted[3:9] = torch.tensor([1.0, 0.2, 0.0, 0.0, 1.0, 0.2], dtype=torch.float32).numpy()
+        predicted[9] = 0.55
+
+        command = postprocess_robot_state_command(
+            current,
+            predicted,
+            enabled=False,
+            position_alpha=0.35,
+            rotation_alpha=0.25,
+            max_position_step=0.03,
+            gripper_open_threshold=0.6,
+            gripper_close_threshold=0.4,
+        )
+
+        self.assertAlmostEqual(float(command[9]), 0.55, places=6)
+
     def test_compute_grip_diagnostics_from_actions_reports_deadband_and_transition_metrics(self) -> None:
         cfg = MDITExperimentConfig()
         pred_actions = torch.zeros(1, 4, 10, dtype=torch.float32)
@@ -139,9 +159,13 @@ class MDITEvalCliTest(unittest.TestCase):
 
         cfg = payload_cfg_to_experiment_cfg(payload_cfg, ckpt_root=Path("/tmp/ckpt"))
 
+        self.assertEqual(cfg.n_obs_steps, 2)
+        self.assertEqual(cfg.horizon, 100)
         self.assertTrue(cfg.enable_success_rate_eval)
         self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
         self.assertEqual(cfg.offline_eval_ckpt_payload_mode, "lightweight")
+        self.assertFalse(cfg.rlbench_disable_task_validation)
+        self.assertFalse(cfg.ema_enable)
 
     def test_payload_cfg_to_experiment_cfg_maps_legacy_transformer_alias(self) -> None:
         payload_cfg = {

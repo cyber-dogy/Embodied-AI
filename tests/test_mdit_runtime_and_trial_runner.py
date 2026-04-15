@@ -18,17 +18,83 @@ from mdit.model.model import MultiTaskDiTPolicy
 from mdit.model.objectives import FlowMatchingObjective
 from mdit.constants import ACTION, OBS_IMAGES, OBS_STATE, TASK
 from mdit.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
-from mdit.train.eval import run_success_rate_eval_subprocess
+from mdit.train.eval import build_rlbench_env_kwargs, run_success_rate_eval_subprocess
 from research.mdit_trial_runner import (
     MDITTrialRequest,
     _load_trial_request,
+    _resolved_request,
     _materialize_best_success_checkpoint,
+    _write_experiment_manifest,
     _prepare_cfg,
     _select_best_success_record,
 )
 
 
 class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
+    def test_build_rlbench_env_kwargs_respects_disable_task_validation_config(self) -> None:
+        cfg = MDITExperimentConfig(
+            rlbench_disable_task_validation=True,
+            eval_step_heartbeat_every=0,
+            use_pcd=False,
+        )
+        env_kwargs = build_rlbench_env_kwargs(cfg, headless=True)
+
+        self.assertIn("disable_task_validation", env_kwargs)
+        self.assertTrue(bool(env_kwargs["disable_task_validation"]))
+        self.assertEqual(env_kwargs["obs_mode"], "rgb")
+
+    def test_experiment_manifest_marks_recipe_drift_when_locked_fields_are_overridden(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            config_path = tmp_path / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "train_data_path": str(tmp_path),
+                        "valid_data_path": str(tmp_path),
+                        "run_name": "base_run",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            request = MDITTrialRequest(
+                config_path=config_path,
+                stage_epochs=100,
+                checkpoint_every=100,
+                eval_episodes=20,
+                ckpt_root=tmp_path / "ckpt",
+                config_overrides={
+                    "batch_size": 16,
+                    "observation_encoder.vision.train_mode": "last_block",
+                },
+            )
+
+            base_cfg = MDITExperimentConfig(
+                train_data_path=tmp_path,
+                valid_data_path=tmp_path,
+            )
+            resolved_cfg = _prepare_cfg(request)
+            resolved_request = _resolved_request(request, resolved_cfg)
+            run_dir = resolved_cfg.ckpt_dir
+            run_dir.mkdir(parents=True, exist_ok=True)
+
+            manifest_path = _write_experiment_manifest(
+                run_dir,
+                request=request,
+                base_cfg=base_cfg,
+                resolved_cfg=resolved_cfg,
+                resolved_request=resolved_request,
+            )
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        self.assertTrue(bool(payload.get("recipe_drift")))
+        drift_keys = [row["key"] for row in payload.get("recipe_drift_details", [])]
+        self.assertIn("batch_size", drift_keys)
+        self.assertIn("observation_encoder.vision.train_mode", drift_keys)
+        self.assertTrue(
+            any("recipe drift detected via overrides" in row for row in payload.get("change_summary", []))
+        )
+
     def test_rlbench_env_recovers_vrep_runtime_errors_via_interpolation(self) -> None:
         env = RLBenchEnv.__new__(RLBenchEnv)
         env.log_invalid_action_errors = False
@@ -116,6 +182,29 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         self.assertTrue(cfg.save_latest_ckpt)
         self.assertEqual(cfg.checkpoint_payload_mode, "full")
 
+    def test_prepare_cfg_forces_mainline_online_wandb(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            config_path = Path(tmp_dir) / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "train_data_path": str(Path(tmp_dir)),
+                        "valid_data_path": str(Path(tmp_dir)),
+                        "wandb_enable": False,
+                        "wandb_mode": "disabled",
+                        "ema_enable": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            request = MDITTrialRequest(config_path=config_path, stage_epochs=100, checkpoint_every=20)
+
+            cfg = _prepare_cfg(request)
+
+        self.assertTrue(cfg.wandb_enable)
+        self.assertEqual(cfg.wandb_mode, "online")
+        self.assertTrue(cfg.wandb_resume)
+
     def test_lightweight_checkpoint_omits_resume_state(self) -> None:
         cfg = MDITExperimentConfig()
         model = torch.nn.Linear(4, 2)
@@ -146,6 +235,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
 
         self.assertEqual(payload["checkpoint_payload_mode"], "lightweight")
         self.assertIn("epoch_summary", payload)
+        self.assertNotIn("ema_state_dict", payload)
         self.assertNotIn("optimizer_state_dict", payload)
         self.assertNotIn("scheduler_state_dict", payload)
         self.assertNotIn("scaler_state_dict", payload)
@@ -248,6 +338,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             self.assertTrue(text)
             self.assertEqual(timeout, 321)
             self.assertIn("eval_mdit_checkpoint.py", str(cmd[1]))
+            self.assertIn("--no-prefer-ema", cmd)
             output_json = Path(cmd[cmd.index("--output-json") + 1])
             output_json.write_text(
                 json.dumps(
@@ -285,6 +376,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
             del cwd, check, capture_output, text, timeout
             device = cmd[cmd.index("--device") + 1]
             seen_devices.append(device)
+            self.assertIn("--no-prefer-ema", cmd)
             if device == "cuda":
                 raise subprocess.CalledProcessError(
                     1,
@@ -478,7 +570,7 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         self.assertEqual(float(second[0, 0]), 2.0)
         self.assertEqual(len(policy._queues[ACTION]), 0)
 
-    def test_predict_action_postprocesses_rotation_and_gripper(self) -> None:
+    def test_predict_action_postprocesses_rotation_and_keeps_raw_gripper_when_smoothing_is_disabled(self) -> None:
         policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
         policy.config = MDITExperimentConfig(
             camera_names=("front", "wrist", "overhead"),
@@ -499,6 +591,25 @@ class MDITRuntimeAndTrialRunnerTest(unittest.TestCase):
         self.assertAlmostEqual(float(np.linalg.norm(action[3:6])), 1.0, places=5)
         self.assertAlmostEqual(float(np.linalg.norm(action[6:9])), 1.0, places=5)
         self.assertAlmostEqual(float(np.dot(action[3:6], action[6:9])), 0.0, places=5)
+        self.assertEqual(float(action[9]), 0.5)
+
+    def test_predict_action_postprocesses_gripper_hysteresis_when_smoothing_enabled(self) -> None:
+        policy = MultiTaskDiTPolicy.__new__(MultiTaskDiTPolicy)
+        policy.config = MDITExperimentConfig(
+            camera_names=("front", "wrist", "overhead"),
+            smooth_actions=True,
+            gripper_open_threshold=0.6,
+            gripper_close_threshold=0.4,
+        )
+        policy.select_action = lambda batch: torch.tensor([[0.1, 0.2, 0.3, 2.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.5]])
+        policy.unnormalize_action = lambda action: action
+
+        obs = torch.zeros(5, 4, 4, 3, dtype=torch.uint8)
+        robot_state = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0], dtype=np.float32)
+
+        with mock.patch("mdit.model.model.get_device", return_value=torch.device("cpu")):
+            action = policy.predict_action(obs.numpy(), robot_state, task_text="demo")
+
         self.assertEqual(float(action[9]), 0.0)
 
     def test_select_best_success_prefers_periodic_checkpoint_on_ties(self) -> None:

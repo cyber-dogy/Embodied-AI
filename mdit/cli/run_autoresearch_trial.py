@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=PROJECT_ROOT / "configs" / "mdit" / "faithful_baseline.json",
+        default=PROJECT_ROOT / "configs" / "mdit" / "rgb5_lastblock_faithful_obs2_h100_a24.json",
         help="Base config JSON path.",
     )
     parser.add_argument("--stage-epochs", type=int, default=None, help="Training length for this trial.")

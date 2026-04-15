@@ -27,20 +27,20 @@ class SearchSpec:
     eval_episodes: int
     description: str
     overrides: dict[str, Any]
+    checkpoint_every: int = 100
 
 
 DEFAULT_BASELINE = SearchSpec(
-    name="rgb5_shared_lastblock_pdittoken_obs2_a16_lr2e5_100",
+    name="rgb5_lastblock_faithful_obs2_h100_a24_100",
     stage_epochs=100,
+    checkpoint_every=20,
     eval_episodes=20,
-    description="5RGB + text + last_block + shared encoder + obs2 + action16 + PDIT token path baseline",
+    description="faithful MDIT baseline: text + 5RGB + shared last_block + obs2/h100/a24 + raw-weight eval",
     overrides={
         "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
         "n_obs_steps": 2,
-        "horizon": 32,
-        "n_action_steps": 16,
-        "use_amp": False,
-        "transformer_variant": "pdit",
+        "horizon": 100,
+        "n_action_steps": 24,
         "observation_encoder.vision.use_separate_encoder_per_camera": False,
         "observation_encoder.vision.train_mode": "last_block",
         "observation_encoder.vision.resize_shape": [224, 224],
@@ -60,12 +60,40 @@ DEFAULT_BASELINE = SearchSpec(
         "max_position_step": 0.03,
         "gripper_open_threshold": 0.6,
         "gripper_close_threshold": 0.4,
-        "pdit_backbone.final_layer_zero_init": True,
-        "pdit_backbone.decoder_condition_mode": "mean_pool",
+        "success_selection_every_epochs": 20,
+        "success_selection_episodes": 20,
+        "checkpoint_every_epochs": 20,
+        "delete_periodic_ckpts_after_success_eval": False,
+        "rlbench_disable_task_validation": False,
     },
 )
 
-DEFAULT_CANDIDATES: tuple[SearchSpec, ...] = ()
+DEFAULT_CANDIDATES: tuple[SearchSpec, ...] = (
+    SearchSpec(
+        name="rgb5_lastblock_bs8_acc4_probe10",
+        stage_epochs=10,
+        checkpoint_every=10,
+        eval_episodes=20,
+        description="throughput_probe faithful MDIT with bs=8 grad_accum=4",
+        overrides={"batch_size": 8, "grad_accum_steps": 4, "num_workers": 8},
+    ),
+    SearchSpec(
+        name="rgb5_lastblock_bs12_acc3_probe10",
+        stage_epochs=10,
+        checkpoint_every=10,
+        eval_episodes=20,
+        description="throughput_probe faithful MDIT with bs=12 grad_accum=3",
+        overrides={"batch_size": 12, "grad_accum_steps": 3, "num_workers": 8},
+    ),
+    SearchSpec(
+        name="rgb5_lastblock_bs16_acc2_probe10",
+        stage_epochs=10,
+        checkpoint_every=10,
+        eval_episodes=20,
+        description="throughput_probe faithful MDIT with bs=16 grad_accum=2",
+        overrides={"batch_size": 16, "grad_accum_steps": 2, "num_workers": 8},
+    ),
+)
 
 DEFAULT_WATCH_POLL_SEC = 60
 DEFAULT_SWITCH_BATCH_SIZE = 144
@@ -105,6 +133,29 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def _now_text() -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _extract_recipe_drift_from_manifest(manifest_path: str | None) -> tuple[bool, list[dict[str, Any]]]:
+    if not manifest_path:
+        return False, []
+    path = Path(str(manifest_path)).expanduser().resolve()
+    if not path.exists():
+        return False, []
+    try:
+        payload = _load_json(path)
+    except Exception:
+        return False, []
+    return bool(payload.get("recipe_drift", False)), list(payload.get("recipe_drift_details") or [])
+
+
+def _hydrate_result_recipe_drift(result: dict[str, Any]) -> dict[str, Any]:
+    hydrated = dict(result)
+    if "recipe_drift" in hydrated and "recipe_drift_details" in hydrated:
+        return hydrated
+    drift, details = _extract_recipe_drift_from_manifest(hydrated.get("experiment_manifest_path"))
+    hydrated.setdefault("recipe_drift", drift)
+    hydrated.setdefault("recipe_drift_details", details)
+    return hydrated
 
 
 def _normalize_pid(pid: int | None) -> int | None:
@@ -1208,7 +1259,7 @@ def run_search_spec(
         "--stage-epochs",
         str(int(spec.stage_epochs)),
         "--checkpoint-every",
-        "100",
+        str(int(spec.checkpoint_every)),
         "--eval-episodes",
         str(int(spec.eval_episodes)),
         "--experiment-name",
@@ -1239,7 +1290,7 @@ def run_search_spec(
     result["eval_episodes"] = int(spec.eval_episodes)
     result["overrides"] = dict(spec.overrides)
     result["log_path"] = str(log_path)
-    return result
+    return _hydrate_result_recipe_drift(result)
 
 
 def run_mdit_autoresearch_loop(
@@ -1289,12 +1340,13 @@ def run_mdit_autoresearch_loop(
             poll_sec=60,
             timeout_sec=None if wait_for_baseline else 1,
         )
+        baseline_result = _hydrate_result_recipe_drift(baseline_result)
         baseline_result["stage_epochs"] = 100
         baseline_result["eval_episodes"] = 20
         baseline_result["overrides"] = {}
         baseline_result["log_path"] = None
     elif summary.get("baseline") is not None:
-        baseline_result = dict(summary["baseline"])
+        baseline_result = _hydrate_result_recipe_drift(dict(summary["baseline"]))
     else:
         baseline_result = run_search_spec(
             DEFAULT_BASELINE,
@@ -1325,7 +1377,7 @@ def run_mdit_autoresearch_loop(
                 eval_episodes=spec.eval_episodes,
             )
         if existing_result is not None:
-            result = dict(existing_result)
+            result = _hydrate_result_recipe_drift(dict(existing_result))
         else:
             result = run_search_spec(
                 spec,
@@ -1343,106 +1395,10 @@ def run_mdit_autoresearch_loop(
         _write_json(summary_path, summary)
 
     screening_results = [baseline_result, *candidate_results]
-    gate_100_pass = [
-        row
-        for row in screening_results
-        if row.get("success_20") is not None and float(row["success_20"]) >= 0.45
-    ]
-    promoted = _choose_top_specs(gate_100_pass, limit=2) if gate_100_pass else []
-    summary["promoted"] = promoted
-    _write_json(summary_path, summary)
-
-    mid_results: list[dict[str, Any]] = []
-    for row in promoted:
-        spec = SearchSpec(
-            name=f"{row['experiment_name']}_mid300",
-            stage_epochs=300,
-            eval_episodes=20,
-            description=f"300-epoch gate run from {row['experiment_name']}",
-            overrides=dict(row.get("overrides", {})),
-        )
-        existing_result = _find_existing_result(
-            summary.get("mid_runs"),
-            experiment_name=spec.name,
-            stage_epochs=spec.stage_epochs,
-            eval_episodes=spec.eval_episodes,
-        )
-        if existing_result is None:
-            existing_result = _find_existing_trial_record(
-                experiment_name=spec.name,
-                stage_epochs=spec.stage_epochs,
-                eval_episodes=spec.eval_episodes,
-            )
-        if existing_result is not None:
-            result = dict(existing_result)
-        else:
-            result = run_search_spec(
-                spec,
-                config_path=config_path,
-                device=device,
-                headless=headless,
-                show_progress=show_progress,
-                cleanup_failed=cleanup_failed,
-                audit_timeout_sec=max(int(audit_timeout_sec), 10800),
-                ckpt_root=ckpt_root,
-                data_root=data_root,
-            )
-        mid_results.append(result)
-        summary["mid_runs"] = mid_results
-        _write_json(summary_path, summary)
-
-    deep_seeds = [
-        row for row in mid_results if row.get("success_20") is not None and float(row["success_20"]) >= 0.55
-    ]
-    deep_results: list[dict[str, Any]] = []
-    for row in deep_seeds:
-        spec = SearchSpec(
-            name=f"{row['experiment_name']}_deep500",
-            stage_epochs=500,
-            eval_episodes=20,
-            description=f"500-epoch gate run from {row['experiment_name']}",
-            overrides=dict(row.get("overrides", {})),
-        )
-        existing_result = _find_existing_result(
-            summary.get("deep_runs"),
-            experiment_name=spec.name,
-            stage_epochs=spec.stage_epochs,
-            eval_episodes=spec.eval_episodes,
-        )
-        if existing_result is None:
-            existing_result = _find_existing_trial_record(
-                experiment_name=spec.name,
-                stage_epochs=spec.stage_epochs,
-                eval_episodes=spec.eval_episodes,
-            )
-        if existing_result is not None:
-            result = dict(existing_result)
-        else:
-            result = run_search_spec(
-                spec,
-                config_path=config_path,
-                device=device,
-                headless=headless,
-                show_progress=show_progress,
-                cleanup_failed=cleanup_failed,
-                audit_timeout_sec=max(int(audit_timeout_sec), 21600),
-                ckpt_root=ckpt_root,
-                data_root=data_root,
-            )
-        deep_results.append(result)
-        summary["deep_runs"] = deep_results
-        best_so_far = max(deep_results, key=_score_key)
-        summary["winner"] = best_so_far
-        _write_json(summary_path, summary)
-
-    if deep_results:
-        summary["winner"] = max(deep_results, key=_score_key)
-    elif mid_results:
-        summary["winner"] = max(mid_results, key=_score_key)
-    elif candidate_results:
-        summary["winner"] = max(screening_results, key=_score_key)
-    else:
-        summary["winner"] = baseline_result
+    summary["promoted"] = []
+    summary["mid_runs"] = []
+    summary["deep_runs"] = []
+    summary["winner"] = max(screening_results, key=_score_key) if screening_results else baseline_result
     summary["finished_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
     _write_json(summary_path, summary)
     return summary

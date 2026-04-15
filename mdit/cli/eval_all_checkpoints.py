@@ -98,8 +98,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--prefer-ema",
         action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Load EMA weights when available (default: true).",
+        default=False,
+        help="Load EMA weights from legacy checkpoints when available (default: false).",
     )
     parser.add_argument("--plot-path", type=Path, default=None, help="Optional success-rate plot output.")
     parser.add_argument(
@@ -220,7 +220,7 @@ def make_cache_key(
     episodes: int,
     max_steps: int,
     seed: int,
-    prefer_ema: bool = True,
+    prefer_ema: bool = False,
     config_overrides: dict[str, Any] | None = None,
 ) -> str:
     override_text = json.dumps(config_overrides or {}, sort_keys=True, ensure_ascii=False)
@@ -241,7 +241,7 @@ def _run_eval_subprocess(
     headless: bool,
     show_progress: bool,
     timeout_sec: int,
-    prefer_ema: bool = True,
+    prefer_ema: bool = False,
     config_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ckpt_path = Path(record["path"]).resolve()
@@ -294,7 +294,7 @@ def eval_single_checkpoint(
     headless: bool,
     show_progress: bool,
     heartbeat_every: int,
-    prefer_ema: bool = True,
+    prefer_ema: bool = False,
     config_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from mdit.train.eval import load_model_for_eval, run_success_rate_eval

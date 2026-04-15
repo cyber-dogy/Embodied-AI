@@ -102,16 +102,15 @@ class MDITTrainBuildersTest(unittest.TestCase):
         self.assertIs(result, batch)
         mocked_move.assert_called_once_with(batch, "cuda", non_blocking=True)
 
-    def test_build_policy_supports_rgb_pdit_transformer_variant(self) -> None:
+    def test_build_policy_uses_faithful_rgb_text_conditioning(self) -> None:
         cfg = MDITExperimentConfig(
             device="cpu",
-            transformer_variant="pdit",
             train_data_path="/tmp/train.zarr",
             valid_data_path="/tmp/valid.zarr",
             camera_names=("right_shoulder", "left_shoulder", "overhead", "front", "wrist"),
-            n_obs_steps=3,
-            horizon=32,
-            n_action_steps=8,
+            n_obs_steps=2,
+            horizon=100,
+            n_action_steps=24,
         )
 
         with mock.patch.dict(
@@ -124,14 +123,14 @@ class MDITTrainBuildersTest(unittest.TestCase):
             policy = build_policy(cfg, dataset_stats={})
 
             batch = {
-                OBS_IMAGES: torch.zeros(1, 3, 5, 3, 8, 8, dtype=torch.float32),
-                OBS_STATE: torch.zeros(1, 3, 10, dtype=torch.float32),
+                OBS_IMAGES: torch.zeros(1, 2, 5, 3, 8, 8, dtype=torch.float32),
+                OBS_STATE: torch.zeros(1, 2, 10, dtype=torch.float32),
                 TASK: ["demo task"],
             }
-            cond_tokens = policy._encode_conditioning(batch)
+            cond_vec = policy._encode_conditioning(batch)
 
-        self.assertEqual(policy._transformer_variant, "pdit")
-        self.assertEqual(tuple(cond_tokens.shape), (1, 19, cfg.transformer.hidden_dim))
+        self.assertEqual(policy._transformer_variant, "mdit")
+        self.assertEqual(tuple(cond_vec.shape), (1, policy.observation_encoder.conditioning_dim))
 
 
 if __name__ == "__main__":

@@ -88,7 +88,6 @@ def build_checkpoint_payload(
         "cfg": config_to_dict(cfg),
         "line": "mdit",
         "model_state_dict": model.state_dict(),
-        "ema_state_dict": None if ema_model is None else ema_model.state_dict(),
         "checkpoint_payload_mode": str(checkpoint_payload_mode),
         "dataset_stats": dataset_stats,
         "completed_epoch": int(epoch),
@@ -101,6 +100,8 @@ def build_checkpoint_payload(
         "epoch_summary": None if not epoch_summaries else dict(epoch_summaries[-1]),
         "latest_success_eval": None if not success_eval_history else dict(success_eval_history[-1]),
     }
+    if ema_model is not None:
+        payload["ema_state_dict"] = ema_model.state_dict()
     if str(checkpoint_payload_mode) != "lightweight":
         payload.update(
             {

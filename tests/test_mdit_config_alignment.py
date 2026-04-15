@@ -13,7 +13,7 @@ import torch.nn as nn
 import zarr
 
 import _bootstrap  # noqa: F401
-from mdit.config import MDITExperimentConfig, config_from_dict, load_config
+from mdit.config import MDITExperimentConfig, config_from_dict, ensure_mainline_train_config, load_config
 from mdit.constants import OBS_IMAGES
 from mdit.data.dataset import build_dataset
 from mdit.model.observation_encoder import CLIPEncoder, CLIPTextEncoder
@@ -90,23 +90,32 @@ class MDITConfigAlignmentTest(unittest.TestCase):
     def test_default_vision_train_mode_is_all(self) -> None:
         cfg = MDITExperimentConfig()
         self.assertEqual(cfg.observation_encoder.vision.train_mode, "all")
-        self.assertEqual(cfg.n_action_steps, 8)
-        self.assertEqual(cfg.transformer_variant, "mdit")
-        self.assertIsNone(cfg.objective.loss_weights)
-        self.assertTrue(cfg.enable_success_rate_eval)
-        self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
-
-    def test_obs3_rgb5_flowmatch_pdit_first_config_loads_expected_values(self) -> None:
-        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_flowmatch_pdit_first.json")
-
-        self.assertEqual(cfg.n_obs_steps, 3)
-        self.assertEqual(cfg.horizon, 32)
-        self.assertEqual(cfg.n_action_steps, 1)
+        self.assertEqual(cfg.n_obs_steps, 2)
+        self.assertEqual(cfg.horizon, 100)
+        self.assertEqual(cfg.n_action_steps, 24)
         self.assertEqual(
             cfg.camera_names,
             ("right_shoulder", "left_shoulder", "overhead", "front", "wrist"),
         )
-        self.assertEqual(cfg.observation_encoder.vision.train_mode, "all")
+        self.assertEqual(cfg.transformer_variant, "mdit")
+        self.assertEqual(cfg.drop_n_last_frames, 75)
+        self.assertIsNone(cfg.objective.loss_weights)
+        self.assertTrue(cfg.enable_success_rate_eval)
+        self.assertEqual(cfg.offline_eval_ckpt_every_epochs, 0)
+        self.assertFalse(cfg.rlbench_disable_task_validation)
+        self.assertFalse(cfg.ema_enable)
+
+    def test_faithful_baseline_config_loads_expected_values(self) -> None:
+        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "faithful_baseline.json")
+
+        self.assertEqual(cfg.n_obs_steps, 2)
+        self.assertEqual(cfg.horizon, 100)
+        self.assertEqual(cfg.n_action_steps, 24)
+        self.assertEqual(
+            cfg.camera_names,
+            ("right_shoulder", "left_shoulder", "overhead", "front", "wrist"),
+        )
+        self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
         self.assertEqual(cfg.observation_encoder.vision.lr_multiplier, 0.1)
         self.assertFalse(cfg.transformer.use_rope)
         self.assertTrue(cfg.use_amp)
@@ -116,41 +125,27 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.checkpoint_payload_mode, "full")
         self.assertTrue(cfg.save_latest_ckpt)
         self.assertTrue(cfg.save_best_valid_ckpt)
-        self.assertEqual(cfg.success_selection_every_epochs, 100)
+        self.assertFalse(cfg.ema_enable)
+        self.assertEqual(cfg.success_selection_every_epochs, 20)
         self.assertEqual(cfg.success_selection_episodes, 20)
-        self.assertTrue(cfg.smooth_actions)
+        self.assertFalse(cfg.smooth_actions)
 
-    def test_obs3_rgb5_sep_lastblock_a8_gate100_config_loads_expected_values(self) -> None:
-        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_sep_lastblock_a8_gate100.json")
+    def test_rgb5_lastblock_faithful_config_loads_expected_values(self) -> None:
+        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "rgb5_lastblock_faithful_obs2_h100_a24.json")
 
-        self.assertEqual(cfg.n_obs_steps, 3)
-        self.assertEqual(cfg.horizon, 32)
-        self.assertEqual(cfg.n_action_steps, 8)
-        self.assertEqual(
-            cfg.camera_names,
-            ("right_shoulder", "left_shoulder", "overhead", "front", "wrist"),
-        )
-        self.assertTrue(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
+        self.assertEqual(cfg.run_name, "unplug_charger_mdit_rgb5_lastblock_faithful_obs2_h100_a24")
+        self.assertEqual(cfg.n_obs_steps, 2)
+        self.assertEqual(cfg.horizon, 100)
+        self.assertEqual(cfg.n_action_steps, 24)
+        self.assertFalse(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
         self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
-        self.assertEqual(tuple(cfg.observation_encoder.vision.resize_shape), (240, 240))
+        self.assertEqual(tuple(cfg.observation_encoder.vision.resize_shape), (224, 224))
         self.assertTrue(cfg.enable_success_rate_eval)
-        self.assertEqual(cfg.success_selection_every_epochs, 100)
+        self.assertEqual(cfg.success_selection_every_epochs, 20)
         self.assertEqual(cfg.success_selection_episodes, 20)
-        self.assertTrue(cfg.smooth_actions)
+        self.assertFalse(cfg.smooth_actions)
 
-    def test_obs3_rgb5_pdittoken_lastblock_a8_gate100_config_loads_expected_values(self) -> None:
-        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "obs3_rgb5_pdittoken_lastblock_a8_gate100.json")
-
-        self.assertEqual(cfg.transformer_variant, "pdit")
-        self.assertEqual(cfg.n_obs_steps, 3)
-        self.assertEqual(cfg.n_action_steps, 8)
-        self.assertTrue(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
-        self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
-        self.assertTrue(cfg.pdit_backbone.final_layer_zero_init)
-        self.assertEqual(cfg.pdit_backbone.decoder_condition_mode, "mean_pool")
-        self.assertEqual(cfg.objective.loss_weights, {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0})
-
-    def test_rgb5_shared_lastblock_pdittoken_obs2_a16_gate100_config_loads_expected_values(self) -> None:
+    def test_legacy_pdittoken_config_loads_but_is_rejected_for_mainline_training(self) -> None:
         cfg = load_config(
             PROJECT_ROOT / "configs" / "mdit" / "rgb5_shared_lastblock_pdittoken_obs2_a16_gate100.json"
         )
@@ -158,17 +153,8 @@ class MDITConfigAlignmentTest(unittest.TestCase):
         self.assertEqual(cfg.transformer_variant, "pdit")
         self.assertEqual(cfg.n_obs_steps, 2)
         self.assertEqual(cfg.n_action_steps, 16)
-        self.assertFalse(cfg.observation_encoder.vision.use_separate_encoder_per_camera)
-        self.assertEqual(cfg.observation_encoder.vision.train_mode, "last_block")
-        self.assertEqual(tuple(cfg.observation_encoder.vision.resize_shape), (224, 224))
-        self.assertFalse(cfg.use_amp)
-        self.assertEqual(cfg.grad_accum_steps, 4)
-        self.assertFalse(cfg.smooth_actions)
-        self.assertEqual(cfg.optimizer_betas, (0.95, 0.999))
-        self.assertEqual(cfg.optimizer_weight_decay, 0.0)
-        self.assertEqual(cfg.objective.sigma_min, 0.0)
-        self.assertEqual(cfg.objective.num_integration_steps, 50)
-        self.assertEqual(cfg.objective.loss_weights, {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0})
+        with self.assertRaisesRegex(ValueError, "Faithful MDIT mainline training only supports"):
+            ensure_mainline_train_config(cfg)
 
     def test_pcd_ablation_pdit_transformer_config_maps_legacy_alias(self) -> None:
         cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "pcd_ablation_pdit_transformer.json")
@@ -187,6 +173,18 @@ class MDITConfigAlignmentTest(unittest.TestCase):
                     "pcd_transformer_variant": "pdit",
                 }
             )
+
+    def test_mainline_training_rejects_ema_even_when_architecture_is_mdit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg = config_from_dict(
+                {
+                    "train_data_path": tmp_dir,
+                    "valid_data_path": tmp_dir,
+                    "ema_enable": True,
+                }
+            )
+            with self.assertRaisesRegex(ValueError, "ema_enable=true"):
+                ensure_mainline_train_config(cfg)
 
     def test_objective_loss_weights_validate_keys_and_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

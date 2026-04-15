@@ -98,7 +98,7 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
 
 ### 主线切换决策
 
-根据执行计划 [docs/mdit/2026-04-12-mdit-autoresearch-execution-plan-zh.md](../2026-04-12-mdit-autoresearch-execution-plan-zh.md) 第1节:
+根据执行计划 [docs/mdit/2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md](../2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md) 第1节:
 
 > 本轮唯一主线改为: `rgb5_pdittoken_lastblock_a8_lr2e5_100`
 

@@ -1,0 +1,4 @@
+{
+  "extends": "mdit/faithful_baseline.json",
+  "run_name": "unplug_charger_mdit_rgb5_lastblock_faithful_obs2_h100_a24"
+}

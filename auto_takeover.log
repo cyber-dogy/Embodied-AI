@@ -1,0 +1,24 @@
+2026-04-14 14:50:03 - Training still in progress (summary.json not ready)
+2026-04-14 15:23:05 - Training still in progress (summary.json not ready)
+2026-04-14 15:44:14 - Training still in progress (summary.json not ready)
+2026-04-14 16:23:48 - Training still in progress (summary.json not ready)
+2026-04-14 17:59:56 - Epoch 100 checkpoint and success eval found
+epoch=100 success_rate=0.2 device=cpu cpu_fallback=True
+2026-04-14 18:14:47 - Epoch 100 checkpoint and success eval found
+epoch=100 success_rate=0.2 device=cpu cpu_fallback=True
+2026-04-14 19:16:28 - Completed epochs: 0
+2026-04-14 19:16:28 - Training in progress, not yet at epoch 100 with missing eval
+2026-04-14 22:11:43 - Training still in progress (summary.json not ready)
+2026-04-14 22:14:13 - Training still in progress (summary.json not ready)
+2026-04-14 22:44:13 - Training still in progress (summary.json not ready)
+2026-04-15 00:40:25 - Training still in progress (summary.json not ready)
+2026-04-15 01:14:12 - Training still in progress (summary.json not ready)
+2026-04-15 01:44:13 - Training still in progress (summary.json not ready)
+2026-04-15 10:30:18 - Completed epochs: 0
+2026-04-15 10:30:18 - Training in progress, not yet at epoch 100 with missing eval
+2026-04-15 11:47:03 - Completed epochs: 0
+2026-04-15 11:47:03 - Training in progress, not yet at epoch 100 with missing eval
+2026-04-15 12:25:35 - Completed epochs: 0
+2026-04-15 12:25:35 - Training in progress, not yet at epoch 100 with missing eval
+2026-04-15 12:45:23 - Completed epochs: 0
+2026-04-15 12:45:23 - Training in progress, not yet at epoch 100 with missing eval

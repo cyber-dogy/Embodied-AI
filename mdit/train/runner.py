@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 from common.runtime import set_device, set_seeds
-from mdit.config import MDITExperimentConfig, config_to_dict, save_config
+from mdit.config import MDITExperimentConfig, config_to_dict, ensure_mainline_train_config, save_config
 from mdit.data import compute_dataset_stats, save_stats
 from .builders import (
     build_dataloaders,
@@ -21,8 +21,7 @@ from .builders import (
     get_autocast_context,
     move_batch_to_device,
 )
-from .checkpoints import build_ema_model, load_resume_state, save_checkpoint, update_ema_model
-from .checkpoints import finish_wandb_run, init_wandb_run
+from .checkpoints import finish_wandb_run, init_wandb_run, load_resume_state, save_checkpoint
 from .eval import (
     compute_sample_metric,
     evaluate_model_on_loader,
@@ -47,7 +46,6 @@ def _save_temporary_success_eval_checkpoint(
     cfg: MDITExperimentConfig,
     *,
     model: torch.nn.Module,
-    ema_model: torch.nn.Module | None,
     optimizer: torch.optim.Optimizer,
     scheduler,
     scaler,
@@ -69,7 +67,7 @@ def _save_temporary_success_eval_checkpoint(
         temp_path,
         cfg=cfg,
         model=model,
-        ema_model=ema_model,
+        ema_model=None,
         optimizer=optimizer,
         scheduler=scheduler,
         scaler=scaler,
@@ -91,7 +89,7 @@ def _save_temporary_success_eval_checkpoint(
 
 
 def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
-    cfg.validate()
+    ensure_mainline_train_config(cfg)
     set_device(cfg.device)
     set_seeds(cfg.seed)
     cfg.ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -113,11 +111,6 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
 
     if resume_state["dataset_stats"] is not None:
         dataset_stats = resume_state["dataset_stats"]
-
-    # Build EMA AFTER resume so it copies the correct (possibly resumed) weights
-    ema_model = build_ema_model(model, cfg.ema_enable)
-    if ema_model is not None and resume_state["ema_state_dict"] is not None:
-        ema_model.load_state_dict(resume_state["ema_state_dict"])
 
     train_loss_history = resume_state["train_loss_history"]
     valid_loss_history = resume_state["valid_loss_history"]
@@ -163,7 +156,6 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     optimizer.zero_grad(set_to_none=True)
                     scheduler.step()
                     global_step += 1
-                    update_ema_model(ema_model, model, cfg.ema_decay)
 
                 raw_loss = float(loss.detach().cpu())
                 epoch_losses.append(raw_loss)
@@ -188,7 +180,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
             train_loss_history.append(train_summary["loss_total"])
 
             valid_summary = None
-            eval_model = ema_model if ema_model is not None else model
+            eval_model = model
             if ((epoch + 1) % max(1, cfg.val_every_epochs)) == 0:
                 valid_summary = evaluate_model_on_loader(eval_model, dataloader_valid, cfg)
             valid_loss_history.append(None if valid_summary is None else valid_summary["loss_total"])
@@ -215,7 +207,6 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 success_eval_ckpt_path = _save_temporary_success_eval_checkpoint(
                     cfg,
                     model=model,
-                    ema_model=ema_model,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -233,6 +224,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     success_eval_history=success_eval_history,
                 )
                 try:
+                    if str(cfg.device).startswith("cuda") and torch.cuda.is_available():
+                        torch.cuda.empty_cache()
                     success_summary = run_success_rate_eval_subprocess(
                         success_eval_ckpt_path,
                         cfg,
@@ -243,6 +236,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         progress_desc=f"mdit success epoch {epoch + 1}",
                         timeout_sec=int(cfg.success_eval_timeout_sec),
                     )
+                    if str(cfg.device).startswith("cuda") and torch.cuda.is_available():
+                        torch.cuda.empty_cache()
                     success_rate = float(success_summary["success_rate"])
                     if best_success_rate is None or success_rate > best_success_rate:
                         best_success_rate = success_rate
@@ -263,6 +258,8 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         "deleted_periodic_ckpt": False,
                     }
                 finally:
+                    if str(cfg.device).startswith("cuda") and torch.cuda.is_available():
+                        torch.cuda.empty_cache()
                     if success_eval_ckpt_path.exists():
                         success_eval_ckpt_path.unlink()
             elif (
@@ -296,7 +293,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     cfg.latest_ckpt_path,
                     cfg=cfg,
                     model=model,
-                    ema_model=ema_model,
+                    ema_model=None,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -320,7 +317,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     cfg.best_ckpt_path,
                     cfg=cfg,
                     model=model,
-                    ema_model=ema_model,
+                    ema_model=None,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -346,7 +343,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     periodic_path,
                     cfg=cfg,
                     model=model,
-                    ema_model=ema_model,
+                    ema_model=None,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -377,7 +374,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     offline_eval_path,
                     cfg=cfg,
                     model=model,
-                    ema_model=ema_model,
+                    ema_model=None,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -416,7 +413,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                         cfg.best_success_ckpt_path,
                         cfg=cfg,
                         model=model,
-                        ema_model=ema_model,
+                        ema_model=None,
                         optimizer=optimizer,
                         scheduler=scheduler,
                         scaler=scaler,
@@ -451,7 +448,7 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                     cfg.latest_ckpt_path,
                     cfg=cfg,
                     model=model,
-                    ema_model=ema_model,
+                    ema_model=None,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,
@@ -507,7 +504,6 @@ def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
                 final_eval_ckpt_path = _save_temporary_success_eval_checkpoint(
                     cfg,
                     model=model,
-                    ema_model=ema_model,
                     optimizer=optimizer,
                     scheduler=scheduler,
                     scaler=scaler,

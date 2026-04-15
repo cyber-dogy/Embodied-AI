@@ -166,6 +166,11 @@ def load_config(path: str | Path) -> MDITExperimentConfig:
     return config_from_dict(payload)
 
 
+def ensure_mainline_train_config(cfg: MDITExperimentConfig) -> MDITExperimentConfig:
+    cfg.validate_mainline_training()
+    return cfg
+
+
 def apply_config_overrides(
     cfg: MDITExperimentConfig,
     overrides: dict[str, Any] | None,

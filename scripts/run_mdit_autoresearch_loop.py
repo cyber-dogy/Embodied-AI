@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=PROJECT_ROOT / "configs" / "mdit" / "rgb5_shared_lastblock_pdittoken_obs2_a16_gate100.json",
+        default=PROJECT_ROOT / "configs" / "mdit" / "rgb5_lastblock_faithful_obs2_h100_a24.json",
         help="Base config JSON path.",
     )
     parser.add_argument(

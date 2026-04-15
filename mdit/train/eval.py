@@ -125,6 +125,20 @@ def compute_sample_metric(
     return float(F.mse_loss(pred_actions, target_actions).detach().cpu())
 
 
+def build_rlbench_env_kwargs(cfg: MDITExperimentConfig, *, headless: bool) -> dict[str, Any]:
+    return {
+        "task_name": cfg.task_name,
+        "voxel_size": 0.01,
+        "n_points": int(cfg.observation_encoder.pcd.n_points) if cfg.use_pcd else 2048,
+        "use_pc_color": bool(cfg.observation_encoder.pcd.use_color) if cfg.use_pcd else False,
+        "headless": bool(headless),
+        "vis": False,
+        "obs_mode": "pcd" if cfg.use_pcd else "rgb",
+        "responsive_ui": True,
+        "disable_task_validation": bool(cfg.rlbench_disable_task_validation),
+    }
+
+
 def run_success_rate_eval(
     model: MultiTaskDiTPolicy,
     cfg: MDITExperimentConfig,
@@ -137,17 +151,7 @@ def run_success_rate_eval(
 ) -> dict[str, Any]:
     from envs import RLBenchEnv
 
-    env = RLBenchEnv(
-        task_name=cfg.task_name,
-        voxel_size=0.01,
-        n_points=int(cfg.observation_encoder.pcd.n_points) if cfg.use_pcd else 2048,
-        use_pc_color=bool(cfg.observation_encoder.pcd.use_color) if cfg.use_pcd else False,
-        headless=headless,
-        vis=False,
-        obs_mode="pcd" if cfg.use_pcd else "rgb",
-        responsive_ui=True,
-        disable_task_validation=True,
-    )
+    env = RLBenchEnv(**build_rlbench_env_kwargs(cfg, headless=headless))
     model.eval()
     records: list[dict[str, Any]] = []
     success_count = 0
@@ -247,7 +251,7 @@ def _build_success_eval_subprocess_cmd(
         str(device),
         "--heartbeat-every",
         str(int(heartbeat_every)),
-        "--prefer-ema",
+        "--no-prefer-ema",
     ]
     cmd.append("--headless" if bool(headless) else "--no-headless")
     cmd.append("--show-progress" if bool(show_progress) else "--no-show-progress")
@@ -416,7 +420,7 @@ def load_model_for_eval(
     cfg: MDITExperimentConfig,
     ckpt_path,
     payload: dict[str, Any] | None = None,
-    prefer_ema: bool = True,
+    prefer_ema: bool = False,
 ):
     if payload is None:
         payload = torch.load(ckpt_path, map_location="cpu")
