@@ -10,7 +10,7 @@ import numpy as np
 import torch
 
 from common.runtime import set_device, set_seeds
-from mdit.config import MDITExperimentConfig, config_to_dict, ensure_mainline_train_config, save_config
+from mdit.config import MDITExperimentConfig, config_to_dict, ensure_ablation_train_config, ensure_mainline_train_config, save_config
 from mdit.data import compute_dataset_stats, save_stats
 from .builders import (
     build_dataloaders,
@@ -89,7 +89,11 @@ def _save_temporary_success_eval_checkpoint(
 
 
 def train_experiment(cfg: MDITExperimentConfig) -> dict[str, Any]:
-    ensure_mainline_train_config(cfg)
+    _is_ablation = bool(cfg.use_pcd) or str(cfg.transformer_variant).lower() != "mdit"
+    if _is_ablation:
+        ensure_ablation_train_config(cfg)
+    else:
+        ensure_mainline_train_config(cfg)
     set_device(cfg.device)
     set_seeds(cfg.seed)
     cfg.ckpt_dir.mkdir(parents=True, exist_ok=True)
