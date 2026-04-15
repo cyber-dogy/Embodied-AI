@@ -1,0 +1,22 @@
+{
+  "extends": "rgb_text_pdit_100_fair_bs160.json",
+  "run_name": "ablation_rgb_text_pdit_100_fair_bs64_noamp",
+  "batch_size": 64,
+  "grad_accum_steps": 1,
+  "use_amp": false,
+  "checkpoint_every_epochs": 50,
+  "success_selection_every_epochs": 50,
+  "success_selection_episodes": 20,
+  "camera_names": ["right_shoulder", "left_shoulder", "overhead", "front", "wrist"],
+  "observation_encoder": {
+    "vision": {
+      "train_mode": "last_block",
+      "num_unfreeze_blocks": 1
+    },
+    "text": {
+      "model": "openai/clip-vit-base-patch16"
+    }
+  },
+  "wandb_enable": true,
+  "wandb_mode": "online"
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "fm_autodl_lab.json",
+  "run_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "batch_size": 64,
+  "grad_accum_steps": 1,
+  "train_use_amp": false,
+  "wandb_enable": true,
+  "wandb_mode": "online",
+  "wandb_project": "autodl-unplug-charger-pdit"
+}

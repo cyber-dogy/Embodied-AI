@@ -783,3 +783,57 @@ except Exception as exc:
 - pcd_mdit 分支 commit: `ce4bb17`
 - rgb_text_pdit 分支 commit: `02bc489`
 - 两个实验均因 collapse 被 trial runner 自动清理，未生成有效 ckpt
+
+---
+
+### 2026-04-15 19:50:08 +0800 · `envs/rlbench_env.py` + `mdit/cli/eval_checkpoint.py` · `V-REP side -1` 回归为 simulator 错误导致评估误判
+
+问题：
+
+- `RLBenchEnv._step_safe()` 把 `RuntimeError: ... V-REP/CoppeliaSim side ... Return value: -1` 直接当 `simulator runtime error` 并立刻终止；
+- `mdit` 评估分析也把这类错误并入 `simulator_runtime_error`，导致“规划拒绝动作”被误读成“仿真器崩溃”。
+
+修改：
+
+- `envs/rlbench_env.py`
+  - 新增 `_is_planning_runtime_error()` 判别 `V-REP/CoppeliaSim side + return value -1`
+  - 这类 `RuntimeError` 改为 `planning runtime error` 并走插值回退路径（与 `IKError/InvalidActionError` 同逻辑）
+  - 抽出 `_step_with_planning_fallback()` 统一回退执行
+- `mdit/cli/eval_checkpoint.py`
+  - 恢复 `planning_runtime_error` 分桶
+  - `V-REP side -1` 不再归入 `simulator_runtime_error`
+  - `likely_causes` 改为区分 `planner_rejecting_many_predicted_actions` 与 `true_simulator_runtime_failures_dominate`
+- `tests/test_mdit_eval_cli.py`
+  - 更新断言，锁定新分桶语义，防止再次回归
+
+结果：
+
+- 评估记录重新具备“规划失败 vs 真 simulator 故障”的可解释性；
+- 后续看到大量 `planning_runtime_error` 时，优先排查策略动作可执行性，不再先判定仿真环境损坏。
+
+---
+
+### 2026-04-15 19:50:08 +0800 · `pdit/cli/eval_checkpoint.py` + `docs/mdit/*execution*.md` · 补齐 PDIT 评估分桶分析与基准复核步骤
+
+问题：
+
+- PDIT 单 checkpoint 评估只有原始 `episode_records`，缺少统一错误分桶与 likely-causes 分析；
+- 手册中缺少“先用已知高成功 PDIT+EMA checkpoint 复核评估链路”的强制步骤，易把链路问题误当模型问题。
+
+修改：
+
+- `pdit/cli/eval_checkpoint.py`
+  - 新增 `_normalize_error_label()` / `build_episode_analysis()`
+  - 新增 `planning_runtime_error` 分桶（含 `V-REP side -1` 映射）
+  - 评估后自动输出 `__analysis.json`，控制台同步打印 `episode_analysis`
+- `tests/test_pdit_eval_cli.py`
+  - 新增分桶测试，确保 `planning_runtime_error` 与 `simulator_runtime_error` 分离
+- `docs/mdit/2026-04-15-ablation-execution-manual.md`
+  - 增加“评估链路基准复核（强制先做）”命令（PDIT + EMA + 20ep）
+- `docs/mdit/2026-04-15-mdit-faithful-rgb5-fm-execution-plan-zh.md`
+  - 增加 PDIT 历史高成功基线复核命令块
+
+结果：
+
+- PDIT / MDIT 两条评估链路的错误分析口径对齐；
+- 下游执行先验证评估链路，再解释模型结果，减少“0 成功率”误诊。

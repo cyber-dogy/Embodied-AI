@@ -391,7 +391,7 @@ def _build_single_eval_command(
 ) -> list[str]:
     cmd = [
         sys.executable,
-        str(PROJECT_ROOT / "scripts" / "eval_checkpoint.py"),
+        str(PROJECT_ROOT / "scripts" / "eval_pdit_checkpoint.py"),
         "--ckpt-path",
         str(Path(record["path"]).resolve()),
         "--strategy",

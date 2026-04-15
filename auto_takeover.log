@@ -38,3 +38,13 @@ epoch=100 success_rate=0.0 device=cuda cpu_fallback=False
 2026-04-15 16:28:19 - Gate decision: FAIL (success@20=0.0)
 2026-04-15 16:28:19 - Decision: STOP branch, cleaning checkpoints
 2026-04-15 16:28:19 - Removed all .pt files from /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_shared_lastblock_pdittoken_obs2_a16_100
+2026-04-15 17:12:53 - Success eval history found
+epoch=100 success_rate=0.0 device=cuda cpu_fallback=False
+2026-04-15 17:12:53 - Gate decision: FAIL (success@20=0.0)
+2026-04-15 17:12:53 - Decision: STOP branch, cleaning checkpoints
+2026-04-15 17:12:53 - Removed all .pt files from /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_shared_lastblock_pdittoken_obs2_a16_100
+2026-04-15 18:41:04 - Success eval history found
+epoch=100 success_rate=0.0 device=cuda cpu_fallback=False
+2026-04-15 18:41:04 - Gate decision: FAIL (success@20=0.0)
+2026-04-15 18:41:04 - Decision: STOP branch, cleaning checkpoints
+2026-04-15 18:41:04 - Removed all .pt files from /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb5_shared_lastblock_pdittoken_obs2_a16_100

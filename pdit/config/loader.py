@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, fields, is_dataclass
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args, get_origin, get_type_hints
 
 from common.runtime import PROJECT_ROOT
 from .schema import ExperimentConfig
@@ -81,6 +81,62 @@ def _normalize_payload_paths(payload: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def _normalize_legacy_aliases(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(payload)
+    if "n_pred_steps" not in normalized:
+        for legacy_key in ("horizon", "pred_horizon"):
+            if legacy_key in normalized:
+                normalized["n_pred_steps"] = normalized[legacy_key]
+                break
+    if "n_obs_steps" not in normalized and "obs_horizon" in normalized:
+        normalized["n_obs_steps"] = normalized["obs_horizon"]
+    if "y_dim" not in normalized and "action_dim" in normalized:
+        normalized["y_dim"] = normalized["action_dim"]
+
+    # Old checkpoints may store optimizer knobs under task-specific names.
+    if "learning_rate" not in normalized and "optimizer_lr" in normalized:
+        normalized["learning_rate"] = normalized["optimizer_lr"]
+    if "betas" not in normalized and "optimizer_betas" in normalized:
+        normalized["betas"] = normalized["optimizer_betas"]
+    if "eps" not in normalized and "optimizer_eps" in normalized:
+        normalized["eps"] = normalized["optimizer_eps"]
+    if "transformer_weight_decay" not in normalized and "optimizer_weight_decay" in normalized:
+        normalized["transformer_weight_decay"] = normalized["optimizer_weight_decay"]
+    return normalized
+
+
+def _coerce_dataclass(field_type: Any, value: Any) -> Any:
+    if value is None:
+        return None
+    origin = get_origin(field_type)
+    if origin is not None:
+        args = [arg for arg in get_args(field_type) if arg is not type(None)]
+        if len(args) == 1:
+            return _coerce_dataclass(args[0], value)
+    if is_dataclass(field_type) and isinstance(value, dict):
+        nested_type_hints = get_type_hints(field_type)
+        kwargs = {}
+        for field in fields(field_type):
+            if field.name not in value:
+                continue
+            nested_field_type = nested_type_hints.get(field.name, field.type)
+            kwargs[field.name] = _coerce_dataclass(nested_field_type, value[field.name])
+        return field_type(**kwargs)
+    return value
+
+
+def config_from_dict(payload: dict[str, Any]) -> ExperimentConfig:
+    payload = _normalize_legacy_aliases(payload)
+    type_hints = get_type_hints(ExperimentConfig)
+    kwargs = {}
+    for field in fields(ExperimentConfig):
+        if field.name not in payload:
+            continue
+        field_type = type_hints.get(field.name, field.type)
+        kwargs[field.name] = _coerce_dataclass(field_type, payload[field.name])
+    return ExperimentConfig(**kwargs)
+
+
 def config_to_dict(cfg: ExperimentConfig) -> dict[str, Any]:
     payload = asdict(cfg)
     for key, value in list(payload.items()):
@@ -104,7 +160,7 @@ def load_config(path: str | Path) -> ExperimentConfig:
     raw_payload = _json_load(config_path)
     payload = _compose_payload(config_path, raw_payload)
     payload = _normalize_payload_paths(payload)
-    return ExperimentConfig(**payload)
+    return config_from_dict(payload)
 
 
 def apply_config_overrides(
@@ -118,4 +174,4 @@ def apply_config_overrides(
     if unknown_keys:
         raise KeyError(f"Unknown config override keys: {', '.join(unknown_keys)}")
     payload.update(overrides)
-    return ExperimentConfig(**payload)
+    return config_from_dict(payload)

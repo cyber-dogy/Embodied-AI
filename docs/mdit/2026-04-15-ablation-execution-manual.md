@@ -35,7 +35,7 @@ git checkout autoresearch/20260409-mdit
 git pull origin autoresearch/20260409-mdit
 
 # 激活环境
-source ~/miniconda3/etc/profile.d/conda.sh
+source /opt/miniconda3/etc/profile.d/conda.sh
 conda activate mdit_env
 
 # 验证配置可以加载
@@ -53,6 +53,30 @@ for p in ['configs/ablation/pcd_mdit_100.json', 'configs/ablation/rgb_text_pdit_
 OK configs/ablation/pcd_mdit_100.json
 OK configs/ablation/rgb_text_pdit_100.json
 ```
+
+## 评估链路基准复核（强制先做）
+
+先复核“已知高成功 PDIT checkpoint + EMA”评估链路是否正常，再跑消融。  
+这一步失败时，不允许继续解释模型优劣。
+
+```bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_pdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt \
+  --strategy fm \
+  --episodes 20 \
+  --max-steps 200 \
+  --device cuda \
+  --headless \
+  --show-progress \
+  --prefer-ema
+```
+
+期望：`success_rate` 保持高位（历史记录约 `0.85~0.95`）。  
+如果明显偏离，优先排查评估链路（环境/命令/错误分桶），不要先改训练配方。
 
 ---
 
@@ -82,7 +106,6 @@ HF_HUB_OFFLINE=1 python scripts/run_mdit_autoresearch_trial.py \
   --description "ablation pcd_mdit: PCD+MDIT-transformer+MDIT-FM bs32 100ep" \
   --headless \
   --show-progress \
---set batch_size=16 \
   2>&1 | tee logs/run_pcd_mdit_100.log
 ```
 

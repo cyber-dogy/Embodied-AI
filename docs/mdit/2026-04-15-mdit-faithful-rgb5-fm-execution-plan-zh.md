@@ -327,6 +327,24 @@ python scripts/eval_mdit_checkpoint.py \
   --prefer-ema
 ```
 
+PDIT 历史高成功基线复核（用于先验证评估链路本身）：
+
+```bash
+source /opt/miniconda3/etc/profile.d/conda.sh
+conda activate mdit_env
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+
+python scripts/eval_pdit_checkpoint.py \
+  --ckpt-path ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt \
+  --strategy fm \
+  --episodes 20 \
+  --max-steps 200 \
+  --device cuda \
+  --headless \
+  --show-progress \
+  --prefer-ema
+```
+
 ### 6.7 全 checkpoint 评估
 
 ```bash

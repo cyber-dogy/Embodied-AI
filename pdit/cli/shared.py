@@ -7,7 +7,7 @@ bootstrap_local_cli_imports()
 from pathlib import Path
 from typing import Any
 
-from pdit.config import ExperimentConfig
+from pdit.config import ExperimentConfig, apply_config_overrides, config_from_dict
 
 
 def payload_cfg_to_experiment_cfg(
@@ -17,6 +17,7 @@ def payload_cfg_to_experiment_cfg(
     ckpt_root: Path | None = None,
     heartbeat_every: int | None = None,
     device: str | None = None,
+    config_overrides: dict[str, Any] | None = None,
 ) -> ExperimentConfig:
     cfg_dict = dict(payload_cfg)
     cfg_dict.update(
@@ -37,4 +38,5 @@ def payload_cfg_to_experiment_cfg(
         cfg_dict["eval_step_heartbeat_every"] = int(heartbeat_every)
     if device is not None:
         cfg_dict["device"] = str(device)
-    return ExperimentConfig(**cfg_dict)
+    cfg = config_from_dict(cfg_dict)
+    return apply_config_overrides(cfg, config_overrides)

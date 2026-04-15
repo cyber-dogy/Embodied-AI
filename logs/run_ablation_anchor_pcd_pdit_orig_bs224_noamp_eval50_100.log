@@ -1,0 +1,15 @@
+/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/pdit/train/builders.py:111: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  return torch.cuda.amp.GradScaler(enabled=scaler_enabled)
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/gjw/.netrc.
+wandb: Currently logged in as: 1832088497 (cyber-dogy) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 2q08vxwb
+wandb: Tracking run with wandb version 0.25.1
+wandb: Run data is saved locally in /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs224_noamp/wandb/run-20260415_204910-2q08vxwb
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ablation_anchor_pcd_pdit_orig_bs224_noamp_fm
+wandb: ⭐️ View project at https://wandb.ai/cyber-dogy/autodl-unplug-charger-pdit
+wandb: 🚀 View run at https://wandb.ai/cyber-dogy/autodl-unplug-charger-pdit/runs/2q08vxwb
+train epoch 0:   0%|          | 0/48 [00:00<?, ?it/s]                                                     {"audit_report_path": null, "best_ckpt_path": null, "best_success_epoch": null, "best_success_rate": null, "best_valid_ckpt_path": null, "collapse_detected": true, "collapse_reasons": ["CUDA out of memory. Tried to allocate 5.25 GiB. GPU 0 has a total capacity of 23.40 GiB of which 3.26 GiB is free. Including non-PyTorch memory, this process has 19.86 GiB memory in use. Of the allocated memory 13.21 GiB is allocated by PyTorch, and 6.05 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"], "description": "strict fair anchor A: original pdit line, pcd+pdit, bs224, no-amp, eval@50/100", "error_type": "OutOfMemoryError", "experiment_name": "ablation_anchor_pcd_pdit_orig_bs224_noamp_eval50_100", "kept_ckpt_paths": [], "offline_audit_command": null, "pending_offline_audit": false, "phase": "train_only", "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs224_noamp", "run_name": "ablation_anchor_pcd_pdit_orig_bs224_noamp", "success_100": null, "success_300": null, "success_500": null, "summary_path": null, "trial_score": -1.0}
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mablation_anchor_pcd_pdit_orig_bs224_noamp_fm[0m at: [34mhttps://wandb.ai/cyber-dogy/autodl-unplug-charger-pdit/runs/2q08vxwb[0m
+[1;34mwandb[0m: Find logs at: [1;35m../../MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs224_noamp/wandb/run-20260415_204910-2q08vxwb/logs[0m

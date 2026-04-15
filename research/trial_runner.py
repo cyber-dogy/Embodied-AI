@@ -162,6 +162,8 @@ def _build_offline_audit_command(run_dir: Path) -> str:
     cmd = [
         sys.executable,
         str(PROJECT_ROOT / "scripts" / "run_autoresearch_trial.py"),
+        "--line",
+        "pdit",
         "--phase",
         "audit-only",
         "--run-dir",
@@ -233,7 +235,7 @@ def _run_checkpoint_audit(
         results_json.unlink()
     cmd = [
         sys.executable,
-        str(PROJECT_ROOT / "scripts" / "eval_all_checkpoints.py"),
+        str(PROJECT_ROOT / "scripts" / "eval_pdit_all_checkpoints.py"),
         "--ckpt-epochs-dir",
         str(run_dir / "epochs"),
         "--results-json",
