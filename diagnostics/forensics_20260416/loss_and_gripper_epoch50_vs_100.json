@@ -1,0 +1,16 @@
+{
+  "epoch50": {
+    "completed_epoch": 49,
+    "train_loss_last": 0.6412047338485718,
+    "valid_loss_last": 1.4762258380651474,
+    "valid_grip_deadband": 0.007047526305541396,
+    "valid_grip_mean_pred": 0.8749091774225235
+  },
+  "epoch100": {
+    "completed_epoch": 99,
+    "train_loss_last": 0.5072659349441528,
+    "valid_loss_last": 1.5991719961166382,
+    "valid_grip_deadband": 0.00453976372955367,
+    "valid_grip_mean_pred": 0.8735651820898056
+  }
+}

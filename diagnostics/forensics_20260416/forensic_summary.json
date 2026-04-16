@@ -1,0 +1,114 @@
+{
+  "anchor_eval": {
+    "success_rate": 0.7,
+    "mean_steps": 102.85,
+    "num_successes": 14
+  },
+  "target_epoch50_eval": {
+    "success_rate": 0.0,
+    "mean_steps": 200.0,
+    "num_successes": 0,
+    "error_counts": {
+      "planning runtime error: The call failed on the V-REP side. Return value: -1": 11,
+      "none": 8,
+      "A path could not be found because the target is outside of workspace.": 1
+    }
+  },
+  "run_success_eval_history_file": [
+    {
+      "epoch": 50,
+      "success_rate": 0.05,
+      "mean_steps": 191.1,
+      "num_episodes": 20,
+      "checkpoint_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100_fair_bs128_noamp/epochs/epoch_0050.pt",
+      "device_used": "cuda",
+      "cpu_fallback": false,
+      "initial_device": null,
+      "error": null,
+      "deleted_periodic_ckpt": false
+    },
+    {
+      "epoch": 100,
+      "success_rate": 0.0,
+      "mean_steps": 200.0,
+      "num_episodes": 20,
+      "checkpoint_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100_fair_bs128_noamp/epochs/epoch_0100.pt",
+      "device_used": "cuda",
+      "cpu_fallback": false,
+      "initial_device": null,
+      "error": null,
+      "deleted_periodic_ckpt": false
+    }
+  ],
+  "checkpoint_success_history_lengths": {
+    "epoch_0050_len": 0,
+    "epoch_0100_len": 1,
+    "latest_len": 2,
+    "epoch_0100_latest_success_eval": {
+      "epoch": 50,
+      "success_rate": 0.05,
+      "mean_steps": 191.1,
+      "num_episodes": 20,
+      "checkpoint_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100_fair_bs128_noamp/epochs/epoch_0050.pt",
+      "device_used": "cuda",
+      "cpu_fallback": false,
+      "initial_device": null,
+      "error": null,
+      "deleted_periodic_ckpt": false
+    },
+    "latest_latest_success_eval": {
+      "epoch": 100,
+      "success_rate": 0.0,
+      "mean_steps": 200.0,
+      "num_episodes": 20,
+      "checkpoint_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100_fair_bs128_noamp/epochs/epoch_0100.pt",
+      "device_used": "cuda",
+      "cpu_fallback": false,
+      "initial_device": null,
+      "error": null,
+      "deleted_periodic_ckpt": false
+    }
+  },
+  "offline_action_stats": {
+    "epochs/epoch_0050.pt": {
+      "num_samples": 449,
+      "pred_cmd_pos_delta_norm_mean": 0.17123925685882568,
+      "pred_cmd_pos_delta_norm_p50": 0.1272621601819992,
+      "pred_cmd_pos_delta_norm_p95": 0.4412558674812315,
+      "pred_cmd_pos_delta_norm_lt_1mm_ratio": 0.0,
+      "pred_cmd_rot_delta_norm_mean": 0.7048889994621277,
+      "pred_gripper_mean": 0.8528692722320557,
+      "pred_gripper_std": 0.3879704177379608,
+      "pred_gripper_open_ratio_ge0.6": 0.8645833432674408,
+      "pred_gripper_close_ratio_le0.4": 0.12923177459742874,
+      "pred_gripper_switch_rate_mean": 0.03011523373425007,
+      "chunk_step_pos_delta_mean": 0.18090097606182098,
+      "chunk_step_pos_delta_p95": 0.5770646631717672,
+      "chunk_step_pos_delta_lt_1mm_ratio": 9.683354313934346e-05,
+      "chunk_step_rot_delta_mean": 0.6907277703285217,
+      "pred_vs_target_cmd_mse_mean": 0.09309595078229904,
+      "target_cmd_pos_delta_mean": 0.0,
+      "target_next_pos_delta_mean": 0.010648814961314201
+    },
+    "epochs/epoch_0100.pt": {
+      "num_samples": 449,
+      "pred_cmd_pos_delta_norm_mean": 0.1441948562860489,
+      "pred_cmd_pos_delta_norm_p50": 0.10037056356668472,
+      "pred_cmd_pos_delta_norm_p95": 0.3830589532852171,
+      "pred_cmd_pos_delta_norm_lt_1mm_ratio": 0.0,
+      "pred_cmd_rot_delta_norm_mean": 0.5928773880004883,
+      "pred_gripper_mean": 0.8589434623718262,
+      "pred_gripper_std": 0.38630133867263794,
+      "pred_gripper_open_ratio_ge0.6": 0.8668619990348816,
+      "pred_gripper_close_ratio_le0.4": 0.12972005851042923,
+      "pred_gripper_switch_rate_mean": 0.022659048438072205,
+      "chunk_step_pos_delta_mean": 0.14890079200267792,
+      "chunk_step_pos_delta_p95": 0.5477167785167684,
+      "chunk_step_pos_delta_lt_1mm_ratio": 0.0,
+      "chunk_step_rot_delta_mean": 0.597358763217926,
+      "pred_vs_target_cmd_mse_mean": 0.06715375930070877,
+      "target_cmd_pos_delta_mean": 0.0,
+      "target_next_pos_delta_mean": 0.010648814961314201
+    }
+  }
+}
