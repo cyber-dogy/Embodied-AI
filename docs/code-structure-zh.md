@@ -30,27 +30,35 @@ scripts/run_autoresearch_trial.py
 离线 audit 主链路：
 
 ```text
-scripts/run_autoresearch_trial.py --phase audit-only
+scripts/run_autoresearch_trial.py --line pdit --phase audit-only
   -> cli/run_autoresearch_trial.py
   -> research/trial_runner.py
-  -> scripts/eval_all_checkpoints.py
-  -> cli/eval_all_checkpoints.py
+  -> scripts/eval_pdit_all_checkpoints.py
+  -> pdit/cli/eval_all_checkpoints.py
   -> train/eval.py
 ```
 
 单个 ckpt 评估：
 
 ```text
-scripts/eval_checkpoint.py
-  -> cli/eval_checkpoint.py
+scripts/eval_checkpoint.py --line pdit
+  -> pdit/cli/eval_checkpoint.py
   -> train/eval.py
+```
+
+`mdit` 单 ckpt 推荐直接用：
+
+```text
+scripts/eval_mdit_checkpoint.py
+  -> mdit/cli/eval_checkpoint.py
+  -> mdit/train/eval.py
 ```
 
 单次 rollout / 录视频：
 
 ```text
-scripts/record_rollout_videos.py
-  -> cli/record_rollout_videos.py
+scripts/record_rollout_videos.py --line pdit
+  -> pdit/cli/record_rollout_videos.py
   -> train/eval.py + envs/rlbench_env.py
 ```
 
@@ -59,8 +67,9 @@ notebook 主链路：
 ```text
 notebooks/pfm_unplug_charger_transformer_fm_autodl_lab.ipynb
   -> 只拼命令和配置 override
-  -> 调 scripts/run_autoresearch_trial.py
-  -> 调 scripts/eval_checkpoint.py / scripts/record_rollout_videos.py
+  -> 调 scripts/run_autoresearch_trial.py --line pdit
+  -> 调 scripts/eval_checkpoint.py --line pdit
+  -> 调 scripts/record_rollout_videos.py --line pdit
   -> 读 summary.json / audit_report.json / manifest
 ```
 

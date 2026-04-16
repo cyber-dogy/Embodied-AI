@@ -298,7 +298,8 @@ python scripts/eval_mdit_checkpoint.py \
   --episodes 20 \
   --max-steps 200 \
   --headless \
-  --show-progress
+  --show-progress \
+  --no-prefer-ema
 ```
 
 ### 寝室本地离线测评：
@@ -316,6 +317,7 @@ python scripts/eval_mdit_all_checkpoints.py \
   --seed 1234 \
   --headless \
   --show-progress \
+  --no-prefer-ema \
   --device cuda \
   --set n_action_steps=16 \
   --set smooth_actions=true \
@@ -339,6 +341,7 @@ QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --no-headless \
   --show-progress \
+  --no-prefer-ema \
   --device cuda \
   --set n_action_steps=16 \
   --set smooth_actions=true \
@@ -361,6 +364,7 @@ python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --headless \
   --show-progress \
+  --no-prefer-ema \
   --device cuda \
   --set n_action_steps=16 \
   --set smooth_actions=true \
@@ -485,7 +489,7 @@ python scripts/eval_mdit_checkpoint.py \
   --heartbeat-every 50 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 
@@ -502,7 +506,7 @@ python scripts/eval_mdit_all_checkpoints.py \
   --seed 1234 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 开仿真界面看 1 个 episode
@@ -517,7 +521,7 @@ QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --no-headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 单个 ckpt 做 100 episode 评估
@@ -532,7 +536,7 @@ python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 如果你要评估的是“旧的 n_action_steps=1 老 ckpt”，那就在评估命令后面补这一段 override：
@@ -652,7 +656,7 @@ python scripts/eval_mdit_checkpoint.py \
   --heartbeat-every 50 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 本地批量评估
@@ -668,7 +672,7 @@ python scripts/eval_mdit_all_checkpoints.py \
   --seed 1234 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 本地开界面看 1 个 episode
@@ -683,7 +687,7 @@ QT_QPA_PLATFORM=xcb python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --no-headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 
@@ -699,7 +703,7 @@ python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 
 ```
@@ -722,6 +726,7 @@ python scripts/eval_mdit_checkpoint.py \
 
 ```bash
 python scripts/eval_checkpoint.py \
+  --line pdit \
   --ckpt-path ckpt/<run_name>/best_success.pt \
   --episodes 50 \
   --max-steps 200 \
@@ -732,6 +737,7 @@ python scripts/eval_checkpoint.py \
 
 ```bash
 python scripts/record_rollout_videos.py \
+  --line pdit \
   --ckpt-path ckpt/<run_name>/best_success.pt \
   --episodes 1 \
   --camera front \
@@ -758,6 +764,7 @@ python scripts/verify_baseline_regression.py
 
 ```bash
 python scripts/eval_checkpoint.py \
+  --line pdit \
   --ckpt-path ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/best_success.pt \
   --episodes 20 \
   --headless
@@ -765,6 +772,7 @@ python scripts/eval_checkpoint.py \
 
 ```bash
 python scripts/eval_checkpoint.py \
+  --line pdit \
   --ckpt-path ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/best_success.pt \
   --episodes 100 \
   --headless

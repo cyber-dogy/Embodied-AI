@@ -141,7 +141,7 @@ python scripts/eval_mdit_checkpoint.py \
   --seed 1234 \
   --headless \
   --show-progress \
-  --prefer-ema \
+  --no-prefer-ema \
   --device cuda
 ```
 

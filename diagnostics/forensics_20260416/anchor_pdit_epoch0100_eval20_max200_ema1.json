@@ -1,0 +1,310 @@
+{
+  "ckpt": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0100.pt",
+  "seed": 1234,
+  "success_rate": 0.7,
+  "mean_steps": 102.85,
+  "num_episodes": 20,
+  "duration_sec": 574.9484451600001,
+  "episode_records": [
+    {
+      "episode": 0,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 35.14344751401222,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 1,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 35.66949129200657,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 2,
+      "success": true,
+      "steps": 46,
+      "duration_sec": 8.460494851009571,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 3,
+      "success": true,
+      "steps": 51,
+      "duration_sec": 14.712972487002844,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 4,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 31.70952168700751,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 5,
+      "success": true,
+      "steps": 39,
+      "duration_sec": 7.293758257001173,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 6,
+      "success": true,
+      "steps": 48,
+      "duration_sec": 8.62368190100824,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 7,
+      "success": true,
+      "steps": 69,
+      "duration_sec": 13.590826833999017,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 8,
+      "success": true,
+      "steps": 66,
+      "duration_sec": 41.54515026300214,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 9,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 37.129665190994274,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 10,
+      "success": true,
+      "steps": 61,
+      "duration_sec": 10.137697086000117,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 11,
+      "success": true,
+      "steps": 49,
+      "duration_sec": 10.216185700992355,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 12,
+      "success": true,
+      "steps": 83,
+      "duration_sec": 50.0315181909973,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 13,
+      "success": true,
+      "steps": 89,
+      "duration_sec": 115.25483290100237,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 14,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 33.804976696002996,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 15,
+      "success": true,
+      "steps": 64,
+      "duration_sec": 27.510139221994905,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 16,
+      "success": true,
+      "steps": 54,
+      "duration_sec": 11.995108394999988,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 17,
+      "success": true,
+      "steps": 56,
+      "duration_sec": 10.557184609002434,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 18,
+      "success": true,
+      "steps": 82,
+      "duration_sec": 19.499455611003214,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 19,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 46.42368346800504,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    }
+  ]
+}

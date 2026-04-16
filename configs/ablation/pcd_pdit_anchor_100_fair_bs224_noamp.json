@@ -6,5 +6,5 @@
   "train_use_amp": false,
   "wandb_enable": true,
   "wandb_mode": "online",
-  "wandb_project": "autodl-unplug-charger-pdit"
+  "wandb_project": "autodl-unplug-charger-mdit"
 }

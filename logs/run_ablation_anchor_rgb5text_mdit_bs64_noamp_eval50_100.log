@@ -418,4 +418,191 @@ wandb: 🚀 View run ablation_anchor_rgb5text_mdit_bs64_noamp at: https://wandb.
 wandb: ⭐️ View project at: https://wandb.ai/cyber-dogy/autodl-unplug-charger-mdit
 wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
 wandb: Find logs at: ./ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/wandb/run-20260415_211132-d08e0hti/logs
-mdit ckpts:   0%|          | 0/2 [00:00<?, ?it/s]epoch_0050:   0%|          | 0/20 [00:00<?, ?it/s]
+mdit ckpts:   0%|          | 0/2 [00:00<?, ?it/s]epoch_0050:   0%|          | 0/20 [00:00<?, ?it/s]epoch_0050:   0%|          | 0/20 [10:03<?, ?it/s, success=0/1]epoch_0050:   5%|▌         | 1/20 [10:03<3:11:00, 603.19s/it, success=0/1]epoch_0050:   5%|▌         | 1/20 [10:30<3:11:00, 603.19s/it, success=0/2]epoch_0050:  10%|█         | 2/20 [10:30<1:19:21, 264.53s/it, success=0/2]epoch_0050:  10%|█         | 2/20 [11:01<1:19:21, 264.53s/it, success=0/3]epoch_0050:  15%|█▌        | 3/20 [11:01<44:44, 157.93s/it, success=0/3]  epoch_0050:  15%|█▌        | 3/20 [14:58<44:44, 157.93s/it, success=0/4]epoch_0050:  20%|██        | 4/20 [14:58<50:23, 188.95s/it, success=0/4]epoch_0050:  20%|██        | 4/20 [15:24<50:23, 188.95s/it, success=0/5]epoch_0050:  25%|██▌       | 5/20 [15:24<32:31, 130.10s/it, success=0/5]epoch_0050:  25%|██▌       | 5/20 [16:08<32:31, 130.10s/it, success=0/6]epoch_0050:  30%|███       | 6/20 [16:08<23:31, 100.83s/it, success=0/6]epoch_0050:  30%|███       | 6/20 [16:37<23:31, 100.83s/it, success=0/7]epoch_0050:  35%|███▌      | 7/20 [16:37<16:49, 77.65s/it, success=0/7] epoch_0050:  35%|███▌      | 7/20 [17:36<16:49, 77.65s/it, success=0/8]epoch_0050:  40%|████      | 8/20 [17:36<14:17, 71.48s/it, success=0/8]epoch_0050:  40%|████      | 8/20 [18:18<14:17, 71.48s/it, success=0/9]epoch_0050:  45%|████▌     | 9/20 [18:18<11:26, 62.42s/it, success=0/9]epoch_0050:  45%|████▌     | 9/20 [18:55<11:26, 62.42s/it, success=0/10]epoch_0050:  50%|█████     | 10/20 [18:55<09:03, 54.36s/it, success=0/10]epoch_0050:  50%|█████     | 10/20 [20:04<09:03, 54.36s/it, success=0/11]epoch_0050:  55%|█████▌    | 11/20 [20:04<08:50, 58.98s/it, success=0/11]                                                 Traceback (most recent call last):
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/eval_mdit_all_checkpoints.py", line 9, in <module>
+    raise SystemExit(main())
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/mdit/cli/eval_all_checkpoints.py", line 386, in main
+    result = _run_eval_subprocess(
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/mdit/cli/eval_all_checkpoints.py", line 273, in _run_eval_subprocess
+    subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, timeout=max(1, int(timeout_sec)))
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 505, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 1154, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 2047, in _communicate
+    self.wait(timeout=self._remaining_time(endtime))
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 1209, in wait
+    return self._wait(timeout=timeout)
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 1951, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['/home/gjw/.conda/envs/mdit_env/bin/python', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/eval_mdit_checkpoint.py', '--ckpt-path', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/epochs/epoch_0050.pt', '--episodes', '20', '--seed', '1234', '--max-steps', '200', '--heartbeat-every', '50', '--output-json', '/tmp/mdit-eval-s79pobyj/result.json', '--headless', '--show-progress', '--no-prefer-ema', '--device', 'cuda']' timed out after 1799.9999917629993 seconds
+Traceback (most recent call last):
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_mdit_autoresearch_trial.py", line 9, in <module>
+    raise SystemExit(main())
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/mdit/cli/run_autoresearch_trial.py", line 171, in main
+    result = run_mdit_autoresearch_trial(request)
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/mdit_trial_runner.py", line 1112, in run_mdit_autoresearch_trial
+    return finalize_mdit_autoresearch_trial(
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/mdit_trial_runner.py", line 978, in finalize_mdit_autoresearch_trial
+    audit_json = _run_checkpoint_audit(
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/mdit_trial_runner.py", line 543, in _run_checkpoint_audit
+    subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, timeout=max(1, int(timeout_sec)))
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/home/gjw/.conda/envs/mdit_env/bin/python', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/eval_mdit_all_checkpoints.py', '--ckpt-epochs-dir', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/epochs', '--results-json', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/audit_raw_results.json', '--episodes', '20', '--seed', '1234', '--max-steps', '200', '--heartbeat-every', '50', '--plot-path', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/audit_success_rate.png', '--no-include-special', '--headless', '--show-progress', '--no-prefer-ema', '--device', 'cuda']' returned non-zero exit status 1.
+Traceback (most recent call last):
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_mdit_autoresearch_trial.py", line 9, in <module>
+    raise SystemExit(main())
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/mdit/cli/run_autoresearch_trial.py", line 171, in main
+    result = run_mdit_autoresearch_trial(request)
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/mdit_trial_runner.py", line 1112, in run_mdit_autoresearch_trial
+    return finalize_mdit_autoresearch_trial(
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/mdit_trial_runner.py", line 978, in finalize_mdit_autoresearch_trial
+    audit_json = _run_checkpoint_audit(
+  File "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research/mdit_trial_runner.py", line 543, in _run_checkpoint_audit
+    subprocess.run(cmd, cwd=PROJECT_ROOT, check=True, timeout=max(1, int(timeout_sec)))
+  File "/home/gjw/.conda/envs/mdit_env/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/home/gjw/.conda/envs/mdit_env/bin/python', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/eval_mdit_all_checkpoints.py', '--ckpt-epochs-dir', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/epochs', '--results-json', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/audit_raw_results.json', '--episodes', '20', '--seed', '1234', '--max-steps', '200', '--heartbeat-every', '50', '--plot-path', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/audit_success_rate.png', '--no-include-special', '--headless', '--show-progress', '--no-prefer-ema', '--device', 'cuda']' returned non-zero exit status 1.
+epoch_0050:  55%|█████▌    | 11/20 [32:48<08:50, 58.98s/it, success=0/12]epoch_0050:  60%|██████    | 12/20 [32:48<36:27, 273.38s/it, success=0/12]epoch_0050:  60%|██████    | 12/20 [33:56<36:27, 273.38s/it, success=0/13]epoch_0050:  65%|██████▌   | 13/20 [33:56<24:38, 211.20s/it, success=0/13]epoch_0050:  65%|██████▌   | 13/20 [34:30<24:38, 211.20s/it, success=0/14]epoch_0050:  70%|███████   | 14/20 [34:30<15:47, 157.87s/it, success=0/14]epoch_0050:  70%|███████   | 14/20 [35:40<15:47, 157.87s/it, success=0/15]epoch_0050:  75%|███████▌  | 15/20 [35:40<10:56, 131.24s/it, success=0/15]epoch_0050:  75%|███████▌  | 15/20 [36:09<10:56, 131.24s/it, success=0/16]epoch_0050:  80%|████████  | 16/20 [36:09<06:41, 100.37s/it, success=0/16]epoch_0050:  80%|████████  | 16/20 [36:38<06:41, 100.37s/it, success=0/17]epoch_0050:  85%|████████▌ | 17/20 [36:38<03:57, 79.08s/it, success=0/17] epoch_0050:  85%|████████▌ | 17/20 [37:06<03:57, 79.08s/it, success=0/18]epoch_0050:  90%|█████████ | 18/20 [37:06<02:07, 63.73s/it, success=0/18]epoch_0050:  90%|█████████ | 18/20 [37:35<02:07, 63.73s/it, success=0/19]epoch_0050:  95%|█████████▌| 19/20 [37:35<00:53, 53.37s/it, success=0/19]epoch_0050:  95%|█████████▌| 19/20 [38:06<00:53, 53.37s/it, success=0/20]epoch_0050: 100%|██████████| 20/20 [38:06<00:00, 46.44s/it, success=0/20]                                                                         epoch_0050: episode=0 starting
+epoch_0050: episode=0 heartbeat step=50
+epoch_0050: episode=0 heartbeat step=100
+epoch_0050: episode=0 heartbeat step=150
+epoch_0050: episode=1 starting
+epoch_0050: episode=1 heartbeat step=50
+epoch_0050: episode=1 heartbeat step=100
+epoch_0050: episode=1 heartbeat step=150
+epoch_0050: episode=2 starting
+epoch_0050: episode=2 heartbeat step=50
+epoch_0050: episode=2 heartbeat step=100
+epoch_0050: episode=2 heartbeat step=150
+epoch_0050: episode=3 starting
+epoch_0050: episode=3 heartbeat step=50
+epoch_0050: episode=3 heartbeat step=100
+epoch_0050: episode=3 heartbeat step=150
+epoch_0050: episode=4 starting
+epoch_0050: episode=4 heartbeat step=50
+epoch_0050: episode=4 heartbeat step=100
+epoch_0050: episode=4 heartbeat step=150
+epoch_0050: episode=5 starting
+epoch_0050: episode=5 heartbeat step=50
+epoch_0050: episode=5 heartbeat step=100
+epoch_0050: episode=5 heartbeat step=150
+epoch_0050: episode=6 starting
+epoch_0050: episode=6 heartbeat step=50
+epoch_0050: episode=6 heartbeat step=100
+epoch_0050: episode=6 heartbeat step=150
+epoch_0050: episode=7 starting
+epoch_0050: episode=7 heartbeat step=50
+epoch_0050: episode=7 heartbeat step=100
+epoch_0050: episode=7 heartbeat step=150
+epoch_0050: episode=8 starting
+epoch_0050: episode=8 heartbeat step=50
+epoch_0050: episode=8 heartbeat step=100
+epoch_0050: episode=8 heartbeat step=150
+epoch_0050: episode=9 starting
+epoch_0050: episode=9 heartbeat step=50
+epoch_0050: episode=9 heartbeat step=100
+epoch_0050: episode=9 heartbeat step=150
+epoch_0050: episode=10 starting
+epoch_0050: episode=10 heartbeat step=50
+epoch_0050: episode=10 heartbeat step=100
+epoch_0050: episode=10 heartbeat step=150
+epoch_0050: episode=11 starting
+epoch_0050: episode=11 heartbeat step=50
+epoch_0050: episode=11 heartbeat step=100
+epoch_0050: episode=11 heartbeat step=150
+epoch_0050: episode=12 starting
+epoch_0050: episode=12 heartbeat step=50
+epoch_0050: episode=12 heartbeat step=100
+epoch_0050: episode=12 heartbeat step=150
+epoch_0050: episode=13 starting
+epoch_0050: episode=13 heartbeat step=50
+epoch_0050: episode=13 heartbeat step=100
+epoch_0050: episode=13 heartbeat step=150
+epoch_0050: episode=14 starting
+epoch_0050: episode=14 heartbeat step=50
+epoch_0050: episode=14 heartbeat step=100
+epoch_0050: episode=14 heartbeat step=150
+epoch_0050: episode=15 starting
+epoch_0050: episode=15 heartbeat step=50
+epoch_0050: episode=15 heartbeat step=100
+epoch_0050: episode=15 heartbeat step=150
+epoch_0050: episode=16 starting
+epoch_0050: episode=16 heartbeat step=50
+epoch_0050: episode=16 heartbeat step=100
+epoch_0050: episode=16 heartbeat step=150
+epoch_0050: episode=17 starting
+epoch_0050: episode=17 heartbeat step=50
+epoch_0050: episode=17 heartbeat step=100
+epoch_0050: episode=17 heartbeat step=150
+epoch_0050: episode=18 starting
+epoch_0050: episode=18 heartbeat step=50
+epoch_0050: episode=18 heartbeat step=100
+epoch_0050: episode=18 heartbeat step=150
+epoch_0050: episode=19 starting
+epoch_0050: episode=19 heartbeat step=50
+epoch_0050: episode=19 heartbeat step=100
+epoch_0050: episode=19 heartbeat step=150
+eval summary:
+{
+  "ckpt": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_rgb5text_mdit_bs64_noamp/epochs/epoch_0050.pt",
+  "seed": 1234,
+  "success_rate": 0.0,
+  "mean_steps": 200.0,
+  "num_episodes": 20,
+  "duration_sec": 2292.0047300669976,
+  "num_successes": 0,
+  "episode_analysis": {
+    "num_episodes": 20,
+    "num_successes": 0,
+    "num_failures": 20,
+    "success_rate": 0.0,
+    "mean_steps": 200.0,
+    "success_episode_indices": [],
+    "failure_episode_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "failure_error_buckets": {
+      "A path could not be found. Most likely due to the target being inaccessible or a collison was detected.": 1,
+      "planning_runtime_error": 14,
+      "none": 5
+    },
+    "failure_step_buckets": {
+      "lt_20": 0,
+      "20_to_99": 0,
+      "100_to_horizon_minus_1": 0,
+      "at_horizon": 20
+    },
+    "num_failures_without_error": 5,
+    "max_steps_observed": 200,
+    "min_steps_observed": 200,
+    "likely_causes": [
+      "planner_rejecting_many_predicted_actions",
+      "some_rollouts_exhaust_the_horizon_without_finishing",
+      "policy_quality_is_currently_well_below_target"
+    ]
+  }
+}
+saved full result -> /tmp/mdit-eval-s79pobyj/result.json
+saved episode analysis -> /tmp/mdit-eval-s79pobyj/result__analysis.json
+[CoppeliaSim:loadinfo]   done.

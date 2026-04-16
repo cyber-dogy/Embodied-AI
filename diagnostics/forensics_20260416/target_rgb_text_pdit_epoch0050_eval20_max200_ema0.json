@@ -1,0 +1,310 @@
+{
+  "ckpt": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100_fair_bs128_noamp/epochs/epoch_0050.pt",
+  "seed": 1234,
+  "success_rate": 0.0,
+  "mean_steps": 200.0,
+  "num_episodes": 20,
+  "duration_sec": 1986.0227087139938,
+  "episode_records": [
+    {
+      "episode": 0,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 160.2217392129969,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 1,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 69.83153703100106,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 2,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 56.151302725993446,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 3,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 65.76272759900894,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 4,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 42.28856897899823,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "A path could not be found because the target is outside of workspace."
+    },
+    {
+      "episode": 5,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 51.192442404004396,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 6,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 42.11374152399367,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 7,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 137.59232053199958,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 8,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 185.86872907800716,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 9,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 141.5999702370027,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 10,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 36.51790197599621,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 11,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 68.89753845699306,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 12,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 282.8665425809886,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 13,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 202.9098918489908,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 14,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 76.07095620599284,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 15,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 174.319342140996,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 16,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 46.549739003006835,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 17,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 55.916892174995155,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 18,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 46.063349688003655,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    },
+    {
+      "episode": 19,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 37.65290288600954,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "extends": "pcd_mdit_100_fair_bs160.json",
-  "run_name": "ablation_pcd_mdit_100_fair_bs64_noamp",
-  "batch_size": 64,
+  "run_name": "ablation_pcd_mdit_100_fair_bs128_noamp",
+  "batch_size": 128,
   "grad_accum_steps": 1,
   "use_amp": false,
   "checkpoint_every_epochs": 50,

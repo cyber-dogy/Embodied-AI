@@ -1,0 +1,49 @@
+{
+  "num_episodes": 20,
+  "num_successes": 0,
+  "num_failures": 20,
+  "success_rate": 0.0,
+  "mean_steps": 200.0,
+  "success_episode_indices": [],
+  "failure_episode_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "failure_error_buckets": {
+    "planning_runtime_error": 11,
+    "none": 8,
+    "A path could not be found because the target is outside of workspace.": 1
+  },
+  "failure_step_buckets": {
+    "lt_20": 0,
+    "20_to_99": 0,
+    "100_to_horizon_minus_1": 0,
+    "at_horizon": 20
+  },
+  "num_failures_without_error": 8,
+  "max_steps_observed": 200,
+  "min_steps_observed": 200,
+  "likely_causes": [
+    "planner_rejecting_many_predicted_actions",
+    "some_rollouts_exhaust_the_horizon_without_finishing",
+    "policy_quality_is_currently_well_below_target"
+  ]
+}
