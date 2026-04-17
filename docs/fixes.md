@@ -837,3 +837,155 @@ except Exception as exc:
 
 - PDIT / MDIT 两条评估链路的错误分析口径对齐；
 - 下游执行先验证评估链路，再解释模型结果，减少“0 成功率”误诊。
+
+### 2026-04-16 17:20:33 +0800 · `mdit/*` + `research/mdit_trial_runner.py` + `research/mdit_autoresearch_loop.py` + `configs/mdit/fm_autodl_lab.json` + `scripts/*mdit*` + `tests/test_mdit_*` + `docs/mdit/2026-04-16-mdit-execution-manual.md` · 新建 MDIT 主线并切换到 5RGB+Text 输入（PDIT backbone/policy 语义保持）
+
+**问题**：仓库已存在 `scripts --line mdit` 与 `pyproject` 的 mdit 入口，但 `mdit/` 代码线缺失，无法执行独立 RGB+text 主线；同时需要确保评估链路与 pdit 一致、且不污染 pdit 现有成功实现。
+
+**修改**：
+
+- 新建独立 `mdit/` 包（由 `pdit` 拷贝后按 mdit 命名空间重构），保持 `pdit` 代码零改动。
+- `mdit/config/schema.py` 增加 RGB+text 主线字段：5 相机配置、text 来源、CLIP vision/text、3-token 融合、OOM 自动降档 tier。
+- `mdit/data/modalities/rgb.py` 实现 `RobotDatasetRgbText`，读取 `data/images` + `data/robot_state`，输出 `(obs_rgb, robot_state_obs, robot_state_pred, task_text)`。
+- `mdit/model/encoders/clip_rgb_text_token.py` 实现 5 路独立 CLIP vision 分支（last block 微调）+ 冻结 CLIP text + 投影；通过 `camera adapter -> step fusion adapter -> cond token projector` 输出 3 个 cond token，并对齐 `cond_dim = obs_features_dim + y_dim`。
+- `mdit/policy/fm_policy.py` / `diffusion_policy.py` 改为支持 RGB+text batch 合约，`predict_action` 走默认 task text；robot_state 归一化与 backbone/action 语义保持 pdit 对齐。
+- `mdit/train/runner.py` 新增 OOM 自动降档：`32x4 -> 16x8 -> 8x16`（global batch 保持 128）。
+- 评估链路复用共享实现：`mdit/train/eval.py` 继续复用 `common.rlbench_rollout`，并直接调用 `pdit.train.action_postprocess`。
+- 新增 mdit 专用脚本：`scripts/train_mdit.py`、`scripts/eval_mdit_checkpoint.py`、`scripts/eval_mdit_all_checkpoints.py`、`scripts/run_mdit_autoresearch_trial.py`、`scripts/record_mdit_rollout_videos.py`。
+- 新增 `research/mdit_trial_runner.py`（mdit 训练+离线审计编排）与 `research/mdit_autoresearch_loop.py`（baseline loop 入口）。
+- 新增配置 `configs/mdit/fm_autodl_lab.json`（100 epoch / checkpoint 50 / eval episodes 20 / wandb online）。
+- 新增测试：`tests/test_mdit_dataset.py`、`tests/test_mdit_encoder_contract.py`、`tests/test_mdit_policy_contract.py`、`tests/test_mdit_cli_smoke.py`。
+- 新增执行手册：`docs/mdit/2026-04-16-mdit-execution-manual.md`。
+
+**结果**：
+
+- `mdit` 主线具备独立可执行的训练/评估/autoresearch/脚本入口。
+- 输入侧已从 pcd 切换为 `5RGB + text`，并固定为 3-token 融合策略。
+- `pdit` 原有代码路径保持不变；mdit 评估链路与 pdit 共享关键 rollout/postprocess 逻辑。
+- 本地已完成 Python 语法编译检查（`mdit` + 新增 `research/scripts` 文件）。
+
+### 2026-04-16 20:48:28 +0800 · `ckpt/unplug_charger_mdit_rgb_text_3token_100/*` + `tmux session mdit_unplug_train` · SSH 前台训练可能被断开，切换为 tmux 断点续训
+
+问题：
+
+- MDIT 训练最初运行在 SSH 前台终端（`pts/6`），若用户退出 SSH 会话，进程可能收到 hangup 导致中断。
+- `run_autoresearch_trial --phase train-only` 当前实现会在 trial runner 内强制 `resume_from_latest=False`，不适合作为断点续训入口。
+
+修改：
+
+- 停止前台训练进程，保留已有 checkpoint（`latest.pt`）。
+- 创建并启动后台 `tmux` 会话：`mdit_unplug_train`。
+- 在 `tmux` 内改用 `scripts/train.py --line mdit --resume` 续训同一 run：
+  - `--run-name unplug_charger_mdit_rgb_text_3token_100`
+  - `--set train_epochs=100 --set checkpoint_every_epochs=50`
+  - `--set wandb_resume=true`，复用 WandB run id `8ikgnzbw`
+- 将续训日志落盘到：
+  - `ckpt/unplug_charger_mdit_rgb_text_3token_100/logs/train_resume_20260416_204647.log`
+  - 并更新 `logs/.latest_resume_log` 指向当前日志文件。
+
+结果：
+
+- 训练已在 `tmux` 后台持续推进（当前可见 `train epoch 2` 进度）。
+- 用户可随时断开 SSH，不影响训练；重新连接后可 `tmux attach -t mdit_unplug_train` 直接接力。
+- 断点与 WandB 都保持连续，无需重头训练。
+
+### 2026-04-16 20:50:41 +0800 · `ckpt/unplug_charger_mdit_rgb_text_3token_100/logs/train_resume_20260416_204647.log` · WandB 续跑早期 step 告警（非致命）
+
+问题：
+
+- 续训刚启动时出现 `WandB step must be monotonically increasing` 告警，原因是历史 run 的最新 step（约 204）高于本地 checkpoint 记录的 `global_step=166`。
+
+修改：
+
+- 保持 `wandb_resume=true` 连续记录，不中断训练；
+- 确认告警仅影响早期少量低 step 日志（低于 WandB 当前 step 的点会被忽略），不影响模型参数更新与 checkpoint 保存。
+
+结果：
+
+- 训练进程继续正常推进，checkpoint 正常写入；
+- 监控结论以 epoch 级指标、checkpoint 审计结果和后续 step（超过历史 step）日志为准。
+
+### 2026-04-16 23:30:00 +0800 · `common/task_text.py` + `mdit/config/consistency.py` + `mdit/train/checkpoints.py` + `mdit/cli/shared.py` + `mdit/cli/eval_*` + `research/mdit_trial_runner.py` + `research/mdit_autoresearch_loop.py` + `configs/mdit/fm_autodl_lane_b.json` + `docs/mdit/*` + `CLAUDE.md` · MDIT autoresearch 升级为评估口径锁死 + 双线 watchdog + 冠军固化
+
+问题：此前 `mdit` 虽然已有独立 RGB+text 主线，但缺少严格的 train/eval contract 校验、缺少真实可恢复的 autoresearch 守护 loop，也没有 Lane B 挑战者配置与冠军固定路径；一旦评估配方漂移、训练中断或 run 过多堆积，后续结论容易混乱。
+
+修改：统一新增 `effective_task_text` / `eval_contract` / `recipe_contract` 概念，checkpoint 与 `experiment_manifest.json` 同步保存训练配方；`eval_checkpoint` / `eval_all_checkpoints` 在运行前写 `eval_manifest` 并检查 contract drift；`mdit` 训练阶段新增 `train_heartbeat.json`；`research/mdit_trial_runner.py` 现在会提前写 manifest、在 train/audit 后自动写 `docs/mdit` 与 `docs/fixes.md` 留痕；`research/mdit_autoresearch_loop.py` 升级为带状态文件、训练 watchdog、audit retry、晋级规则、冠军 alias 与 `best_path.md` 的双线 loop；新增 `scripts/run_mdit_autoresearch_loop.py` 和 Lane B 配置 `configs/mdit/fm_autodl_lane_b.json`；执行手册与 `CLAUDE.md` 同步更新到新入口。
+
+结果：`mdit` 现在具备“同口径训练/评估 + 可恢复后台接管 + Lane A/Lane B 并行筛选 + 冠军固定”这一整套可托管实验骨架。后续 autoresearch 可直接挂在 `tmux` 中持续推进，且每轮成功/失败都会留下结构化记录。
+
+### 2026-04-17 09:49:32 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:04:33 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:04:52 +0800 · `mdit/cli/eval_all_checkpoints.py + research/mdit_trial_runner.py + research/mdit_autoresearch_loop.py`
+问题：离线审计虽然会产出 JSON/表格，但终端里没有足够醒目的主结论摘要；同时 autoresearch 恢复时会把 `pending_offline_audit=true` 的 screening 记录误当成已完成，导致跳过应做的正式审计。
+
+修改：给 all-checkpoint 审计补充 `audit_summary` 输出，明确打印 `success@50/100/300/500`、`best_success`、`aggregate_success_rate`；给 trial audit 完成路径补充 `trial_audit_summary` 输出；并修正 autoresearch 恢复逻辑，只有真正完成离线审计的记录才会被视为已完成。
+
+结果：`tmux`/终端日志里会直接看到关键成功率和最佳 checkpoint，不需要再手工翻 JSON；`Lane A mainline` 在恢复后会先按正确口径完成审计，再继续后续候选搜索。
+
+### 2026-04-17 10:37:03 +0800 · `research/mdit_trial_runner.py`
+问题：autoresearch 的 audit-only 阶段默认会把 `best_valid/latest` 等 special checkpoints 也一起跑掉，导致即便 `epoch_50/100` 已经完成，后续对比仍要额外等待很久。
+
+修改：将 MDIT trial runner 的共享审计命令改为 `--no-include-special`，autoresearch 只评估周期 checkpoint，保持主判据聚焦在 `epoch_50/100 @ 20 episodes`。
+
+结果：当前主线完成 `epoch_50/100` 后就能更快进入 `lane_a_stabilized` 和 `lane_b_faithful` 的后续对比，不再被 special checkpoint 审计拖慢。
+
+### 2026-04-17 10:39:53 +0800 · `research/mdit_trial_runner.py`
+问题：即使已经有可复用的 `audit_raw_results.json`，MDIT trial runner 进入 audit-only 时也会先删除缓存，导致 `epoch_0050` 无法 cache hit，只能重复评估。
+
+修改：移除 `_run_checkpoint_audit(...)` 中对 `audit_raw_results.json` 的预删除逻辑，让共享 `eval_all_checkpoints` 自己按 cache key 复用已有结果。
+
+结果：当前主线重新拉起后可以直接复用已完成的 `epoch_0050` 审计，只补跑 `epoch_0100`，更快进入后续候选对比。
+
+### 2026-04-17 10:37:35 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:39:34 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:40:23 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:41:09 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:41:59 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：将现有 run `unplug_charger_mdit_rgb_text_3token_100` 接入 autoresearch 守护链。
+
+修改：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_100，stage_epochs=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
+
+### 2026-04-17 10:55:44 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：离线审计 trial `unplug_charger_mdit_rgb_text_3token_100` 已完成。
+
+修改：统一使用共享 audit chain，episodes=20，stage_epochs=100。
+
+结果：trial_score=0.55，best_success_rate=0.55，recipe_drift=False，collapse=False

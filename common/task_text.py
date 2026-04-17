@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Any, Iterable
 
 
 DEFAULT_TASK_INSTRUCTIONS = {
@@ -62,3 +62,52 @@ def choose_instruction(
                 return cleaned
 
     return get_default_instruction(task_name)
+
+
+def resolve_task_text(
+    task_name: str,
+    *,
+    text_source: str = "task_template",
+    descriptions: Iterable[str] | None = None,
+    override_text: str | None = None,
+) -> str:
+    source = str(text_source or "task_template").strip().lower().replace("-", "_").replace(" ", "_")
+    if source in {"task_template", "task_name"}:
+        return choose_instruction(
+            task_name=task_name,
+            descriptions=None,
+            override_text=override_text,
+        )
+    if source == "dataset":
+        return choose_instruction(
+            task_name=task_name,
+            descriptions=descriptions,
+            override_text=override_text,
+        )
+    raise ValueError(
+        f"Unsupported text_source={text_source!r}. "
+        "Expected one of: task_template, task_name, dataset."
+    )
+
+
+def build_task_text_contract(
+    task_name: str,
+    *,
+    text_source: str = "task_template",
+    descriptions: Iterable[str] | None = None,
+    override_text: str | None = None,
+) -> dict[str, Any]:
+    description_list = [" ".join(str(text).split()) for text in descriptions or [] if str(text).strip()]
+    effective_task_text = resolve_task_text(
+        task_name=task_name,
+        text_source=text_source,
+        descriptions=description_list,
+        override_text=override_text,
+    )
+    return {
+        "task_name": _clean_text(task_name),
+        "text_source": str(text_source or "task_template").strip().lower().replace("-", "_").replace(" ", "_"),
+        "task_text_override": _clean_text(override_text) or None,
+        "dataset_descriptions": description_list,
+        "effective_task_text": effective_task_text,
+    }

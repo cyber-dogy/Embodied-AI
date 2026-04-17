@@ -1,5 +1,6 @@
 from .trial_runner import finalize_autoresearch_trial, run_autoresearch_trial, train_autoresearch_trial
 from .mdit_trial_runner import (
+    adopt_existing_mdit_autoresearch_run,
     finalize_mdit_autoresearch_trial,
     run_mdit_autoresearch_trial,
     train_mdit_autoresearch_trial,
@@ -16,6 +17,7 @@ __all__ = [
     "finalize_autoresearch_trial",
     "finalize_lelan_autoresearch_trial",
     "finalize_mdit_autoresearch_trial",
+    "adopt_existing_mdit_autoresearch_run",
     "run_lelan_autoresearch_loop",
     "run_lelan_autoresearch_trial",
     "run_mdit_attached_watch",
