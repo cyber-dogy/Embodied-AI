@@ -4,7 +4,22 @@
 
 **每个 agent 在修改本项目代码前必须先读此文件。**
 每次发现 bug、做出修改、观察到实验结果后，必须在本文件末尾追加一条记录。
-格式固定为：`YYYY-MM-DD HH:MM:SS ±TZ · 文件 · 问题 · 修改 · 结果`。必须带完整时间戳。只记关键信息，禁止大段粘贴无关代码。
+格式固定为：
+
+`### YYYY-MM-DD HH:MM:SS ±TZ · 简明标题`
+
+并严格包含四个字段：
+
+- `范围`：涉及的文件、模块或脚本
+- `背景`：发生了什么，为什么值得记录
+- `处理`：实际改了什么，或采取了什么应对动作
+- `结果`：当前结论、关键指标、产物路径、后续状态
+
+补充要求：
+
+- 标题必须单看就能知道“这条记录在说什么”，不能只写文件名。
+- 结果必须尽量写清 `run_name / checkpoint / success rate / 下一步状态`，避免只写 `none`、`待观察` 这类模糊词。
+- 允许简略，但必须保证人和后续模型都能快速读懂上下文。
 
 ---
 
@@ -983,9 +998,135 @@ except Exception as exc:
 
 结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100，pending_offline_audit=true
 
-### 2026-04-17 10:55:44 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
-问题：离线审计 trial `unplug_charger_mdit_rgb_text_3token_100` 已完成。
+### 2026-04-17 10:55:44 +0800 · 离线审计完成，确认当前 RGB+text 主线成绩 · unplug_charger_mdit_rgb_text_3token_100
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：`Lane A mainline` 的 100 epoch screening 已完成，需要用共享 audit chain 固化 `epoch_0050/epoch_0100` 的成功率，作为后续候选比较锚点。
+
+处理：统一使用共享 audit chain 执行 `20 episodes` 审计，锁定与训练一致的评估口径，不引入额外 special checkpoint 干扰主结论。
+
+结果：`epoch_0050` 成功率 `0.25`，`epoch_0100` 成功率 `0.55`，最佳结果为 `0.55 @ epoch 100`；`trial_score=0.55`，`recipe_drift=false`，`collapse=false`，该 run 已成为后续 RGB+text 路线的临时对照锚点。
+
+### 2026-04-17 11:05:36 +0800 · 冻结当前最优路线，防止后续搜索覆盖 · unplug_charger_mdit_rgb_text_3token_100
+范围：`docs/mdit/best_path.md + docs/mdit/archive/legacy_notes/2026-04-17-110536-provisional-best-lane-a-mainline.md + autoresearch_records/frozen_best`
+
+背景：当前最优 RGB+text 路线已经出现，但原始 run 后续可能被 autoresearch 清理或被更晚的候选覆盖，需要先固化一个可回退锚点。
+
+处理：将 `best_success.pt`、`best_valid.pt`、`epoch_0050.pt`、`epoch_0100.pt` 冻结到 `autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055`，并建立 `current_provisional_best` 稳定别名，同时更新 `best_path.md`。
+
+结果：当前最佳方向已经可稳定回退；后续实验可以继续推进，但这一条 `0.55 @ epoch_0100` 的 RGB+text 主线不会因清理或覆盖而丢失。
+
+### 2026-04-17 11:10:00 +0800 · 改善 fixes 自动摘要，减少重复和歧义
+范围：`research/mdit_trial_runner.py + docs/fixes.md`
+
+背景：训练/审计完成后写入 `docs/fixes.md` 的内容过于状态化，不像可复盘记录；同时同一 run 被重复接管时会追加重复条目，噪声偏大。
+
+处理：给训练完成与审计完成路径补充摘要化结果输出，自动记录关键 epoch、关键指标和审计成绩；同时为 `adopt_existing` 记录增加去重键，避免重复刷屏。
+
+结果：后续训练与评估记录会直接写明核心结论与下一状态；同一历史 run 反复被接管时，不会再在 `fixes.md` 中不断产生重复条目。
+
+### 2026-04-17 11:20:15 +0800 · 修正 autoresearch 完成态判断，失败记录不再阻塞重跑
+范围：`research/mdit_autoresearch_loop.py + docs/fixes.md`
+
+背景：`mdit_autoresearch` 被中断后，`lane_a_stabilized_100` 的一次异常失败被错误写成“已完成候选”；恢复时 loop 会直接跳过它，导致托管停在旧失败记录上。
+
+处理：将候选“已完成”的判定收紧为 `pending_offline_audit=false` 且 `error_type is None`；异常失败记录不再阻塞同一候选重新训练或重新审计。
+
+结果：autoresearch 重新拉起后，会继续接管 `lane_a_stabilized_100`，而不是卡死在旧失败上；由于旧 run 缺少可续训的 `latest.pt`，这一轮改为新 run 重启训练。
+
+### 2026-04-17 11:23:51 +0800 · 为 fresh run 提前写出 latest.pt，保证随时可续训
+范围：`mdit/train/runner.py + research/mdit_autoresearch_loop.py + docs/fixes.md`
+
+背景：`mdit` 训练原本只在 epoch 结束后保存 `latest.pt`；如果 fresh run 在第一个 epoch 中途被打断，磁盘上会没有可续训 checkpoint，不满足“随时可接续”的要求。
+
+处理：在 MDIT 训练启动后、进入第一个 batch 前，若 `latest.pt` 不存在则立即写入一个 bootstrap latest checkpoint；随后重启当前 `lane_a_stabilized_100` 候选，让它从新逻辑启动。
+
+结果：新 run `unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329` 在 `epoch=0, global_step=0` 时就同时具备 `config.json + train_heartbeat.json + latest.pt`，后续即使中断也可以立刻续训。
+
+### 2026-04-17 11:16:09 +0800 · 训练阶段异常退出，保留现场等待 watchdog 重跑 · unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：`lane_a_stabilized_100` 的第一轮训练在训练阶段触发 PyTorch checkpoint 写盘异常：`[enforce fail at inline_container.cc:664] unexpected pos 2602795840 vs 2602795728`。
+
+处理：保留失败 run 的 manifest、trial record 与日志线索，不清理现场，等待 autoresearch watchdog 后续重跑或人工诊断。
+
+结果：该 run 以 `RuntimeError` 结束，未进入正式审计；后续已改为新 run 重新启动同一候选训练。
+
+### 2026-04-17 16:58:16 +0800 · 训练完成并进入待审计状态 · unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：`lane_a_stabilized_100` 的 100 epoch 训练已跑完，需要保留关键产物并转入共享离线审计，验证这条稳定化路线是否优于主线锚点。
+
+处理：写出 `trial record`、`summary.json`、`experiment_manifest.json`，保留 `best_valid.pt`、`epoch_0050.pt`、`epoch_0100.pt`，并生成 audit-only 命令交给共享评估链。
+
+结果：该 run 已完成 `100` 个 epoch（`latest_epoch=99`）；最佳验证指标 `best_metric=0.870`，出现在 `best_epoch=46`；当前候选带有受控配方偏移：`command_mode first -> mean_first_n`、`average_first_n 1 -> 2`、`smooth_actions false -> true`；`pending_offline_audit=true`，审计结果待回填。
+
+### 2026-04-17 17:00:00 +0800 · 将分散的 run note 合并为单一研究日志
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：`docs/mdit` 中每次训练、审计、接管都会新建一份时间戳 note，长期运行后目录污染明显，也提高了误删风险。
+
+处理：将 autoresearch 的 research note 输出从“每次新建单独 markdown 文件”改为统一追加到 `docs/mdit/research_journal.md`；并把现有自动生成的历史 note 合并进该 journal，保留 `best_path.md` 与执行手册作为稳定文档。
+
+结果：后续 `docs/mdit` 不会再因为每次执行新增一堆零散 note；run-by-run 记录会持续沉淀在同一份 `research_journal.md` 中。
+
+### 2026-04-17 17:02:00 +0800 · 归档历史 note，清理 docs/mdit 根目录
+范围：`docs/mdit/archive/legacy_notes + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：虽然新的记录模式已经切到 `research_journal.md`，但历史时间戳 note 仍留在 `docs/mdit` 根目录，目录视图依然杂乱，也更容易被误删。
+
+处理：将历史自动生成 note 从 `docs/mdit/` 根目录整体迁移到 `docs/mdit/archive/legacy_notes/`，根目录只保留执行手册、`best_path.md` 和 `research_journal.md`；同时为归档目录补充 `README.md` 说明。
+
+结果：`docs/mdit` 根目录已收敛成稳定文档集合；历史记录仍保存在 `research_journal.md` 和 `archive/legacy_notes/` 中，不会因根目录误操作而丢失。
+
+### 2026-04-17 17:11:51 +0800 · 重构 fixes 记录模板，提升人和后续模型的可读性
+范围：`research/mdit_trial_runner.py + docs/fixes.md`
+
+背景：`fixes.md` 近期自动写入的条目标题只有文件范围，正文又偏向裸 `key=value` 状态输出；虽然简短，但读者和后续模型都需要先猜“这条记录到底在说什么”。
+
+处理：将自动写入模板改为固定的 `标题 + 范围 + 背景 + 处理 + 结果` 结构；训练/审计摘要改写成带 `run_name`、关键指标、受控配方偏移和下一状态的短句；同时手工重写最近一批 MDIT 关键记录，让文档从现在起具备一致的阅读口径。
+
+结果：后续新增的 fixes 条目会直接写清事件标题、涉及 run、关键 checkpoint/指标和下一步状态；当前最近一批 MDIT 记录已经可以被人和后续模型单独阅读理解，`python -m py_compile research/mdit_trial_runner.py` 已通过。
+
+### 2026-04-17 17:20:29 +0800 · `research/mdit_trial_runner.py + docs/mdit + docs/fixes.md`
+问题：离线审计 trial `unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329` 已完成。
 
 修改：统一使用共享 audit chain，episodes=20，stage_epochs=100。
 
-结果：trial_score=0.55，best_success_rate=0.55，recipe_drift=False，collapse=False
+结果：success@100=0.350，best_success=0.350，best_success_epoch=100，trial_score=-1.000，collapse=True，recipe_drift=True，collapse_reasons=epoch 100 success 0.35 below threshold 0.55
+
+### 2026-04-17 17:20:44 +0800 · 训练失败，保留现场等待重试 · unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：候选 run `unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029` 在训练阶段异常退出：(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /timm/vit_base_patch16_clip_224.openai/resolve/main/model.safetensors (Caused by ProxyError('Cannot connect to proxy.', TimeoutError('_ssl.c:1000: The handshake operation timed out')))"), '(Request ID: 4de944c2-7728-468a-83d0-51d3b3f6962e)')
+
+处理：保留失败 run 的 trial record、manifest 与日志线索，不清理现场，等待 watchdog 重试或人工诊断。
+
+结果：error_type=ProxyError；run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029
+
+### 2026-04-17 17:20:54 +0800 · 稳定化对照审计完成，确认弱于当前主线锚点 · lane_a_stabilized_100
+范围：`autoresearch_records/mdit_loop_state__unplug_rgb_text_search.json + ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329/* + docs/fixes.md`
+
+背景：`lane_a_stabilized_100` 使用 `command_mode=mean_first_n`、`average_first_n=2`、`smooth_actions=true`，目标是缓解主线中的 `planning_runtime_error` 和 horizon exhaustion，需要确认这组稳定化改动是否真的优于主线。
+
+处理：完成共享 audit chain 的 `epoch_0050/epoch_0100 @ 20 episodes` 审计，并与当前主线锚点 `unplug_charger_mdit_rgb_text_3token_100` 的锁定口径结果直接对照。
+
+结果：该候选 `epoch_0050=0.20 (4/20)`、`epoch_0100=0.35 (7/20)`，显著低于主线锚点的 `epoch_0100=0.55 (11/20)`；失败仍以 `at_horizon` 为主，说明动作平滑化没有解决核心问题，反而让 rollout 更容易“做不完”，该路线判定为弱线，不再作为主方向推进。
+
+### 2026-04-17 17:21:30 +0800 · 修复 Lane B 启动时的 Hugging Face 超时，强制 autoresearch 优先走本地缓存
+范围：`research/mdit_autoresearch_loop.py + autoresearch_records/logs/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029__train.log + docs/fixes.md`
+
+背景：`lane_b_faithful_100` 在第一次启动时没有进入训练，而是在加载 `timm/vit_base_patch16_clip_224.openai` 时触发 `huggingface.co` 代理握手超时；本机其实已经有 `timm` 视觉权重和 `openai/clip-vit-base-patch16` 文本权重缓存，因此这次失败属于环境加载路径问题，不是模型结构失败。
+
+处理：为 autoresearch 子进程新增本地缓存检测；当检测到 `timm` 和 `CLIP` 权重都已缓存时，自动给训练/审计子进程注入 `HF_HUB_OFFLINE=1`、`TRANSFORMERS_OFFLINE=1`、`HF_HUB_DISABLE_TELEMETRY=1`，强制优先使用本地缓存，并把该环境状态写入子进程日志。
+
+结果：已验证在 `mdit_env` 下离线模式可以成功初始化 `VisionTransformer` 与 `CLIPTextModel`；后续 Lane B 重跑将不再因为外网握手超时而中断，当前这次 `ProxyError` 记录应解释为启动环境故障，而不是 Lane B 方案本身失败。
+
+### 2026-04-17 19:05:00 +0800 · 新增 MTDP 严格验证线与 12G 单档兼容，不污染现有主线和共享评估
+范围：`mdit/config/* + mdit/model/* + mdit/policy/* + research/mdit_* + configs/mdit/fm_autodl_lane_c_mtdp_strict*.json + tests/test_mdit_*`
+
+背景：现有 `lane_a/lane_b` 还不足以严格验证 `multitask_dit_policy` 在当前仓库约束下是否可行；同时后续还需要把同一条严格线带到 12G RTX 4070 上做真实训练兼容验证。
+
+处理：新增独立 strict 变体 `clip_rgb_text_mtdp + dit_mtdp_rope + fm_variant=mtdp_strict`，实现 MTDP 风格 global conditioning vector、RoPE backbone、beta timestep sampling、Euler 积分和 state/action min-max 归一化；运行时自动从训练集解析 `state_min/max` 与 `action_min/max` 并写回 config/checkpoint；新增 `lane_c_mtdp_strict_100` 与 `lane_c_mtdp_strict_100_12g` 配置，其中 12G 档只降一档到 `batch_size=16, grad_accum_steps=8`，并通过 `activation_checkpointing=true`、`vision_encode_chunk_size=1` 压显存；autoresearch 默认 screening 新增 `lane_c_mtdp_strict_100`，旧主线与共享评估入口保持不变。
+
+结果：旧主线接口仍保持原行为；新增 strict/12G 代码路径已通过 `python -m unittest discover -s tests -p 'test_mdit*_contract.py'`、`python -m unittest discover -s tests -p 'test_mdit_autoresearch_loop.py'`、`python -m unittest discover -s tests -p 'test_mdit_cli_smoke.py'`、`python -m unittest discover -s tests -p 'test_trial_runner.py'`、`python -m unittest discover -s tests -p 'test_pdit_eval_cli.py'`；当前最佳路线未被覆盖，新 strict 线可作为下一条正式挑战线接入训练。

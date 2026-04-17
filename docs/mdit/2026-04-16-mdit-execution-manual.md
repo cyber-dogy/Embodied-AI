@@ -49,6 +49,14 @@
 
 ## 4. 单次训练 / 审计命令
 
+查看指令
+
+tmux attach -t mdit_autoresearch
+
+tmux list-panes -a -F '#{session_name} #{window_index}.#{pane_index} #{pane_current_command} #{pane_dead} #{pane_current_path}'
+
+tail -f /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112110__train.log
+
 ### Train-only
 
 ```bash

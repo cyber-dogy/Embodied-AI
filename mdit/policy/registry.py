@@ -16,6 +16,31 @@ def _default_task_text(cfg: ExperimentConfig) -> str:
 def build_policy(strategy: str, cfg: ExperimentConfig, obs_encoder, backbone):
     strategy = str(strategy).lower()
     if strategy == "fm":
+        if str(cfg.fm_variant) == "mtdp_strict":
+            from .fm_mtdp_policy import MTDPFMPolicy, MTDPFMPolicyConfig
+
+            policy_cfg = MTDPFMPolicyConfig(
+                y_dim=cfg.y_dim,
+                n_obs_steps=cfg.n_obs_steps,
+                n_pred_steps=cfg.n_pred_steps,
+                default_task_text=_default_task_text(cfg),
+                subs_factor=cfg.subs_factor,
+                sigma_min=cfg.fm_sigma_min,
+                num_integration_steps=cfg.fm_num_integration_steps,
+                integration_method=cfg.fm_integration_method,
+                timestep_sampling_strategy=cfg.fm_timestep_sampling_strategy,
+                timestep_beta_alpha=cfg.fm_timestep_beta_alpha,
+                timestep_beta_beta=cfg.fm_timestep_beta_beta,
+                timestep_beta_s=cfg.fm_timestep_beta_s,
+                vision_lr_multiplier=cfg.vision_lr_multiplier,
+                loss_weights=cfg.fm_loss_weights or {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0},
+                state_min=cfg.state_min,
+                state_max=cfg.state_max,
+                action_min=cfg.action_min,
+                action_max=cfg.action_max,
+            )
+            return MTDPFMPolicy(policy_cfg, obs_encoder=obs_encoder, backbone=backbone)
+
         from .fm_policy import FMPolicyConfig, FMTransformerPolicy
 
         policy_cfg = FMPolicyConfig(

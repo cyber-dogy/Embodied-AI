@@ -37,6 +37,12 @@ def parse_args() -> argparse.Namespace:
         help="Lane B faithful challenger config.",
     )
     parser.add_argument(
+        "--lane-c-config",
+        type=Path,
+        default=PROJECT_ROOT / "configs" / "mdit" / "fm_autodl_lane_c_mtdp_strict.json",
+        help="Lane C strict MTDP challenger config.",
+    )
+    parser.add_argument(
         "--existing-lane-a-run-dir",
         type=Path,
         default=None,
@@ -146,6 +152,7 @@ def main() -> int:
         tag=args.tag,
         lane_a_config=args.lane_a_config.expanduser().resolve(),
         lane_b_config=args.lane_b_config.expanduser().resolve(),
+        lane_c_config=args.lane_c_config.expanduser().resolve(),
         existing_lane_a_run_dir=(
             None if args.existing_lane_a_run_dir is None else args.existing_lane_a_run_dir.expanduser().resolve()
         ),

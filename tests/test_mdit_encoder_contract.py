@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 
 import _bootstrap  # noqa: F401
+from mdit.model.encoders.clip_rgb_text_mtdp import ClipRgbTextMTDPEncoder
 from mdit.model.encoders.clip_rgb_text_token import ClipRgbTextTokenEncoder
 
 
@@ -18,11 +19,15 @@ class _DummyVisionBackbone(nn.Module):
         self.num_features = embed_dim
         self.blocks = nn.ModuleList([nn.Linear(embed_dim, embed_dim) for _ in range(4)])
         self.norm = nn.LayerNorm(embed_dim)
+        self.grad_checkpointing_enabled = False
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         batch = x.shape[0]
         cls = torch.ones(batch, self.embed_dim, device=x.device, dtype=x.dtype)
         return cls.unsqueeze(1)
+
+    def set_grad_checkpointing(self, enabled: bool = True) -> None:
+        self.grad_checkpointing_enabled = bool(enabled)
 
 
 class _DummyTokenizer:
@@ -94,6 +99,43 @@ class MDITEncoderContractTest(unittest.TestCase):
             robot_state_obs = torch.rand(2, 3, 10)
             cond_tokens = encoder(obs_rgb, robot_state_obs, task_text=["a", "b"])
             self.assertEqual(cond_tokens.shape, (2, 3, 26))
+
+    def test_mtdp_encoder_outputs_global_conditioning_vector(self) -> None:
+        with mock.patch(
+            "mdit.model.encoders.clip_rgb_text_token.timm",
+            new=types.SimpleNamespace(create_model=lambda *args, **kwargs: _DummyVisionBackbone()),
+        ), mock.patch(
+            "mdit.model.encoders.clip_rgb_text_mtdp.CLIPTokenizer",
+            new=_DummyTokenizer,
+        ), mock.patch(
+            "mdit.model.encoders.clip_rgb_text_mtdp.CLIPTextModel",
+            new=_DummyTextModel,
+        ):
+            encoder = ClipRgbTextMTDPEncoder(
+                n_obs_steps=2,
+                robot_state_dim=10,
+                camera_names=("right_shoulder", "left_shoulder", "overhead", "front", "wrist"),
+                image_size=(32, 32),
+                vision_backbone_name="dummy",
+                vision_pretrained=False,
+                vision_train_mode="last_block",
+                vision_num_unfreeze_blocks=1,
+                text_model_name="dummy",
+                text_projection_dim=16,
+                task_name="unplug_charger",
+                task_text_override=None,
+                activation_checkpointing=True,
+                vision_encode_chunk_size=1,
+            )
+
+            obs_rgb = torch.rand(2, 2, 5, 16, 16, 3)
+            robot_state_obs = torch.rand(2, 2, 10)
+            conditioning_vec = encoder(obs_rgb, robot_state_obs, task_text=["a", "b"])
+
+            self.assertEqual(conditioning_vec.shape, (2, encoder.conditioning_dim))
+            self.assertEqual(encoder.conditioning_dim, 2 * (10 + 5 * 32 + 16))
+            first_backbone = encoder.vision_branches[0].backbone
+            self.assertTrue(first_backbone.grad_checkpointing_enabled)
 
     def test_faithful_concat_recipe_keeps_same_cond_contract(self) -> None:
         with mock.patch(

@@ -3,12 +3,17 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from mdit.config import ExperimentConfig
-from .backbones import DiTTrajectoryBackbone
-from .encoders import ClipRgbTextTokenEncoder, DummyObsEncoder, PointNetObsTokenEncoder
+from .backbones import DiTMTDPRoPEBackbone, DiTTrajectoryBackbone
+from .encoders import (
+    ClipRgbTextMTDPEncoder,
+    ClipRgbTextTokenEncoder,
+    DummyObsEncoder,
+    PointNetObsTokenEncoder,
+)
 
 
 EncoderBuilder = Callable[[ExperimentConfig], object]
-BackboneBuilder = Callable[[ExperimentConfig], object]
+BackboneBuilder = Callable[..., object]
 
 
 def _build_clip_rgb_text_token_encoder(cfg: ExperimentConfig) -> ClipRgbTextTokenEncoder:
@@ -27,6 +32,7 @@ def _build_clip_rgb_text_token_encoder(cfg: ExperimentConfig) -> ClipRgbTextToke
         task_text_override=cfg.task_text_override,
         token_fusion_mode=str(cfg.token_fusion_mode),
         fusion_recipe="step_fusion",
+        activation_checkpointing=bool(cfg.activation_checkpointing),
     )
 
 
@@ -46,6 +52,26 @@ def _build_clip_rgb_text_faithful_encoder(cfg: ExperimentConfig) -> ClipRgbTextT
         task_text_override=cfg.task_text_override,
         token_fusion_mode=str(cfg.token_fusion_mode),
         fusion_recipe="faithful_concat",
+        activation_checkpointing=bool(cfg.activation_checkpointing),
+    )
+
+
+def _build_clip_rgb_text_mtdp_encoder(cfg: ExperimentConfig) -> ClipRgbTextMTDPEncoder:
+    return ClipRgbTextMTDPEncoder(
+        n_obs_steps=int(cfg.n_obs_steps),
+        robot_state_dim=int(cfg.y_dim),
+        camera_names=tuple(cfg.camera_names),
+        image_size=tuple(cfg.vision_image_size),
+        vision_backbone_name=str(cfg.vision_backbone_name),
+        vision_pretrained=bool(cfg.vision_pretrained),
+        vision_train_mode=str(cfg.vision_train_mode),
+        vision_num_unfreeze_blocks=int(cfg.vision_num_unfreeze_blocks),
+        text_model_name=str(cfg.text_model_name),
+        text_projection_dim=int(cfg.text_projection_dim),
+        task_name=str(cfg.task_name),
+        task_text_override=cfg.task_text_override,
+        activation_checkpointing=bool(cfg.activation_checkpointing),
+        vision_encode_chunk_size=int(cfg.vision_encode_chunk_size),
     )
 
 
@@ -84,15 +110,44 @@ def _build_dit_backbone(cfg: ExperimentConfig) -> DiTTrajectoryBackbone:
     )
 
 
+def _build_dit_mtdp_rope_backbone(
+    cfg: ExperimentConfig,
+    *,
+    obs_encoder: ClipRgbTextMTDPEncoder | None,
+) -> DiTMTDPRoPEBackbone:
+    if obs_encoder is None:
+        raise ValueError("dit_mtdp_rope requires the resolved obs_encoder instance.")
+    conditioning_dim = getattr(obs_encoder, "conditioning_dim", None)
+    if conditioning_dim is None:
+        raise ValueError("clip_rgb_text_mtdp must expose conditioning_dim for dit_mtdp_rope.")
+    return DiTMTDPRoPEBackbone(
+        input_dim=int(cfg.y_dim),
+        output_dim=int(cfg.y_dim),
+        horizon=int(cfg.n_pred_steps),
+        conditioning_dim=int(conditioning_dim),
+        hidden_dim=int(cfg.hidden_dim),
+        num_layers=int(cfg.num_blocks),
+        num_heads=int(cfg.nhead),
+        dropout=float(cfg.dropout),
+        timestep_embed_dim=int(cfg.time_dim),
+        use_rope=bool(cfg.use_rope),
+        rope_base=float(cfg.rope_base),
+        use_positional_encoding=bool(cfg.use_positional_encoding),
+        activation_checkpointing=bool(cfg.activation_checkpointing),
+    )
+
+
 ENCODER_REGISTRY: dict[str, EncoderBuilder] = {
     "clip_rgb_text_token": _build_clip_rgb_text_token_encoder,
     "clip_rgb_text_faithful": _build_clip_rgb_text_faithful_encoder,
+    "clip_rgb_text_mtdp": _build_clip_rgb_text_mtdp_encoder,
     "dummy_obs": _build_dummy_obs_encoder,
     "pointnet_token": _build_pointnet_obs_encoder,
 }
 
 BACKBONE_REGISTRY: dict[str, BackboneBuilder] = {
     "dit": _build_dit_backbone,
+    "dit_mtdp_rope": _build_dit_mtdp_rope_backbone,
 }
 
 
@@ -104,11 +159,13 @@ def build_obs_encoder(cfg: ExperimentConfig):
     return builder(cfg)
 
 
-def build_backbone(cfg: ExperimentConfig):
+def build_backbone(cfg: ExperimentConfig, *, obs_encoder=None):
     try:
         builder = BACKBONE_REGISTRY[str(cfg.backbone_name)]
     except KeyError as exc:
         raise ValueError(f"Unsupported backbone_name: {cfg.backbone_name}") from exc
+    if str(cfg.backbone_name) == "dit_mtdp_rope":
+        return builder(cfg, obs_encoder=obs_encoder)
     return builder(cfg)
 
 

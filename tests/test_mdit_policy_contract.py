@@ -7,8 +7,10 @@ import torch
 import torch.nn as nn
 
 import _bootstrap  # noqa: F401
+from mdit.model.backbones.dit_mtdp_rope import DiTMTDPRoPEBackbone
 from common.runtime import set_device
 from mdit.model.backbones.dit import DiTTrajectoryBackbone
+from mdit.policy.fm_mtdp_policy import MTDPFMPolicy, MTDPFMPolicyConfig
 from mdit.policy.fm_policy import FMPolicyConfig, FMTransformerPolicy
 
 
@@ -21,6 +23,24 @@ class _StubObsEncoder(nn.Module):
         del obs, task_text
         obs_feat = self.proj(robot_state_obs.float())
         return torch.cat([obs_feat, robot_state_obs.float()], dim=-1)
+
+
+class _StubMTDPObsEncoder(nn.Module):
+    def __init__(self, cond_dim: int):
+        super().__init__()
+        self.conditioning_dim = int(cond_dim)
+        self.proj = nn.Linear(10, cond_dim)
+
+    def forward(self, obs: torch.Tensor, robot_state_obs: torch.Tensor, task_text=None) -> torch.Tensor:
+        del obs, task_text
+        pooled = robot_state_obs.float().mean(dim=1)
+        return self.proj(pooled)
+
+    def non_vision_parameters(self):
+        return [param for param in self.parameters() if param.requires_grad]
+
+    def vision_parameters(self):
+        return []
 
 
 class MDITPolicyContractTest(unittest.TestCase):
@@ -69,6 +89,64 @@ class MDITPolicyContractTest(unittest.TestCase):
         obs, robot_state_obs, _, task_text = normed
         pred = policy.infer_y(obs, robot_state_obs, task_text=task_text)
         self.assertEqual(pred.shape, (2, 32, 10))
+
+        obs_np = np.random.randint(0, 255, size=(5, 16, 16, 3), dtype=np.uint8)
+        robot_state_np = np.zeros((10,), dtype=np.float32)
+        action = policy.predict_action(obs_np, robot_state_np)
+        self.assertEqual(action.shape[-1], 10)
+
+    def test_mtdp_strict_policy_contract(self) -> None:
+        set_device("cpu")
+        cfg = MTDPFMPolicyConfig(
+            y_dim=10,
+            n_obs_steps=2,
+            n_pred_steps=100,
+            default_task_text="unplug the charger cable",
+            subs_factor=3,
+            sigma_min=0.0,
+            num_integration_steps=8,
+            integration_method="euler",
+            timestep_sampling_strategy="beta",
+            timestep_beta_alpha=1.5,
+            timestep_beta_beta=1.0,
+            timestep_beta_s=0.999,
+            vision_lr_multiplier=0.1,
+            state_min=tuple([-1.0] * 10),
+            state_max=tuple([1.0] * 10),
+            action_min=tuple([-1.0] * 10),
+            action_max=tuple([1.0] * 10),
+        )
+        obs_encoder = _StubMTDPObsEncoder(cond_dim=64)
+        backbone = DiTMTDPRoPEBackbone(
+            input_dim=10,
+            output_dim=10,
+            horizon=100,
+            conditioning_dim=64,
+            hidden_dim=128,
+            num_layers=2,
+            num_heads=4,
+            dropout=0.0,
+            timestep_embed_dim=64,
+            use_rope=True,
+            rope_base=10000.0,
+            use_positional_encoding=True,
+            activation_checkpointing=False,
+        )
+        policy = MTDPFMPolicy(cfg, obs_encoder=obs_encoder, backbone=backbone)
+
+        batch = (
+            torch.rand(2, 2, 5, 16, 16, 3),
+            torch.rand(2, 2, 10) * 2 - 1,
+            torch.rand(2, 100, 10) * 2 - 1,
+            ["unplug the charger cable", "unplug the charger cable"],
+        )
+        loss_dict = policy.compute_loss_dict(batch)
+        self.assertIn("loss_total", loss_dict)
+
+        normed = policy._norm_data(batch)
+        obs, robot_state_obs, _, task_text = normed
+        pred = policy.infer_y(obs, robot_state_obs, task_text=task_text)
+        self.assertEqual(pred.shape, (2, 100, 10))
 
         obs_np = np.random.randint(0, 255, size=(5, 16, 16, 3), dtype=np.uint8)
         robot_state_np = np.zeros((10,), dtype=np.float32)

@@ -7,7 +7,7 @@ import unittest
 
 import _bootstrap  # noqa: F401
 from mdit.cli.shared import payload_cfg_to_experiment_cfg, prepare_eval_manifest
-from mdit.config import config_to_dict, load_config
+from mdit.config import config_to_dict, load_config, resolve_runtime_config
 from mdit.config.consistency import build_eval_contract, build_experiment_manifest_payload, write_json
 from research.mdit_trial_runner import TrialRequest
 
@@ -16,6 +16,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class MDITEvalContractTest(unittest.TestCase):
+    def test_strict_lane_contract_contains_mtdp_fields(self) -> None:
+        cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "fm_autodl_lane_c_mtdp_strict.json")
+        cfg = resolve_runtime_config(cfg)
+        contract = build_eval_contract(cfg)
+
+        self.assertEqual(contract["fm_variant"], "mtdp_strict")
+        self.assertEqual(contract["backbone_name"], "dit_mtdp_rope")
+        self.assertEqual(contract["fm_timestep_sampling_strategy"], "beta")
+        self.assertTrue(contract["use_rope"])
+        self.assertIsNotNone(contract["state_min"])
+        self.assertIsNotNone(contract["action_max"])
+
     def test_prepare_eval_manifest_accepts_matching_contract(self) -> None:
         cfg = load_config(PROJECT_ROOT / "configs" / "mdit" / "fm_autodl_lab.json")
         with tempfile.TemporaryDirectory() as tmp_dir:

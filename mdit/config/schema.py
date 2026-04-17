@@ -14,6 +14,8 @@ class ExperimentConfig:
     obs_mode: str = "rgb"
     encoder_name: str = "clip_rgb_text_token"
     backbone_name: str = "dit"
+    fm_variant: str = "standard"
+    normalization_profile: str = "legacy"
     research_lane: str = "lane_a_mainline"
     train_data_path: Path = DATA_ROOT / "unplug_charger" / "train"
     valid_data_path: Path = DATA_ROOT / "unplug_charger" / "valid"
@@ -48,6 +50,9 @@ class ExperimentConfig:
     text_model_name: str = "openai/clip-vit-base-patch16"
     text_projection_dim: int = 256
     token_fusion_mode: str = "3_token"
+    vision_lr_multiplier: float = 1.0
+    vision_encode_chunk_size: int = 0
+    activation_checkpointing: bool = False
 
     hidden_dim: int = 512
     time_dim: int = 256
@@ -59,6 +64,9 @@ class ExperimentConfig:
     debug_finiteness: bool = True
     final_layer_zero_init: bool = False
     decoder_condition_mode: str = "mean_pool"
+    use_rope: bool = False
+    rope_base: float = 10000.0
+    use_positional_encoding: bool = True
 
     batch_size: int = 32
     grad_accum_steps: int = 4
@@ -117,6 +125,18 @@ class ExperimentConfig:
     fm_exp_scale: float = 4.0
     fm_snr_sampler: str = "uniform"
     fm_loss_weights: dict[str, float] | None = None
+    fm_sigma_min: float = 0.0
+    fm_num_integration_steps: int = 100
+    fm_integration_method: str = "euler"
+    fm_timestep_sampling_strategy: str = "uniform"
+    fm_timestep_beta_alpha: float = 1.5
+    fm_timestep_beta_beta: float = 1.0
+    fm_timestep_beta_s: float = 0.999
+
+    state_min: tuple[float, ...] | None = None
+    state_max: tuple[float, ...] | None = None
+    action_min: tuple[float, ...] | None = None
+    action_max: tuple[float, ...] | None = None
 
     diffusion_train_steps: int = 100
     diffusion_eval_steps: int = 100
@@ -165,6 +185,29 @@ class ExperimentConfig:
         self.text_model_name = str(self.text_model_name)
         self.text_projection_dim = int(self.text_projection_dim)
         self.token_fusion_mode = str(self.token_fusion_mode)
+        self.fm_variant = str(self.fm_variant)
+        self.normalization_profile = str(self.normalization_profile)
+        self.vision_lr_multiplier = float(self.vision_lr_multiplier)
+        self.vision_encode_chunk_size = int(self.vision_encode_chunk_size)
+        self.activation_checkpointing = bool(self.activation_checkpointing)
+        self.use_rope = bool(self.use_rope)
+        self.rope_base = float(self.rope_base)
+        self.use_positional_encoding = bool(self.use_positional_encoding)
+        self.fm_sigma_min = float(self.fm_sigma_min)
+        self.fm_num_integration_steps = int(self.fm_num_integration_steps)
+        self.fm_integration_method = str(self.fm_integration_method)
+        self.fm_timestep_sampling_strategy = str(self.fm_timestep_sampling_strategy)
+        self.fm_timestep_beta_alpha = float(self.fm_timestep_beta_alpha)
+        self.fm_timestep_beta_beta = float(self.fm_timestep_beta_beta)
+        self.fm_timestep_beta_s = float(self.fm_timestep_beta_s)
+        if self.state_min is not None:
+            self.state_min = tuple(float(v) for v in self.state_min)
+        if self.state_max is not None:
+            self.state_max = tuple(float(v) for v in self.state_max)
+        if self.action_min is not None:
+            self.action_min = tuple(float(v) for v in self.action_min)
+        if self.action_max is not None:
+            self.action_max = tuple(float(v) for v in self.action_max)
 
     def validate(self) -> None:
         if not self.train_data_path.exists():
@@ -175,12 +218,52 @@ class ExperimentConfig:
             raise ValueError(f"MDIT currently supports obs_mode='rgb', got {self.obs_mode}")
         if len(self.camera_names) != 5:
             raise ValueError(f"Expected exactly 5 cameras, got {self.camera_names}")
-        if self.encoder_name not in {"clip_rgb_text_token", "clip_rgb_text_faithful"}:
+        if self.encoder_name not in {
+            "clip_rgb_text_token",
+            "clip_rgb_text_faithful",
+            "clip_rgb_text_mtdp",
+        }:
             raise ValueError(f"Unsupported MDIT encoder_name={self.encoder_name!r}")
-        if self.token_fusion_mode != "3_token":
+        if self.backbone_name not in {"dit", "dit_mtdp_rope"}:
+            raise ValueError(f"Unsupported MDIT backbone_name={self.backbone_name!r}")
+        if self.fm_variant not in {"standard", "mtdp_strict"}:
+            raise ValueError(f"Unsupported fm_variant={self.fm_variant!r}")
+        if self.normalization_profile not in {"legacy", "mtdp_strict"}:
+            raise ValueError(f"Unsupported normalization_profile={self.normalization_profile!r}")
+        if self.encoder_name == "clip_rgb_text_mtdp":
+            if self.token_fusion_mode != "global_conditioning":
+                raise ValueError(
+                    "clip_rgb_text_mtdp requires token_fusion_mode='global_conditioning'."
+                )
+        elif self.token_fusion_mode != "3_token":
             raise ValueError(
-                f"Only token_fusion_mode='3_token' is supported for this mainline, got {self.token_fusion_mode}"
+                f"Only token_fusion_mode='3_token' is supported for the current mainline, got {self.token_fusion_mode}"
             )
+        if self.fm_variant == "mtdp_strict":
+            if self.encoder_name != "clip_rgb_text_mtdp":
+                raise ValueError("mtdp_strict requires encoder_name='clip_rgb_text_mtdp'.")
+            if self.backbone_name != "dit_mtdp_rope":
+                raise ValueError("mtdp_strict requires backbone_name='dit_mtdp_rope'.")
+            if self.normalization_profile != "mtdp_strict":
+                raise ValueError("mtdp_strict requires normalization_profile='mtdp_strict'.")
+            if self.fm_timestep_sampling_strategy not in {"uniform", "beta"}:
+                raise ValueError(
+                    "fm_timestep_sampling_strategy must be 'uniform' or 'beta'."
+                )
+            if self.fm_integration_method not in {"euler", "rk4"}:
+                raise ValueError("fm_integration_method must be 'euler' or 'rk4'.")
+            if self.vision_lr_multiplier <= 0:
+                raise ValueError("vision_lr_multiplier must be > 0 for mtdp_strict.")
+            if self.vision_encode_chunk_size < 0:
+                raise ValueError("vision_encode_chunk_size must be >= 0.")
+            if self.state_min is not None and len(self.state_min) != int(self.y_dim):
+                raise ValueError("state_min must match y_dim.")
+            if self.state_max is not None and len(self.state_max) != int(self.y_dim):
+                raise ValueError("state_max must match y_dim.")
+            if self.action_min is not None and len(self.action_min) != int(self.y_dim):
+                raise ValueError("action_min must match y_dim.")
+            if self.action_max is not None and len(self.action_max) != int(self.y_dim):
+                raise ValueError("action_max must match y_dim.")
         if int(self.text_projection_dim) <= 0:
             raise ValueError("text_projection_dim must be > 0")
 

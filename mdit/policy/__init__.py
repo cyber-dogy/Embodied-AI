@@ -7,6 +7,8 @@ __all__ = [
     "DiffusionTransformerPolicy",
     "FMPolicyConfig",
     "FMTransformerPolicy",
+    "MTDPFMPolicyConfig",
+    "MTDPFMPolicy",
     "build_policy",
     "list_policies",
 ]
@@ -19,6 +21,14 @@ def __getattr__(name: str):
         exports = {
             "FMPolicyConfig": FMPolicyConfig,
             "FMTransformerPolicy": FMTransformerPolicy,
+        }
+        return exports[name]
+    if name in {"MTDPFMPolicyConfig", "MTDPFMPolicy"}:
+        from .fm_mtdp_policy import MTDPFMPolicy, MTDPFMPolicyConfig
+
+        exports = {
+            "MTDPFMPolicyConfig": MTDPFMPolicyConfig,
+            "MTDPFMPolicy": MTDPFMPolicy,
         }
         return exports[name]
     if name in {"DiffusionPolicyConfig", "DiffusionTransformerPolicy"}:

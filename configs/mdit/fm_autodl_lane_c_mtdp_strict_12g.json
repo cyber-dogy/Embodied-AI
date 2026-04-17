@@ -1,0 +1,13 @@
+{
+  "extends": "fm_autodl_lane_c_mtdp_strict.json",
+  "run_name": "unplug_charger_mdit_lane_c_mtdp_strict_12g_fm_v1",
+  "batch_size": 16,
+  "grad_accum_steps": 8,
+  "batch_fallback_tiers": [[16, 8], [8, 16]],
+  "num_workers": 2,
+  "train_use_amp": true,
+  "train_amp_dtype": "float16",
+  "empty_cuda_cache": true,
+  "activation_checkpointing": true,
+  "vision_encode_chunk_size": 1
+}

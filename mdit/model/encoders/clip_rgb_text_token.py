@@ -33,6 +33,7 @@ class _CLIPVisionBranch(nn.Module):
         pretrained: bool,
         train_mode: str,
         num_unfreeze_blocks: int,
+        activation_checkpointing: bool = False,
     ) -> None:
         super().__init__()
         if timm is None:
@@ -44,7 +45,16 @@ class _CLIPVisionBranch(nn.Module):
         )
         self.train_mode = str(train_mode)
         self.num_unfreeze_blocks = int(num_unfreeze_blocks)
+        self.activation_checkpointing = bool(activation_checkpointing)
         self.output_dim = int(getattr(self.backbone, "num_features", getattr(self.backbone, "embed_dim", 768)))
+        if self.activation_checkpointing:
+            grad_ckpt_setter = getattr(self.backbone, "set_grad_checkpointing", None)
+            if not callable(grad_ckpt_setter):
+                raise ValueError(
+                    f"Vision backbone {type(self.backbone).__name__} does not support activation checkpointing."
+                )
+            # 只在显式请求时打开，避免污染现有主线的默认执行图。
+            grad_ckpt_setter(True)
         self._configure_train_mode()
 
     def _configure_train_mode(self) -> None:
@@ -111,6 +121,7 @@ class ClipRgbTextTokenEncoder(nn.Module):
         task_text_override: str | None,
         token_fusion_mode: str,
         fusion_recipe: str = "step_fusion",
+        activation_checkpointing: bool = False,
     ) -> None:
         super().__init__()
         if CLIPTokenizer is None or CLIPTextModel is None:
@@ -146,6 +157,7 @@ class ClipRgbTextTokenEncoder(nn.Module):
                     pretrained=bool(vision_pretrained),
                     train_mode=str(vision_train_mode),
                     num_unfreeze_blocks=int(vision_num_unfreeze_blocks),
+                    activation_checkpointing=bool(activation_checkpointing),
                 )
                 for _ in self.camera_names
             ]

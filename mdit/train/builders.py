@@ -44,14 +44,14 @@ def build_obs_encoder(cfg: ExperimentConfig):
     return build_obs_encoder_from_registry(cfg)
 
 
-def build_backbone(cfg: ExperimentConfig):
-    return build_backbone_from_registry(cfg)
+def build_backbone(cfg: ExperimentConfig, obs_encoder=None):
+    return build_backbone_from_registry(cfg, obs_encoder=obs_encoder)
 
 
 def build_policy(cfg: ExperimentConfig, strategy: str):
     device = set_device(cfg.device)
     obs_encoder = build_obs_encoder(cfg)
-    backbone = build_backbone(cfg)
+    backbone = build_backbone(cfg, obs_encoder=obs_encoder)
     policy = build_policy_from_registry(strategy, cfg, obs_encoder, backbone)
     policy.to(device)
     return policy

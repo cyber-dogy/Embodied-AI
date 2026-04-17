@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime
 import json
+import os
 from pathlib import Path
 import shlex
 import shutil
@@ -54,6 +55,25 @@ def _record_dir() -> Path:
 
 def _logs_dir() -> Path:
     return _record_dir() / "logs"
+
+
+def _has_cached_hf_file(model_dir: str, filename: str) -> bool:
+    snapshots_dir = Path.home() / ".cache" / "huggingface" / "hub" / model_dir / "snapshots"
+    if not snapshots_dir.exists():
+        return False
+    return any(path.is_file() for path in snapshots_dir.glob(f"*/{filename}"))
+
+
+def _child_process_env() -> dict[str, str]:
+    env = dict(os.environ)
+    # 这些模型已经在本机缓存过时，优先强制离线加载，避免 autoresearch 因外网握手超时中断。
+    has_timm_clip = _has_cached_hf_file("models--timm--vit_base_patch16_clip_224.openai", "pytorch_model.bin")
+    has_openai_clip = _has_cached_hf_file("models--openai--clip-vit-base-patch16", "model.safetensors")
+    if has_timm_clip and has_openai_clip:
+        env.setdefault("HF_HUB_OFFLINE", "1")
+        env.setdefault("TRANSFORMERS_OFFLINE", "1")
+        env.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
+    return env
 
 
 def _state_path(tag: str) -> Path:
@@ -163,7 +183,9 @@ def _find_existing_result(rows: list[dict[str, Any]] | None, spec: SearchSpec) -
 def _is_completed_result(row: dict[str, Any] | None) -> bool:
     if not isinstance(row, dict):
         return False
-    return row.get("pending_offline_audit") is not True
+    if row.get("pending_offline_audit") is True:
+        return False
+    return row.get("error_type") is None
 
 
 def _score(result: dict[str, Any]) -> float:
@@ -224,6 +246,18 @@ def _default_lane_b_spec(config_path: Path) -> SearchSpec:
         eval_episodes=20,
         description="Lane B faithful challenger: multitask-style concat conditioning + shared audit chain",
         overrides={"research_lane": "lane_b_faithful"},
+    )
+
+
+def _default_lane_c_spec(config_path: Path) -> SearchSpec:
+    return SearchSpec(
+        name="lane_c_mtdp_strict_100",
+        lane="lane_c_mtdp_strict",
+        config_path=config_path,
+        stage_epochs=100,
+        eval_episodes=20,
+        description="Lane C strict MTDP challenger: global conditioning + RoPE + beta timestep sampling",
+        overrides={"research_lane": "lane_c_mtdp_strict"},
     )
 
 
@@ -526,7 +560,7 @@ def _run_existing_lane_a_screening(
         and str(existing_record.get("experiment_name")) == str(spec.name)
         and int(existing_record.get("stage_epochs") or 0) == int(spec.stage_epochs)
         and int(existing_record.get("eval_episodes") or 0) == int(spec.eval_episodes)
-        and existing_record.get("pending_offline_audit") is False
+        and _is_completed_result(existing_record)
     ):
         existing_record["lane"] = spec.lane
         existing_record["stage_epochs"] = int(spec.stage_epochs)
@@ -588,6 +622,9 @@ def _spawn_logged_process(cmd: list[str], log_path: Path) -> tuple[subprocess.Po
     log_path.parent.mkdir(parents=True, exist_ok=True)
     handle = log_path.open("a", encoding="utf-8")
     handle.write(f"\n[{_timestamp()}] CMD: {' '.join(shlex.quote(part) for part in cmd)}\n")
+    child_env = _child_process_env()
+    if child_env.get("HF_HUB_OFFLINE") == "1":
+        handle.write(f"[{_timestamp()}] ENV: HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1\n")
     handle.flush()
     process = subprocess.Popen(
         cmd,
@@ -595,6 +632,7 @@ def _spawn_logged_process(cmd: list[str], log_path: Path) -> tuple[subprocess.Po
         stdout=handle,
         stderr=subprocess.STDOUT,
         text=True,
+        env=child_env,
     )
     return process, handle
 
@@ -809,7 +847,7 @@ def _run_search_spec(
         stage_epochs=spec.stage_epochs,
         eval_episodes=spec.eval_episodes,
     )
-    if existing is not None and existing.get("pending_offline_audit") is False:
+    if _is_completed_result(existing):
         existing["lane"] = spec.lane
         existing["stage_epochs"] = int(spec.stage_epochs)
         existing["eval_episodes"] = int(spec.eval_episodes)
@@ -1050,6 +1088,7 @@ def _maybe_init_state(
     tag: str,
     lane_a_config: Path,
     lane_b_config: Path,
+    lane_c_config: Path | None,
     existing_lane_a_run_dir: Path | None,
     strategy: str,
 ) -> dict[str, Any]:
@@ -1061,6 +1100,7 @@ def _maybe_init_state(
         "strategy": str(strategy),
         "lane_a_config": str(lane_a_config),
         "lane_b_config": str(lane_b_config),
+        "lane_c_config": None if lane_c_config is None else str(lane_c_config),
         "existing_lane_a_run_dir": None if existing_lane_a_run_dir is None else str(existing_lane_a_run_dir),
         "screening": [],
         "promoted_300": [],
@@ -1076,6 +1116,7 @@ def run_mdit_autoresearch_loop(
     tag: str,
     lane_a_config: Path,
     lane_b_config: Path,
+    lane_c_config: Path | None = None,
     existing_lane_a_run_dir: Path | None = None,
     strategy: str = "fm",
     device: str | None,
@@ -1100,16 +1141,19 @@ def run_mdit_autoresearch_loop(
             tag=tag,
             lane_a_config=lane_a_config,
             lane_b_config=lane_b_config,
+            lane_c_config=lane_c_config,
             existing_lane_a_run_dir=existing_lane_a_run_dir,
             strategy=strategy,
         )
         _persist_state(summary_path, state)
 
-    screening_specs = (
+    screening_specs = [
         _default_lane_a_spec(lane_a_config),
         _default_lane_a_stabilized_spec(lane_a_config),
         _default_lane_b_spec(lane_b_config),
-    )
+    ]
+    if lane_c_config is not None:
+        screening_specs.append(_default_lane_c_spec(lane_c_config))
 
     screening_results = list(state.get("screening") or [])
     for spec in screening_specs:

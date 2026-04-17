@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 from common.runtime import set_device, set_seeds
-from mdit.config import ExperimentConfig, config_to_dict, save_config
+from mdit.config import ExperimentConfig, config_to_dict, resolve_runtime_config, save_config
 from .builders import (
     build_dataloaders,
     build_grad_scaler,
@@ -99,6 +99,7 @@ def _write_train_heartbeat(
 
 
 def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[str, Any]:
+    cfg = resolve_runtime_config(cfg)
     cfg.validate()
     set_device(cfg.device)
     cfg.ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -124,6 +125,29 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
     best_success_epoch = resume_state["best_success_epoch"]
     global_step = int(resume_state["global_step"])
     start_epoch = int(resume_state["start_epoch"])
+    bootstrap_epoch = int(start_epoch) - 1
+
+    if not cfg.latest_ckpt_path.exists():
+        save_checkpoint(
+            cfg.latest_ckpt_path,
+            cfg=cfg,
+            strategy=strategy,
+            model=model,
+            ema_model=ema_model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            scaler=scaler,
+            epoch=bootstrap_epoch,
+            global_step=global_step,
+            best_metric=best_metric,
+            best_epoch=best_epoch,
+            best_success_rate=best_success_rate,
+            best_success_epoch=best_success_epoch,
+            train_loss_history=train_loss_history,
+            valid_loss_history=valid_loss_history,
+            epoch_summaries=epoch_summaries,
+            wandb_run_id=None if wandb_run is None else wandb_run.id,
+        )
 
     sample_batch_cpu = next(iter(dataloader_train))
     run_started_at = time.perf_counter()
@@ -429,6 +453,7 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
 
 
 def train_experiment(cfg: ExperimentConfig, strategy: str = "fm") -> dict[str, Any]:
+    cfg = resolve_runtime_config(cfg)
     tiers = _normalize_fallback_tiers(cfg)
     if not cfg.auto_batch_fallback or len(tiers) <= 1:
         return _train_experiment_once(cfg, strategy)

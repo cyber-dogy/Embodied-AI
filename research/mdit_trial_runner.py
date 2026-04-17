@@ -14,7 +14,13 @@ from typing import Any
 import torch
 
 from common.runtime import PROJECT_ROOT
-from mdit.config import ExperimentConfig, apply_config_overrides, config_to_dict, load_config
+from mdit.config import (
+    ExperimentConfig,
+    apply_config_overrides,
+    config_to_dict,
+    load_config,
+    resolve_runtime_config,
+)
 from mdit.config.consistency import (
     build_experiment_manifest_payload,
     build_recipe_contract,
@@ -216,6 +222,10 @@ def _docs_mdit_dir(repo_root: Path) -> Path:
     return path
 
 
+def _research_journal_path(repo_root: Path) -> Path:
+    return _docs_mdit_dir(repo_root) / "research_journal.md"
+
+
 def _write_research_note(
     repo_root: Path,
     *,
@@ -226,7 +236,7 @@ def _write_research_note(
     audit_report: dict[str, Any] | None = None,
 ) -> Path:
     timestamp = datetime.now().astimezone()
-    note_path = _docs_mdit_dir(repo_root) / f"{timestamp.strftime('%Y-%m-%d-%H%M%S')}-{_slugify(run_name)}.md"
+    note_path = _research_journal_path(repo_root)
     phenomenon = (
         f"trial_score={result.get('trial_score')} | "
         f"best_success_rate={result.get('best_success_rate')} | "
@@ -238,11 +248,22 @@ def _write_research_note(
         for row in audit_report.get("audit_records") or []:
             for cause in row.get("contract_issues") or []:
                 likely_causes.append(cause)
-    content = "\n".join(
+    blocks: list[str] = []
+    if not note_path.exists():
+        blocks.extend(
+            [
+                "# MDIT Research Journal",
+                "",
+                "- This file is append-only and maintained by autoresearch.",
+                "- Keep `best_path.md` and the execution manual as separate stable docs; run-by-run notes are consolidated here.",
+                "",
+            ]
+        )
+    blocks.extend(
         [
-            f"# {title}",
+            f"## {timestamp.isoformat(timespec='seconds')} · {phase} · {run_name}",
             "",
-            f"- Time: {timestamp.isoformat(timespec='seconds')}",
+            f"- Title: {title}",
             f"- Run: `{run_name}`",
             f"- Phase: `{phase}`",
             f"- Phenomenon: {phenomenon}",
@@ -261,28 +282,111 @@ def _write_research_note(
             "",
         ]
     )
-    note_path.write_text(content, encoding="utf-8")
+    with note_path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(blocks))
     return note_path
 
 
 def _append_fixes_entry(
     repo_root: Path,
     *,
+    title: str,
     file_scope: str,
-    problem: str,
-    change: str,
+    background: str,
+    action_text: str,
     result_text: str,
+    dedupe_key: str | None = None,
 ) -> None:
     fixes_path = repo_root / "docs" / "fixes.md"
+    marker = None if dedupe_key is None else f"<!-- dedupe:{dedupe_key} -->"
+    if marker is not None and fixes_path.exists():
+        existing = fixes_path.read_text(encoding="utf-8")
+        if marker in existing:
+            return
     timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
+    # fixes.md 同时记录修复、训练、审计与接管事件，因此统一输出为“标题 + 范围 + 背景 + 处理 + 结果”。
     entry = (
-        f"\n### {timestamp} · `{file_scope}`\n"
-        f"问题：{problem}\n\n"
-        f"修改：{change}\n\n"
+        f"\n{marker}\n" if marker is not None else "\n"
+    ) + (
+        f"### {timestamp} · {title}\n"
+        f"范围：`{file_scope}`\n\n"
+        f"背景：{background}\n\n"
+        f"处理：{action_text}\n\n"
         f"结果：{result_text}\n"
     )
     with fixes_path.open("a", encoding="utf-8") as handle:
         handle.write(entry)
+
+
+def _format_metric(value: Any) -> str:
+    metric = _maybe_float(value)
+    if metric is None:
+        return "未解析"
+    return f"{metric:.3f}"
+
+
+def _format_value(value: Any) -> str:
+    return "未解析" if value is None else str(value)
+
+
+def _summarize_recipe_drift(output: dict[str, Any]) -> str:
+    details = output.get("recipe_drift_details") or []
+    if not details:
+        return "无"
+    parts: list[str] = []
+    for row in details[:5]:
+        parts.append(f"{row.get('key')} {row.get('base_value')} -> {row.get('resolved_value')}")
+    return "；".join(parts)
+
+
+def _summarize_train_result(output: dict[str, Any]) -> str:
+    summary = output.get("train_summary") or {}
+    latest_epoch = summary.get("latest_epoch")
+    completed_epochs = None
+    if isinstance(latest_epoch, int) and latest_epoch >= 0:
+        completed_epochs = latest_epoch + 1
+    best_metric = summary.get("best_metric")
+    kept_ckpts = [Path(path).name for path in output.get("kept_ckpt_paths") or []]
+    parts = [
+        f"run_dir={_format_value(output.get('run_dir'))}",
+        (
+            f"训练已完成 {completed_epochs} 个 epoch（latest_epoch={latest_epoch}）"
+            if completed_epochs is not None
+            else "训练完成轮次未解析"
+        ),
+        f"最佳验证指标 best_metric={_format_metric(best_metric)}，best_epoch={_format_value(summary.get('best_epoch'))}",
+        (
+            f"保留检查点={', '.join(kept_ckpts)}"
+            if kept_ckpts
+            else "保留检查点=未解析"
+        ),
+        f"待离线审计={_format_value(output.get('pending_offline_audit'))}",
+        f"受控配方偏移={_summarize_recipe_drift(output)}",
+    ]
+    return "；".join(parts)
+
+
+def _summarize_audit_result(output: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for epoch in (50, 100, 300, 500):
+        value = output.get(f"success_{epoch}")
+        if value is None:
+            continue
+        parts.append(f"success@epoch_{epoch:04d}={_format_metric(value)}")
+    parts.extend(
+        [
+            f"最佳成功率={_format_metric(output.get('best_success_rate'))}",
+            f"最佳 checkpoint epoch={_format_value(output.get('best_success_epoch'))}",
+            f"trial_score={_format_metric(output.get('trial_score'))}",
+            f"是否 collapse={_format_value(output.get('collapse_detected'))}",
+        ]
+    )
+    if output.get("collapse_reasons"):
+        parts.append(f"collapse 原因={'; '.join(str(item) for item in output['collapse_reasons'])}")
+    parts.append(f"受控配方偏移={_summarize_recipe_drift(output)}")
+    if output.get("audit_report_path"):
+        parts.append(f"audit_report={output['audit_report_path']}")
+    return "；".join(parts)
 
 
 def _build_offline_audit_command(run_dir: Path) -> str:
@@ -329,7 +433,7 @@ def _prepare_cfg(request: TrialRequest) -> ExperimentConfig:
         cfg.run_name = str(request.run_name)
     else:
         cfg.run_name = _make_unique_run_name(cfg.run_name, request.experiment_name, request.stage_epochs)
-    return cfg
+    return resolve_runtime_config(cfg)
 
 
 def _resolved_request(request: TrialRequest, cfg: ExperimentConfig) -> TrialRequest:
@@ -816,16 +920,16 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
         )
         _append_fixes_entry(
             repo_root,
-            file_scope="research/mdit_trial_runner.py + docs/mdit + docs/fixes.md",
-            problem=f"训练 trial `{cfg.run_name}` 已完成，等待离线审计。",
-            change=(
-                f"保存 manifest/summary/checkpoints，stage_epochs={request.stage_epochs}，"
-                f"checkpoint_every={request.checkpoint_every}。"
+            title=f"训练完成并进入待审计状态 · {cfg.run_name}",
+            file_scope="research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md",
+            background=(
+                f"候选 run `{cfg.run_name}` 已完成训练阶段，需要保留关键产物并转入共享离线审计。"
             ),
-            result_text=(
-                f"pending_offline_audit=true，recipe_drift={output['recipe_drift']}，"
-                f"run_dir={run_dir}"
+            action_text=(
+                f"写出 trial record、summary、experiment_manifest，并保留关键 checkpoint；"
+                f"stage_epochs={request.stage_epochs}，checkpoint_every={request.checkpoint_every}。"
             ),
+            result_text=_summarize_train_result(output),
         )
         if log_results:
             _append_results_row(
@@ -850,10 +954,11 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
         )
         _append_fixes_entry(
             repo_root,
-            file_scope="research/mdit_trial_runner.py + docs/mdit + docs/fixes.md",
-            problem=f"训练 trial `{run_dir.name}` 失败：{exc}",
-            change="保留失败记录与 manifest 线索，等待后续诊断或 watchdog 续训。",
-            result_text=f"error_type={type(exc).__name__}",
+            title=f"训练失败，保留现场等待重试 · {run_dir.name}",
+            file_scope="research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md",
+            background=f"候选 run `{run_dir.name}` 在训练阶段异常退出：{exc}",
+            action_text="保留失败 run 的 trial record、manifest 与日志线索，不清理现场，等待 watchdog 重试或人工诊断。",
+            result_text=f"error_type={type(exc).__name__}；run_dir={run_dir}",
         )
         if log_results:
             _append_results_row(
@@ -1040,16 +1145,16 @@ def finalize_autoresearch_trial(
         )
         _append_fixes_entry(
             repo_root,
-            file_scope="research/mdit_trial_runner.py + docs/mdit + docs/fixes.md",
-            problem=f"离线审计 trial `{cfg.run_name}` 已完成。",
-            change=(
-                f"统一使用共享 audit chain，episodes={request.eval_episodes}，"
+            title=f"离线审计完成 · {cfg.run_name}",
+            file_scope="research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md",
+            background=(
+                f"候选 run `{cfg.run_name}` 已完成共享离线审计，需要固化关键成功率与后续筛选依据。"
+            ),
+            action_text=(
+                f"统一使用共享 audit chain 执行评估；episodes={request.eval_episodes}，"
                 f"stage_epochs={request.stage_epochs}。"
             ),
-            result_text=(
-                f"trial_score={trial_score}，best_success_rate={output['best_success_rate']}，"
-                f"recipe_drift={output['recipe_drift']}，collapse={collapse_detected}"
-            ),
+            result_text=_summarize_audit_result(output),
         )
         if log_results:
             _append_results_row(
@@ -1106,10 +1211,11 @@ def finalize_autoresearch_trial(
         )
         _append_fixes_entry(
             repo_root,
-            file_scope="research/mdit_trial_runner.py + docs/mdit + docs/fixes.md",
-            problem=f"离线审计 trial `{cfg.run_name}` 失败：{exc}",
-            change="保留训练产物与 manifest，等待 watchdog 重试或人工对照 PDIT/faithful 挑战者诊断。",
-            result_text=f"error_type={type(exc).__name__}",
+            title=f"离线审计失败，保留产物等待重试 · {cfg.run_name}",
+            file_scope="research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md",
+            background=f"候选 run `{cfg.run_name}` 在共享离线审计阶段异常退出：{exc}",
+            action_text="保留训练产物、manifest 与 audit 命令线索，等待 watchdog 重试或人工对照 PDIT/faithful 挑战者诊断。",
+            result_text=f"error_type={type(exc).__name__}；pending_offline_audit=true；run_dir={run_dir}",
         )
         if log_results:
             _append_results_row(
@@ -1237,13 +1343,17 @@ def adopt_existing_mdit_autoresearch_run(
     )
     _append_fixes_entry(
         repo_root,
-        file_scope="research/mdit_trial_runner.py + docs/mdit + docs/fixes.md",
-        problem=f"将现有 run `{run_dir.name}` 接入 autoresearch 守护链。",
-        change=(
+        title=f"接管已有 run 并补齐元数据 · {run_dir.name}",
+        file_scope="research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md",
+        background=f"现有 run `{run_dir.name}` 需要纳入 autoresearch 守护链，供后续统一训练/审计/筛选。",
+        action_text=(
             f"补写 trial_request/experiment_manifest，experiment_name={request_overrides.experiment_name}，"
             f"stage_epochs={request_overrides.stage_epochs}。"
         ),
-        result_text=f"run_dir={run_dir}，pending_offline_audit=true",
+        result_text=f"run_dir={run_dir}；pending_offline_audit=true",
+        dedupe_key=(
+            f"adopt_existing:{run_dir.name}:{request_overrides.experiment_name}:{int(request_overrides.stage_epochs)}"
+        ),
     )
     return output
 
