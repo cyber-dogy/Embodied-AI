@@ -1,68 +1,34 @@
-# Homepage Branch
+# Homepage
 
-这个目录是仓库里独立出来的一条 `homepage` 支线。
+这个目录现在是一个可复用的静态科研主页框架，核心目标只有两件事：
 
-它的职责不是替代 `docs/`，而是：
-
-- 把 `docs/fixes.md` 作为全局修复总账展示出来
-- 把 `docs/pdit`、`docs/mdit`、`docs/lelan` 三条文档线整理成统一入口
-- 自动抓取 `docs/` 里的最近源材料
-- 让你以后继续写文档时，不需要每次都重做首页结构
+- 把 `docs/`、`fixes.md`、本地实验产物整理成结构化首页与详情页
+- 让后续新增任务、研究线、demo 素材时，不需要再重写页面骨架
 
 ## 目录结构
 
 ```text
 homepage/
-├── index.html
+├── assets/
+│   ├── generated-homepage-data.js
+│   ├── homepage-app.js
+│   └── homepage.css
+├── branches/
+├── config/
+│   └── site-config.json
+├── media/
+│   └── tasks/
+├── showcase/
+├── tasks/
+├── timeline/
 ├── favicon.svg
-├── README.md
-└── assets/
-    ├── generated-homepage-data.js
-    ├── homepage-app.js
-    ├── homepage.css
-    └── homepage-data.js
+├── index.html
+└── MAINTENANCE.md
 ```
 
-## 维护方式
+## 生成方式
 
-这套首页现在是“两层数据”：
-
-1. 自动层：`scripts/build_homepage_data.py` 扫描 `docs/`，生成：
-   - 最近更新文档
-   - 最新 fixes 条目
-   - 按支线自动发现的 source list
-2. 精修层：`assets/homepage-data.js` 维护：
-   - 首页主文案
-   - 支线摘要
-   - 里程碑
-   - 助手工作流
-   - 长期维护规则
-
-这样以后新增支线或专题时，通常不需要改 HTML 模板，只需要：
-
-1. 先把正式内容写进 `docs/`
-2. 跑一遍自动生成脚本
-3. 如果需要更好看的摘要，再微调 `assets/homepage-data.js`
-
-## 作为助手的接管流程
-
-以后你可以直接把这些内容扔给我：
-
-- 一个新的 docs 路径
-- 一段 markdown / 日志 / 结论
-- 一个 wandb run、checkpoint、run name
-- 一张截图或一段 shell 输出
-
-我会按下面流程处理：
-
-1. 先判断它应该归到 `fixes / pdit / mdit / lelan / general`
-2. 如果还没落地成 docs，先帮你补正式 source 文档
-3. 再把它压成 homepage 里的标题、摘要、状态、关键指标和下一步
-4. 更新主页对应区块，而不是让你手工排版
-
-## 本地预览
-
-最稳的方式是直接用我加的服务脚本，它会固定从 repo 根目录启动：
+主页不是手写 HTML 集合，而是通过生成脚本统一产出：
 
 ```bash
 cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
@@ -76,28 +42,65 @@ python scripts/serve_homepage.py --port 43429
 http://127.0.0.1:43429/
 ```
 
-## 你这次 404 的原因
+## 配置入口
 
-你刚才是在父目录 `~/MyProjects` 下直接跑：
+需要长期维护的公开展示信息集中在：
 
-```bash
-python -m http.server 43429
-```
+- `homepage/config/site-config.json`
 
-这时正确地址不是 `/homepage/`，而是：
+这里负责定义：
+
+- 站点标题与 slogan
+- 任务卡片
+- 研究线 profile
+- 任务与图表的映射关系
+- 各任务的 source 文档与实验产物入口
+
+## 素材入口
+
+按任务放素材：
 
 ```text
-http://127.0.0.1:43429/autodl_unplug_charger_transformer_fm/
+homepage/media/tasks/<task-id>/
 ```
 
-因为 repo 本身只是父目录里的一个子目录。
+当前任务目录已预留：
 
-## 链接约定
+- `pdit-anchor`
+- `mdit-mainline`
+- `lelan-pipeline`
+- `infra-audit`
 
-首页里的源文档链接默认都是相对 repo 根目录的，例如：
+支持格式：
 
-- `../docs/fixes.md`
-- `../docs/pdit/...`
-- `../docs/mdit/...`
+- `png`
+- `jpg`
+- `webp`
+- `gif`
+- `mp4`
+- `webm`
 
-所以推荐永远从 repo 根目录启动服务，或者直接使用 `scripts/serve_homepage.py`。
+## 页面结构
+
+当前生成的公开页面包括：
+
+- 首页：大标题 hero + `已完成 / 进行中` 日期分组卡片 + 少量概览图表 + 研究线入口 + showcase
+- `homepage/tasks/<task-id>/`
+- `homepage/branches/<branch-id>/`
+- `homepage/timeline/`
+- `homepage/showcase/`
+
+任务页固定采用：
+
+- 任务背景与当前判断
+- 关键成果卡片
+- success / total loss / mse 图表
+- 按日期分组的任务时间线
+- 关键结论
+- 证据链接
+
+## 维护说明
+
+维护规则、agent 处理边界、标题写法和素材规范都放在：
+
+- `homepage/MAINTENANCE.md`

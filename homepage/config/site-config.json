@@ -1,0 +1,293 @@
+{
+  "site": {
+    "title": "GJW · Embodied AI Lab Notes",
+    "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
+    "description": "围绕 unplug charger 任务的策略训练、行为审计、主线比较与执行资料。"
+  },
+  "home_charts": [
+    "pdit-success-curve",
+    "mdit-success-curve",
+    "results-status-overview"
+  ],
+  "tasks": [
+    {
+      "id": "pdit-anchor",
+      "title": "PDIT 基线恢复与锚点固化",
+      "summary": "把点云主线从工程不稳定状态修回到可复核的行为锚点，并留下 checkpoint、审计与回归证据。",
+      "status": "已验证",
+      "branch_ids": [
+        "pdit"
+      ],
+      "keywords": [
+        "baseline",
+        "recovery",
+        "checkpoint",
+        "pdit",
+        "point cloud",
+        "anchor"
+      ],
+      "featured_paths": [
+        "docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
+        "docs/pdit/2026-04-07-training-model-audit-zh.md",
+        "docs/top10-checkpoint-manifest.json"
+      ],
+      "artifact_paths": {
+        "summary": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/summary.json",
+        "audit": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json",
+        "manifest": "docs/top10-checkpoint-manifest.json"
+      },
+      "chart_ids": [
+        "pdit-success-curve",
+        "pdit-checkpoint-ranking",
+        "pdit-loss-tail"
+      ]
+    },
+    {
+      "id": "mdit-mainline",
+      "title": "MDIT RGB+Text 主线推进",
+      "summary": "围绕 Lane A / Lane B 的主线筛选、冻结最佳路径、恢复接管与 500 epoch 续训，逐步把 faithful MDIT 研究线做成可持续推进的档案。",
+      "status": "推进中",
+      "branch_ids": [
+        "mdit"
+      ],
+      "keywords": [
+        "mdit",
+        "lane",
+        "rgb+text",
+        "journal",
+        "takeover",
+        "resume"
+      ],
+      "featured_paths": [
+        "docs/mdit/research_journal.md",
+        "docs/mdit/best_path.md",
+        "docs/mdit/2026-04-16-mdit-execution-manual.md"
+      ],
+      "artifact_paths": {
+        "summary": "ckpt/unplug_charger_mdit_rgb_text_3token_100/summary.json",
+        "audit": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json",
+        "resume_wandb": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
+      },
+      "chart_ids": [
+        "mdit-success-curve",
+        "mdit-loss-tail",
+        "mdit-resume-snapshot"
+      ]
+    },
+    {
+      "id": "lelan-pipeline",
+      "title": "LeLaN 自动研究链路固化",
+      "summary": "优先把 LeLaN 的训练、评估、选模与审计留痕规范固定下来，为后续正式 run 和 demo 留出统一入口。",
+      "status": "待结果",
+      "branch_ids": [
+        "lelan"
+      ],
+      "keywords": [
+        "lelan",
+        "autoresearch",
+        "execution",
+        "gate",
+        "obs3",
+        "a8"
+      ],
+      "featured_paths": [
+        "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md",
+        "docs/lelan/research/README.md"
+      ],
+      "artifact_paths": {},
+      "chart_ids": []
+    },
+    {
+      "id": "infra-audit",
+      "title": "训练与审计基础设施修复",
+      "summary": "把训练栈、评估栈、日志记录和修复链路统一起来，确保后续每条研究线都能留下清晰、可复盘的证据。",
+      "status": "长期维护",
+      "branch_ids": [],
+      "keywords": [
+        "fix",
+        "audit",
+        "pipeline",
+        "code structure",
+        "job",
+        "regression"
+      ],
+      "featured_paths": [
+        "docs/fixes.md",
+        "docs/code-structure-zh.md",
+        "docs/pdit-vs-mdit.md"
+      ],
+      "artifact_paths": {},
+      "chart_ids": [
+        "results-status-overview",
+        "branch-doc-volume"
+      ],
+      "media_entries": [
+        {
+          "path": "docs/image/fixes/1776007255805.png",
+          "title": "修复现场截图 A",
+          "caption": "记录工程修复过程中的现场证据。"
+        },
+        {
+          "path": "docs/image/fixes/1776007270781.png",
+          "title": "修复现场截图 B",
+          "caption": "作为 fixes 时间线的图像补充。"
+        }
+      ]
+    }
+  ],
+  "branch_profiles": {
+    "pdit": {
+      "title": "PDIT 主线",
+      "summary": "当前最稳定的点云行为锚点，负责提供可复核的 baseline 与 checkpoint 证据。",
+      "status": "稳定锚点",
+      "keywords": [
+        "pdit",
+        "baseline",
+        "recovery",
+        "point cloud",
+        "checkpoint"
+      ],
+      "featured_paths": [
+        "docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
+        "docs/top10-checkpoint-manifest.json"
+      ]
+    },
+    "mdit": {
+      "title": "MDIT 研究线",
+      "summary": "围绕 RGB+Text faithful recipe 的主线探索，已经形成 journal、best path 与接管记录。",
+      "status": "推进中",
+      "keywords": [
+        "mdit",
+        "lane",
+        "rgb_text",
+        "faithful",
+        "journal"
+      ],
+      "featured_paths": [
+        "docs/mdit/research_journal.md",
+        "docs/mdit/best_path.md"
+      ]
+    },
+    "lelan": {
+      "title": "LeLaN 执行线",
+      "summary": "先把训练与审计链路固定，再逐步长成正式实验档案和 demo 展示入口。",
+      "status": "铺设中",
+      "keywords": [
+        "lelan",
+        "autoresearch",
+        "execution",
+        "obs3",
+        "a8"
+      ],
+      "featured_paths": [
+        "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md",
+        "docs/lelan/research/README.md"
+      ]
+    }
+  },
+  "timeline_overrides": {
+    "2026-04-18": {
+      "title": "恢复 MDIT 500 epoch 续训接管，并把主页正式改造成研究档案入口",
+      "summary": "这一天的重点是把 Lane A 主线继续往 500 epoch 推进，同时把研究主页从临时卡片页重构成长期维护的多页档案站。",
+      "task_ids": [
+        "mdit-mainline",
+        "infra-audit"
+      ],
+      "branch_ids": [
+        "mdit"
+      ]
+    },
+    "2026-04-17": {
+      "title": "冻结 MDIT 当前主线锚点，并完成多条 lane 的审计分流",
+      "summary": "主线 0.55 成功率被固定为当下可复核锚点，弱 lane 被降级为参考线，研究线开始从离散 run note 转向统一 journal。",
+      "task_ids": [
+        "mdit-mainline"
+      ],
+      "branch_ids": [
+        "mdit"
+      ]
+    },
+    "2026-04-16": {
+      "title": "把 MDIT 执行手册固定下来，研究线进入规范运行阶段",
+      "summary": "训练、续训、审计与接管流程从零散脚本整理成明确执行手册，后续主线推进开始有统一口径。",
+      "task_ids": [
+        "mdit-mainline",
+        "infra-audit"
+      ],
+      "branch_ids": [
+        "mdit"
+      ]
+    },
+    "2026-04-15": {
+      "title": "确认多条 MDIT challenger 仍未越过主线门槛，主线锚点继续保留",
+      "summary": "多个 100 epoch challenger 在同一审计口径下未能替代当前主线，研究策略从盲目扩散重新收束到可信主线。",
+      "task_ids": [
+        "mdit-mainline"
+      ],
+      "branch_ids": [
+        "mdit"
+      ]
+    },
+    "2026-04-14": {
+      "title": "完成首轮 MDIT screening 失败归因，早期 challenger 被系统性降级",
+      "summary": "围绕 pdittoken、shared recipe 等早期候选完成首轮 gate 复核，确认它们还不足以替代当前主线。",
+      "task_ids": [
+        "mdit-mainline"
+      ],
+      "branch_ids": [
+        "mdit"
+      ]
+    },
+    "2026-04-13": {
+      "title": "修正关键训练口径并重启 MDIT screening，开始重新建立可信比较面",
+      "summary": "围绕 output_proj 初始化、valid loss 口径与 screening recipe 做了一轮关键修正，保证后续比较不再被明显工程偏差污染。",
+      "task_ids": [
+        "mdit-mainline",
+        "infra-audit"
+      ],
+      "branch_ids": [
+        "mdit"
+      ]
+    },
+    "2026-04-12": {
+      "title": "固化 LeLaN 自动研究链路，并建立持续追加的修复账本",
+      "summary": "LeLaN 执行计划完成成型，fixes.md 被明确为全局修复与调试事实源，后续工程动作开始有统一留痕入口。",
+      "task_ids": [
+        "lelan-pipeline",
+        "infra-audit"
+      ],
+      "branch_ids": [
+        "lelan"
+      ]
+    },
+    "2026-04-10": {
+      "title": "完成环境迁移与 5090 侧准备，为后续长训和接管扫清障碍",
+      "summary": "这一天主要聚焦环境、迁移与部署前检查，为后续大规模训练、审计和 resume 提供基础条件。",
+      "task_ids": [
+        "infra-audit"
+      ],
+      "branch_ids": []
+    },
+    "2026-04-08": {
+      "title": "把 PDIT baseline 修稳，并验证 checkpoint 行为锚点成立",
+      "summary": "PDIT 基线不再只是能训练，而是形成了 20 episode 和 100 episode 双重复核的稳定行为锚点。",
+      "task_ids": [
+        "pdit-anchor"
+      ],
+      "branch_ids": [
+        "pdit"
+      ]
+    },
+    "2026-04-07": {
+      "title": "修正训练与离线审计链路，建立可复盘的 baseline 工作面",
+      "summary": "围绕训练栈、离线审计与 checkpoint 管理完成一轮系统修补，为后续主线恢复提供可靠工程底座。",
+      "task_ids": [
+        "pdit-anchor",
+        "infra-audit"
+      ],
+      "branch_ids": [
+        "pdit"
+      ]
+    }
+  }
+}

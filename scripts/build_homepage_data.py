@@ -1,248 +1,1521 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_DIR = ROOT / "docs"
-OUTPUT_PATH = ROOT / "homepage" / "assets" / "generated-homepage-data.js"
+CONFIG_PATH = ROOT / "homepage/config/site-config.json"
+OUTPUT_PATH = ROOT / "homepage/assets/generated-homepage-data.js"
 
-VISIBLE_SUFFIXES = {".md", ".json", ".png", ".jpg", ".jpeg", ".webp", ".gif"}
-RECENT_DOC_SUFFIXES = {".md", ".json"}
-MAX_PREVIEW_CHARS = 180
+LINE_COLORS = {
+    "teal": "#2b766f",
+    "rust": "#b2573f",
+    "gold": "#a27a32",
+    "blue": "#3e7cb1",
+    "coral": "#d4684c",
+    "olive": "#6b8f3e",
+}
+MEDIA_EXTENSIONS = {
+    ".png": "image",
+    ".jpg": "image",
+    ".jpeg": "image",
+    ".gif": "image",
+    ".webp": "image",
+    ".svg": "image",
+    ".mp4": "video",
+    ".webm": "video",
+}
+STATUS_GROUP = {
+    "已验证": "done",
+    "稳定锚点": "done",
+    "推进中": "in_progress",
+    "待结果": "in_progress",
+    "铺设中": "in_progress",
+    "长期维护": "in_progress",
+}
 
 
-def normalize_preview(text: str) -> str:
-    text = text.replace(ROOT.as_posix(), "<repo>")
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build the static homepage payload.")
+    parser.add_argument("--config", default=str(CONFIG_PATH), help="Path to homepage site-config.json")
+    parser.add_argument("--output", default=str(OUTPUT_PATH), help="Path to generated JS payload")
+    return parser.parse_args()
+
+
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    return json.loads(read_text(path))
+
+
+def write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def repo_rel(path_like: str | Path | None) -> str | None:
+    if not path_like:
+        return None
+    path = Path(path_like)
+    if path.is_absolute():
+        try:
+            return path.relative_to(ROOT).as_posix()
+        except ValueError:
+            return path.as_posix()
+    return path.as_posix()
+
+
+def clean_text(text: str) -> str:
+    text = text.replace(str(ROOT), "")
+    text = text.replace("\u00a0", " ")
     text = re.sub(r"`([^`]+)`", r"\1", text)
-    text = text.replace("**", "")
-    text = text.replace("~~", "")
-    return text
+    text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\1", text)
+    text = re.sub(r"/home/\S+", lambda match: Path(match.group(0)).name, text)
+    text = re.sub(r"^\s*[-*]\s+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"^\s*\d+\.\s+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
 
 
-def truncate(text: str, limit: int = MAX_PREVIEW_CHARS) -> str:
-    text = normalize_preview(text)
-    text = re.sub(r"\s+", " ", text).strip()
+def safe_excerpt(text: str, *, limit: int = 160) -> str:
+    text = clean_text(text)
     if len(text) <= limit:
         return text
     return text[: limit - 1].rstrip() + "…"
 
 
-def classify_doc(doc_path: Path) -> str:
-    relative = doc_path.relative_to(DOCS_DIR)
-    parts = relative.parts
-    if relative.as_posix() == "fixes.md" or parts[:2] == ("image", "fixes"):
-        return "fixes"
-    if parts[0] in {"pdit", "mdit", "lelan"}:
-        return parts[0]
-    return "general"
+def format_ratio(value: float | int | None, digits: int = 2) -> str:
+    if value is None:
+        return "-"
+    return f"{float(value):.{digits}f}"
 
 
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
+def format_number(value: float | int | None, digits: int = 3) -> str:
+    if value is None:
+        return "-"
+    return f"{float(value):.{digits}f}"
 
 
-def extract_markdown_title(text: str, fallback: str) -> str:
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        if line.startswith("# "):
-            return line[2:].strip()
-    return fallback
+def status_group(status: str) -> str:
+    return STATUS_GROUP.get(status, "in_progress")
 
 
-def extract_markdown_preview(text: str) -> str:
-    lines = text.splitlines()
-    in_code = False
-    paragraph: list[str] = []
-    for raw_line in lines:
-        line = raw_line.rstrip()
-        stripped = line.strip()
-        if stripped.startswith("```"):
-            in_code = not in_code
-            continue
-        if in_code:
-            continue
-        if not stripped:
-            if paragraph:
-                break
-            continue
-        if stripped.startswith("#"):
-            continue
-        if stripped.startswith(">"):
-            stripped = stripped.lstrip(">").strip()
-        if stripped.startswith("- ") or stripped.startswith("* ") or re.match(r"^\d+\.\s", stripped):
-            stripped = re.sub(r"^(- |\* |\d+\.\s)", "", stripped).strip()
-        paragraph.append(stripped)
-        if len(" ".join(paragraph)) >= MAX_PREVIEW_CHARS:
-            break
-    if not paragraph:
-        return "该文档目前主要由结构化标题、代码块或清单组成，适合在主页里作为源材料入口。"
-    return truncate(" ".join(paragraph))
+def make_metric(label: str, value: Any) -> dict[str, str]:
+    return {"label": label, "value": str(value)}
 
 
-def extract_json_preview(path: Path) -> str:
-    name = path.name
-    if name == "top10-checkpoint-manifest.json":
-        return "checkpoint 排名、canonical best、post-refactor 行为回归与归档映射。"
-    if name == "baseline-regression-reference.json":
-        return "baseline 回归参考与对照指标，适合作为主线 sanity check 的证据源。"
-    return "结构化 JSON 产物，可作为实验清单、对照或评测证据的 source of truth。"
-
-
-def build_doc_entry(path: Path) -> dict[str, object]:
-    relative = path.relative_to(ROOT)
-    branch = classify_doc(path)
-    modified_ts = path.stat().st_mtime
-    modified = datetime.fromtimestamp(modified_ts).strftime("%Y-%m-%d %H:%M")
-    href = "../" + relative.as_posix()
-
-    if path.suffix == ".md":
-        text = read_text(path)
-        title = extract_markdown_title(text, path.stem)
-        preview = extract_markdown_preview(text)
-    elif path.suffix == ".json":
-        title = path.name
-        preview = extract_json_preview(path)
-    else:
-        title = path.name
-        preview = "图像证据，可在主页中作为修复现场或实验截图引用。"
-
-    archived = "archive/legacy_notes" in relative.as_posix()
+def make_link(title: str, path: str | Path | None, summary: str = "", label: str = "查看原始记录") -> dict[str, str]:
     return {
-        "branch": branch,
         "title": title,
-        "preview": preview,
-        "href": href,
-        "path": relative.as_posix(),
-        "modified": modified,
-        "mtime": modified_ts,
-        "archived": archived,
-        "suffix": path.suffix,
+        "path": repo_rel(path) or "",
+        "summary": summary,
+        "label": label,
     }
 
 
-def parse_fixes_entries(path: Path, limit: int = 6) -> list[dict[str, str]]:
-    text = read_text(path)
-    entries: list[dict[str, object]] = []
-    heading: str | None = None
-    lines: list[str] = []
-    in_code = False
+def make_chart_point(x: float | int, y: float | int, label: str) -> dict[str, Any]:
+    return {"x": x, "y": y, "label": label}
 
-    for raw_line in text.splitlines():
-        stripped = raw_line.strip()
-        if stripped.startswith("```"):
-            in_code = not in_code
-        if not in_code and raw_line.startswith("### "):
-            if heading is not None:
-                entries.append({"heading": heading, "lines": lines[:]})
-            heading = raw_line[4:].strip()
-            lines = []
+
+def sorted_success_points(mapping: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not mapping:
+        return []
+    points: list[tuple[int, float]] = []
+    for raw_epoch, raw_value in mapping.items():
+        try:
+            epoch = int(raw_epoch)
+            value = float(raw_value)
+        except (TypeError, ValueError):
             continue
-        if heading is not None:
-            lines.append(raw_line.rstrip())
+        points.append((epoch, value))
+    points.sort(key=lambda item: item[0])
+    return [make_chart_point(epoch, value, f"epoch {epoch}") for epoch, value in points]
 
-    if heading is not None:
-        entries.append({"heading": heading, "lines": lines[:]})
 
-    latest_entries = entries[-limit:]
-    latest_entries.reverse()
-    result: list[dict[str, str]] = []
+def parse_markdown_sections(text: str) -> list[dict[str, Any]]:
+    matches = list(re.finditer(r"^(#{1,6})\s+(.+?)\s*$", text, flags=re.MULTILINE))
+    if not matches:
+        return []
+    sections: list[dict[str, Any]] = []
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        sections.append(
+            {
+                "level": len(match.group(1)),
+                "title": clean_text(match.group(2)),
+                "body": text[start:end].strip(),
+            }
+        )
+    return sections
 
-    for entry in latest_entries:
-        heading_text = str(entry["heading"])
-        content_lines = [line.strip() for line in entry["lines"] if line.strip()]
-        parts = heading_text.split(" · ")
-        date = parts[0]
-        title = parts[1] if len(parts) > 1 else heading_text
-        trailing = parts[2] if len(parts) > 2 else ""
-        scope = next((line.replace("范围：", "", 1).strip() for line in content_lines if line.startswith("范围：")), "")
-        background = next((line.replace("背景：", "", 1).strip() for line in content_lines if line.startswith("背景：")), "")
-        result_line = next((line.replace("结果：", "", 1).strip() for line in content_lines if line.startswith("结果：")), "")
-        preview = result_line or background or scope or "fixes 最新记录。"
-        result.append(
+
+def section_body(sections: list[dict[str, Any]], title: str) -> str:
+    for section in sections:
+        if section["title"] == title:
+            return section["body"]
+    return ""
+
+
+def bullet_lines(text: str) -> list[str]:
+    lines = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("```"):
+            continue
+        if line.startswith("- ") or line.startswith("* "):
+            lines.append(clean_text(line))
+    return lines
+
+
+def parse_bullet_fields(text: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        matched = re.match(r"^-\s+([^:]+):\s*(.*)$", line)
+        if not matched:
+            continue
+        fields[clean_text(matched.group(1))] = clean_text(matched.group(2))
+    return fields
+
+
+def humanize_file_name(path: str | Path) -> str:
+    stem = Path(path).stem
+    stem = re.sub(r"^\d{4}-\d{2}-\d{2}[-_]*", "", stem)
+    stem = stem.replace("_", " ").replace("-", " ")
+    stem = re.sub(r"\s+", " ", stem).strip()
+    return stem or Path(path).name
+
+
+def is_raw_title(title: str) -> bool:
+    title = title.strip()
+    return (
+        "__" in title
+        or bool(re.fullmatch(r"[a-z0-9_]+", title)) and len(title) > 24
+        or ("/" in title and not any("\u4e00" <= char <= "\u9fff" for char in title))
+        or ".py" in title
+        or ".md" in title
+    )
+
+
+def prettify_fix_title(title: str) -> str:
+    parts = [clean_text(part) for part in title.split(" · ")]
+    if len(parts) > 1 and is_raw_title(parts[-1]) and not is_raw_title(parts[0]):
+        return parts[0]
+    if is_raw_title(title):
+        return ""
+    return clean_text(title)
+
+
+def media_caption_from_name(path: Path) -> str:
+    base = humanize_file_name(path)
+    return f"{base} 的现场素材。"
+
+
+def build_media_items(task_id: str, entries: list[dict[str, Any]] | None = None) -> list[dict[str, str]]:
+    items: list[dict[str, str]] = []
+    media_root = ROOT / "homepage/media/tasks" / task_id
+    for file_path in sorted(media_root.glob("*")):
+        if not file_path.is_file() or file_path.name.startswith("."):
+            continue
+        kind = MEDIA_EXTENSIONS.get(file_path.suffix.lower())
+        if not kind:
+            continue
+        items.append(
+            {
+                "task_id": task_id,
+                "kind": kind,
+                "title": humanize_file_name(file_path),
+                "caption": media_caption_from_name(file_path),
+                "path": repo_rel(file_path) or "",
+            }
+        )
+    for entry in entries or []:
+        rel_path = repo_rel(entry.get("path"))
+        if not rel_path:
+            continue
+        kind = MEDIA_EXTENSIONS.get(Path(rel_path).suffix.lower(), "image")
+        items.append(
+            {
+                "task_id": task_id,
+                "kind": kind,
+                "title": entry.get("title", humanize_file_name(rel_path)),
+                "caption": entry.get("caption", media_caption_from_name(Path(rel_path))),
+                "path": rel_path,
+            }
+        )
+    return items
+
+
+def doc_count_under(path: Path) -> int:
+    if not path.exists():
+        return 0
+    return sum(1 for file_path in path.rglob("*") if file_path.suffix.lower() in {".md", ".json"} and file_path.is_file())
+
+
+def parse_fix_entries(limit: int = 4) -> list[dict[str, str]]:
+    fix_path = ROOT / "docs/fixes.md"
+    text = read_text(fix_path)
+    pattern = re.compile(r"^###\s+(.+)$", re.MULTILINE)
+    matches = list(pattern.finditer(text))
+    entries: list[dict[str, str]] = []
+    for index, match in enumerate(matches):
+        heading = match.group(1).strip()
+        heading_parts = heading.split(" · ")
+        if not heading_parts:
+            continue
+        timestamp = heading_parts[0]
+        date = timestamp.split()[0]
+        title = prettify_fix_title(" · ".join(heading_parts[1:]))
+        if not title or title.startswith("`"):
+            continue
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        body = text[start:end]
+        background = re.search(r"\*\*背景\*\*：(.+)", body)
+        result = re.search(r"\*\*结果\*\*：(.+)", body)
+        summary_parts = []
+        if background:
+            summary_parts.append(background.group(1))
+        if result:
+            summary_parts.append(result.group(1))
+        summary = safe_excerpt(" ".join(summary_parts) or body, limit=150)
+        entries.append(
             {
                 "date": date,
                 "title": title,
-                "run": trailing,
-                "scope": truncate(scope, 120) if scope else "",
-                "preview": truncate(preview, 200),
-                "href": "../docs/fixes.md",
+                "summary": summary,
+                "path": repo_rel(fix_path) or "docs/fixes.md",
+                "_sort_key": timestamp,
             }
         )
-    return result
+    entries.sort(key=lambda item: item["_sort_key"], reverse=True)
+    return [{key: value for key, value in entry.items() if key != "_sort_key"} for entry in entries[:limit]]
+
+
+def parse_mdit_journal_events(text: str) -> list[dict[str, Any]]:
+    pattern = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2})T[^\n]*? · ([^·\n]+) · (.+)$", re.MULTILINE)
+    matches = list(pattern.finditer(text))
+    events: list[dict[str, Any]] = []
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        block = text[start:end].strip()
+        fields = parse_bullet_fields(block)
+        events.append(
+            {
+                "date": match.group(1),
+                "phase": clean_text(match.group(2)),
+                "slug": clean_text(match.group(3)),
+                "fields": fields,
+                "body": clean_text(block),
+            }
+        )
+    return events
+
+
+def parse_best_path(path: Path) -> dict[str, str]:
+    return parse_bullet_fields(read_text(path))
+
+
+def collect_wandb_history(run_url: str | None) -> dict[str, dict[int, float]]:
+    if not run_url:
+        return {}
+    try:
+        import wandb  # type: ignore
+    except ModuleNotFoundError:
+        return {}
+
+    parsed = urlparse(run_url)
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) < 4 or parts[-2] != "runs":
+        return {}
+    # W&B Public API 需要的是 entity/project/run_id，而不是 URL 里的 entity/project/runs。
+    run_path = "/".join([parts[0], parts[1], parts[-1]])
+
+    try:
+        api = wandb.Api(timeout=30)
+        run = api.run(run_path)
+        rows = run.scan_history(
+            keys=[
+                "epoch",
+                "_step",
+                "train/loss_total",
+                "valid/loss_total",
+                "valid/mse_xyz",
+                "valid/mse_rot6d",
+                "valid/mse_grip",
+            ]
+        )
+    except Exception:
+        return {}
+
+    by_epoch: dict[int, dict[str, float]] = {}
+    for row in rows:
+        epoch_value = row.get("epoch")
+        if epoch_value is None:
+            continue
+        try:
+            epoch = int(epoch_value)
+        except (TypeError, ValueError):
+            continue
+        by_epoch[epoch] = row
+
+    metrics = {
+        "train/loss_total": {},
+        "valid/loss_total": {},
+        "valid/mse_xyz": {},
+        "valid/mse_rot6d": {},
+        "valid/mse_grip": {},
+    }
+    for epoch, row in sorted(by_epoch.items()):
+        for key in metrics:
+            value = row.get(key)
+            if value is None:
+                continue
+            try:
+                metrics[key][epoch] = float(value)
+            except (TypeError, ValueError):
+                continue
+    return metrics
+
+
+def build_line_chart(
+    chart_id: str,
+    *,
+    title: str,
+    description: str,
+    series: list[dict[str, Any]],
+    fmt: str = "float",
+    note: str = "",
+) -> dict[str, Any]:
+    return {
+        "id": chart_id,
+        "type": "line",
+        "title": title,
+        "description": description,
+        "format": fmt,
+        "note": note,
+        "series": series,
+    }
+
+
+def build_bar_chart(
+    chart_id: str,
+    *,
+    title: str,
+    description: str,
+    categories: list[str],
+    values: list[float],
+    color: str,
+    fmt: str = "float",
+    note: str = "",
+) -> dict[str, Any]:
+    return {
+        "id": chart_id,
+        "type": "bar",
+        "title": title,
+        "description": description,
+        "format": fmt,
+        "note": note,
+        "categories": categories,
+        "series": [{"name": title, "values": values, "color": color}],
+    }
+
+
+def card_link(title: str, path: str | Path) -> dict[str, str]:
+    return {"title": title, "path": repo_rel(path) or ""}
+
+
+def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    doc_path = ROOT / task_cfg["featured_paths"][0]
+    audit_path = ROOT / task_cfg["artifact_paths"]["audit"]
+    summary_path = ROOT / task_cfg["artifact_paths"]["summary"]
+    manifest_path = ROOT / task_cfg["artifact_paths"]["manifest"]
+    training_audit_path = ROOT / task_cfg["featured_paths"][1]
+    recheck20_path = ROOT / "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json"
+    recheck100_path = ROOT / "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
+    regression_path = ROOT / "docs/baseline-regression-reference.json"
+
+    doc_text = read_text(doc_path)
+    doc_sections = parse_markdown_sections(doc_text)
+    audit = read_json(audit_path)
+    summary = read_json(summary_path)
+    manifest = read_json(manifest_path)
+    recheck20 = read_json(recheck20_path)
+    recheck100 = read_json(recheck100_path)
+
+    success_points = sorted_success_points(audit.get("success_by_epoch"))
+    tail_epochs = summary.get("epoch_summaries", [])
+    loss_tail_points_train = []
+    loss_tail_points_valid = []
+    mse_xyz_points = []
+    mse_rot_points = []
+    mse_grip_points = []
+    for item in tail_epochs:
+        epoch = int(item["epoch"])
+        loss_tail_points_train.append(make_chart_point(epoch, item["train"]["loss_total"], f"epoch {epoch}"))
+        loss_tail_points_valid.append(make_chart_point(epoch, item["valid"]["loss_total"], f"epoch {epoch}"))
+        mse_xyz_points.append(make_chart_point(epoch, item["valid"]["mse_xyz"], f"epoch {epoch}"))
+        mse_rot_points.append(make_chart_point(epoch, item["valid"]["mse_rot6d"], f"epoch {epoch}"))
+        mse_grip_points.append(make_chart_point(epoch, item["valid"]["mse_grip"], f"epoch {epoch}"))
+
+    charts["pdit-success-curve"] = build_line_chart(
+        "pdit-success-curve",
+        title="PDIT success by epoch",
+        description="按同一离线审计口径汇总 100/200/300/400/500 五个检查点的 success@20。",
+        fmt="percent",
+        note="success 曲线严格按 epoch 升序整理。",
+        series=[{"name": "success@20", "color": LINE_COLORS["teal"], "points": success_points}],
+    )
+    charts["pdit-loss-tail"] = build_line_chart(
+        "pdit-loss-tail",
+        title="PDIT train / valid total loss（尾段快照）",
+        description="当前仓库本地保留的是 495-499 epoch 的 summary 尾段，所以这里展示的是末段训练过程，而不是整条 500 epoch 全历史。",
+        fmt="float",
+        note="如后续补齐更完整的 history，生成脚本会优先替换这张图。",
+        series=[
+            {"name": "train/loss_total", "color": LINE_COLORS["rust"], "points": loss_tail_points_train},
+            {"name": "valid/loss_total", "color": LINE_COLORS["blue"], "points": loss_tail_points_valid},
+        ],
+    )
+    charts["pdit-mse-tail"] = build_line_chart(
+        "pdit-mse-tail",
+        title="PDIT valid MSE（尾段快照）",
+        description="展示 summary 里保留下来的 valid mse_xyz / mse_rot6d / mse_grip 尾段变化，用来补足 success 曲线背后的误差信号。",
+        fmt="float",
+        note="PDIT 当前没有 W&B history 可抓，因此这里只能展示本地快照。",
+        series=[
+            {"name": "mse_xyz", "color": LINE_COLORS["teal"], "points": mse_xyz_points},
+            {"name": "mse_rot6d", "color": LINE_COLORS["gold"], "points": mse_rot_points},
+            {"name": "mse_grip", "color": LINE_COLORS["coral"], "points": mse_grip_points},
+        ],
+    )
+
+    timeline_groups = [
+        {
+            "date": "2026-04-09",
+            "cards": [
+                {
+                    "badge": "PDIT 主线",
+                    "title": "根目录重整后的最优策略复核通过",
+                    "summary": "对同一 best_success checkpoint 重新做行为复核，确认仓库结构重整没有把当前最优策略改坏。",
+                    "metrics": [
+                        make_metric("20 回合", format_ratio(recheck20["success_rate"])),
+                        make_metric("100 回合", format_ratio(recheck100["success_rate"])),
+                        make_metric("mean steps@100", format_number(recheck100["mean_steps"], 2)),
+                    ],
+                    "outcome": "Baseline@500 继续作为当前 PDIT 行为锚点。",
+                    "links": [
+                        card_link("20 回合复核", recheck20_path),
+                        card_link("100 回合复核", recheck100_path),
+                        card_link("checkpoint manifest", manifest_path),
+                    ],
+                },
+                {
+                    "badge": "Regression",
+                    "title": "固定 batch 数值回归重新固化为新基准",
+                    "summary": "根目录重整后旧 reference 不再 bitwise 对齐，于是把固定 batch regression 重新固化成新的 canonical baseline。",
+                    "metrics": [
+                        make_metric("reference", "已重建"),
+                        make_metric("脚本", "verify_baseline_regression.py"),
+                        make_metric("状态", "可重复"),
+                    ],
+                    "outcome": "后续代码重构有了统一的数值回归锚点。",
+                    "links": [
+                        card_link("新 regression reference", regression_path),
+                        card_link("恢复进展文档", doc_path),
+                    ],
+                },
+            ],
+        },
+        {
+            "date": "2026-04-08",
+            "cards": [
+                {
+                    "badge": "Repair",
+                    "title": "训练与离线审计链关键 bug 修完",
+                    "summary": "本地导入污染、FM 导入耦合、PointNet 导入、checkpoint 原子保存、子进程 audit 隔离和 audit-only stage 覆盖问题都在同一轮里修正。",
+                    "metrics": [
+                        make_metric("关键修复", "6"),
+                        make_metric("audit-only", "已修"),
+                        make_metric("latest.pt", "原子保存"),
+                    ],
+                    "outcome": "之前“模型完全学不会”的结论被重新归因为工程与评估链问题。",
+                    "links": [
+                        card_link("恢复进展文档", doc_path),
+                        card_link("训练模型审计", training_audit_path),
+                    ],
+                },
+                {
+                    "badge": "Baseline",
+                    "title": "Baseline@100 恢复到 0.90 success@20",
+                    "summary": "修复后的 baseline 不再早期崩掉，在 100 epoch 已经能稳定学出可用行为。",
+                    "metrics": [
+                        make_metric("success@100", "0.90"),
+                        make_metric("best valid", "0.661"),
+                        make_metric("best epoch", "31"),
+                    ],
+                    "outcome": "点云主线的可训练性已经重新被确认。",
+                    "links": [
+                        card_link("恢复进展文档", doc_path),
+                        card_link("训练模型审计", training_audit_path),
+                    ],
+                },
+                {
+                    "badge": "Anchor",
+                    "title": "Baseline@500 锚定 0.95 success@20",
+                    "summary": "100/200/300/400/500 五个检查点的 success 曲线重新梳理后，最强点实际落在 500 epoch，而不是中途崩塌。",
+                    "metrics": [
+                        make_metric("100", "0.75"),
+                        make_metric("300", "0.90"),
+                        make_metric("500", "0.95"),
+                    ],
+                    "outcome": "修复后的 baseline 没有出现之前 feared 的 300→500 崩塌。",
+                    "links": [
+                        card_link("audit report", audit_path),
+                        card_link("summary", summary_path),
+                    ],
+                },
+                {
+                    "badge": "Ablation",
+                    "title": "H1 原始增强结论作废，H2 仍是待证候选",
+                    "summary": "H1 的 stats+aug 路线之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；H2 在 valid loss 上更好，但还没形成新的行为锚点。",
+                    "metrics": [
+                        make_metric("H1@100", "0.55"),
+                        make_metric("H2 best valid", "0.572"),
+                        make_metric("状态", "待行为验证"),
+                    ],
+                    "outcome": "H1 不再作为结构结论引用，当前锚点仍是 baseline@500。",
+                    "links": [
+                        card_link("恢复进展文档", doc_path),
+                        card_link("训练模型审计", training_audit_path),
+                    ],
+                },
+            ],
+        },
+    ]
+
+    findings = [
+        {
+            "title": "主因已经从“学不会”转成“如何稳住后期泛化”",
+            "body": "修复工程问题之后，PDIT baseline 已经能在 100 epoch 达到 0.90@20，在 500 epoch 达到 0.95@20。当前真正的问题是怎么降低 300-500 epoch 的策略漂移，而不是是否能学起来。",
+        },
+        {
+            "title": "H1 原结论不能继续沿用",
+            "body": "数据增强实现曾经错误地把 rot6d 向量当成三维点平移，所以 H1 的坏结果不能被解读成“数据驱动统计一定无效”。",
+        },
+        {
+            "title": "当前公开最强证据是 0.95@20 / 0.85@100",
+            "body": "20 回合短审计把 500 epoch 锚点推到 0.95，根目录重整后又用同一策略做了 100 回合复核，保持在 0.85，足够支撑它继续做主线锚点。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("FM/DiT 恢复进展", doc_path, "完整记录了修复项、Baseline@100/500、H1/H2 结论和后续判断。"),
+        make_link("训练模型审计", training_audit_path, "补充了修复前后模型与训练行为的核对过程。"),
+        make_link("PDIT audit report", audit_path, "包含 success_by_epoch 和当前 best checkpoint。"),
+        make_link("PDIT summary", summary_path, "包含最新 valid/train 尾段指标与 run 元信息。"),
+        make_link("checkpoint manifest", manifest_path, "固化了 canonical best 及其复核证据。"),
+        make_link("100 回合复核结果", recheck100_path, "验证根目录重整后最优策略仍然成立。"),
+    ]
+
+    home_entries = [
+        {
+            "date": "2026-04-09",
+            "group": "done",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "PDIT 主线",
+            "title": "PDIT baseline 在 500 epoch 锚定 0.95@20 / 0.85@100",
+            "summary": "修复训练与审计链后，点云主线不再在 300-500 epoch 崩塌，当前最强策略已经有 20 回合与 100 回合两轮复核。",
+            "metrics": [
+                make_metric("success@20", "0.95"),
+                make_metric("100 回合复核", "0.85"),
+                make_metric("锚点", "@500"),
+            ],
+            "meta": "PDIT 基线恢复与锚点固化",
+            "path": "homepage/tasks/pdit-anchor/",
+        },
+        {
+            "date": "2026-04-08",
+            "group": "done",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "Baseline Recovery",
+            "title": "点云训练栈修稳后，Baseline@100 重新回到 0.90 success@20",
+            "summary": "这一天的核心不是又跑了一次实验，而是把导致历史结论失真的训练、保存和审计问题真正修通了。",
+            "metrics": [
+                make_metric("success@100", "0.90"),
+                make_metric("关键修复", "6"),
+                make_metric("best valid", "0.661"),
+            ],
+            "meta": "从“学不会”转向“后期如何稳住”",
+            "path": "homepage/tasks/pdit-anchor/",
+        },
+    ]
+
+    hero_metrics = [
+        make_metric("best success@20", format_ratio(audit["best_success_rate"])),
+        make_metric("100 回合复核", format_ratio(recheck100["success_rate"])),
+        make_metric("best epoch", audit["best_success_epoch"]),
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": "2026-04-09",
+        "hero_metrics": hero_metrics,
+        "report_intro": "PDIT 这条线的任务不是继续堆实验数量，而是把点云主线从“曾经不可信的训练栈”修成一个能反复复核、能承接后续比较的稳定锚点。",
+        "summary_cards": [
+            {
+                "eyebrow": "Anchor",
+                "title": "行为锚点已经稳定下来",
+                "body": "Baseline@500 在离线 20 回合达到 0.95，根目录重整后的 100 回合复核仍有 0.85，说明当前最优策略不是一次性好运气。",
+                "metrics": [
+                    make_metric("20 回合", "0.95"),
+                    make_metric("100 回合", "0.85"),
+                    make_metric("best epoch", "500"),
+                ],
+            },
+            {
+                "eyebrow": "Repair",
+                "title": "训练 / 保存 / 审计三条链都修过一轮",
+                "body": "导入路径污染、checkpoint 原子保存、audit-only stage 覆盖和 RLBench 挂起隔离等问题被集中处理，当前结果终于能按同一口径解释。",
+                "metrics": [
+                    make_metric("关键修复", "6"),
+                    make_metric("audit chain", "稳定"),
+                    make_metric("行为回归", "通过"),
+                ],
+            },
+            {
+                "eyebrow": "Ablation",
+                "title": "H1 结论作废，H2 仍属候选",
+                "body": "H1 的数据增强路径存在语义 bug，不能再拿来支持结构结论；H2 在 valid loss 上有优势，但还没有行为层面的替代证据。",
+                "metrics": [
+                    make_metric("H1", "作废"),
+                    make_metric("H2 best valid", "0.572"),
+                    make_metric("当前锚点", "baseline"),
+                ],
+            },
+            {
+                "eyebrow": "Current",
+                "title": "现在要解决的是后期稳定性，而不是可训练性",
+                "body": "PDIT 已经证明自己能学起来，真正要继续追的是怎样减少中后期漂移、让 success 与 valid signal 更长期对齐。",
+                "metrics": [
+                    make_metric("100 epoch", "可用"),
+                    make_metric("500 epoch", "可复核"),
+                    make_metric("问题", "晚期泛化"),
+                ],
+            },
+        ],
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": ["pdit-success-curve", "pdit-loss-tail", "pdit-mse-tail"],
+        "media_items": media_items,
+        "home_entries": home_entries,
+        "task_badge": "PDIT 主线",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
+        "manifest_note": safe_excerpt(clean_text(section_body(doc_sections, "迄今为止的总结"))),
+    }
+
+
+def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    journal_path = ROOT / task_cfg["featured_paths"][0]
+    best_path_path = ROOT / task_cfg["featured_paths"][1]
+    manual_path = ROOT / task_cfg["featured_paths"][2]
+    audit_path = ROOT / task_cfg["artifact_paths"]["audit"]
+    summary_path = ROOT / task_cfg["artifact_paths"]["summary"]
+    wandb_summary_path = ROOT / task_cfg["artifact_paths"]["resume_wandb"]
+
+    journal_text = read_text(journal_path)
+    journal_events = parse_mdit_journal_events(journal_text)
+    best_path = parse_best_path(best_path_path)
+    audit = read_json(audit_path)
+    summary = read_json(summary_path)
+    wandb_summary = read_json(wandb_summary_path)
+    wandb_history = collect_wandb_history(summary.get("wandb_run_url"))
+
+    success_points = sorted_success_points(audit.get("success_by_epoch"))
+
+    if wandb_history.get("train/loss_total") and wandb_history.get("valid/loss_total"):
+        total_loss_note = "使用 W&B API 抓取完整 history，展示主线真实训练曲线。"
+        train_loss_points = [make_chart_point(epoch, value, f"epoch {epoch}") for epoch, value in sorted(wandb_history["train/loss_total"].items())]
+        valid_loss_points = [make_chart_point(epoch, value, f"epoch {epoch}") for epoch, value in sorted(wandb_history["valid/loss_total"].items())]
+    else:
+        total_loss_note = "W&B API 当前不可用，回退为本地 audit_report 的 1-100 epoch 历史。"
+        train_loss_points = [make_chart_point(index + 1, value, f"epoch {index + 1}") for index, value in enumerate(audit.get("train_loss_history", []))]
+        valid_loss_points = [make_chart_point(index + 1, value, f"epoch {index + 1}") for index, value in enumerate(audit.get("valid_loss_history", []))]
+
+    if wandb_history.get("valid/mse_xyz"):
+        mse_note = "使用 W&B API 抓取 valid mse_xyz / mse_rot6d / mse_grip 全量 history。"
+        mse_xyz_points = [make_chart_point(epoch, value, f"epoch {epoch}") for epoch, value in sorted(wandb_history["valid/mse_xyz"].items())]
+        mse_rot_points = [make_chart_point(epoch, value, f"epoch {epoch}") for epoch, value in sorted(wandb_history["valid/mse_rot6d"].items())]
+        mse_grip_points = [make_chart_point(epoch, value, f"epoch {epoch}") for epoch, value in sorted(wandb_history["valid/mse_grip"].items())]
+    else:
+        mse_note = "W&B API 当前不可用，因此 mse 曲线回退到 summary 里保留下来的 95-99 epoch 尾段快照。"
+        mse_xyz_points = []
+        mse_rot_points = []
+        mse_grip_points = []
+        for item in summary.get("epoch_summaries", []):
+            epoch = int(item["epoch"])
+            mse_xyz_points.append(make_chart_point(epoch, item["valid"]["mse_xyz"], f"epoch {epoch}"))
+            mse_rot_points.append(make_chart_point(epoch, item["valid"]["mse_rot6d"], f"epoch {epoch}"))
+            mse_grip_points.append(make_chart_point(epoch, item["valid"]["mse_grip"], f"epoch {epoch}"))
+
+    charts["mdit-success-curve"] = build_line_chart(
+        "mdit-success-curve",
+        title="MDIT success by epoch",
+        description="当前锁定的 RGB+Text 主线只在 50 / 100 epoch 做了共享 audit，因此 success 曲线严格按这两个里程碑展示。",
+        fmt="percent",
+        note="排序严格按 epoch 升序，避免 100 在 50 前面或 500 插到前面。",
+        series=[{"name": "success@20", "color": LINE_COLORS["teal"], "points": success_points}],
+    )
+    charts["mdit-loss-curve"] = build_line_chart(
+        "mdit-loss-curve",
+        title="MDIT train / valid total loss",
+        description="把主线训练过程里的 total train loss 和 total valid loss 放在一张图里，便于直接看收敛与回弹。",
+        fmt="float",
+        note=total_loss_note,
+        series=[
+            {"name": "train/loss_total", "color": LINE_COLORS["rust"], "points": train_loss_points},
+            {"name": "valid/loss_total", "color": LINE_COLORS["blue"], "points": valid_loss_points},
+        ],
+    )
+    charts["mdit-mse-curve"] = build_line_chart(
+        "mdit-mse-curve",
+        title="MDIT valid MSE",
+        description="拆开看 xyz / rot6d / grip 三条 valid MSE，避免只盯 total loss 时看不出哪一类误差在拖后腿。",
+        fmt="float",
+        note=mse_note,
+        series=[
+            {"name": "mse_xyz", "color": LINE_COLORS["teal"], "points": mse_xyz_points},
+            {"name": "mse_rot6d", "color": LINE_COLORS["gold"], "points": mse_rot_points},
+            {"name": "mse_grip", "color": LINE_COLORS["coral"], "points": mse_grip_points},
+        ],
+    )
+
+    event_map = {(event["date"], event["slug"]): event for event in journal_events}
+    stabilized_event = next((event for event in journal_events if "lane_a_stabilized" in event["slug"] and event["phase"] == "audit_only"), None)
+    lane_b_fix_event = next((event for event in journal_events if event["phase"] == "infra_fix" and "Lane B first launch failed" in event["fields"].get("Title", "")), None)
+    fallback_event = event_map.get(("2026-04-18", "takeover_triggered_fallback_best500"))
+    resume_event = event_map.get(("2026-04-18", "best500_resume_recovered"))
+
+    timeline_groups = [
+        {
+            "date": "2026-04-18",
+            "cards": [
+                {
+                    "badge": "Mainline Resume",
+                    "title": "Lane C strict 审计未过后，主线回退到 incumbent best route",
+                    "summary": "严格 MTDP 验证线没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
+                    "metrics": [
+                        make_metric("当前锚点", "0.55@100"),
+                        make_metric("回退动作", "best500 fallback"),
+                        make_metric("原因", "recipe drift"),
+                    ],
+                    "outcome": "MDIT 重新聚焦到 incumbent mainline，而不是继续同时养多个弱 lane。",
+                    "links": [
+                        card_link("research journal", journal_path),
+                        card_link("best path", best_path_path),
+                    ],
+                },
+                {
+                    "badge": "Takeover",
+                    "title": "100→500 主线续训在 supervisor 下恢复",
+                    "summary": "早先的 fallback run 首个 optimizer step 就崩掉，后来又确认 watchdog 误判了“已接管但其实空转”的状态；这一天把 optimizer / scheduler 兼容和 supervisor 都补上了。",
+                    "metrics": [
+                        make_metric("续训目标", "500 epoch"),
+                        make_metric("当前 best", "0.55@100"),
+                        make_metric("状态", "已恢复"),
+                    ],
+                    "outcome": "后续 500 epoch 结果会继续积累在同一条主线 lineage 上，而不是再新开匿名 run。",
+                    "links": [
+                        card_link("research journal", journal_path),
+                        card_link("W&B summary", wandb_summary_path),
+                    ],
+                },
+            ],
+        },
+        {
+            "date": "2026-04-17",
+            "cards": [
+                {
+                    "badge": "Anchor",
+                    "title": "Lane A 被冻结为当前 RGB+Text 锚点",
+                    "summary": "在共享 audit 链下，lane_a_mainline_100 是当时唯一完成锁定审计的 RGB+Text 候选，因此被正式冻结为主线锚点。",
+                    "metrics": [
+                        make_metric("epoch 50", "0.25"),
+                        make_metric("epoch 100", "0.55"),
+                        make_metric("mean steps", "121.75"),
+                    ],
+                    "outcome": "后续 challenger 只有在同一审计口径下超过 0.55，才有资格接管主线。",
+                    "links": [
+                        card_link("best path", best_path_path),
+                        card_link("audit report", audit_path),
+                    ],
+                },
+                {
+                    "badge": "Comparison",
+                    "title": "稳定化对照审计后确认弱于当前锚点",
+                    "summary": "Lane A stabilized 的动作平滑改动没有真正触及核心失败模式，弱 lane 在 50 / 100 epoch 的表现都落在锚点之下。",
+                    "metrics": [
+                        make_metric("epoch 50", "0.20"),
+                        make_metric("epoch 100", "0.35"),
+                        make_metric("失败主因", "at_horizon"),
+                    ],
+                    "outcome": "这条稳定化对照线被明确降级为参考线，而不是新主线。",
+                    "links": [
+                        card_link("research journal", journal_path),
+                        card_link("execution manual", manual_path),
+                    ],
+                },
+                {
+                    "badge": "Infra Fix",
+                    "title": "Lane B 首次失败被确认是缓存 / 网络问题，不是模型质量",
+                    "summary": "第一次 faithful lane 启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
+                    "metrics": [
+                        make_metric("HF 模式", "offline"),
+                        make_metric("问题归因", "启动链"),
+                        make_metric("模型判断", "未下结论"),
+                    ],
+                    "outcome": "Lane B 的首轮失败不再被误记成“faithful recipe 无效”。",
+                    "links": [
+                        card_link("research journal", journal_path),
+                        card_link("execution manual", manual_path),
+                    ],
+                },
+            ],
+        },
+        {
+            "date": "2026-04-16",
+            "cards": [
+                {
+                    "badge": "Manual",
+                    "title": "MDIT 执行手册定版，主线推进开始有统一口径",
+                    "summary": "从训练命令、共享评估链、晋级门槛到接管方式，全部被整理成固定手册，后续不再靠零散命令和口口相传维持。",
+                    "metrics": [
+                        make_metric("搜索线", "2"),
+                        make_metric("闸门", "100/300/500"),
+                        make_metric("审计链", "锁定"),
+                    ],
+                    "outcome": "MDIT 开始从零散 run note 转成真正可持续维护的主线研究线。",
+                    "links": [
+                        card_link("execution manual", manual_path),
+                        card_link("research journal", journal_path),
+                    ],
+                }
+            ],
+        },
+    ]
+
+    findings = [
+        {
+            "title": "当前冠军仍然只有 0.55@100 的 Lane A 主线",
+            "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是 lane_a_mainline_100。所有 challenger 都还没有超过它。",
+        },
+        {
+            "title": "稳定化和弱 lane 没有解决核心失败模式",
+            "body": "已知失败大头仍是 at_horizon，说明只是平滑 action head 或轻微换 lane 并不能直接解决 MDIT 的行为瓶颈。",
+        },
+        {
+            "title": "真正的下一步是把 100→500 主线续训跑完并审完",
+            "body": "现在最重要的不是再开更多对照，而是在同一条 best-route lineage 上拿到完整 500 epoch 的共享 audit 结果。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("MDIT research journal", journal_path, "append-only 研究日志，记录每条 lane 的推进、失败和接管。"),
+        make_link("MDIT best path", best_path_path, "当前主线锚点、best checkpoint 和晋级逻辑。"),
+        make_link("MDIT execution manual", manual_path, "训练、审计、接管与晋级规则的固定手册。"),
+        make_link("MDIT audit report", audit_path, "0.25@50 / 0.55@100 的共享审计证据。"),
+        make_link("MDIT summary", summary_path, "1-100 epoch 主线的 summary 与 W&B run URL。"),
+        make_link("W&B summary snapshot", wandb_summary_path, "500 续训接管后的本地 W&B 摘要快照。"),
+    ]
+
+    home_entries = [
+        {
+            "date": "2026-04-18",
+            "group": "in_progress",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "MDIT 主线",
+            "title": "MDIT 主线恢复 100→500 续训接管",
+            "summary": "lane C strict 审计没有通过后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+            "metrics": [
+                make_metric("当前锚点", "0.55@100"),
+                make_metric("续训目标", "500"),
+                make_metric("状态", "恢复中"),
+            ],
+            "meta": "主线从筛选期进入长训接管期",
+            "path": "homepage/tasks/mdit-mainline/",
+        },
+        {
+            "date": "2026-04-17",
+            "group": "in_progress",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "RGB+Text Anchor",
+            "title": "Lane A 冻结为当前 RGB+Text 锚点，challenger 全部暂未越线",
+            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，稳定化 lane 和 faithful lane 的首轮推进都没能完成接管。",
+            "metrics": [
+                make_metric("epoch 50", "0.25"),
+                make_metric("epoch 100", "0.55"),
+                make_metric("弱 lane", "2"),
+            ],
+            "meta": "研究线开始从扩散筛选重新收束",
+            "path": "homepage/tasks/mdit-mainline/",
+        },
+    ]
+
+    latest_resume_epoch = wandb_summary.get("epoch")
+    hero_metrics = [
+        make_metric("current anchor", "0.55@100"),
+        make_metric("epoch 50", "0.25"),
+        make_metric("resume", f"epoch {latest_resume_epoch}" if latest_resume_epoch is not None else "100→500"),
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": "2026-04-18",
+        "hero_metrics": hero_metrics,
+        "report_intro": "MDIT 这条线当前最重要的不是再开更多名字相似的 run，而是把 RGB+Text 主线的筛选、冻结、接管和 500 epoch 续训放在同一条研究叙事里看清楚。",
+        "summary_cards": [
+            {
+                "eyebrow": "Anchor",
+                "title": "RGB+Text 当前锚点是 0.55@100 的 Lane A",
+                "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有 challenger 必须超过的门槛。",
+                "metrics": [
+                    make_metric("epoch 50", "0.25"),
+                    make_metric("epoch 100", "0.55"),
+                    make_metric("status", "frozen best"),
+                ],
+            },
+            {
+                "eyebrow": "Resume",
+                "title": "100→500 续训接管已经恢复",
+                "body": "这轮不是随便补跑，而是把 optimizer state 不兼容、scheduler lr 重算和 watchdog 假接管一起修好后，重新把长训挂到当前 best-route 上。",
+                "metrics": [
+                    make_metric("目标", "500 epoch"),
+                    make_metric("当前 best", "0.55@100"),
+                    make_metric("状态", "resume"),
+                ],
+            },
+            {
+                "eyebrow": "Lane Screening",
+                "title": "弱 lane 已经被显式降级",
+                "body": "稳定化 lane 只到 0.35，Lane B 首败是缓存/网络问题，Lane C strict 没过共享 gate。主线不再被弱候选反复打断。",
+                "metrics": [
+                    make_metric("stabilized@100", "0.35"),
+                    make_metric("Lane B", "offline fix"),
+                    make_metric("Lane C", "未过 gate"),
+                ],
+            },
+            {
+                "eyebrow": "Contract",
+                "title": "研究线已经有固定的执行与审计口径",
+                "body": "execution manual、best_path 和 research journal 三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
+                "metrics": [
+                    make_metric("manual", "已固化"),
+                    make_metric("journal", "append-only"),
+                    make_metric("audit chain", "共享"),
+                ],
+            },
+        ],
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": ["mdit-success-curve", "mdit-loss-curve", "mdit-mse-curve"],
+        "media_items": media_items,
+        "home_entries": home_entries,
+        "task_badge": "MDIT 主线",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
+        "event_digest": {
+            "resume_recovered": resume_event["fields"] if resume_event else {},
+            "fallback_triggered": fallback_event["fields"] if fallback_event else {},
+            "stabilized_lane": stabilized_event["fields"] if stabilized_event else {},
+            "lane_b_fix": lane_b_fix_event["fields"] if lane_b_fix_event else {},
+        },
+    }
+
+
+def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    plan_path = ROOT / task_cfg["featured_paths"][0]
+    readme_path = ROOT / task_cfg["featured_paths"][1]
+    plan_text = read_text(plan_path)
+    sections = parse_markdown_sections(plan_text)
+
+    charts["lelan-stage-gates"] = build_bar_chart(
+        "lelan-stage-gates",
+        title="LeLaN 阶段闸门",
+        description="LeLaN 目前还在铺设工程链路，所以最重要的不是已有结果，而是把 100 / 300 / 500 epoch 的晋级门槛固定清楚。",
+        categories=["100 epoch", "300 epoch", "500 epoch"],
+        values=[0.45, 0.55, 0.60],
+        color=LINE_COLORS["teal"],
+        fmt="percent",
+        note="这是一张任务规则图，不是训练曲线图。",
+    )
+
+    timeline_groups = [
+        {
+            "date": "2026-04-12",
+            "cards": [
+                {
+                    "badge": "Recipe",
+                    "title": "LeLaN 主线 recipe 固定为 5RGB / obs3 / a8",
+                    "summary": "这一轮先固定 5RGB、obs3、horizon=32、n_action_steps=8、smooth_actions=true 和 100 epoch / 20 episode gate，不急着改 backbone。",
+                    "metrics": [
+                        make_metric("RGB", "5"),
+                        make_metric("obs", "3"),
+                        make_metric("action steps", "8"),
+                    ],
+                    "outcome": "LeLaN 第一轮重点从“改模型”转成“先把工程链路立起来”。",
+                    "links": [
+                        card_link("执行计划", plan_path),
+                        card_link("LeLaN research README", readme_path),
+                    ],
+                },
+                {
+                    "badge": "Eval Chain",
+                    "title": "EMA、success eval 与 offline eval ckpt 双路径补齐",
+                    "summary": "训练中 success gate 和不依赖 RLBench 的离线 eval ckpt 两条路径被明确分开，resume 和 prefer-ema 也都补齐了兼容。",
+                    "metrics": [
+                        make_metric("EMA", "on"),
+                        make_metric("success gate", "100@20"),
+                        make_metric("eval ckpt", "100 epoch"),
+                    ],
+                    "outcome": "LeLaN 后续 run 不会再出现“训练、评估、选模链路断开”的状态。",
+                    "links": [
+                        card_link("执行计划", plan_path),
+                        card_link("LeLaN research README", readme_path),
+                    ],
+                },
+                {
+                    "badge": "Trace",
+                    "title": "autoresearch 留痕规范一次性固定下来",
+                    "summary": "manifest、summary、dataset_stats、audit_report、trial_request 和 change_summary 都被写进固定产物约定里，后续可以直接追加而不是重新发明格式。",
+                    "metrics": [
+                        make_metric("核心产物", "7+"),
+                        make_metric("screening lanes", "3"),
+                        make_metric("stop gate", "0.45"),
+                    ],
+                    "outcome": "LeLaN 后续最先长出来的是“可审计的工程链路”，而不是无上下文的零散 run。",
+                    "links": [
+                        card_link("执行计划", plan_path),
+                        card_link("LeLaN research README", readme_path),
+                    ],
+                },
+            ],
+        }
+    ]
+
+    findings = [
+        {
+            "title": "这一轮先补工程基础，而不是先改结构",
+            "body": "LeLaN 当前的核心缺口不是 encoder 设计，而是训练、评估、选模和审计链路没有一体化。"},
+        {
+            "title": "所有 screening 先走统一主线 recipe",
+            "body": "只有当三条 100 epoch screening 全都过不了 0.45@20，下一轮才允许更激进的结构改动。",
+        },
+        {
+            "title": "留痕格式已经比结果更早固定",
+            "body": "即便本页还没有 success 曲线，后续每条 LeLaN run 也会自动留下 manifest、summary、audit 和 change summary。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("LeLaN autoresearch 执行计划", plan_path, "定义了本轮目标、主线 recipe、闸门与训练 / 评估约束。"),
+        make_link("LeLaN research README", readme_path, "定义了后续 run 报告必须具备的结构。"),
+    ]
+
+    home_entries = [
+        {
+            "date": "2026-04-12",
+            "group": "in_progress",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "LeLaN",
+            "title": "LeLaN 自动研究链路完成首轮固化",
+            "summary": "先把 5RGB / obs3 / a8 的主线 recipe、EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
+            "metrics": [
+                make_metric("obs", "3"),
+                make_metric("actions", "8"),
+                make_metric("gate", "0.45@100"),
+            ],
+            "meta": "当前还是工程铺设期，结果页会在正式 run 后变厚",
+            "path": "homepage/tasks/lelan-pipeline/",
+        }
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": "2026-04-12",
+        "hero_metrics": [
+            make_metric("主线", "5RGB / obs3"),
+            make_metric("actions", "8"),
+            make_metric("gate", "0.45@100"),
+        ],
+        "report_intro": "LeLaN 这页目前更像“执行链路报告”，因为它的首要目标是把训练、评估、选模和审计变成一套能长期追加的自动研究流程。",
+        "summary_cards": [
+            {
+                "eyebrow": "Recipe",
+                "title": "第一轮 recipe 固定，不先碰 backbone",
+                "body": "先锁定 5RGB、obs3、horizon=32、n_action_steps=8 和 smooth_actions，把工程链路建立清楚再谈结构创新。",
+                "metrics": [
+                    make_metric("RGB", "5"),
+                    make_metric("obs", "3"),
+                    make_metric("actions", "8"),
+                ],
+            },
+            {
+                "eyebrow": "Eval",
+                "title": "训练内 success gate 与离线 eval ckpt 双路径都补齐了",
+                "body": "训练可以选择直接做 success eval，也可以完全不依赖 RLBench、按固定节奏保存轻量 eval ckpt，后续审计链不再卡死在单一路径上。",
+                "metrics": [
+                    make_metric("EMA", "兼容"),
+                    make_metric("prefer-ema", "已支持"),
+                    make_metric("eval ckpt", "固定目录"),
+                ],
+            },
+            {
+                "eyebrow": "Trace",
+                "title": "autoresearch 产物和 change summary 已经定版",
+                "body": "manifest、summary、dataset_stats、audit_report 和 trial_request 都成为固定产物，change_summary 也必须可被人直接读懂。",
+                "metrics": [
+                    make_metric("产物", "7+"),
+                    make_metric("change_summary", "人类可读"),
+                    make_metric("状态", "可追加"),
+                ],
+            },
+            {
+                "eyebrow": "Gate",
+                "title": "100 / 300 / 500 三段闸门已经固定",
+                "body": "当前阶段最重要的是用统一 gate 管住筛选节奏，而不是同时尝试太多方向导致结论无法对比。",
+                "metrics": [
+                    make_metric("100", "0.45"),
+                    make_metric("300", "0.55"),
+                    make_metric("500", "0.60"),
+                ],
+            },
+        ],
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": ["lelan-stage-gates"],
+        "media_items": media_items,
+        "home_entries": home_entries,
+        "task_badge": "LeLaN",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
+        "manifest_note": safe_excerpt(section_body(sections, "2.6 autoresearch 留痕")),
+    }
+
+
+def build_infra_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    fixes_path = ROOT / task_cfg["featured_paths"][0]
+    code_structure_path = ROOT / task_cfg["featured_paths"][1]
+    compare_path = ROOT / task_cfg["featured_paths"][2]
+    fix_entries = parse_fix_entries(limit=6)
+
+    branch_counts = [
+        doc_count_under(ROOT / "docs/pdit"),
+        doc_count_under(ROOT / "docs/mdit"),
+        doc_count_under(ROOT / "docs/lelan"),
+    ]
+    charts["results-status-overview"] = build_bar_chart(
+        "results-status-overview",
+        title="任务状态分布",
+        description="首页只保留高层状态分布，帮助快速看当前有哪些任务已经形成锚点，哪些还在推进中。",
+        categories=["已验证", "推进中", "待结果", "长期维护"],
+        values=[1, 1, 1, 1],
+        color=LINE_COLORS["rust"],
+        fmt="int",
+    )
+    charts["branch-doc-volume"] = build_bar_chart(
+        "branch-doc-volume",
+        title="文档沉淀规模",
+        description="按支线统计当前 docs 下已沉淀的 Markdown / JSON 文档数量，用来反映哪条研究线的留痕已经成体系。",
+        categories=["PDIT", "MDIT", "LeLaN"],
+        values=[float(count) for count in branch_counts],
+        color=LINE_COLORS["blue"],
+        fmt="int",
+    )
+
+    timeline_cards = []
+    for entry in fix_entries:
+        timeline_cards.append(
+            {
+                "badge": "Infra",
+                "title": entry["title"],
+                "summary": entry["summary"],
+                "metrics": [
+                    make_metric("日期", entry["date"]),
+                    make_metric("类型", "修复"),
+                    make_metric("状态", "已记录"),
+                ],
+                "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+                "links": [card_link("fixes.md", fixes_path)],
+            }
+        )
+
+    timeline_groups = []
+    grouped_cards: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for card in timeline_cards:
+        grouped_cards[card["metrics"][0]["value"]].append(card)
+    for date in sorted(grouped_cards.keys(), reverse=True):
+        timeline_groups.append({"date": date, "cards": grouped_cards[date]})
+
+    findings = [
+        {
+            "title": "fixes 账本只做事实源，不再占据公开主页中心",
+            "body": "infra 页面保留全局修复脉络，但首页只抽取少量关键转折，不再把调试流水账摆在最前面。",
+        },
+        {
+            "title": "留痕格式已经进入可复用阶段",
+            "body": "训练、评估、审计和研究日志都开始有固定产物路径和记录口径，后续 agent 不需要重新发明首页结构。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("fixes.md", fixes_path, "全局修复与调试事实源。"),
+        make_link("代码结构文档", code_structure_path, "补充仓库结构与模块关系。"),
+        make_link("PDIT vs MDIT 对照", compare_path, "帮助解释两条主线的定位差异。"),
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": fix_entries[0]["date"] if fix_entries else "",
+        "hero_metrics": [
+            make_metric("fixes", len(fix_entries)),
+            make_metric("PDIT docs", branch_counts[0]),
+            make_metric("MDIT docs", branch_counts[1]),
+        ],
+        "report_intro": "这页只保留真正影响研究推进的基础设施修复，不再把 maintenance 规则和 agent 说明写进公开首页。",
+        "summary_cards": [
+            {
+                "eyebrow": "Fix Log",
+                "title": "全局修复账本已经固定成单一事实源",
+                "body": "后续每次改动、结论和关键 run 状态都在 fixes.md 里按统一模板追加，不再散落到多个临时文档里。",
+                "metrics": [
+                    make_metric("事实源", "单一"),
+                    make_metric("模板", "固定"),
+                    make_metric("状态", "追加式"),
+                ],
+            },
+            {
+                "eyebrow": "Archive",
+                "title": "研究文档开始按支线收束",
+                "body": "PDIT、MDIT、LeLaN 都逐步有自己的 docs 目录和稳定文档，不再把运行记录直接塞进首页或根目录。",
+                "metrics": [
+                    make_metric("PDIT docs", branch_counts[0]),
+                    make_metric("MDIT docs", branch_counts[1]),
+                    make_metric("LeLaN docs", branch_counts[2]),
+                ],
+            },
+        ],
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": ["results-status-overview", "branch-doc-volume"],
+        "media_items": media_items,
+        "home_entries": [],
+        "task_badge": "Infra",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
+    }
+
+
+def build_task(task_cfg: dict[str, Any], charts: dict[str, Any]) -> dict[str, Any]:
+    media_items = build_media_items(task_cfg["id"], task_cfg.get("media_entries"))
+    if task_cfg["id"] == "pdit-anchor":
+        return build_pdit_task(task_cfg, charts, media_items)
+    if task_cfg["id"] == "mdit-mainline":
+        return build_mdit_task(task_cfg, charts, media_items)
+    if task_cfg["id"] == "lelan-pipeline":
+        return build_lelan_task(task_cfg, charts, media_items)
+    if task_cfg["id"] == "infra-audit":
+        return build_infra_task(task_cfg, charts, media_items)
+    raise ValueError(f"Unsupported task id: {task_cfg['id']}")
+
+
+def build_branches(
+    branch_profiles: dict[str, Any],
+    tasks: list[dict[str, Any]],
+    charts: dict[str, Any],
+) -> list[dict[str, Any]]:
+    task_map = {task["id"]: task for task in tasks}
+    branches = []
+    for branch_id, profile in branch_profiles.items():
+        related_tasks = [task for task in tasks if branch_id in task["branch_ids"]]
+        if not related_tasks:
+            continue
+        timeline_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for task in related_tasks:
+            for group in task["timeline_groups"]:
+                for card in group["cards"]:
+                    branch_card = dict(card)
+                    branch_card["task_id"] = task["id"]
+                    branch_card["task_title"] = task["title"]
+                    timeline_groups[group["date"]].append(branch_card)
+        merged_timeline = []
+        for date in sorted(timeline_groups.keys(), reverse=True):
+            merged_timeline.append({"date": date, "cards": timeline_groups[date]})
+
+        related_chart_ids: list[str] = []
+        for task in related_tasks:
+            for chart_id in task["chart_ids"]:
+                if chart_id not in related_chart_ids:
+                    related_chart_ids.append(chart_id)
+        branches.append(
+            {
+                "id": branch_id,
+                "title": profile["title"],
+                "summary": profile["summary"],
+                "status": profile["status"],
+                "status_group": status_group(profile["status"]),
+                "page_path": f"homepage/branches/{branch_id}/",
+                "latest_update": merged_timeline[0]["date"] if merged_timeline else "",
+                "hero_metrics": related_tasks[0]["hero_metrics"],
+                "related_task_ids": [task["id"] for task in related_tasks],
+                "timeline_groups": merged_timeline,
+                "evidence_links": [make_link(humanize_file_name(path), path) for path in profile.get("featured_paths", [])],
+                "chart_ids": related_chart_ids[:3],
+                "summary_cards": [
+                    {
+                        "eyebrow": "Branch",
+                        "title": related_tasks[0]["summary_cards"][0]["title"],
+                        "body": related_tasks[0]["summary_cards"][0]["body"],
+                        "metrics": related_tasks[0]["summary_cards"][0]["metrics"],
+                    }
+                ],
+            }
+        )
+    return branches
+
+
+def build_home_sections(tasks: list[dict[str, Any]]) -> dict[str, Any]:
+    done_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    in_progress_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+
+    for task in tasks:
+        if task["id"] == "infra-audit":
+            continue
+        for entry in task["home_entries"]:
+            target = done_groups if entry["group"] == "done" else in_progress_groups
+            target[entry["date"]].append(entry)
+
+    def pack(groups: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+        packed = []
+        for date in sorted(groups.keys(), reverse=True):
+            cards = sorted(groups[date], key=lambda item: item["title"])
+            packed.append({"date": date, "cards": cards})
+        return packed
+
+    return {
+        "done_groups": pack(done_groups),
+        "in_progress_groups": pack(in_progress_groups),
+    }
+
+
+def build_timeline_page(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for task in tasks:
+        for group in task["timeline_groups"]:
+            for card in group["cards"]:
+                timeline_card = dict(card)
+                timeline_card["task_id"] = task["id"]
+                timeline_card["task_title"] = task["title"]
+                timeline_card["task_path"] = task["page_path"]
+                grouped[group["date"]].append(timeline_card)
+    packed = []
+    for date in sorted(grouped.keys(), reverse=True):
+        packed.append({"date": date, "cards": grouped[date]})
+    return packed
+
+
+def build_payload(config: dict[str, Any]) -> dict[str, Any]:
+    charts: dict[str, Any] = {}
+    tasks = [build_task(task_cfg, charts) for task_cfg in config["tasks"]]
+    branches = build_branches(config["branch_profiles"], tasks, charts)
+    showcase_items = [item for task in tasks for item in task["media_items"]]
+    home = build_home_sections(tasks)
+    timeline_page = build_timeline_page(tasks)
+    fix_highlights = parse_fix_entries(limit=4)
+
+    stats = {
+        "task_count": len(tasks),
+        "branch_count": len(branches),
+        "timeline_count": sum(len(group["cards"]) for group in timeline_page),
+        "validated_rows": sum(len(task["chart_ids"]) for task in tasks if task["chart_ids"]),
+    }
+
+    status_counts = Counter(task["status"] for task in tasks)
+    charts["results-status-overview"] = build_bar_chart(
+        "results-status-overview",
+        title="任务状态分布",
+        description="首页只保留很少的概览图，用来快速判断当前哪些任务已经形成锚点、哪些仍在推进。",
+        categories=list(status_counts.keys()),
+        values=[float(count) for count in status_counts.values()],
+        color=LINE_COLORS["rust"],
+        fmt="int",
+    )
+
+    payload = {
+        "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "site": config["site"],
+        "stats": stats,
+        "home": home,
+        "tasks": tasks,
+        "branches": branches,
+        "timeline_page_groups": timeline_page,
+        "charts": charts,
+        "home_chart_ids": config["home_charts"],
+        "showcase": {"items": showcase_items},
+        "fix_highlights": fix_highlights,
+    }
+    return payload
 
 
 def main() -> None:
-    all_docs = [
-      build_doc_entry(path)
-      for path in sorted(DOCS_DIR.rglob("*"))
-      if path.is_file() and path.suffix.lower() in VISIBLE_SUFFIXES
-    ]
-
-    visible_docs = [doc for doc in all_docs if not doc["archived"]]
-    recent_docs = sorted(
-        [doc for doc in visible_docs if doc["suffix"] in RECENT_DOC_SUFFIXES],
-        key=lambda item: float(item["mtime"]),
-        reverse=True,
-    )[:10]
-
-    docs_by_branch: dict[str, list[dict[str, str]]] = defaultdict(list)
-    branch_counter: Counter[str] = Counter()
-    for doc in visible_docs:
-        branch = str(doc["branch"])
-        branch_counter[branch] += 1
-        docs_by_branch[branch].append(
-            {
-                "title": str(doc["title"]),
-                "preview": str(doc["preview"]),
-                "href": str(doc["href"]),
-                "modified": str(doc["modified"]),
-            }
-        )
-
-    for branch, entries in docs_by_branch.items():
-        entries.sort(key=lambda item: item["modified"], reverse=True)
-        docs_by_branch[branch] = entries[:8]
-
-    branch_stats = {
-        branch: {
-            "doc_count": branch_counter.get(branch, 0),
-            "visible_recent_count": len(docs_by_branch.get(branch, [])),
-        }
-        for branch in sorted(set(branch_counter) | {"fixes", "pdit", "mdit", "lelan", "general"})
-    }
-
-    payload = {
-        "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "repoName": ROOT.name,
-        "totalVisibleDocs": len(visible_docs),
-        "branchStats": branch_stats,
-        "latestFixes": parse_fixes_entries(DOCS_DIR / "fixes.md"),
-        "recentDocs": [
-            {
-                "branch": str(doc["branch"]),
-                "title": str(doc["title"]),
-                "preview": str(doc["preview"]),
-                "href": str(doc["href"]),
-                "modified": str(doc["modified"]),
-            }
-            for doc in recent_docs
-        ],
-        "docsByBranch": docs_by_branch,
-    }
-
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(
-        "window.homepageGeneratedData = "
-        + json.dumps(payload, ensure_ascii=False, indent=2)
-        + ";\n",
-        encoding="utf-8",
-    )
+    args = parse_args()
+    config = read_json(Path(args.config))
+    payload = build_payload(config)
+    js = "window.homepageData = " + json.dumps(payload, ensure_ascii=False, indent=2) + ";\n"
+    write_text(Path(args.output), js)
+    print(f"Wrote homepage payload to {args.output}")
 
 
 if __name__ == "__main__":
