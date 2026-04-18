@@ -137,6 +137,7 @@
         "regression"
       ],
       "featured_paths": [
+        "docs/research_desk.md",
         "docs/fixes.md",
         "docs/code-structure-zh.md",
         "docs/pdit-vs-mdit.md"

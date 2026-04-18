@@ -2,6 +2,7 @@
 
 - This file is append-only and maintained by autoresearch.
 - Keep `best_path.md` and the execution manual as separate stable docs; run-by-run notes are consolidated here.
+- Cross-line stage summaries now live in `docs/research_desk.md`; this file only keeps MDIT run-by-run notes and audit history.
 - Legacy one-file-per-run notes have been moved to `docs/mdit/archive/legacy_notes/` so the root `docs/mdit` directory stays clean.
 
 ## Historical Migration

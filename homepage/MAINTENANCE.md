@@ -170,22 +170,23 @@ homepage/media/tasks/<task-id>/
 
 1. 新材料先进入 `docs/` 或实验产物目录
 2. 必要时补 `fixes.md`
-3. 如果是新的一级任务，再更新 `homepage/config/site-config.json`
-4. 运行 `./scripts/rebuild_homepage.sh`
-5. 用 `python scripts/serve_homepage.py --port 43429` 本地检查
-6. 本地检查重点：
+3. 提炼并更新 `research_desk.md`
+4. 如果是新的一级任务，再更新 `homepage/config/site-config.json`
+5. 运行 `./scripts/rebuild_homepage.sh`
+6. 用 `python scripts/serve_homepage.py --port 43429` 本地检查
+7. 本地检查重点：
    - 首页卡片标题是否还是成果标题
    - 有没有漏出原始 run name / 绝对路径
    - 任务页时间线是否按日期分组
    - success 顺序是否正确
    - 页面主体是否仍然能不点文档就读懂
    - `cloudflare-pages-site/` 里是否已经带上最新素材、外部 Markdown 和 JSON 证据
-7. 提交并 push：
+8. 提交并 push：
    - `homepage/assets/generated-homepage-data.js`
    - `cloudflare-pages-site/`
    - 本次实际变更的配置 / 文档 / 素材
-8. 等 Cloudflare Pages 自动发布
-9. 访问公开地址复核：
+9. 等 Cloudflare Pages 自动发布
+10. 访问公开地址复核：
    - `https://embodied-ai.pages.dev/homepage/`
 
 这条发布链路是工作流的一部分，后续只要 homepage 内容有改动，就必须同步到线上页面，不能只改本地。

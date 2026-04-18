@@ -45,6 +45,14 @@ STATUS_GROUP = {
     "铺设中": "in_progress",
     "长期维护": "in_progress",
 }
+RESEARCH_DESK_LINE_TO_TASK = {
+    "PDIT 主线": "pdit-anchor",
+    "MDIT 主线": "mdit-mainline",
+    "MDIT 对照线": "mdit-mainline",
+    "LeLaN 执行线": "lelan-pipeline",
+    "基础设施": "infra-audit",
+    "文档治理": "infra-audit",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -235,6 +243,29 @@ def parse_bullet_fields(text: str) -> dict[str, str]:
     return fields
 
 
+def parse_labeled_fields(text: str, labels: list[str]) -> dict[str, str]:
+    if not labels:
+        return {}
+    pattern = re.compile(rf"^({'|'.join(re.escape(label) for label in labels)})：\s*", re.MULTILINE)
+    matches = list(pattern.finditer(text))
+    fields: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        fields[match.group(1)] = text[start:end].strip()
+    return fields
+
+
+def extract_markdown_links(text: str) -> list[dict[str, str]]:
+    links: list[dict[str, str]] = []
+    for matched in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", text):
+        rel_path = repo_rel(matched.group(2))
+        if not rel_path:
+            continue
+        links.append({"title": clean_text(matched.group(1)), "path": rel_path})
+    return links
+
+
 def humanize_file_name(path: str | Path) -> str:
     stem = Path(path).stem
     stem = re.sub(r"^\d{4}-\d{2}-\d{2}[-_]*", "", stem)
@@ -388,6 +419,90 @@ def parse_fix_entries(limit: int = 4) -> list[dict[str, str]]:
         )
     entries.sort(key=lambda item: item["_sort_key"], reverse=True)
     return [{key: value for key, value in entry.items() if key != "_sort_key"} for entry in entries[:limit]]
+
+
+def parse_research_desk_entries() -> list[dict[str, Any]]:
+    desk_path = ROOT / "docs/research_desk.md"
+    if not desk_path.exists():
+        return []
+    text = read_text(desk_path)
+    pattern = re.compile(r"^##\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4}) - (.+?) - (.+)$", re.MULTILINE)
+    matches = list(pattern.finditer(text))
+    entries: list[dict[str, Any]] = []
+    labels = ["发现问题", "原因分析", "解决思路", "具体操作", "当前判断", "相关材料"]
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        body = text[start:end].strip()
+        line_name = clean_text(match.group(2))
+        task_id = RESEARCH_DESK_LINE_TO_TASK.get(line_name)
+        if not task_id:
+            continue
+        fields = parse_labeled_fields(body, labels)
+        entries.append(
+            {
+                "date": match.group(1).split()[0],
+                "timestamp": match.group(1),
+                "line_name": line_name,
+                "title": clean_text(match.group(3)),
+                "task_id": task_id,
+                "finding": clean_text(fields.get("发现问题", "")),
+                "cause": clean_text(fields.get("原因分析", "")),
+                "solution": clean_text(fields.get("解决思路", "")),
+                "operation": clean_text(fields.get("具体操作", "")),
+                "judgment": clean_text(fields.get("当前判断", "")),
+                "links": extract_markdown_links(fields.get("相关材料", ""))[:3],
+            }
+        )
+    entries.sort(key=lambda item: item["timestamp"], reverse=True)
+    return entries
+
+
+def build_research_desk_timeline_card(entry: dict[str, Any]) -> dict[str, Any]:
+    summary_text = safe_excerpt(
+        " ".join(part for part in [entry.get("finding", ""), entry.get("solution", "")] if part) or entry.get("judgment", ""),
+        limit=150,
+    )
+    card = {
+        "badge": entry["line_name"],
+        "title": entry["title"],
+        "summary": summary_text,
+        "date_key": entry["date"],
+        "metrics": [
+            make_metric("线路", entry["line_name"]),
+            make_metric("日期", entry["date"]),
+            make_metric("来源", "research desk"),
+        ],
+        "outcome": safe_excerpt(entry.get("judgment", ""), limit=180),
+        "links": [card_link(link["title"], link["path"]) for link in entry.get("links", [])],
+    }
+    if entry.get("task_id"):
+        card["task_id"] = entry["task_id"]
+    return card
+
+
+def build_research_desk_home_entry(entry: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
+    summary = safe_excerpt(
+        entry.get("judgment", "")
+        or " ".join(part for part in [entry.get("finding", ""), entry.get("solution", "")] if part),
+        limit=155,
+    )
+    return {
+        "date": entry["date"],
+        "group": task["status_group"],
+        "task_id": task["id"],
+        "branch_ids": task["branch_ids"],
+        "badge": entry["line_name"],
+        "title": entry["title"],
+        "summary": summary,
+        "metrics": [
+            make_metric("日期", entry["date"]),
+            make_metric("线路", entry["line_name"]),
+            make_metric("来源", "research desk"),
+        ],
+        "meta": "阶段总结 · Research Desk",
+        "path": task["page_path"],
+    }
 
 
 def parse_mdit_journal_events(text: str) -> list[dict[str, Any]]:
@@ -1535,10 +1650,16 @@ def build_dummy_sim2real_task(task_cfg: dict[str, Any], charts: dict[str, Any], 
     }
 
 
-def build_infra_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
-    fixes_path = ROOT / task_cfg["featured_paths"][0]
-    code_structure_path = ROOT / task_cfg["featured_paths"][1]
-    compare_path = ROOT / task_cfg["featured_paths"][2]
+def build_infra_task(
+    task_cfg: dict[str, Any],
+    charts: dict[str, Any],
+    media_items: list[dict[str, str]],
+    research_desk_entries: list[dict[str, Any]],
+) -> dict[str, Any]:
+    research_desk_path = ROOT / task_cfg["featured_paths"][0]
+    fixes_path = ROOT / task_cfg["featured_paths"][1]
+    code_structure_path = ROOT / task_cfg["featured_paths"][2]
+    compare_path = ROOT / task_cfg["featured_paths"][3]
     fix_entries = parse_fix_entries(limit=6)
 
     branch_counts = [
@@ -1566,41 +1687,47 @@ def build_infra_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
     )
 
     timeline_cards = []
-    for entry in fix_entries:
-        timeline_cards.append(
-            {
-                "badge": "Infra",
-                "title": entry["title"],
-                "summary": entry["summary"],
-                "metrics": [
-                    make_metric("日期", entry["date"]),
-                    make_metric("类型", "修复"),
-                    make_metric("状态", "已记录"),
-                ],
-                "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-                "links": [card_link("fixes.md", fixes_path)],
-            }
-        )
+    if research_desk_entries:
+        for entry in research_desk_entries:
+            timeline_cards.append(build_research_desk_timeline_card(entry))
+    else:
+        for entry in fix_entries:
+            timeline_cards.append(
+                {
+                    "badge": "Infra",
+                    "title": entry["title"],
+                    "summary": entry["summary"],
+                    "date_key": entry["date"],
+                    "metrics": [
+                        make_metric("日期", entry["date"]),
+                        make_metric("类型", "修复"),
+                        make_metric("状态", "已记录"),
+                    ],
+                    "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+                    "links": [card_link("fixes.md", fixes_path)],
+                }
+            )
 
     timeline_groups = []
     grouped_cards: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for card in timeline_cards:
-        grouped_cards[card["metrics"][0]["value"]].append(card)
+        grouped_cards[str(card.get("date_key") or card["metrics"][0]["value"])].append(card)
     for date in sorted(grouped_cards.keys(), reverse=True):
         timeline_groups.append({"date": date, "cards": grouped_cards[date]})
 
     findings = [
         {
-            "title": "fixes 账本只做事实源，不再占据公开主页中心",
-            "body": "infra 页面保留全局修复脉络，但首页只抽取少量关键转折，不再把调试流水账摆在最前面。",
+            "title": "research_desk 负责阶段总结，fixes 退回事实源",
+            "body": "首页与全局时间线优先展示人工提炼过的阶段进展；需要回查具体 bug、run 状态和路径时，再回到 fixes 账本。",
         },
         {
-            "title": "留痕格式已经进入可复用阶段",
-            "body": "训练、评估、审计和研究日志都开始有固定产物路径和记录口径，后续 agent 不需要重新发明首页结构。",
+            "title": "跨线路整理终于有了单一入口",
+            "body": "PDIT、MDIT、LeLaN 和文档治理的关键阶段变化现在可以汇总到同一份 desk 文档，homepage 不必再从多份自动日志里反向猜结论。",
         },
     ]
 
     evidence_links = [
+        make_link("research_desk.md", research_desk_path, "跨线路阶段总结总账本，供 homepage 优先提炼。"),
         make_link("fixes.md", fixes_path, "全局修复与调试事实源。"),
         make_link("代码结构文档", code_structure_path, "补充仓库结构与模块关系。"),
         make_link("PDIT vs MDIT 对照", compare_path, "帮助解释两条主线的定位差异。"),
@@ -1614,32 +1741,32 @@ def build_infra_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
         "status_group": status_group(task_cfg["status"]),
         "page_path": f"homepage/tasks/{task_cfg['id']}/",
         "branch_ids": task_cfg["branch_ids"],
-        "latest_update": fix_entries[0]["date"] if fix_entries else "",
+        "latest_update": research_desk_entries[0]["date"] if research_desk_entries else (fix_entries[0]["date"] if fix_entries else ""),
         "hero_metrics": [
-            make_metric("fixes", len(fix_entries)),
+            make_metric("desk 条目", len(research_desk_entries)),
             make_metric("PDIT docs", branch_counts[0]),
             make_metric("MDIT docs", branch_counts[1]),
         ],
-        "report_intro": "这页只保留真正影响研究推进的基础设施修复，不再把 maintenance 规则和 agent 说明写进公开首页。",
+        "report_intro": "这页现在承担全项目阶段总结入口的职责：homepage 优先从 `research_desk.md` 提炼跨线路进展，`fixes.md` 继续保留为事实源和回查源。",
         "summary_cards": [
             {
-                "eyebrow": "Fix Log",
-                "title": "全局修复账本已经固定成单一事实源",
-                "body": "后续每次改动、结论和关键 run 状态都在 fixes.md 里按统一模板追加，不再散落到多个临时文档里。",
+                "eyebrow": "Research Desk",
+                "title": "阶段总结已经从 fixes 日志中抽离出来",
+                "body": "research_desk 负责讲清“哪条线现在走到哪里、为什么这样判断、下一步是什么”，避免 homepage 继续从机械式记录里反向拼叙事。",
                 "metrics": [
-                    make_metric("事实源", "单一"),
-                    make_metric("模板", "固定"),
-                    make_metric("状态", "追加式"),
+                    make_metric("总结源", "research desk"),
+                    make_metric("结构", "固定"),
+                    make_metric("写法", "人工提炼"),
                 ],
             },
             {
-                "eyebrow": "Archive",
-                "title": "研究文档开始按支线收束",
-                "body": "PDIT、MDIT、LeLaN 都逐步有自己的 docs 目录和稳定文档，不再把运行记录直接塞进首页或根目录。",
+                "eyebrow": "Evidence",
+                "title": "事实源和稳定证据文档继续保留",
+                "body": "fixes、研究日志、best_path 和各线路稳定文档仍然保留原始事实与证据，desk 只负责把真正改变研究判断的节点压缩出来。",
                 "metrics": [
-                    make_metric("PDIT docs", branch_counts[0]),
-                    make_metric("MDIT docs", branch_counts[1]),
+                    make_metric("fixes", len(fix_entries)),
                     make_metric("LeLaN docs", branch_counts[2]),
+                    make_metric("状态", "并行保留"),
                 ],
             },
         ],
@@ -1654,7 +1781,7 @@ def build_infra_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
     }
 
 
-def build_task(task_cfg: dict[str, Any], charts: dict[str, Any]) -> dict[str, Any]:
+def build_task(task_cfg: dict[str, Any], charts: dict[str, Any], research_desk_entries: list[dict[str, Any]]) -> dict[str, Any]:
     media_items = build_media_items(task_cfg["id"], task_cfg["title"], task_cfg.get("media_entries"))
     if task_cfg["id"] == "dummy-sim2real-platform":
         return build_dummy_sim2real_task(task_cfg, charts, media_items)
@@ -1665,7 +1792,7 @@ def build_task(task_cfg: dict[str, Any], charts: dict[str, Any]) -> dict[str, An
     if task_cfg["id"] == "lelan-pipeline":
         return build_lelan_task(task_cfg, charts, media_items)
     if task_cfg["id"] == "infra-audit":
-        return build_infra_task(task_cfg, charts, media_items)
+        return build_infra_task(task_cfg, charts, media_items, research_desk_entries)
     raise ValueError(f"Unsupported task id: {task_cfg['id']}")
 
 
@@ -1734,12 +1861,23 @@ def build_branches(
     return branches
 
 
-def build_home_sections(tasks: list[dict[str, Any]]) -> dict[str, Any]:
+def build_home_sections(tasks: list[dict[str, Any]], research_desk_entries: list[dict[str, Any]]) -> dict[str, Any]:
     done_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     in_progress_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    task_map = {task["id"]: task for task in tasks}
+    covered_task_ids = {entry["task_id"] for entry in research_desk_entries if entry["task_id"] != "infra-audit"}
+
+    for entry in research_desk_entries:
+        if entry["task_id"] == "infra-audit":
+            continue
+        task = task_map.get(entry["task_id"])
+        if task is None:
+            continue
+        target = done_groups if task["status_group"] == "done" else in_progress_groups
+        target[entry["date"]].append(build_research_desk_home_entry(entry, task))
 
     for task in tasks:
-        if task["id"] == "infra-audit":
+        if task["id"] == "infra-audit" or task["id"] in covered_task_ids:
             continue
         for entry in task["home_entries"]:
             target = done_groups if entry["group"] == "done" else in_progress_groups
@@ -1764,9 +1902,24 @@ def build_home_sections(tasks: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def build_timeline_page(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_timeline_page(tasks: list[dict[str, Any]], research_desk_entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    task_map = {task["id"]: task for task in tasks}
+    covered_task_ids = {entry["task_id"] for entry in research_desk_entries}
+
+    for entry in research_desk_entries:
+        task = task_map.get(entry["task_id"])
+        if task is None:
+            continue
+        timeline_card = build_research_desk_timeline_card(entry)
+        timeline_card["task_id"] = task["id"]
+        timeline_card["task_title"] = task["title"]
+        timeline_card["task_path"] = task["page_path"]
+        grouped[entry["date"]].append(timeline_card)
+
     for task in tasks:
+        if task["id"] in covered_task_ids:
+            continue
         for group in task["timeline_groups"]:
             for card in group["cards"]:
                 timeline_card = dict(card)
@@ -1785,10 +1938,11 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
     charts: dict[str, Any] = {}
     task_overrides = overrides.get("tasks", {})
     branch_overrides = overrides.get("branches", {})
+    research_desk_entries = parse_research_desk_entries()
 
     tasks = []
     for task_cfg in config["tasks"]:
-        task = build_task(task_cfg, charts)
+        task = build_task(task_cfg, charts, research_desk_entries)
         task = deep_merge(task, task_overrides.get(task["id"], {}))
         tasks.append(task)
 
@@ -1804,8 +1958,8 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
             continue
         seen_preview_tasks.add(item["task_id"])
         showcase_preview_items.append(item)
-    home = build_home_sections(tasks)
-    timeline_page = build_timeline_page(tasks)
+    home = build_home_sections(tasks, research_desk_entries)
+    timeline_page = build_timeline_page(tasks, research_desk_entries)
     fix_highlights = parse_fix_entries(limit=4)
 
     stats = {
