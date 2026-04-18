@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 from collections import Counter, defaultdict
@@ -13,6 +14,7 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "homepage/config/site-config.json"
+OVERRIDES_PATH = ROOT / "homepage/config/manual_overrides.json"
 OUTPUT_PATH = ROOT / "homepage/assets/generated-homepage-data.js"
 
 LINE_COLORS = {
@@ -48,6 +50,7 @@ STATUS_GROUP = {
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build the static homepage payload.")
     parser.add_argument("--config", default=str(CONFIG_PATH), help="Path to homepage site-config.json")
+    parser.add_argument("--overrides", default=str(OVERRIDES_PATH), help="Path to manual_overrides.json")
     parser.add_argument("--output", default=str(OUTPUT_PATH), help="Path to generated JS payload")
     return parser.parse_args()
 
@@ -60,9 +63,42 @@ def read_json(path: Path) -> dict[str, Any]:
     return json.loads(read_text(path))
 
 
+def read_json_if_exists(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return read_json(path)
+
+
 def write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def strip_private_override_keys(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: strip_private_override_keys(item)
+            for key, item in value.items()
+            if not str(key).startswith("_")
+        }
+    if isinstance(value, list):
+        return [strip_private_override_keys(item) for item in value]
+    return value
+
+
+def deep_merge(base: Any, override: Any) -> Any:
+    # 覆写规则尽量简单：字典递归合并，数组整段替换，避免人工维护时出现“半覆盖”歧义。
+    if override is None:
+        return copy.deepcopy(base)
+    if isinstance(base, dict) and isinstance(override, dict):
+        merged = {key: copy.deepcopy(value) for key, value in base.items()}
+        for key, value in override.items():
+            if key in merged:
+                merged[key] = deep_merge(merged[key], value)
+            else:
+                merged[key] = copy.deepcopy(value)
+        return merged
+    return copy.deepcopy(override)
 
 
 def repo_rel(path_like: str | Path | None) -> str | None:
@@ -1734,10 +1770,20 @@ def build_timeline_page(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return packed
 
 
-def build_payload(config: dict[str, Any]) -> dict[str, Any]:
+def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = None) -> dict[str, Any]:
+    overrides = strip_private_override_keys(overrides or {})
     charts: dict[str, Any] = {}
-    tasks = [build_task(task_cfg, charts) for task_cfg in config["tasks"]]
+    task_overrides = overrides.get("tasks", {})
+    branch_overrides = overrides.get("branches", {})
+
+    tasks = []
+    for task_cfg in config["tasks"]:
+        task = build_task(task_cfg, charts)
+        task = deep_merge(task, task_overrides.get(task["id"], {}))
+        tasks.append(task)
+
     branches = build_branches(config["branch_profiles"], tasks, charts)
+    branches = [deep_merge(branch, branch_overrides.get(branch["id"], {})) for branch in branches]
     showcase_items = [item for task in tasks for item in task["media_items"]]
     showcase_preview_items = []
     seen_preview_tasks: set[str] = set()
@@ -1780,24 +1826,25 @@ def build_payload(config: dict[str, Any]) -> dict[str, Any]:
 
     payload = {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "site": config["site"],
+        "site": deep_merge(config["site"], overrides.get("site", {})),
         "stats": stats,
         "home": home,
         "tasks": tasks,
         "branches": branches,
         "timeline_page_groups": timeline_page,
         "charts": charts,
-        "home_chart_ids": config["home_charts"],
+        "home_chart_ids": overrides.get("home_chart_ids", config["home_charts"]),
         "showcase": {"items": showcase_items, "preview_items": showcase_preview_items},
         "fix_highlights": fix_highlights,
     }
-    return payload
+    return deep_merge(payload, overrides.get("payload", {}))
 
 
 def main() -> None:
     args = parse_args()
     config = read_json(Path(args.config))
-    payload = build_payload(config)
+    overrides = read_json_if_exists(Path(args.overrides))
+    payload = build_payload(config, overrides)
     js = "window.homepageData = " + json.dumps(payload, ensure_ascii=False, indent=2) + ";\n"
     write_text(Path(args.output), js)
     print(f"Wrote homepage payload to {args.output}")

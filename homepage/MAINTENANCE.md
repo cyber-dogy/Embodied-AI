@@ -90,11 +90,18 @@
 2. 让生成器自动发现 branch
 3. 如果它已经足够成为首页一级任务，再补 `homepage/config/site-config.json`
 
+如果只是要手修公开展示文案：
+
+1. 优先改 `homepage/config/manual_overrides.json`
+2. 能不碰 Python 就不碰 Python
+3. 只有当自动提炼逻辑本身错了，才回头改 `scripts/build_homepage_data.py`
+
 如果材料来自同级兄弟仓库：
 
 1. 先把公开证据挂到 `homepage/external/<project>/`
 2. 任务页正文仍然要在生成器里整理成卡片、时间线和结论
 3. 不能因为 source 在别的仓库，就退回成“只挂原始文档链接”
+4. Cloudflare Pages 发布时不要依赖这些软链接原样存在，必须通过发布包把它们转成真实文件
 
 ## 图表规则
 
@@ -159,7 +166,7 @@ homepage/media/tasks/<task-id>/
 1. 新材料先进入 `docs/` 或实验产物目录
 2. 必要时补 `fixes.md`
 3. 如果是新的一级任务，再更新 `homepage/config/site-config.json`
-4. 运行 `python scripts/build_homepage_data.py`
+4. 运行 `./scripts/rebuild_homepage.sh`
 5. 用 `python scripts/serve_homepage.py --port 43429` 本地检查
 6. 本地检查重点：
    - 首页卡片标题是否还是成果标题
@@ -167,6 +174,21 @@ homepage/media/tasks/<task-id>/
    - 任务页时间线是否按日期分组
    - success 顺序是否正确
    - 页面主体是否仍然能不点文档就读懂
+   - `cloudflare-pages-site/` 里是否已经带上最新素材、外部 Markdown 和 JSON 证据
+
+## Cloudflare Pages 发布规则
+
+`cloudflare-pages-site/` 是给 Cloudflare Pages 用的纯静态发布目录。
+
+- 这个目录必须跟着主页一起重建
+- 目录里的文件允许是生成产物，不要手工修改
+- Cloudflare Pages 应该发布它，而不是直接发布本地预览目录
+- 自动部署的正确含义是：push 后自动发布这个目录，而不是让云端重新跑本地实验抓取逻辑
+
+这样做的原因有两个：
+
+- 主页里有一部分证据和素材来自兄弟仓库软链接
+- 主页里还有一部分证据来自本地 `ckpt/` / JSON 快照，云端未必能重新构造
 
 ## 当前生成器职责
 
@@ -181,3 +203,4 @@ homepage/media/tasks/<task-id>/
 - 发现 demo 素材
 
 如果后续要继续扩展，优先改这个脚本和 `site-config.json`，不要在公开 HTML 里手写业务内容。
+但日常标题、summary、任务页手工修文，优先走 `manual_overrides.json`。

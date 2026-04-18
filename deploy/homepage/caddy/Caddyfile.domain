@@ -1,0 +1,17 @@
+{
+	email {$HOMEPAGE_ACME_EMAIL}
+}
+
+# 这个版本给有公网域名和 80/443 权限的正式服务器使用。
+{$HOMEPAGE_DOMAIN} {
+	encode zstd gzip
+
+	reverse_proxy {$HOMEPAGE_UPSTREAM:127.0.0.1:43429}
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}

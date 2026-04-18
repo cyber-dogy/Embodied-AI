@@ -1,0 +1,62 @@
+{
+  "_guide": {
+    "site": "这里可以手工覆盖站点 title / slogan / description。",
+    "tasks": "tasks 下用 task_id 做键，例如 dummy-sim2real-platform、pdit-anchor、mdit-mainline。",
+    "branches": "branches 下用 branch_id 做键，例如 robot-platform、pdit、mdit、lelan。",
+    "lists": "summary_cards、timeline_groups、findings、evidence_links、home_entries、hero_metrics、home_chart_ids 这类数组字段采用整段替换，不做局部 patch。",
+    "payload": "只有非常特殊的情况才直接改 payload，常规标题和 summary 优先改 site / tasks / branches。"
+  },
+  "site": {},
+  "tasks": {},
+  "branches": {},
+  "home_chart_ids": [],
+  "payload": {},
+  "_examples": {
+    "site": {
+      "title": "GJW · Embodied AI Lab Notes",
+      "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。"
+    },
+    "tasks": {
+      "dummy-sim2real-platform": {
+        "title": "六轴臂 Sim2Real 采集平台搭建",
+        "summary": "这里可以手工改首页和任务页共用的一句话摘要。",
+        "report_intro": "这里可以手工改任务页顶部的大段说明。",
+        "home_entries": [
+          {
+            "date": "2026-04-02",
+            "group": "done",
+            "task_id": "dummy-sim2real-platform",
+            "branch_ids": [
+              "robot-platform"
+            ],
+            "badge": "Sim2Real 平台",
+            "title": "六轴臂 Sim2Real 采集平台固化完成",
+            "summary": "这里可以手工改首页卡片摘要。",
+            "metrics": [
+              {
+                "label": "机械臂",
+                "value": "6 轴"
+              },
+              {
+                "label": "示教录制",
+                "value": "10 Hz"
+              },
+              {
+                "label": "Demo",
+                "value": "3 个"
+              }
+            ],
+            "meta": "已完成 · 具身采集平台",
+            "path": "homepage/tasks/dummy-sim2real-platform/"
+          }
+        ]
+      }
+    },
+    "branches": {
+      "robot-platform": {
+        "title": "具身采集平台",
+        "summary": "这里可以手工改研究线页的摘要。"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+	admin off
+	auto_https off
+}
+
+# 用户态 Caddy 默认监听高位端口，避免没有 sudo 时抢占 80/443。
+{$HOMEPAGE_SITE::18080} {
+	encode zstd gzip
+
+	reverse_proxy {$HOMEPAGE_UPSTREAM:127.0.0.1:43429}
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}

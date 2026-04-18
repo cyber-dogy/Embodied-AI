@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="GJW homepage icon">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2f7f77"/>
+      <stop offset="100%" stop-color="#b8603d"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)"/>
+  <path d="M33 68c0-19 12-31 30-31 8 0 16 2 22 7l-7 11c-4-3-9-5-15-5-11 0-18 7-18 18 0 12 7 19 18 19 3 0 6 0 9-1V73H59V61h27v33c-7 4-15 6-24 6-18 0-29-12-29-32Z" fill="#fff6ef"/>
+</svg>
