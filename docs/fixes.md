@@ -1130,3 +1130,85 @@ except Exception as exc:
 处理：新增独立 strict 变体 `clip_rgb_text_mtdp + dit_mtdp_rope + fm_variant=mtdp_strict`，实现 MTDP 风格 global conditioning vector、RoPE backbone、beta timestep sampling、Euler 积分和 state/action min-max 归一化；运行时自动从训练集解析 `state_min/max` 与 `action_min/max` 并写回 config/checkpoint；新增 `lane_c_mtdp_strict_100` 与 `lane_c_mtdp_strict_100_12g` 配置，其中 12G 档只降一档到 `batch_size=16, grad_accum_steps=8`，并通过 `activation_checkpointing=true`、`vision_encode_chunk_size=1` 压显存；autoresearch 默认 screening 新增 `lane_c_mtdp_strict_100`，旧主线与共享评估入口保持不变。
 
 结果：旧主线接口仍保持原行为；新增 strict/12G 代码路径已通过 `python -m unittest discover -s tests -p 'test_mdit*_contract.py'`、`python -m unittest discover -s tests -p 'test_mdit_autoresearch_loop.py'`、`python -m unittest discover -s tests -p 'test_mdit_cli_smoke.py'`、`python -m unittest discover -s tests -p 'test_trial_runner.py'`、`python -m unittest discover -s tests -p 'test_pdit_eval_cli.py'`；当前最佳路线未被覆盖，新 strict 线可作为下一条正式挑战线接入训练。
+
+### 2026-04-17 19:38:30 +0800 · 停止可续训的 Lane B，切换到 MTDP strict 正式训练
+范围：`ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_174328/* + tmux:mdit_autoresearch + configs/mdit/fm_autodl_lane_c_mtdp_strict.json + docs/fixes.md`
+
+背景：当前正在训练的是 `lane_b_faithful_100`，但这条线的对比价值已经低于新完成的 `MTDP strict` 挑战线；同时 `lane_b` 已经写出 `latest.pt`，具备安全停机和后续续训条件，因此更合理的资源分配是暂停 `lane_b`，把 5090 直接切到 `lane_c_mtdp_strict_100`。
+
+处理：先确认 `lane_b` 的 `latest.pt` 和 `train_heartbeat.json` 存在，再停止其 autoresearch 父进程与孤立训练子进程，保留现有 run 目录不清理；随后在 `tmux` 会话 `mdit_autoresearch` 中新增窗口 `mtdp_strict`，启动 `configs/mdit/fm_autodl_lane_c_mtdp_strict.json` 的 `100 epoch` 训练，并将控制台输出同步写入独立训练日志。
+
+结果：`lane_b` 已在 `epoch=28, global_step=2399` 处安全停下，续训点保留在 `ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_174328/latest.pt`；新的严格验证线 `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720` 已正式启动，当前已写出 `latest.pt` 和 `train_heartbeat.json`，并进入 `epoch=0, batch_idx=50, global_step=12`，后续主比较对象切换为 `MTDP strict`。
+
+### 2026-04-17 19:50:30 +0800 · 启用 MTDP strict 自动接管与 best500 fallback 守护
+范围：`research/mdit_takeover_controller.py + scripts/run_mdit_takeover.py + tmux:mdit_autoresearch:takeover_guard + docs/fixes.md`
+
+背景：当前 5090 正在训练 `lane_c_mtdp_strict_100`，用户要求后续不要靠人工盯；如果这条严格挑战线在共享审计里没有超过当前锁定最优 `0.55`，就自动把最优主线 recipe 拉到 `500 epoch` 继续验证。
+
+处理：新增专用接管器 `run_mdit_takeover.py`，后台守护当前 active run 的训练完成、离线审计与必要的续训恢复；当 `MTDP strict` 审计结果未超过当前锚点时，自动按当前最优主线的已锁定 recipe 新开一条 `500 epoch` run，并继续走同一条共享评估链。该守护已挂到 `tmux` 会话 `mdit_autoresearch` 的 `takeover_guard` 窗口中。
+
+结果：当前自动接管策略已生效；active run=`unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`，incumbent=`unplug_charger_mdit_rgb_text_3token_100`，fallback 条件为“严格线共享审计未超过 `0.55`”；若触发 fallback，将自动拉起 `lane_a_mainline_500_fallback`，无需人工再下指令。
+
+### 2026-04-17 19:55:00 +0800 · 增加 latest 补点脚本，并为 0.55 主线补出可续训 latest
+范围：`scripts/patch_mdit_latest_from_checkpoint.py + ckpt/unplug_charger_mdit_rgb_text_3token_100/latest.pt + docs/fixes.md`
+
+背景：当前最优主线 `unplug_charger_mdit_rgb_text_3token_100` 保留了 `epoch_0100.pt`，但没有 `latest.pt`；而现有 `--resume` 逻辑默认只识别 `latest.pt`，导致最佳路线虽然具备完整训练态 checkpoint，却不能直接走原生续训入口。
+
+处理：新增独立补丁脚本 `scripts/patch_mdit_latest_from_checkpoint.py`，专门把一个完整训练态 checkpoint 校验后原样补成 `latest.pt`，默认不覆盖已有 `latest`；随后实际对 `ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt` 执行补点，生成 `ckpt/unplug_charger_mdit_rgb_text_3token_100/latest.pt`。
+
+结果：当前最优主线现在已经具备原生 resume 入口；新生成的 `latest.pt` 已校验包含 `model_state_dict`、`optimizer_state_dict`、`scheduler_state_dict`、`scaler_state_dict`、`ema_state_dict`，并且 `completed_epoch=99`、`global_step=8300`、`strategy=fm`，后续可以直接基于它继续向 `500 epoch` 续训，而不需要再从头开跑。
+
+### 2026-04-17 20:03:00 +0800 · 更新接管器 fallback：最佳路线改为从 100 epoch latest 续到 500
+范围：`research/mdit_takeover_controller.py + scripts/run_mdit_takeover.py + tmux:mdit_autoresearch:takeover_guard + docs/fixes.md`
+
+背景：此前接管器在 `MTDP strict` 未超过当前最优时，会按最佳主线 recipe 新开一条 500 epoch fresh run；这虽然语义正确，但没有利用现成的 100 epoch 训练态 checkpoint，会浪费时间，也不符合“最佳路线继续深挖”的目标。
+
+处理：先用 `scripts/patch_mdit_latest_from_checkpoint.py` 为当前最优主线补出可续训 `latest.pt`，再把接管器 fallback 改成“克隆最佳路线的 config/latest 与 50/100 checkpoint 到新 run 目录，然后通过原生 `train.py --resume` 从 `epoch_0100` 继续训练到 `500 epoch`”；原最佳 run 保持不动，防止覆盖当前锚点。
+
+结果：当前 `takeover_guard` 已采用新的 fallback 逻辑；如果 `lane_c_mtdp_strict_100` 没超过 `0.55`，后续会自动拉起一条基于最佳路线 `epoch_0100` 续训的 `500 epoch` run，而不是从头重训。
+
+### 2026-04-18 00:26:53 +0800 · 训练完成并进入待审计状态 · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：候选 run `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720` 已完成训练阶段，需要保留关键产物并转入共享离线审计。
+
+处理：写出 trial record、summary、experiment_manifest，并保留关键 checkpoint；stage_epochs=100，checkpoint_every=50。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720；训练已完成 100 个 epoch（latest_epoch=99）；最佳验证指标 best_metric=0.228，best_epoch=52；保留检查点=best_valid.pt, epoch_0050.pt, epoch_0100.pt；待离线审计=True；受控配方偏移=state_min None -> [-0.16713987290859222, -0.6003386974334717, 0.7817165851593018, -0.9997481107711792, -0.9988288879394531, -0.9999188184738159, -0.9999663829803467, -0.9964766502380371, -1.000000238418579, 0.0]；state_max None -> [0.4585603177547455, 0.5131571292877197, 1.7406383752822876, 0.9998515248298645, 0.9948352575302124, 0.9993093013763428, 0.9999883770942688, 1.0, 0.8144750595092773, 1.0]；action_min None -> [-0.16713987290859222, -0.6003386974334717, 0.7817165851593018, -0.9997481107711792, -0.9988288879394531, -0.9999188184738159, -0.9999663829803467, -0.9964766502380371, -1.000000238418579, 0.0]；action_max None -> [0.4585603177547455, 0.5131571292877197, 1.7406383752822876, 0.9998515248298645, 0.9948352575302124, 0.9993093013763428, 0.9999883770942688, 1.0, 0.8144750595092773, 1.0]
+
+### 2026-04-18 00:57:23 +0800 · 离线审计完成 · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：候选 run `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720` 已完成共享离线审计，需要固化关键成功率与后续筛选依据。
+
+处理：统一使用共享 audit chain 执行评估；episodes=20，stage_epochs=100。
+
+结果：最佳成功率=未解析；最佳 checkpoint epoch=未解析；trial_score=-1.000；是否 collapse=True；collapse 原因=epoch 100 success None below threshold 0.55；受控配方偏移=state_min None -> [-0.16713987290859222, -0.6003386974334717, 0.7817165851593018, -0.9997481107711792, -0.9988288879394531, -0.9999188184738159, -0.9999663829803467, -0.9964766502380371, -1.000000238418579, 0.0]；state_max None -> [0.4585603177547455, 0.5131571292877197, 1.7406383752822876, 0.9998515248298645, 0.9948352575302124, 0.9993093013763428, 0.9999883770942688, 1.0, 0.8144750595092773, 1.0]；action_min None -> [-0.16713987290859222, -0.6003386974334717, 0.7817165851593018, -0.9997481107711792, -0.9988288879394531, -0.9999188184738159, -0.9999663829803467, -0.9964766502380371, -1.000000238418579, 0.0]；action_max None -> [0.4585603177547455, 0.5131571292877197, 1.7406383752822876, 0.9998515248298645, 0.9948352575302124, 0.9993093013763428, 0.9999883770942688, 1.0, 0.8144750595092773, 1.0]
+
+### 2026-04-18 00:57:23 +0800 · 接管器触发 500 epoch 最优路线 fallback
+范围：`research/mdit_takeover_controller.py + docs/fixes.md + docs/mdit/research_journal.md`
+
+背景：严格挑战线 `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720` 已完成共享审计，但没有超过当前锁定最优锚点 `0.550`。
+
+处理：按照当前最优主线的已锁定 recipe 新开一条 500 epoch run，继续使用共享评估链，不覆盖原有 best snapshot。
+
+结果：触发原因：challenger audit reported recipe drift
+
+<!-- dedupe:adopt_existing:unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723:lane_a_mainline_500_resume:500 -->
+### 2026-04-18 00:57:23 +0800 · 接管已有 run 并补齐元数据 · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：现有 run `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723` 需要纳入 autoresearch 守护链，供后续统一训练/审计/筛选。
+
+处理：补写 trial_request/experiment_manifest，experiment_name=lane_a_mainline_500_resume，stage_epochs=500。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723；pending_offline_audit=true
+
+### 2026-04-18 09:00:55 +0800 · 修复主线 100->500 续训兼容并恢复真实后台接管
+范围：`mdit/train/checkpoints.py + mdit/train/runner.py + research/mdit_takeover_controller.py + scripts/run_mdit_takeover_supervisor.py + tmux:mdit_autoresearch`
+
+背景：用户指出所谓 autoresearch 并没有真实接管。排查后确认：`lane_c_mtdp_strict_100` 审计结束后，接管器确实试图把当前最优主线从 `epoch_0100` 续到 `500 epoch`，但旧 checkpoint 的优化器状态和当前参数顺序不兼容，导致 `optimizer.step()` 在第一轮就崩；同时接管器还会被旧心跳、旧清理状态和日志 tail 误判成“训练还活着”。
+
+处理：为续训加载增加优化器状态形状校验，遇到旧 Adam 动量错绑时只恢复模型/EMA/步数并重建优化器内部状态；同时按新的 `train_epochs` 重新计算 scheduler 当前学习率，避免 100->500 时带着 0 学习率空跑。接着修正接管状态机：支持从已有 `active_audit_result` / `fallback_run_dir` 直接恢复；活跃进程探测只认 Python 训练进程；旧 heartbeat 不再被当成新进度；新增 `run_mdit_takeover_supervisor.py` 常驻监督器，并重新挂到 `tmux` 的 `takeover_guard` 窗口。
+
+结果：当前 `best route` 已经由后台监督器重新拉起，run=`unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`；新的训练日志已经出现 `[resume] skip optimizer_state_dict: ...`，随后 `epoch 100` 继续推进且学习率恢复为约 `9.21e-05`，说明最佳路线的 `100 -> 500` 续训链路已经真正接通，不再依赖用户手动发消息。

@@ -237,3 +237,50 @@
 - Result: Added an isolated strict lane with `clip_rgb_text_mtdp`, `dit_mtdp_rope`, `fm_variant=mtdp_strict`, runtime min-max stats resolution, and a 12G-compatible single-step execution profile (`16x8`, activation checkpointing, camera chunk encode). Existing mainline/eval defaults remain unchanged.
 - Audit report: none
 - Contract issues: none
+## 2026-04-18T00:26:53+08:00 · train_only · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+
+- Title: MDIT Train Note · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+- Run: `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`
+- Phase: `train_only`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+## 2026-04-18T00:57:23+08:00 · audit_only · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+
+- Title: MDIT Audit Note · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+- Run: `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`
+- Phase: `audit_only`
+- Phenomenon: trial_score=-1.0 | best_success_rate=None | collapse=True
+- Reasons: epoch 100 success None below threshold 0.55
+- Result: best_success_rate=None trial_score=-1.0
+- Audit report: none
+- Contract issues: none
+## 2026-04-18T00:57:23+08:00 · takeover · takeover_triggered_fallback_best500
+
+- Active run: `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`
+- Incumbent run: `unplug_charger_mdit_rgb_text_3token_100`
+- Decision: trigger best-route 500 fallback
+- Reason: challenger audit reported recipe drift
+## 2026-04-18T00:57:23+08:00 · adopt_existing · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+
+- Title: MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+## 2026-04-18T09:00:55+08:00 · takeover · best500_resume_recovered
+
+- Title: Best-route 100->500 resume recovered under supervisor
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phase: `takeover_resume`
+- Phenomenon: The earlier fallback run crashed at the first optimizer step and the previous guard died, so the project looked “taken over” in tmux but was actually idle.
+- Reasons: Legacy optimizer moments were mismatched to the current parameter order; stale heartbeat timestamps and non-training processes also confused the watchdog.
+- Result: Resume now skips incompatible optimizer state, recomputes scheduler lr for the 500-epoch horizon, and is supervised by `run_mdit_takeover_supervisor.py`. Current log already shows `epoch 100` continuing with non-zero lr.
+- Audit report: pending after training reaches 500 and shared audit starts
+- Contract issues: none for the incumbent best-route resume path

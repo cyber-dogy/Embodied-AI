@@ -126,6 +126,10 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
     global_step = int(resume_state["global_step"])
     start_epoch = int(resume_state["start_epoch"])
     bootstrap_epoch = int(start_epoch) - 1
+    resume_notes = list(resume_state.get("resume_notes") or [])
+
+    for note in resume_notes:
+        print(f"[resume] {note}", flush=True)
 
     if not cfg.latest_ckpt_path.exists():
         save_checkpoint(
@@ -157,7 +161,10 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
         epoch=start_epoch,
         batch_idx=None,
         global_step=global_step,
-        payload={"start_epoch": int(start_epoch)},
+        payload={
+            "start_epoch": int(start_epoch),
+            "resume_notes": resume_notes,
+        },
     )
 
     for epoch in range(start_epoch, cfg.train_epochs):
