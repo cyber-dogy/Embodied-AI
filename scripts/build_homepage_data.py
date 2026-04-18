@@ -34,7 +34,9 @@ MEDIA_EXTENSIONS = {
     ".webm": "video",
 }
 STATUS_GROUP = {
+    "已完成": "done",
     "已验证": "done",
+    "已固化": "done",
     "稳定锚点": "done",
     "推进中": "in_progress",
     "待结果": "in_progress",
@@ -105,6 +107,13 @@ def format_number(value: float | int | None, digits: int = 3) -> str:
     if value is None:
         return "-"
     return f"{float(value):.{digits}f}"
+
+
+def parse_first_float(text: str) -> float | None:
+    matched = re.search(r"-?\d+(?:\.\d+)?", str(text))
+    if not matched:
+        return None
+    return float(matched.group(0))
 
 
 def status_group(status: str) -> str:
@@ -223,22 +232,54 @@ def media_caption_from_name(path: Path) -> str:
     return f"{base} 的现场素材。"
 
 
-def build_media_items(task_id: str, entries: list[dict[str, Any]] | None = None) -> list[dict[str, str]]:
+def infer_media_caption(task_title: str, file_path: Path) -> str:
+    title = humanize_file_name(file_path)
+    lowered = file_path.stem.lower()
+    if "数字孪生" in title:
+        return f"展示 {task_title} 的真机-仿真数字孪生同步效果：{title}。"
+    if "规划轨迹执行" in title:
+        return f"展示 {task_title} 的规划轨迹如何从预览落到真实执行：{title}。"
+    if "仿真运动规划" in title or "mojoco仿真运动规划" in title.lower():
+        return f"展示 {task_title} 中 MuJoCo 侧的运动规划与预览过程：{title}。"
+    if "示教" in title:
+        return f"展示 {task_title} 的示教或回放现场：{title}。"
+    if "rollout" in lowered or "demo" in lowered:
+        return f"展示 {task_title} 的 rollout / demo 片段：{title}。"
+    if "success" in lowered or "pass" in lowered:
+        return f"记录 {task_title} 的成功行为片段：{title}。"
+    if "fail" in lowered or "error" in lowered:
+        return f"记录 {task_title} 的失败或异常现象：{title}。"
+    if "loss" in lowered or "curve" in lowered or "chart" in lowered:
+        return f"展示 {task_title} 的训练或评估曲线素材：{title}。"
+    if "audit" in lowered or "eval" in lowered:
+        return f"补充 {task_title} 的评估 / 审计现场：{title}。"
+    return f"展示 {task_title} 的现场素材：{title}。"
+
+
+def build_media_items(task_id: str, task_title: str, entries: list[dict[str, Any]] | None = None) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
     media_root = ROOT / "homepage/media/tasks" / task_id
-    for file_path in sorted(media_root.glob("*")):
-        if not file_path.is_file() or file_path.name.startswith("."):
+    captions_path = media_root / "captions.json"
+    caption_overrides: dict[str, dict[str, str]] = {}
+    if captions_path.exists():
+        caption_overrides = read_json(captions_path)
+
+    for file_path in sorted(media_root.rglob("*")):
+        if not file_path.is_file() or file_path.name.startswith(".") or file_path.name == "captions.json":
             continue
         kind = MEDIA_EXTENSIONS.get(file_path.suffix.lower())
         if not kind:
             continue
+        rel_inside_task = file_path.relative_to(media_root).as_posix()
+        overrides = caption_overrides.get(rel_inside_task) or caption_overrides.get(file_path.name) or {}
         items.append(
             {
                 "task_id": task_id,
                 "kind": kind,
-                "title": humanize_file_name(file_path),
-                "caption": media_caption_from_name(file_path),
+                "title": overrides.get("title", humanize_file_name(file_path)),
+                "caption": overrides.get("caption", infer_media_caption(task_title, file_path)),
                 "path": repo_rel(file_path) or "",
+                "showcase_preview": bool(overrides.get("showcase", False)),
             }
         )
     for entry in entries or []:
@@ -251,8 +292,9 @@ def build_media_items(task_id: str, entries: list[dict[str, Any]] | None = None)
                 "task_id": task_id,
                 "kind": kind,
                 "title": entry.get("title", humanize_file_name(rel_path)),
-                "caption": entry.get("caption", media_caption_from_name(Path(rel_path))),
+                "caption": entry.get("caption", infer_media_caption(task_title, Path(rel_path))),
                 "path": rel_path,
+                "showcase_preview": bool(entry.get("showcase", False)),
             }
         )
     return items
@@ -262,6 +304,14 @@ def doc_count_under(path: Path) -> int:
     if not path.exists():
         return 0
     return sum(1 for file_path in path.rglob("*") if file_path.suffix.lower() in {".md", ".json"} and file_path.is_file())
+
+
+def file_date_label(path: Path) -> str:
+    return datetime.fromtimestamp(path.stat().st_mtime).astimezone().strftime("%Y-%m-%d")
+
+
+def file_time_label(path: Path) -> str:
+    return datetime.fromtimestamp(path.stat().st_mtime).astimezone().strftime("%H:%M")
 
 
 def parse_fix_entries(limit: int = 4) -> list[dict[str, str]]:
@@ -434,6 +484,16 @@ def build_bar_chart(
     }
 
 
+def build_compare_cards(chart_id: str, *, title: str, description: str, cards: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "id": chart_id,
+        "type": "compare_cards",
+        "title": title,
+        "description": description,
+        "cards": cards,
+    }
+
+
 def card_link(title: str, path: str | Path) -> dict[str, str]:
     return {"title": title, "path": repo_rel(path) or ""}
 
@@ -590,14 +650,14 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
                 },
                 {
                     "badge": "Ablation",
-                    "title": "H1 原始增强结论作废，H2 仍是待证候选",
-                    "summary": "H1 的 stats+aug 路线之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；H2 在 valid loss 上更好，但还没形成新的行为锚点。",
+                    "title": "统计特征增强对照作废，官方式动态候选仍待验证",
+                    "summary": "统计特征归一化 + 原始增强这条对照之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；更接近官方 DiT 动态的候选在 valid loss 上更好，但还没形成新的行为锚点。",
                     "metrics": [
-                        make_metric("H1@100", "0.55"),
-                        make_metric("H2 best valid", "0.572"),
+                        make_metric("增强对照@100", "0.55"),
+                        make_metric("动态候选 best valid", "0.572"),
                         make_metric("状态", "待行为验证"),
                     ],
-                    "outcome": "H1 不再作为结构结论引用，当前锚点仍是 baseline@500。",
+                    "outcome": "旧增强对照不再作为结构结论引用，当前锚点仍是 baseline@500。",
                     "links": [
                         card_link("恢复进展文档", doc_path),
                         card_link("训练模型审计", training_audit_path),
@@ -613,8 +673,8 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "body": "修复工程问题之后，PDIT baseline 已经能在 100 epoch 达到 0.90@20，在 500 epoch 达到 0.95@20。当前真正的问题是怎么降低 300-500 epoch 的策略漂移，而不是是否能学起来。",
         },
         {
-            "title": "H1 原结论不能继续沿用",
-            "body": "数据增强实现曾经错误地把 rot6d 向量当成三维点平移，所以 H1 的坏结果不能被解读成“数据驱动统计一定无效”。",
+            "title": "统计特征增强对照的旧结论不能继续沿用",
+            "body": "数据增强实现曾经错误地把 rot6d 向量当成三维点平移，所以那条统计特征增强对照的坏结果不能被解读成“数据驱动统计一定无效”。",
         },
         {
             "title": "当前公开最强证据是 0.95@20 / 0.85@100",
@@ -623,7 +683,7 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     ]
 
     evidence_links = [
-        make_link("FM/DiT 恢复进展", doc_path, "完整记录了修复项、Baseline@100/500、H1/H2 结论和后续判断。"),
+        make_link("FM/DiT 恢复进展", doc_path, "完整记录了修复项、Baseline@100/500、统计特征增强对照与动态候选的判断。"),
         make_link("训练模型审计", training_audit_path, "补充了修复前后模型与训练行为的核对过程。"),
         make_link("PDIT audit report", audit_path, "包含 success_by_epoch 和当前 best checkpoint。"),
         make_link("PDIT summary", summary_path, "包含最新 valid/train 尾段指标与 run 元信息。"),
@@ -706,11 +766,11 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             },
             {
                 "eyebrow": "Ablation",
-                "title": "H1 结论作废，H2 仍属候选",
-                "body": "H1 的数据增强路径存在语义 bug，不能再拿来支持结构结论；H2 在 valid loss 上有优势，但还没有行为层面的替代证据。",
+                "title": "统计特征增强对照作废，官方式动态候选仍属待证",
+                "body": "统计特征增强路径存在语义 bug，不能再拿来支持结构结论；更接近官方 DiT 动态的候选在 valid loss 上有优势，但还没有行为层面的替代证据。",
                 "metrics": [
-                    make_metric("H1", "作废"),
-                    make_metric("H2 best valid", "0.572"),
+                    make_metric("增强对照", "作废"),
+                    make_metric("动态候选 best valid", "0.572"),
                     make_metric("当前锚点", "baseline"),
                 ],
             },
@@ -824,17 +884,17 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "cards": [
                 {
                     "badge": "Mainline Resume",
-                    "title": "Lane C strict 审计未过后，主线回退到 incumbent best route",
-                    "summary": "严格 MTDP 验证线没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
+                    "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
+                    "summary": "严格 MTDP 对照没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
                     "metrics": [
                         make_metric("当前锚点", "0.55@100"),
                         make_metric("回退动作", "best500 fallback"),
                         make_metric("原因", "recipe drift"),
                     ],
-                    "outcome": "MDIT 重新聚焦到 incumbent mainline，而不是继续同时养多个弱 lane。",
+                    "outcome": "MDIT 重新聚焦到唯一可信的 RGB+Text 主线，而不是继续同时养多个弱对照。",
                     "links": [
-                        card_link("research journal", journal_path),
-                        card_link("best path", best_path_path),
+                        card_link("研究日志", journal_path),
+                        card_link("当前主线路径", best_path_path),
                     ],
                 },
                 {
@@ -848,8 +908,8 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
                     ],
                     "outcome": "后续 500 epoch 结果会继续积累在同一条主线 lineage 上，而不是再新开匿名 run。",
                     "links": [
-                        card_link("research journal", journal_path),
-                        card_link("W&B summary", wandb_summary_path),
+                        card_link("研究日志", journal_path),
+                        card_link("W&B 摘要", wandb_summary_path),
                     ],
                 },
             ],
@@ -859,47 +919,47 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "cards": [
                 {
                     "badge": "Anchor",
-                    "title": "Lane A 被冻结为当前 RGB+Text 锚点",
-                    "summary": "在共享 audit 链下，lane_a_mainline_100 是当时唯一完成锁定审计的 RGB+Text 候选，因此被正式冻结为主线锚点。",
+                    "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
+                    "summary": "在共享 audit 链下，当前 RGB+Text 主线是当时唯一完成锁定审计的候选，因此被正式冻结为主线锚点。",
                     "metrics": [
                         make_metric("epoch 50", "0.25"),
                         make_metric("epoch 100", "0.55"),
                         make_metric("mean steps", "121.75"),
                     ],
-                    "outcome": "后续 challenger 只有在同一审计口径下超过 0.55，才有资格接管主线。",
+                    "outcome": "后续其他对照只有在同一审计口径下超过 0.55，才有资格接管主线。",
                     "links": [
-                        card_link("best path", best_path_path),
-                        card_link("audit report", audit_path),
+                        card_link("当前主线路径", best_path_path),
+                        card_link("共享审计结果", audit_path),
                     ],
                 },
                 {
                     "badge": "Comparison",
-                    "title": "稳定化对照审计后确认弱于当前锚点",
-                    "summary": "Lane A stabilized 的动作平滑改动没有真正触及核心失败模式，弱 lane 在 50 / 100 epoch 的表现都落在锚点之下。",
+                    "title": "平滑动作对照审计后确认弱于当前主线",
+                    "summary": "平滑动作这条对照没有真正触及核心失败模式，在 50 / 100 epoch 的表现都落在当前锚点之下。",
                     "metrics": [
                         make_metric("epoch 50", "0.20"),
                         make_metric("epoch 100", "0.35"),
-                        make_metric("失败主因", "at_horizon"),
+                        make_metric("主要失败", "超时未完成"),
                     ],
                     "outcome": "这条稳定化对照线被明确降级为参考线，而不是新主线。",
                     "links": [
-                        card_link("research journal", journal_path),
-                        card_link("execution manual", manual_path),
+                        card_link("研究日志", journal_path),
+                        card_link("执行手册", manual_path),
                     ],
                 },
                 {
                     "badge": "Infra Fix",
-                    "title": "Lane B 首次失败被确认是缓存 / 网络问题，不是模型质量",
-                    "summary": "第一次 faithful lane 启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
+                    "title": "faithful recipe 对照的首轮失败被确认是缓存 / 网络问题",
+                    "summary": "第一次 faithful recipe 对照启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
                     "metrics": [
                         make_metric("HF 模式", "offline"),
                         make_metric("问题归因", "启动链"),
                         make_metric("模型判断", "未下结论"),
                     ],
-                    "outcome": "Lane B 的首轮失败不再被误记成“faithful recipe 无效”。",
+                    "outcome": "这条 faithful recipe 对照的首轮失败不再被误记成“方法本身无效”。",
                     "links": [
-                        card_link("research journal", journal_path),
-                        card_link("execution manual", manual_path),
+                        card_link("研究日志", journal_path),
+                        card_link("执行手册", manual_path),
                     ],
                 },
             ],
@@ -918,8 +978,8 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
                     ],
                     "outcome": "MDIT 开始从零散 run note 转成真正可持续维护的主线研究线。",
                     "links": [
-                        card_link("execution manual", manual_path),
-                        card_link("research journal", journal_path),
+                        card_link("执行手册", manual_path),
+                        card_link("研究日志", journal_path),
                     ],
                 }
             ],
@@ -928,12 +988,12 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
 
     findings = [
         {
-            "title": "当前冠军仍然只有 0.55@100 的 Lane A 主线",
-            "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是 lane_a_mainline_100。所有 challenger 都还没有超过它。",
+            "title": "当前冠军仍然只有 0.55@100 的 RGB+Text 主线",
+            "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是当前这条 0.55@100 锚点线。所有对照都还没有超过它。",
         },
         {
-            "title": "稳定化和弱 lane 没有解决核心失败模式",
-            "body": "已知失败大头仍是 at_horizon，说明只是平滑 action head 或轻微换 lane 并不能直接解决 MDIT 的行为瓶颈。",
+            "title": "平滑动作和其他弱对照没有解决核心失败模式",
+            "body": "已知失败大头仍是“动作还没做完就到时间上限”，说明只是平滑 action head 或轻微换 recipe 并不能直接解决 MDIT 的行为瓶颈。",
         },
         {
             "title": "真正的下一步是把 100→500 主线续训跑完并审完",
@@ -942,12 +1002,12 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     ]
 
     evidence_links = [
-        make_link("MDIT research journal", journal_path, "append-only 研究日志，记录每条 lane 的推进、失败和接管。"),
-        make_link("MDIT best path", best_path_path, "当前主线锚点、best checkpoint 和晋级逻辑。"),
-        make_link("MDIT execution manual", manual_path, "训练、审计、接管与晋级规则的固定手册。"),
-        make_link("MDIT audit report", audit_path, "0.25@50 / 0.55@100 的共享审计证据。"),
-        make_link("MDIT summary", summary_path, "1-100 epoch 主线的 summary 与 W&B run URL。"),
-        make_link("W&B summary snapshot", wandb_summary_path, "500 续训接管后的本地 W&B 摘要快照。"),
+        make_link("研究日志", journal_path, "append-only 研究日志，记录每条对照线的推进、失败和接管。"),
+        make_link("当前主线路径", best_path_path, "当前主线锚点、best checkpoint 和晋级逻辑。"),
+        make_link("执行手册", manual_path, "训练、审计、接管与晋级规则的固定手册。"),
+        make_link("共享审计报告", audit_path, "0.25@50 / 0.55@100 的共享审计证据。"),
+        make_link("主线 summary", summary_path, "1-100 epoch 主线的 summary 与 W&B run URL。"),
+        make_link("W&B 摘要快照", wandb_summary_path, "500 续训接管后的本地 W&B 摘要快照。"),
     ]
 
     home_entries = [
@@ -958,7 +1018,7 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "branch_ids": task_cfg["branch_ids"],
             "badge": "MDIT 主线",
             "title": "MDIT 主线恢复 100→500 续训接管",
-            "summary": "lane C strict 审计没有通过后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+            "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
             "metrics": [
                 make_metric("当前锚点", "0.55@100"),
                 make_metric("续训目标", "500"),
@@ -973,12 +1033,12 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "task_id": task_cfg["id"],
             "branch_ids": task_cfg["branch_ids"],
             "badge": "RGB+Text Anchor",
-            "title": "Lane A 冻结为当前 RGB+Text 锚点，challenger 全部暂未越线",
-            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，稳定化 lane 和 faithful lane 的首轮推进都没能完成接管。",
+            "title": "RGB+Text 当前锚点固定为 0.55@100，所有对照暂未越线",
+            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，平滑动作对照和 faithful recipe 对照的首轮推进都没能完成接管。",
             "metrics": [
                 make_metric("epoch 50", "0.25"),
                 make_metric("epoch 100", "0.55"),
-                make_metric("弱 lane", "2"),
+                make_metric("对照线", "2"),
             ],
             "meta": "研究线开始从扩散筛选重新收束",
             "path": "homepage/tasks/mdit-mainline/",
@@ -987,9 +1047,9 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
 
     latest_resume_epoch = wandb_summary.get("epoch")
     hero_metrics = [
-        make_metric("current anchor", "0.55@100"),
+        make_metric("当前锚点", "0.55@100"),
         make_metric("epoch 50", "0.25"),
-        make_metric("resume", f"epoch {latest_resume_epoch}" if latest_resume_epoch is not None else "100→500"),
+        make_metric("续训进度", f"epoch {latest_resume_epoch}" if latest_resume_epoch is not None else "100→500"),
     ]
 
     return {
@@ -1006,12 +1066,12 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         "summary_cards": [
             {
                 "eyebrow": "Anchor",
-                "title": "RGB+Text 当前锚点是 0.55@100 的 Lane A",
-                "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有 challenger 必须超过的门槛。",
+                "title": "RGB+Text 当前锚点固定在 0.55@100",
+                "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有其他对照必须超过的门槛。",
                 "metrics": [
                     make_metric("epoch 50", "0.25"),
                     make_metric("epoch 100", "0.55"),
-                    make_metric("status", "frozen best"),
+                    make_metric("状态", "已冻结"),
                 ],
             },
             {
@@ -1025,19 +1085,19 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
                 ],
             },
             {
-                "eyebrow": "Lane Screening",
-                "title": "弱 lane 已经被显式降级",
-                "body": "稳定化 lane 只到 0.35，Lane B 首败是缓存/网络问题，Lane C strict 没过共享 gate。主线不再被弱候选反复打断。",
+                "eyebrow": "Screening",
+                "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经分流",
+                "body": "平滑动作对照只到 0.35，faithful recipe 首败是缓存/网络问题，严格 MTDP 对照没过共享 gate。主线不再被弱候选反复打断。",
                 "metrics": [
                     make_metric("stabilized@100", "0.35"),
-                    make_metric("Lane B", "offline fix"),
-                    make_metric("Lane C", "未过 gate"),
+                    make_metric("faithful", "offline fix"),
+                    make_metric("严格 MTDP", "未过 gate"),
                 ],
             },
             {
                 "eyebrow": "Contract",
                 "title": "研究线已经有固定的执行与审计口径",
-                "body": "execution manual、best_path 和 research journal 三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
+                "body": "执行手册、当前主线路径和研究日志三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
                 "metrics": [
                     make_metric("manual", "已固化"),
                     make_metric("journal", "append-only"),
@@ -1085,12 +1145,12 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
             "cards": [
                 {
                     "badge": "Recipe",
-                    "title": "LeLaN 主线 recipe 固定为 5RGB / obs3 / a8",
-                    "summary": "这一轮先固定 5RGB、obs3、horizon=32、n_action_steps=8、smooth_actions=true 和 100 epoch / 20 episode gate，不急着改 backbone。",
+                    "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
+                    "summary": "这一轮先固定 5 路 RGB、3 帧观测、horizon=32、8 步动作和平滑动作，再用 100 epoch / 20 episode gate 管住节奏，不急着改 backbone。",
                     "metrics": [
-                        make_metric("RGB", "5"),
-                        make_metric("obs", "3"),
-                        make_metric("action steps", "8"),
+                        make_metric("RGB", "5 路"),
+                        make_metric("观测帧", "3"),
+                        make_metric("动作步数", "8"),
                     ],
                     "outcome": "LeLaN 第一轮重点从“改模型”转成“先把工程链路立起来”。",
                     "links": [
@@ -1119,8 +1179,8 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
                     "summary": "manifest、summary、dataset_stats、audit_report、trial_request 和 change_summary 都被写进固定产物约定里，后续可以直接追加而不是重新发明格式。",
                     "metrics": [
                         make_metric("核心产物", "7+"),
-                        make_metric("screening lanes", "3"),
-                        make_metric("stop gate", "0.45"),
+                        make_metric("筛选分支", "3"),
+                        make_metric("停止门槛", "0.45"),
                     ],
                     "outcome": "LeLaN 后续最先长出来的是“可审计的工程链路”，而不是无上下文的零散 run。",
                     "links": [
@@ -1159,11 +1219,11 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
             "branch_ids": task_cfg["branch_ids"],
             "badge": "LeLaN",
             "title": "LeLaN 自动研究链路完成首轮固化",
-            "summary": "先把 5RGB / obs3 / a8 的主线 recipe、EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
+            "summary": "先把 5 路 RGB、3 帧观测、8 步动作的主线配方，以及 EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
             "metrics": [
-                make_metric("obs", "3"),
-                make_metric("actions", "8"),
-                make_metric("gate", "0.45@100"),
+                make_metric("观测帧", "3"),
+                make_metric("动作步数", "8"),
+                make_metric("100 epoch gate", "0.45"),
             ],
             "meta": "当前还是工程铺设期，结果页会在正式 run 后变厚",
             "path": "homepage/tasks/lelan-pipeline/",
@@ -1180,20 +1240,20 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
         "branch_ids": task_cfg["branch_ids"],
         "latest_update": "2026-04-12",
         "hero_metrics": [
-            make_metric("主线", "5RGB / obs3"),
-            make_metric("actions", "8"),
-            make_metric("gate", "0.45@100"),
+            make_metric("输入", "5 路 RGB / 3 帧"),
+            make_metric("动作步数", "8"),
+            make_metric("100 epoch gate", "0.45"),
         ],
         "report_intro": "LeLaN 这页目前更像“执行链路报告”，因为它的首要目标是把训练、评估、选模和审计变成一套能长期追加的自动研究流程。",
         "summary_cards": [
             {
                 "eyebrow": "Recipe",
                 "title": "第一轮 recipe 固定，不先碰 backbone",
-                "body": "先锁定 5RGB、obs3、horizon=32、n_action_steps=8 和 smooth_actions，把工程链路建立清楚再谈结构创新。",
+                "body": "先锁定 5 路 RGB、3 帧观测、horizon=32、8 步动作和 smooth_actions，把工程链路建立清楚再谈结构创新。",
                 "metrics": [
-                    make_metric("RGB", "5"),
-                    make_metric("obs", "3"),
-                    make_metric("actions", "8"),
+                    make_metric("RGB", "5 路"),
+                    make_metric("观测帧", "3"),
+                    make_metric("动作步数", "8"),
                 ],
             },
             {
@@ -1236,6 +1296,206 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
         "task_badge": "LeLaN",
         "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
         "manifest_note": safe_excerpt(section_body(sections, "2.6 autoresearch 留痕")),
+    }
+
+
+def build_dummy_sim2real_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    interview_path = ROOT / task_cfg["featured_paths"][0]
+    can_path = ROOT / task_cfg["featured_paths"][1]
+    boundary_path = ROOT / task_cfg["featured_paths"][2]
+    kinematics_path = ROOT / task_cfg["featured_paths"][3]
+
+    interview_text = read_text(interview_path)
+    interview_sections = parse_markdown_sections(interview_text)
+    latest_update = "2026-04-02"
+
+    summary_cards = [
+        {
+            "eyebrow": "Sim2Real",
+            "title": "六轴运动映射和数字孪生同步已经打通",
+            "body": "把单位制、轴向符号和 J3 的 90° 零位偏置统一进 firmware_to_urdf()，再用 EMA 平滑把真机状态稳定映射到 MuJoCo 侧，真机与仿真终于站到同一坐标口径上。",
+            "metrics": [
+                make_metric("映射轴数", "6"),
+                make_metric("仿真同步", "20 Hz"),
+                make_metric("J3 偏置", "90°"),
+            ],
+        },
+        {
+            "eyebrow": "Planning",
+            "title": "仿真规划、影子预览和示教回放连成了同一条轨迹链路",
+            "body": "主体、影子和 IK 各自独立持有 MuJoCo 模型，真机监控与规划预览可以同屏共存；示教则改成带时间戳的连续轨迹记录，天然兼容模仿学习数据格式。",
+            "metrics": [
+                make_metric("影子模型", "3 套"),
+                make_metric("示教录制", "10 Hz"),
+                make_metric("轨迹压缩", "RDP"),
+            ],
+        },
+        {
+            "eyebrow": "Kinematics",
+            "title": "MuJoCo FK 与数值 IK 已经形成闭环控制接口",
+            "body": "FK 直接复用 MuJoCo 的完整几何模型，IK 用 L-BFGS-B 和多初始猜测在关节限位内求解目标位姿，再把结果回写到影子预览与真机执行，形成可直接接入模仿学习和世界模型的动作接口。",
+            "metrics": [
+                make_metric("IK 精度", "< 8 mm"),
+                make_metric("初始猜测", "6 组"),
+                make_metric("FK 引擎", "MuJoCo"),
+            ],
+        },
+        {
+            "eyebrow": "Safety",
+            "title": "CAN 限流和示教边界保护把平台从能跑推进到可复用",
+            "body": "采样间隔、回放频率、超时保护、RDP 稀疏化和示教退出回退机制补齐后，轨迹回放不再轻易挤爆总线，现场示教也更适合作为长期复用的数据采集流程。",
+            "metrics": [
+                make_metric("最小采样", "50 ms"),
+                make_metric("回放上限", "20 Hz"),
+                make_metric("双层保护", "已补齐"),
+            ],
+        },
+    ]
+
+    # 这条线所有公开文档都集中在同一天，因此时间线按“阶段顺序”展开，
+    # 用卡片顺序表达先后，不再把用户扔回原始 Markdown 自己拼过程。
+    timeline_groups = [
+        {
+            "date": "2026-04-02",
+            "cards": [
+                {
+                    "badge": "Safety",
+                    "title": "补齐 CAN 限流与示教退出保护，平台状态正式固化",
+                    "summary": "采样节奏、回放上限、超时保护、RDP 稀疏化和退出示教时的平滑回退全部补齐后，这套六轴臂平台不再只是能演示，而是具备长期复用的数据采集稳定性。",
+                    "metrics": [
+                        make_metric("阶段", "04"),
+                        make_metric("最小采样", "50 ms"),
+                        make_metric("回放上限", "20 Hz"),
+                    ],
+                    "outcome": "平台从“功能打通”走到了“可以稳定拿来做真机轨迹采集”的状态，因此被固定进已完成区。",
+                    "links": [
+                        card_link("CAN 通信保护总结", can_path),
+                        card_link("示教边界与退出处理", boundary_path),
+                    ],
+                }
+            ],
+        },
+        {
+            "date": "2026-03-28",
+            "cards": [
+                {
+                    "badge": "Kinematics",
+                    "title": "用 MuJoCo 正解与数值逆解建立末端闭环控制",
+                    "summary": "FK 直接复用 MuJoCo 的完整几何与 site 定义，IK 则用 L-BFGS-B 在关节限位内做多初始猜测优化，把“目标位姿 → 逆解 → 影子预览 → 真机下发”串成闭环。",
+                    "metrics": [
+                        make_metric("阶段", "03"),
+                        make_metric("IK 精度", "< 8 mm"),
+                        make_metric("初始猜测", "6 组"),
+                    ],
+                    "outcome": "这套平台已经具备服务模仿学习和世界模型的数据接口，不再只是一个可视化控制 Demo。",
+                    "links": [
+                        card_link("项目总览", interview_path),
+                        card_link("正逆运动学技术文档", kinematics_path),
+                    ],
+                },
+            ],
+        },
+        {
+            "date": "2026-03-22",
+            "cards": [
+                {
+                    "badge": "Planning",
+                    "title": "把仿真规划与示教录制做成连续轨迹链路",
+                    "summary": "通过主体 / 影子 / IK 三套模型隔离运行状态，让规划预览和真机监控能够同屏；同时把示教记录改成带时间戳的 10 Hz 连续轨迹，并接入 RDP 稀疏化与按节奏回放。",
+                    "metrics": [
+                        make_metric("阶段", "02"),
+                        make_metric("模型数", "3"),
+                        make_metric("示教录制", "10 Hz"),
+                    ],
+                    "outcome": "规划、示教和回放开始共享同一种轨迹格式，这一步已经非常接近模仿学习数据采集。",
+                    "links": [card_link("项目总览", interview_path)],
+                }
+            ],
+        },
+        {
+            "date": "2026-03-15",
+            "cards": [
+                {
+                    "badge": "Sim2Real",
+                    "title": "打通六轴映射与真机-仿真数字孪生同步",
+                    "summary": "围绕单位制、轴向符号和零位偏置统一出一套 firmware_to_urdf() 映射，再用 EMA 平滑把真机轮询稳定映射成 MuJoCo 侧的连续显示，解决了数字孪生最先卡住的坐标系问题。",
+                    "metrics": [
+                        make_metric("阶段", "01"),
+                        make_metric("六轴映射", "已打通"),
+                        make_metric("同步节奏", "2 → 20 Hz"),
+                    ],
+                    "outcome": "真机姿态现在可以稳定映射到 MuJoCo 侧，Sim2Real 这条基础链路已经成立。",
+                    "links": [card_link("项目总览", interview_path)],
+                },
+            ],
+        }
+    ]
+
+    findings = [
+        {
+            "title": "这条项目线已经完成平台搭建，可以固定留在“已完成”区",
+            "body": "它的价值不在于继续滚动追加训练日志，而在于把具身学习所需的运动映射、示教回放、逆解控制和安全保护一次性搭稳，后续直接作为数据采集底座复用。",
+        },
+        {
+            "title": "三项核心能力已经对齐到具身学习数据采集场景",
+            "body": "Sim2Real 运动映射负责真机与仿真的统一坐标口径，示教轨迹负责结构化演示数据，FK/IK 闭环负责把末端目标变成可执行动作，这三者组合起来正好对应模仿学习与世界模型的接口需求。",
+        },
+        {
+            "title": "安全保护不是附属功能，而是平台可复用的前提",
+            "body": "如果没有 CAN 限流、RDP 稀疏化、超时保护和边界回退，这套系统只能偶尔演示；正是这些工程约束补齐后，它才有资格成为长期复用的数据采集平台。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("项目总览", interview_path, safe_excerpt(section_body(interview_sections, "一、项目全景"), limit=120)),
+        make_link("CAN 通信保护总结", can_path, "记录示教采样、RDP 稀疏化、回放限流和超时保护的关键参数。"),
+        make_link("示教边界与退出处理", boundary_path, "记录示教拖动时的边界提示、平滑回退和退出流程。"),
+        make_link("正逆运动学技术文档", kinematics_path, "补充 FK/IK 求解逻辑、关节范围与关键姿态验证结果。"),
+    ]
+
+    home_entries = [
+        {
+            "date": latest_update,
+            "group": "done",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "Sim2Real 平台",
+            "title": "六轴臂 Sim2Real 采集平台固化完成",
+            "summary": "把仿真-真机映射、影子规划、连续示教、数值 IK 和总线保护整合成一套可直接承接模仿学习与世界模型数据采集的六轴臂实验平台。",
+            "metrics": [
+                make_metric("机械臂", "6 轴"),
+                make_metric("示教录制", "10 Hz"),
+                make_metric("Demo", "3 个"),
+            ],
+            "meta": "已完成 · 具身采集平台",
+            "path": f"homepage/tasks/{task_cfg['id']}/",
+        }
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": latest_update,
+        "hero_metrics": [
+            make_metric("机械臂", "6 轴"),
+            make_metric("IK 精度", "< 8 mm"),
+            make_metric("Demo", "3 个"),
+        ],
+        "report_intro": "这条项目线已经完成平台搭建并固化到“已完成”区：它把六轴臂的 Sim2Real 映射、示教轨迹采集、正逆运动学控制和总线保护整理成了一套可直接复用的具身学习数据采集平台。",
+        "summary_cards": summary_cards,
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": [],
+        "media_items": media_items,
+        "home_entries": home_entries,
+        "task_badge": "Sim2Real 平台",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
     }
 
 
@@ -1359,7 +1619,9 @@ def build_infra_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
 
 
 def build_task(task_cfg: dict[str, Any], charts: dict[str, Any]) -> dict[str, Any]:
-    media_items = build_media_items(task_cfg["id"], task_cfg.get("media_entries"))
+    media_items = build_media_items(task_cfg["id"], task_cfg["title"], task_cfg.get("media_entries"))
+    if task_cfg["id"] == "dummy-sim2real-platform":
+        return build_dummy_sim2real_task(task_cfg, charts, media_items)
     if task_cfg["id"] == "pdit-anchor":
         return build_pdit_task(task_cfg, charts, media_items)
     if task_cfg["id"] == "mdit-mainline":
@@ -1440,13 +1702,19 @@ def build_home_sections(tasks: list[dict[str, Any]]) -> dict[str, Any]:
     def pack(groups: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
         packed = []
         for date in sorted(groups.keys(), reverse=True):
-            cards = sorted(groups[date], key=lambda item: item["title"])
+            # 主页卡片保持“最新在前”的阅读顺序，同一天内沿用任务定义顺序。
+            cards = list(groups[date])
             packed.append({"date": date, "cards": cards})
         return packed
 
+    done = pack(done_groups)
+    in_progress = pack(in_progress_groups)
+    current_focus = in_progress[0]["cards"][0] if in_progress and in_progress[0]["cards"] else None
+
     return {
-        "done_groups": pack(done_groups),
-        "in_progress_groups": pack(in_progress_groups),
+        "done_groups": done,
+        "in_progress_groups": in_progress,
+        "current_focus": current_focus,
     }
 
 
@@ -1471,6 +1739,15 @@ def build_payload(config: dict[str, Any]) -> dict[str, Any]:
     tasks = [build_task(task_cfg, charts) for task_cfg in config["tasks"]]
     branches = build_branches(config["branch_profiles"], tasks, charts)
     showcase_items = [item for task in tasks for item in task["media_items"]]
+    showcase_preview_items = []
+    seen_preview_tasks: set[str] = set()
+    for item in showcase_items:
+        if not item.get("showcase_preview"):
+            continue
+        if item["task_id"] in seen_preview_tasks:
+            continue
+        seen_preview_tasks.add(item["task_id"])
+        showcase_preview_items.append(item)
     home = build_home_sections(tasks)
     timeline_page = build_timeline_page(tasks)
     fix_highlights = parse_fix_entries(limit=4)
@@ -1482,15 +1759,23 @@ def build_payload(config: dict[str, Any]) -> dict[str, Any]:
         "validated_rows": sum(len(task["chart_ids"]) for task in tasks if task["chart_ids"]),
     }
 
-    status_counts = Counter(task["status"] for task in tasks)
-    charts["results-status-overview"] = build_bar_chart(
-        "results-status-overview",
-        title="任务状态分布",
-        description="首页只保留很少的概览图，用来快速判断当前哪些任务已经形成锚点、哪些仍在推进。",
-        categories=list(status_counts.keys()),
-        values=[float(count) for count in status_counts.values()],
-        color=LINE_COLORS["rust"],
-        fmt="int",
+    compare_cards = []
+    for task in tasks:
+        if task["id"] == "infra-audit":
+            continue
+        compare_cards.append(
+            {
+                "badge": task.get("task_badge", task["title"]),
+                "title": task["title"],
+                "summary": task["summary_cards"][0]["title"] if task.get("summary_cards") else task["summary"],
+                "metrics": task["hero_metrics"][:3],
+            }
+        )
+    charts["task-anchor-overview"] = build_compare_cards(
+        "task-anchor-overview",
+        title="当前主任务产出对照",
+        description="不用抽象进度圈，而是直接列出各任务当前最重要的成功率、里程碑或产出，让比较口径一眼可读。",
+        cards=compare_cards,
     )
 
     payload = {
@@ -1503,7 +1788,7 @@ def build_payload(config: dict[str, Any]) -> dict[str, Any]:
         "timeline_page_groups": timeline_page,
         "charts": charts,
         "home_chart_ids": config["home_charts"],
-        "showcase": {"items": showcase_items},
+        "showcase": {"items": showcase_items, "preview_items": showcase_preview_items},
         "fix_highlights": fix_highlights,
     }
     return payload

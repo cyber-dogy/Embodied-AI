@@ -14,6 +14,7 @@
   const home = data.home || {};
   const timelinePageGroups = data.timeline_page_groups || [];
   const showcaseItems = data.showcase?.items || [];
+  const showcasePreviewItems = data.showcase?.preview_items || [];
   const fixHighlights = data.fix_highlights || [];
 
   const taskMap = new Map(tasks.map((task) => [task.id, task]));
@@ -54,9 +55,9 @@
           <strong>${escapeHtml(data.site.title)}</strong>
         </a>
         <nav class="topnav" aria-label="主导航">
-          <a href="${navHref("#done")}">已完成</a>
           <a href="${navHref("#in-progress")}">进行中</a>
-          <a href="${navHref("#atlas")}">图表</a>
+          <a href="${navHref("#done")}">已完成</a>
+          <a href="${navHref("#atlas")}">结果</a>
           <a href="${navHref("#branches")}">研究线</a>
           <a href="${pageMeta.type === "home" ? "#showcase" : pathUrl("homepage/showcase/")}">Showcase</a>
         </nav>
@@ -76,6 +77,15 @@
     return `
       ${renderHero()}
       ${renderStatusSection({
+        id: "in-progress",
+        kicker: "In Progress",
+        title: "进行中",
+        tag: "In Process",
+        tagClass: "wip",
+        description: "最新在做的工作放在最前面，方便一进主页就看到当前主推进线。",
+        groups: home.in_progress_groups || [],
+      })}
+      ${renderStatusSection({
         id: "done",
         kicker: "Done",
         title: "已完成",
@@ -84,29 +94,21 @@
         description: "已经形成稳定结论、锚点或可复核阶段成果的任务放在这里。",
         groups: home.done_groups || [],
       })}
-      ${renderStatusSection({
-        id: "in-progress",
-        kicker: "In Progress",
-        title: "进行中",
-        tag: "In Process",
-        tagClass: "wip",
-        description: "仍在推进、接管或等待下一轮正式结果的任务继续按日期归档在这里。",
-        groups: home.in_progress_groups || [],
-      })}
       ${renderChartSection({
         id: "atlas",
         kicker: "Result Atlas",
-        title: "核心图表",
-        description: "首页只保留少量高层图表，详细训练过程统一收进任务页。",
+        title: "核心结果",
+        description: "首页只保留少量高层结果块和关键曲线，详细训练过程统一收进任务页。",
         charts: homeCharts,
       })}
       ${renderBranchSection()}
-      ${renderShowcasePreview(showcaseItems.slice(0, 4))}
+      ${renderShowcasePreview(showcasePreviewItems)}
       ${renderFixHighlights()}
     `;
   }
 
   function renderHero() {
+    const focus = home.current_focus;
     return `
       <section class="hero-section">
         <div class="hero-copy">
@@ -133,20 +135,18 @@
           </div>
           <div class="hero-focus-card">
             <span class="mini-kicker">Current Focus</span>
-            <div class="focus-list">
-              ${tasks
-                .filter((task) => task.id !== "infra-audit")
-                .slice(0, 3)
-                .map(
-                  (task) => `
-                    <a class="focus-item" href="${pathUrl(task.page_path)}">
-                      <strong>${escapeHtml(task.title)}</strong>
-                      <span>${task.hero_metrics.map((item) => `${escapeHtml(item.label)} ${escapeHtml(item.value)}`).join(" · ")}</span>
-                    </a>
-                  `,
-                )
-                .join("")}
-            </div>
+            ${
+              focus
+                ? `
+                  <a class="focus-item focus-item-main" href="${pathUrl(focus.path)}">
+                    <span class="badge badge-soft">${escapeHtml(focus.badge || "Focus")}</span>
+                    <strong>${escapeHtml(focus.title)}</strong>
+                    <p>${escapeHtml(focus.summary)}</p>
+                    <span>${focus.metrics.map((item) => `${escapeHtml(item.label)} ${escapeHtml(item.value)}`).join(" · ")}</span>
+                  </a>
+                `
+                : `<div class="focus-item"><strong>当前没有可展示的主推进任务</strong></div>`
+            }
           </div>
         </aside>
       </section>
@@ -275,7 +275,7 @@
         metrics: task.hero_metrics,
         crumbs: [
           { label: "首页", path: "homepage/" },
-          { label: "任务", path: "homepage/#done" },
+          { label: "任务", path: task.status_group === "in_progress" ? "homepage/#in-progress" : "homepage/#done" },
           { label: task.title, path: task.page_path },
         ],
       })}
@@ -290,12 +290,16 @@
         <div class="entity-chip-row">${branchChips}</div>
       </section>
       ${renderSummaryCards(task.summary_cards)}
-      ${renderChartSection({
-        kicker: "Training Curves",
-        title: "训练图表区",
-        description: "图表顺序固定为 success → total loss → mse，尽量让训练过程一眼可读。",
-        charts: taskCharts,
-      })}
+      ${
+        taskCharts.length
+          ? renderChartSection({
+              kicker: "Training Curves",
+              title: "训练图表区",
+              description: "图表顺序固定为 success → total loss → mse，尽量让训练过程一眼可读。",
+              charts: taskCharts,
+            })
+          : ""
+      }
       ${renderTimelineSection(task.timeline_groups, "Task Timeline", "任务时间线", "按日期分组，每天直接展开“做了什么 / 发现了什么 / 形成了什么判断”。")}
       ${renderFindingsSection(task.findings)}
       ${renderEvidenceSection(task.evidence_links)}
@@ -345,10 +349,24 @@
         </div>
         ${
           groups.length
-            ? groups.map((group) => renderDateGroup(group, renderTimelineCard)).join("")
+            ? `<div class="timeline-group-list">${groups.map((group) => renderTimelineGroup(group)).join("")}</div>`
             : `<div class="empty-panel">当前页面还没有整理出可展示的时间线卡片。</div>`
         }
       </section>
+    `;
+  }
+
+  function renderTimelineGroup(group) {
+    return `
+      <div class="timeline-group">
+        <div class="timeline-group-rail">
+          <span class="timeline-group-date">${escapeHtml(group.date)}</span>
+          <span class="timeline-group-node" aria-hidden="true"></span>
+        </div>
+        <div class="timeline-group-cards">
+          ${group.cards.map((card) => renderTimelineCard(card)).join("")}
+        </div>
+      </div>
     `;
   }
 
@@ -396,15 +414,23 @@
   }
 
   function renderChartCard(chart) {
+    const chartTypeLabel =
+      chart.type === "line" ? "折线图" : chart.type === "compare_cards" ? "结果卡片" : "柱状图";
     return `
       <article class="chart-card" data-chart-card>
         <div class="card-topline">
-          <span class="badge badge-soft">${escapeHtml(chart.type === "line" ? "Line Chart" : "Bar Chart")}</span>
+          <span class="badge badge-soft">${escapeHtml(chartTypeLabel)}</span>
         </div>
         <h3>${escapeHtml(chart.title)}</h3>
         <p class="card-desc">${escapeHtml(chart.description)}</p>
         <div class="chart-body">
-          ${chart.type === "line" ? renderLineChart(chart) : renderBarChart(chart)}
+          ${
+            chart.type === "line"
+              ? renderLineChart(chart)
+              : chart.type === "compare_cards"
+                ? renderCompareCardsChart(chart)
+                : renderBarChart(chart)
+          }
         </div>
         ${chart.note ? `<p class="chart-note">${escapeHtml(chart.note)}</p>` : ""}
         <div class="chart-tooltip" hidden></div>
@@ -533,6 +559,33 @@
     `;
   }
 
+  function renderCompareCardsChart(chart) {
+    const cards = chart.cards || [];
+    if (!cards.length) {
+      return `<div class="chart-empty">当前还没有可展示的对照结果。</div>`;
+    }
+    return `
+      <div class="compare-card-grid">
+        ${cards
+          .map(
+            (card) => `
+              <article class="compare-mini-card">
+                <div class="card-topline">
+                  <span class="badge badge-soft">${escapeHtml(card.badge || "Task")}</span>
+                </div>
+                <h4>${escapeHtml(card.title)}</h4>
+                <p class="card-desc">${escapeHtml(card.summary || "")}</p>
+                <div class="stats-row compact">
+                  ${(card.metrics || []).map((metric) => renderMetric(metric)).join("")}
+                </div>
+              </article>
+            `,
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
   function renderFindingsSection(findings) {
     return `
       <section class="section-block">
@@ -597,7 +650,7 @@
             <p class="eyebrow">Showcase</p>
             <h2>Demo 与现场素材</h2>
           </div>
-          <p class="section-description">任务页里的素材展示只承载真正的 demo、截图和 rollout 证据。</p>
+          <p class="section-description">素材会按任务目录递归抓取，图片、GIF、视频都直接继承进任务页；首页只展示关键预览。</p>
         </div>
         <div class="media-grid">
           ${items.map((item) => renderMediaCard(item)).join("")}
@@ -709,6 +762,9 @@
   }
 
   function renderShowcasePreview(items) {
+    if (!items.length) {
+      return "";
+    }
     return `
       <section class="section-block" id="showcase">
         <div class="section-title-row">
@@ -716,14 +772,10 @@
             <p class="eyebrow">Showcase</p>
             <h2>Demo 与现场素材</h2>
           </div>
-          <p class="section-description">为每个任务预留独立素材目录，后续可以直接往里放图片、GIF、视频。</p>
+          <p class="section-description">首页只保留已经指定的亮点封面；完整视频和现场素材统一放到任务页和素材页里。</p>
         </div>
-        ${
-          items.length
-            ? `<div class="media-grid">${items.map((item) => renderMediaCard(item)).join("")}</div>
-               <div class="more-link-row"><a class="text-link" href="${pathUrl("homepage/showcase/")}">进入完整素材页</a></div>`
-            : `<div class="empty-panel">当前还没有可展示的 demo 素材。</div>`
-        }
+        <div class="media-grid media-grid-preview">${items.map((item) => renderMediaCard(item)).join("")}</div>
+        <div class="more-link-row"><a class="text-link" href="${pathUrl("homepage/showcase/")}">进入完整素材页</a></div>
       </section>
     `;
   }

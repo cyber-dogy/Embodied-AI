@@ -5,11 +5,36 @@
     "description": "围绕 unplug charger 任务的策略训练、行为审计、主线比较与执行资料。"
   },
   "home_charts": [
+    "task-anchor-overview",
     "pdit-success-curve",
-    "mdit-success-curve",
-    "results-status-overview"
+    "mdit-success-curve"
   ],
   "tasks": [
+    {
+      "id": "dummy-sim2real-platform",
+      "title": "六轴臂 Sim2Real 采集平台搭建",
+      "summary": "把六轴机械臂的仿真-真机映射、示教回放、正逆运动学控制和总线保护整合成一套可直接承接模仿学习与世界模型的数据采集实验平台。",
+      "status": "已完成",
+      "branch_ids": [
+        "robot-platform"
+      ],
+      "keywords": [
+        "sim2real",
+        "teleoperation",
+        "teach mode",
+        "ik",
+        "fk",
+        "digital twin"
+      ],
+      "featured_paths": [
+        "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+        "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md",
+        "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md",
+        "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
+      ],
+      "artifact_paths": {},
+      "chart_ids": []
+    },
     {
       "id": "pdit-anchor",
       "title": "PDIT 基线恢复与锚点固化",
@@ -45,7 +70,7 @@
     {
       "id": "mdit-mainline",
       "title": "MDIT RGB+Text 主线推进",
-      "summary": "围绕 Lane A / Lane B 的主线筛选、冻结最佳路径、恢复接管与 500 epoch 续训，逐步把 faithful MDIT 研究线做成可持续推进的档案。",
+      "summary": "围绕 RGB+Text 主线、平滑动作对照、faithful recipe 对照与严格 MTDP 对照的筛选结果，逐步把 100→500 续训接管整理成一条可持续推进的研究主线。",
       "status": "推进中",
       "branch_ids": [
         "mdit"
@@ -136,6 +161,22 @@
     }
   ],
   "branch_profiles": {
+    "robot-platform": {
+      "title": "具身采集平台",
+      "summary": "围绕 Sim2Real 映射、数字孪生、示教回放和数值逆解搭起来的六轴臂实验平台，可直接承接具身学习数据采集。",
+      "status": "已固化",
+      "keywords": [
+        "sim2real",
+        "digital twin",
+        "teach mode",
+        "ik",
+        "teleoperation"
+      ],
+      "featured_paths": [
+        "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+        "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
+      ]
+    },
     "pdit": {
       "title": "PDIT 主线",
       "summary": "当前最稳定的点云行为锚点，负责提供可复核的 baseline 与 checkpoint 证据。",
@@ -154,7 +195,7 @@
     },
     "mdit": {
       "title": "MDIT 研究线",
-      "summary": "围绕 RGB+Text faithful recipe 的主线探索，已经形成 journal、best path 与接管记录。",
+      "summary": "围绕 RGB+Text 主线、关键对照和续训接管形成的研究线，已经沉淀出日志、主线路径和接管记录。",
       "status": "推进中",
       "keywords": [
         "mdit",

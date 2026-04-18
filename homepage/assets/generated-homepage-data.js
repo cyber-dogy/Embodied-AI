@@ -1,14 +1,14 @@
 window.homepageData = {
-  "generated_at": "2026-04-18T18:01:51+08:00",
+  "generated_at": "2026-04-18T19:05:58+08:00",
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
     "description": "围绕 unplug charger 任务的策略训练、行为审计、主线比较与执行资料。"
   },
   "stats": {
-    "task_count": 4,
-    "branch_count": 3,
-    "timeline_count": 21,
+    "task_count": 5,
+    "branch_count": 4,
+    "timeline_count": 25,
     "validated_rows": 9
   },
   "home": {
@@ -76,6 +76,38 @@ window.homepageData = {
             "path": "homepage/tasks/pdit-anchor/"
           }
         ]
+      },
+      {
+        "date": "2026-04-02",
+        "cards": [
+          {
+            "date": "2026-04-02",
+            "group": "done",
+            "task_id": "dummy-sim2real-platform",
+            "branch_ids": [
+              "robot-platform"
+            ],
+            "badge": "Sim2Real 平台",
+            "title": "六轴臂 Sim2Real 采集平台固化完成",
+            "summary": "把仿真-真机映射、影子规划、连续示教、数值 IK 和总线保护整合成一套可直接承接模仿学习与世界模型数据采集的六轴臂实验平台。",
+            "metrics": [
+              {
+                "label": "机械臂",
+                "value": "6 轴"
+              },
+              {
+                "label": "示教录制",
+                "value": "10 Hz"
+              },
+              {
+                "label": "Demo",
+                "value": "3 个"
+              }
+            ],
+            "meta": "已完成 · 具身采集平台",
+            "path": "homepage/tasks/dummy-sim2real-platform/"
+          }
+        ]
       }
     ],
     "in_progress_groups": [
@@ -91,7 +123,7 @@ window.homepageData = {
             ],
             "badge": "MDIT 主线",
             "title": "MDIT 主线恢复 100→500 续训接管",
-            "summary": "lane C strict 审计没有通过后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+            "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
             "metrics": [
               {
                 "label": "当前锚点",
@@ -122,8 +154,8 @@ window.homepageData = {
               "mdit"
             ],
             "badge": "RGB+Text Anchor",
-            "title": "Lane A 冻结为当前 RGB+Text 锚点，challenger 全部暂未越线",
-            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，稳定化 lane 和 faithful lane 的首轮推进都没能完成接管。",
+            "title": "RGB+Text 当前锚点固定为 0.55@100，所有对照暂未越线",
+            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，平滑动作对照和 faithful recipe 对照的首轮推进都没能完成接管。",
             "metrics": [
               {
                 "label": "epoch 50",
@@ -134,7 +166,7 @@ window.homepageData = {
                 "value": "0.55"
               },
               {
-                "label": "弱 lane",
+                "label": "对照线",
                 "value": "2"
               }
             ],
@@ -155,19 +187,19 @@ window.homepageData = {
             ],
             "badge": "LeLaN",
             "title": "LeLaN 自动研究链路完成首轮固化",
-            "summary": "先把 5RGB / obs3 / a8 的主线 recipe、EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
+            "summary": "先把 5 路 RGB、3 帧观测、8 步动作的主线配方，以及 EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
             "metrics": [
               {
-                "label": "obs",
+                "label": "观测帧",
                 "value": "3"
               },
               {
-                "label": "actions",
+                "label": "动作步数",
                 "value": "8"
               },
               {
-                "label": "gate",
-                "value": "0.45@100"
+                "label": "100 epoch gate",
+                "value": "0.45"
               }
             ],
             "meta": "当前还是工程铺设期，结果页会在正式 run 后变厚",
@@ -175,9 +207,386 @@ window.homepageData = {
           }
         ]
       }
-    ]
+    ],
+    "current_focus": {
+      "date": "2026-04-18",
+      "group": "in_progress",
+      "task_id": "mdit-mainline",
+      "branch_ids": [
+        "mdit"
+      ],
+      "badge": "MDIT 主线",
+      "title": "MDIT 主线恢复 100→500 续训接管",
+      "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+      "metrics": [
+        {
+          "label": "当前锚点",
+          "value": "0.55@100"
+        },
+        {
+          "label": "续训目标",
+          "value": "500"
+        },
+        {
+          "label": "状态",
+          "value": "恢复中"
+        }
+      ],
+      "meta": "主线从筛选期进入长训接管期",
+      "path": "homepage/tasks/mdit-mainline/"
+    }
   },
   "tasks": [
+    {
+      "id": "dummy-sim2real-platform",
+      "title": "六轴臂 Sim2Real 采集平台搭建",
+      "summary": "把六轴机械臂的仿真-真机映射、示教回放、正逆运动学控制和总线保护整合成一套可直接承接模仿学习与世界模型的数据采集实验平台。",
+      "status": "已完成",
+      "status_group": "done",
+      "page_path": "homepage/tasks/dummy-sim2real-platform/",
+      "branch_ids": [
+        "robot-platform"
+      ],
+      "latest_update": "2026-04-02",
+      "hero_metrics": [
+        {
+          "label": "机械臂",
+          "value": "6 轴"
+        },
+        {
+          "label": "IK 精度",
+          "value": "< 8 mm"
+        },
+        {
+          "label": "Demo",
+          "value": "3 个"
+        }
+      ],
+      "report_intro": "这条项目线已经完成平台搭建并固化到“已完成”区：它把六轴臂的 Sim2Real 映射、示教轨迹采集、正逆运动学控制和总线保护整理成了一套可直接复用的具身学习数据采集平台。",
+      "summary_cards": [
+        {
+          "eyebrow": "Sim2Real",
+          "title": "六轴运动映射和数字孪生同步已经打通",
+          "body": "把单位制、轴向符号和 J3 的 90° 零位偏置统一进 firmware_to_urdf()，再用 EMA 平滑把真机状态稳定映射到 MuJoCo 侧，真机与仿真终于站到同一坐标口径上。",
+          "metrics": [
+            {
+              "label": "映射轴数",
+              "value": "6"
+            },
+            {
+              "label": "仿真同步",
+              "value": "20 Hz"
+            },
+            {
+              "label": "J3 偏置",
+              "value": "90°"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Planning",
+          "title": "仿真规划、影子预览和示教回放连成了同一条轨迹链路",
+          "body": "主体、影子和 IK 各自独立持有 MuJoCo 模型，真机监控与规划预览可以同屏共存；示教则改成带时间戳的连续轨迹记录，天然兼容模仿学习数据格式。",
+          "metrics": [
+            {
+              "label": "影子模型",
+              "value": "3 套"
+            },
+            {
+              "label": "示教录制",
+              "value": "10 Hz"
+            },
+            {
+              "label": "轨迹压缩",
+              "value": "RDP"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Kinematics",
+          "title": "MuJoCo FK 与数值 IK 已经形成闭环控制接口",
+          "body": "FK 直接复用 MuJoCo 的完整几何模型，IK 用 L-BFGS-B 和多初始猜测在关节限位内求解目标位姿，再把结果回写到影子预览与真机执行，形成可直接接入模仿学习和世界模型的动作接口。",
+          "metrics": [
+            {
+              "label": "IK 精度",
+              "value": "< 8 mm"
+            },
+            {
+              "label": "初始猜测",
+              "value": "6 组"
+            },
+            {
+              "label": "FK 引擎",
+              "value": "MuJoCo"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Safety",
+          "title": "CAN 限流和示教边界保护把平台从能跑推进到可复用",
+          "body": "采样间隔、回放频率、超时保护、RDP 稀疏化和示教退出回退机制补齐后，轨迹回放不再轻易挤爆总线，现场示教也更适合作为长期复用的数据采集流程。",
+          "metrics": [
+            {
+              "label": "最小采样",
+              "value": "50 ms"
+            },
+            {
+              "label": "回放上限",
+              "value": "20 Hz"
+            },
+            {
+              "label": "双层保护",
+              "value": "已补齐"
+            }
+          ]
+        }
+      ],
+      "timeline_groups": [
+        {
+          "date": "2026-04-02",
+          "cards": [
+            {
+              "badge": "Safety",
+              "title": "补齐 CAN 限流与示教退出保护，平台状态正式固化",
+              "summary": "采样节奏、回放上限、超时保护、RDP 稀疏化和退出示教时的平滑回退全部补齐后，这套六轴臂平台不再只是能演示，而是具备长期复用的数据采集稳定性。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "04"
+                },
+                {
+                  "label": "最小采样",
+                  "value": "50 ms"
+                },
+                {
+                  "label": "回放上限",
+                  "value": "20 Hz"
+                }
+              ],
+              "outcome": "平台从“功能打通”走到了“可以稳定拿来做真机轨迹采集”的状态，因此被固定进已完成区。",
+              "links": [
+                {
+                  "title": "CAN 通信保护总结",
+                  "path": "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md"
+                },
+                {
+                  "title": "示教边界与退出处理",
+                  "path": "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-03-28",
+          "cards": [
+            {
+              "badge": "Kinematics",
+              "title": "用 MuJoCo 正解与数值逆解建立末端闭环控制",
+              "summary": "FK 直接复用 MuJoCo 的完整几何与 site 定义，IK 则用 L-BFGS-B 在关节限位内做多初始猜测优化，把“目标位姿 → 逆解 → 影子预览 → 真机下发”串成闭环。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "03"
+                },
+                {
+                  "label": "IK 精度",
+                  "value": "< 8 mm"
+                },
+                {
+                  "label": "初始猜测",
+                  "value": "6 组"
+                }
+              ],
+              "outcome": "这套平台已经具备服务模仿学习和世界模型的数据接口，不再只是一个可视化控制 Demo。",
+              "links": [
+                {
+                  "title": "项目总览",
+                  "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+                },
+                {
+                  "title": "正逆运动学技术文档",
+                  "path": "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-03-22",
+          "cards": [
+            {
+              "badge": "Planning",
+              "title": "把仿真规划与示教录制做成连续轨迹链路",
+              "summary": "通过主体 / 影子 / IK 三套模型隔离运行状态，让规划预览和真机监控能够同屏；同时把示教记录改成带时间戳的 10 Hz 连续轨迹，并接入 RDP 稀疏化与按节奏回放。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "02"
+                },
+                {
+                  "label": "模型数",
+                  "value": "3"
+                },
+                {
+                  "label": "示教录制",
+                  "value": "10 Hz"
+                }
+              ],
+              "outcome": "规划、示教和回放开始共享同一种轨迹格式，这一步已经非常接近模仿学习数据采集。",
+              "links": [
+                {
+                  "title": "项目总览",
+                  "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-03-15",
+          "cards": [
+            {
+              "badge": "Sim2Real",
+              "title": "打通六轴映射与真机-仿真数字孪生同步",
+              "summary": "围绕单位制、轴向符号和零位偏置统一出一套 firmware_to_urdf() 映射，再用 EMA 平滑把真机轮询稳定映射成 MuJoCo 侧的连续显示，解决了数字孪生最先卡住的坐标系问题。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "01"
+                },
+                {
+                  "label": "六轴映射",
+                  "value": "已打通"
+                },
+                {
+                  "label": "同步节奏",
+                  "value": "2 → 20 Hz"
+                }
+              ],
+              "outcome": "真机姿态现在可以稳定映射到 MuJoCo 侧，Sim2Real 这条基础链路已经成立。",
+              "links": [
+                {
+                  "title": "项目总览",
+                  "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "title": "这条项目线已经完成平台搭建，可以固定留在“已完成”区",
+          "body": "它的价值不在于继续滚动追加训练日志，而在于把具身学习所需的运动映射、示教回放、逆解控制和安全保护一次性搭稳，后续直接作为数据采集底座复用。"
+        },
+        {
+          "title": "三项核心能力已经对齐到具身学习数据采集场景",
+          "body": "Sim2Real 运动映射负责真机与仿真的统一坐标口径，示教轨迹负责结构化演示数据，FK/IK 闭环负责把末端目标变成可执行动作，这三者组合起来正好对应模仿学习与世界模型的接口需求。"
+        },
+        {
+          "title": "安全保护不是附属功能，而是平台可复用的前提",
+          "body": "如果没有 CAN 限流、RDP 稀疏化、超时保护和边界回退，这套系统只能偶尔演示；正是这些工程约束补齐后，它才有资格成为长期复用的数据采集平台。"
+        }
+      ],
+      "evidence_links": [
+        {
+          "title": "项目总览",
+          "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+          "summary": "| 维度 | 内容 | |------|------| | 硬件 | Dummy V2 六轴串联机械臂，步进电机 + 减速器，CAN 总线通信，串口桥接（ACM） | | 仿真 | MuJoCo 3.x，MJCF 由厂商 URDF 人工转…",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "CAN 通信保护总结",
+          "path": "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md",
+          "summary": "记录示教采样、RDP 稀疏化、回放限流和超时保护的关键参数。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "示教边界与退出处理",
+          "path": "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md",
+          "summary": "记录示教拖动时的边界提示、平滑回退和退出流程。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "正逆运动学技术文档",
+          "path": "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md",
+          "summary": "补充 FK/IK 求解逻辑、关节范围与关键姿态验证结果。",
+          "label": "查看原始记录"
+        }
+      ],
+      "chart_ids": [],
+      "media_items": [
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "image",
+          "title": "六轴臂平台封面",
+          "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
+          "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+          "showcase_preview": true
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "video",
+          "title": "正逆运动解算演示",
+          "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
+          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/01-运动逆解算.mp4",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "video",
+          "title": "真机-仿真数字孪生同步",
+          "caption": "展示真机姿态如何实时映射到仿真侧，验证 Sim2Real 运动映射与数字孪生同步效果。",
+          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/02-真机仿真数字孪生.mp4",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "video",
+          "title": "规划轨迹真机执行",
+          "caption": "展示规划好的关节轨迹如何按照记录节奏下发真机，体现示教回放与总线保护链路。",
+          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/03-规划轨迹执行.mp4",
+          "showcase_preview": false
+        }
+      ],
+      "home_entries": [
+        {
+          "date": "2026-04-02",
+          "group": "done",
+          "task_id": "dummy-sim2real-platform",
+          "branch_ids": [
+            "robot-platform"
+          ],
+          "badge": "Sim2Real 平台",
+          "title": "六轴臂 Sim2Real 采集平台固化完成",
+          "summary": "把仿真-真机映射、影子规划、连续示教、数值 IK 和总线保护整合成一套可直接承接模仿学习与世界模型数据采集的六轴臂实验平台。",
+          "metrics": [
+            {
+              "label": "机械臂",
+              "value": "6 轴"
+            },
+            {
+              "label": "示教录制",
+              "value": "10 Hz"
+            },
+            {
+              "label": "Demo",
+              "value": "3 个"
+            }
+          ],
+          "meta": "已完成 · 具身采集平台",
+          "path": "homepage/tasks/dummy-sim2real-platform/"
+        }
+      ],
+      "task_badge": "Sim2Real 平台",
+      "docs": [
+        "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+        "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md",
+        "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md",
+        "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
+      ]
+    },
     {
       "id": "pdit-anchor",
       "title": "PDIT 基线恢复与锚点固化",
@@ -245,15 +654,15 @@ window.homepageData = {
         },
         {
           "eyebrow": "Ablation",
-          "title": "H1 结论作废，H2 仍属候选",
-          "body": "H1 的数据增强路径存在语义 bug，不能再拿来支持结构结论；H2 在 valid loss 上有优势，但还没有行为层面的替代证据。",
+          "title": "统计特征增强对照作废，官方式动态候选仍属待证",
+          "body": "统计特征增强路径存在语义 bug，不能再拿来支持结构结论；更接近官方 DiT 动态的候选在 valid loss 上有优势，但还没有行为层面的替代证据。",
           "metrics": [
             {
-              "label": "H1",
+              "label": "增强对照",
               "value": "作废"
             },
             {
-              "label": "H2 best valid",
+              "label": "动态候选 best valid",
               "value": "0.572"
             },
             {
@@ -447,15 +856,15 @@ window.homepageData = {
             },
             {
               "badge": "Ablation",
-              "title": "H1 原始增强结论作废，H2 仍是待证候选",
-              "summary": "H1 的 stats+aug 路线之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；H2 在 valid loss 上更好，但还没形成新的行为锚点。",
+              "title": "统计特征增强对照作废，官方式动态候选仍待验证",
+              "summary": "统计特征归一化 + 原始增强这条对照之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；更接近官方 DiT 动态的候选在 valid loss 上更好，但还没形成新的行为锚点。",
               "metrics": [
                 {
-                  "label": "H1@100",
+                  "label": "增强对照@100",
                   "value": "0.55"
                 },
                 {
-                  "label": "H2 best valid",
+                  "label": "动态候选 best valid",
                   "value": "0.572"
                 },
                 {
@@ -463,7 +872,7 @@ window.homepageData = {
                   "value": "待行为验证"
                 }
               ],
-              "outcome": "H1 不再作为结构结论引用，当前锚点仍是 baseline@500。",
+              "outcome": "旧增强对照不再作为结构结论引用，当前锚点仍是 baseline@500。",
               "links": [
                 {
                   "title": "恢复进展文档",
@@ -484,8 +893,8 @@ window.homepageData = {
           "body": "修复工程问题之后，PDIT baseline 已经能在 100 epoch 达到 0.90@20，在 500 epoch 达到 0.95@20。当前真正的问题是怎么降低 300-500 epoch 的策略漂移，而不是是否能学起来。"
         },
         {
-          "title": "H1 原结论不能继续沿用",
-          "body": "数据增强实现曾经错误地把 rot6d 向量当成三维点平移，所以 H1 的坏结果不能被解读成“数据驱动统计一定无效”。"
+          "title": "统计特征增强对照的旧结论不能继续沿用",
+          "body": "数据增强实现曾经错误地把 rot6d 向量当成三维点平移，所以那条统计特征增强对照的坏结果不能被解读成“数据驱动统计一定无效”。"
         },
         {
           "title": "当前公开最强证据是 0.95@20 / 0.85@100",
@@ -496,7 +905,7 @@ window.homepageData = {
         {
           "title": "FM/DiT 恢复进展",
           "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
-          "summary": "完整记录了修复项、Baseline@100/500、H1/H2 结论和后续判断。",
+          "summary": "完整记录了修复项、Baseline@100/500、统计特征增强对照与动态候选的判断。",
           "label": "查看原始记录"
         },
         {
@@ -603,7 +1012,7 @@ window.homepageData = {
     {
       "id": "mdit-mainline",
       "title": "MDIT RGB+Text 主线推进",
-      "summary": "围绕 Lane A / Lane B 的主线筛选、冻结最佳路径、恢复接管与 500 epoch 续训，逐步把 faithful MDIT 研究线做成可持续推进的档案。",
+      "summary": "围绕 RGB+Text 主线、平滑动作对照、faithful recipe 对照与严格 MTDP 对照的筛选结果，逐步把 100→500 续训接管整理成一条可持续推进的研究主线。",
       "status": "推进中",
       "status_group": "in_progress",
       "page_path": "homepage/tasks/mdit-mainline/",
@@ -613,7 +1022,7 @@ window.homepageData = {
       "latest_update": "2026-04-18",
       "hero_metrics": [
         {
-          "label": "current anchor",
+          "label": "当前锚点",
           "value": "0.55@100"
         },
         {
@@ -621,7 +1030,7 @@ window.homepageData = {
           "value": "0.25"
         },
         {
-          "label": "resume",
+          "label": "续训进度",
           "value": "epoch 99"
         }
       ],
@@ -629,8 +1038,8 @@ window.homepageData = {
       "summary_cards": [
         {
           "eyebrow": "Anchor",
-          "title": "RGB+Text 当前锚点是 0.55@100 的 Lane A",
-          "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有 challenger 必须超过的门槛。",
+          "title": "RGB+Text 当前锚点固定在 0.55@100",
+          "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有其他对照必须超过的门槛。",
           "metrics": [
             {
               "label": "epoch 50",
@@ -641,8 +1050,8 @@ window.homepageData = {
               "value": "0.55"
             },
             {
-              "label": "status",
-              "value": "frozen best"
+              "label": "状态",
+              "value": "已冻结"
             }
           ]
         },
@@ -666,20 +1075,20 @@ window.homepageData = {
           ]
         },
         {
-          "eyebrow": "Lane Screening",
-          "title": "弱 lane 已经被显式降级",
-          "body": "稳定化 lane 只到 0.35，Lane B 首败是缓存/网络问题，Lane C strict 没过共享 gate。主线不再被弱候选反复打断。",
+          "eyebrow": "Screening",
+          "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经分流",
+          "body": "平滑动作对照只到 0.35，faithful recipe 首败是缓存/网络问题，严格 MTDP 对照没过共享 gate。主线不再被弱候选反复打断。",
           "metrics": [
             {
               "label": "stabilized@100",
               "value": "0.35"
             },
             {
-              "label": "Lane B",
+              "label": "faithful",
               "value": "offline fix"
             },
             {
-              "label": "Lane C",
+              "label": "严格 MTDP",
               "value": "未过 gate"
             }
           ]
@@ -687,7 +1096,7 @@ window.homepageData = {
         {
           "eyebrow": "Contract",
           "title": "研究线已经有固定的执行与审计口径",
-          "body": "execution manual、best_path 和 research journal 三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
+          "body": "执行手册、当前主线路径和研究日志三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
           "metrics": [
             {
               "label": "manual",
@@ -710,8 +1119,8 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Mainline Resume",
-              "title": "Lane C strict 审计未过后，主线回退到 incumbent best route",
-              "summary": "严格 MTDP 验证线没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
+              "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
+              "summary": "严格 MTDP 对照没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
               "metrics": [
                 {
                   "label": "当前锚点",
@@ -726,14 +1135,14 @@ window.homepageData = {
                   "value": "recipe drift"
                 }
               ],
-              "outcome": "MDIT 重新聚焦到 incumbent mainline，而不是继续同时养多个弱 lane。",
+              "outcome": "MDIT 重新聚焦到唯一可信的 RGB+Text 主线，而不是继续同时养多个弱对照。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "best path",
+                  "title": "当前主线路径",
                   "path": "docs/mdit/best_path.md"
                 }
               ]
@@ -759,11 +1168,11 @@ window.homepageData = {
               "outcome": "后续 500 epoch 结果会继续积累在同一条主线 lineage 上，而不是再新开匿名 run。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "W&B summary",
+                  "title": "W&B 摘要",
                   "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
                 }
               ]
@@ -775,8 +1184,8 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Anchor",
-              "title": "Lane A 被冻结为当前 RGB+Text 锚点",
-              "summary": "在共享 audit 链下，lane_a_mainline_100 是当时唯一完成锁定审计的 RGB+Text 候选，因此被正式冻结为主线锚点。",
+              "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
+              "summary": "在共享 audit 链下，当前 RGB+Text 主线是当时唯一完成锁定审计的候选，因此被正式冻结为主线锚点。",
               "metrics": [
                 {
                   "label": "epoch 50",
@@ -791,22 +1200,22 @@ window.homepageData = {
                   "value": "121.75"
                 }
               ],
-              "outcome": "后续 challenger 只有在同一审计口径下超过 0.55，才有资格接管主线。",
+              "outcome": "后续其他对照只有在同一审计口径下超过 0.55，才有资格接管主线。",
               "links": [
                 {
-                  "title": "best path",
+                  "title": "当前主线路径",
                   "path": "docs/mdit/best_path.md"
                 },
                 {
-                  "title": "audit report",
+                  "title": "共享审计结果",
                   "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json"
                 }
               ]
             },
             {
               "badge": "Comparison",
-              "title": "稳定化对照审计后确认弱于当前锚点",
-              "summary": "Lane A stabilized 的动作平滑改动没有真正触及核心失败模式，弱 lane 在 50 / 100 epoch 的表现都落在锚点之下。",
+              "title": "平滑动作对照审计后确认弱于当前主线",
+              "summary": "平滑动作这条对照没有真正触及核心失败模式，在 50 / 100 epoch 的表现都落在当前锚点之下。",
               "metrics": [
                 {
                   "label": "epoch 50",
@@ -817,26 +1226,26 @@ window.homepageData = {
                   "value": "0.35"
                 },
                 {
-                  "label": "失败主因",
-                  "value": "at_horizon"
+                  "label": "主要失败",
+                  "value": "超时未完成"
                 }
               ],
               "outcome": "这条稳定化对照线被明确降级为参考线，而不是新主线。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "execution manual",
+                  "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
                 }
               ]
             },
             {
               "badge": "Infra Fix",
-              "title": "Lane B 首次失败被确认是缓存 / 网络问题，不是模型质量",
-              "summary": "第一次 faithful lane 启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
+              "title": "faithful recipe 对照的首轮失败被确认是缓存 / 网络问题",
+              "summary": "第一次 faithful recipe 对照启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
               "metrics": [
                 {
                   "label": "HF 模式",
@@ -851,14 +1260,14 @@ window.homepageData = {
                   "value": "未下结论"
                 }
               ],
-              "outcome": "Lane B 的首轮失败不再被误记成“faithful recipe 无效”。",
+              "outcome": "这条 faithful recipe 对照的首轮失败不再被误记成“方法本身无效”。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "execution manual",
+                  "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
                 }
               ]
@@ -889,11 +1298,11 @@ window.homepageData = {
               "outcome": "MDIT 开始从零散 run note 转成真正可持续维护的主线研究线。",
               "links": [
                 {
-                  "title": "execution manual",
+                  "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
                 },
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 }
               ]
@@ -903,12 +1312,12 @@ window.homepageData = {
       ],
       "findings": [
         {
-          "title": "当前冠军仍然只有 0.55@100 的 Lane A 主线",
-          "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是 lane_a_mainline_100。所有 challenger 都还没有超过它。"
+          "title": "当前冠军仍然只有 0.55@100 的 RGB+Text 主线",
+          "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是当前这条 0.55@100 锚点线。所有对照都还没有超过它。"
         },
         {
-          "title": "稳定化和弱 lane 没有解决核心失败模式",
-          "body": "已知失败大头仍是 at_horizon，说明只是平滑 action head 或轻微换 lane 并不能直接解决 MDIT 的行为瓶颈。"
+          "title": "平滑动作和其他弱对照没有解决核心失败模式",
+          "body": "已知失败大头仍是“动作还没做完就到时间上限”，说明只是平滑 action head 或轻微换 recipe 并不能直接解决 MDIT 的行为瓶颈。"
         },
         {
           "title": "真正的下一步是把 100→500 主线续训跑完并审完",
@@ -917,37 +1326,37 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
-          "title": "MDIT research journal",
+          "title": "研究日志",
           "path": "docs/mdit/research_journal.md",
-          "summary": "append-only 研究日志，记录每条 lane 的推进、失败和接管。",
+          "summary": "append-only 研究日志，记录每条对照线的推进、失败和接管。",
           "label": "查看原始记录"
         },
         {
-          "title": "MDIT best path",
+          "title": "当前主线路径",
           "path": "docs/mdit/best_path.md",
           "summary": "当前主线锚点、best checkpoint 和晋级逻辑。",
           "label": "查看原始记录"
         },
         {
-          "title": "MDIT execution manual",
+          "title": "执行手册",
           "path": "docs/mdit/2026-04-16-mdit-execution-manual.md",
           "summary": "训练、审计、接管与晋级规则的固定手册。",
           "label": "查看原始记录"
         },
         {
-          "title": "MDIT audit report",
+          "title": "共享审计报告",
           "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json",
           "summary": "0.25@50 / 0.55@100 的共享审计证据。",
           "label": "查看原始记录"
         },
         {
-          "title": "MDIT summary",
+          "title": "主线 summary",
           "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/summary.json",
           "summary": "1-100 epoch 主线的 summary 与 W&B run URL。",
           "label": "查看原始记录"
         },
         {
-          "title": "W&B summary snapshot",
+          "title": "W&B 摘要快照",
           "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json",
           "summary": "500 续训接管后的本地 W&B 摘要快照。",
           "label": "查看原始记录"
@@ -969,7 +1378,7 @@ window.homepageData = {
           ],
           "badge": "MDIT 主线",
           "title": "MDIT 主线恢复 100→500 续训接管",
-          "summary": "lane C strict 审计没有通过后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+          "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
           "metrics": [
             {
               "label": "当前锚点",
@@ -995,8 +1404,8 @@ window.homepageData = {
             "mdit"
           ],
           "badge": "RGB+Text Anchor",
-          "title": "Lane A 冻结为当前 RGB+Text 锚点，challenger 全部暂未越线",
-          "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，稳定化 lane 和 faithful lane 的首轮推进都没能完成接管。",
+          "title": "RGB+Text 当前锚点固定为 0.55@100，所有对照暂未越线",
+          "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，平滑动作对照和 faithful recipe 对照的首轮推进都没能完成接管。",
           "metrics": [
             {
               "label": "epoch 50",
@@ -1007,7 +1416,7 @@ window.homepageData = {
               "value": "0.55"
             },
             {
-              "label": "弱 lane",
+              "label": "对照线",
               "value": "2"
             }
           ],
@@ -1073,16 +1482,16 @@ window.homepageData = {
       "latest_update": "2026-04-12",
       "hero_metrics": [
         {
-          "label": "主线",
-          "value": "5RGB / obs3"
+          "label": "输入",
+          "value": "5 路 RGB / 3 帧"
         },
         {
-          "label": "actions",
+          "label": "动作步数",
           "value": "8"
         },
         {
-          "label": "gate",
-          "value": "0.45@100"
+          "label": "100 epoch gate",
+          "value": "0.45"
         }
       ],
       "report_intro": "LeLaN 这页目前更像“执行链路报告”，因为它的首要目标是把训练、评估、选模和审计变成一套能长期追加的自动研究流程。",
@@ -1090,18 +1499,18 @@ window.homepageData = {
         {
           "eyebrow": "Recipe",
           "title": "第一轮 recipe 固定，不先碰 backbone",
-          "body": "先锁定 5RGB、obs3、horizon=32、n_action_steps=8 和 smooth_actions，把工程链路建立清楚再谈结构创新。",
+          "body": "先锁定 5 路 RGB、3 帧观测、horizon=32、8 步动作和 smooth_actions，把工程链路建立清楚再谈结构创新。",
           "metrics": [
             {
               "label": "RGB",
-              "value": "5"
+              "value": "5 路"
             },
             {
-              "label": "obs",
+              "label": "观测帧",
               "value": "3"
             },
             {
-              "label": "actions",
+              "label": "动作步数",
               "value": "8"
             }
           ]
@@ -1170,19 +1579,19 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Recipe",
-              "title": "LeLaN 主线 recipe 固定为 5RGB / obs3 / a8",
-              "summary": "这一轮先固定 5RGB、obs3、horizon=32、n_action_steps=8、smooth_actions=true 和 100 epoch / 20 episode gate，不急着改 backbone。",
+              "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
+              "summary": "这一轮先固定 5 路 RGB、3 帧观测、horizon=32、8 步动作和平滑动作，再用 100 epoch / 20 episode gate 管住节奏，不急着改 backbone。",
               "metrics": [
                 {
                   "label": "RGB",
-                  "value": "5"
+                  "value": "5 路"
                 },
                 {
-                  "label": "obs",
+                  "label": "观测帧",
                   "value": "3"
                 },
                 {
-                  "label": "action steps",
+                  "label": "动作步数",
                   "value": "8"
                 }
               ],
@@ -1238,11 +1647,11 @@ window.homepageData = {
                   "value": "7+"
                 },
                 {
-                  "label": "screening lanes",
+                  "label": "筛选分支",
                   "value": "3"
                 },
                 {
-                  "label": "stop gate",
+                  "label": "停止门槛",
                   "value": "0.45"
                 }
               ],
@@ -1303,19 +1712,19 @@ window.homepageData = {
           ],
           "badge": "LeLaN",
           "title": "LeLaN 自动研究链路完成首轮固化",
-          "summary": "先把 5RGB / obs3 / a8 的主线 recipe、EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
+          "summary": "先把 5 路 RGB、3 帧观测、8 步动作的主线配方，以及 EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
           "metrics": [
             {
-              "label": "obs",
+              "label": "观测帧",
               "value": "3"
             },
             {
-              "label": "actions",
+              "label": "动作步数",
               "value": "8"
             },
             {
-              "label": "gate",
-              "value": "0.45@100"
+              "label": "100 epoch gate",
+              "value": "0.45"
             }
           ],
           "meta": "当前还是工程铺设期，结果页会在正式 run 后变厚",
@@ -1601,14 +2010,16 @@ window.homepageData = {
           "kind": "image",
           "title": "修复现场截图 A",
           "caption": "记录工程修复过程中的现场证据。",
-          "path": "docs/image/fixes/1776007255805.png"
+          "path": "docs/image/fixes/1776007255805.png",
+          "showcase_preview": false
         },
         {
           "task_id": "infra-audit",
           "kind": "image",
           "title": "修复现场截图 B",
           "caption": "作为 fixes 时间线的图像补充。",
-          "path": "docs/image/fixes/1776007270781.png"
+          "path": "docs/image/fixes/1776007270781.png",
+          "showcase_preview": false
         }
       ],
       "home_entries": [],
@@ -1621,6 +2032,210 @@ window.homepageData = {
     }
   ],
   "branches": [
+    {
+      "id": "robot-platform",
+      "title": "具身采集平台",
+      "summary": "围绕 Sim2Real 映射、数字孪生、示教回放和数值逆解搭起来的六轴臂实验平台，可直接承接具身学习数据采集。",
+      "status": "已固化",
+      "status_group": "done",
+      "page_path": "homepage/branches/robot-platform/",
+      "latest_update": "2026-04-02",
+      "hero_metrics": [
+        {
+          "label": "机械臂",
+          "value": "6 轴"
+        },
+        {
+          "label": "IK 精度",
+          "value": "< 8 mm"
+        },
+        {
+          "label": "Demo",
+          "value": "3 个"
+        }
+      ],
+      "related_task_ids": [
+        "dummy-sim2real-platform"
+      ],
+      "timeline_groups": [
+        {
+          "date": "2026-04-02",
+          "cards": [
+            {
+              "badge": "Safety",
+              "title": "补齐 CAN 限流与示教退出保护，平台状态正式固化",
+              "summary": "采样节奏、回放上限、超时保护、RDP 稀疏化和退出示教时的平滑回退全部补齐后，这套六轴臂平台不再只是能演示，而是具备长期复用的数据采集稳定性。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "04"
+                },
+                {
+                  "label": "最小采样",
+                  "value": "50 ms"
+                },
+                {
+                  "label": "回放上限",
+                  "value": "20 Hz"
+                }
+              ],
+              "outcome": "平台从“功能打通”走到了“可以稳定拿来做真机轨迹采集”的状态，因此被固定进已完成区。",
+              "links": [
+                {
+                  "title": "CAN 通信保护总结",
+                  "path": "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md"
+                },
+                {
+                  "title": "示教边界与退出处理",
+                  "path": "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md"
+                }
+              ],
+              "task_id": "dummy-sim2real-platform",
+              "task_title": "六轴臂 Sim2Real 采集平台搭建"
+            }
+          ]
+        },
+        {
+          "date": "2026-03-28",
+          "cards": [
+            {
+              "badge": "Kinematics",
+              "title": "用 MuJoCo 正解与数值逆解建立末端闭环控制",
+              "summary": "FK 直接复用 MuJoCo 的完整几何与 site 定义，IK 则用 L-BFGS-B 在关节限位内做多初始猜测优化，把“目标位姿 → 逆解 → 影子预览 → 真机下发”串成闭环。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "03"
+                },
+                {
+                  "label": "IK 精度",
+                  "value": "< 8 mm"
+                },
+                {
+                  "label": "初始猜测",
+                  "value": "6 组"
+                }
+              ],
+              "outcome": "这套平台已经具备服务模仿学习和世界模型的数据接口，不再只是一个可视化控制 Demo。",
+              "links": [
+                {
+                  "title": "项目总览",
+                  "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+                },
+                {
+                  "title": "正逆运动学技术文档",
+                  "path": "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
+                }
+              ],
+              "task_id": "dummy-sim2real-platform",
+              "task_title": "六轴臂 Sim2Real 采集平台搭建"
+            }
+          ]
+        },
+        {
+          "date": "2026-03-22",
+          "cards": [
+            {
+              "badge": "Planning",
+              "title": "把仿真规划与示教录制做成连续轨迹链路",
+              "summary": "通过主体 / 影子 / IK 三套模型隔离运行状态，让规划预览和真机监控能够同屏；同时把示教记录改成带时间戳的 10 Hz 连续轨迹，并接入 RDP 稀疏化与按节奏回放。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "02"
+                },
+                {
+                  "label": "模型数",
+                  "value": "3"
+                },
+                {
+                  "label": "示教录制",
+                  "value": "10 Hz"
+                }
+              ],
+              "outcome": "规划、示教和回放开始共享同一种轨迹格式，这一步已经非常接近模仿学习数据采集。",
+              "links": [
+                {
+                  "title": "项目总览",
+                  "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+                }
+              ],
+              "task_id": "dummy-sim2real-platform",
+              "task_title": "六轴臂 Sim2Real 采集平台搭建"
+            }
+          ]
+        },
+        {
+          "date": "2026-03-15",
+          "cards": [
+            {
+              "badge": "Sim2Real",
+              "title": "打通六轴映射与真机-仿真数字孪生同步",
+              "summary": "围绕单位制、轴向符号和零位偏置统一出一套 firmware_to_urdf() 映射，再用 EMA 平滑把真机轮询稳定映射成 MuJoCo 侧的连续显示，解决了数字孪生最先卡住的坐标系问题。",
+              "metrics": [
+                {
+                  "label": "阶段",
+                  "value": "01"
+                },
+                {
+                  "label": "六轴映射",
+                  "value": "已打通"
+                },
+                {
+                  "label": "同步节奏",
+                  "value": "2 → 20 Hz"
+                }
+              ],
+              "outcome": "真机姿态现在可以稳定映射到 MuJoCo 侧，Sim2Real 这条基础链路已经成立。",
+              "links": [
+                {
+                  "title": "项目总览",
+                  "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+                }
+              ],
+              "task_id": "dummy-sim2real-platform",
+              "task_title": "六轴臂 Sim2Real 采集平台搭建"
+            }
+          ]
+        }
+      ],
+      "evidence_links": [
+        {
+          "title": "INTERVIEW TECH DOC",
+          "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+          "summary": "",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "技术文档 正逆运动学与示教系统",
+          "path": "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md",
+          "summary": "",
+          "label": "查看原始记录"
+        }
+      ],
+      "chart_ids": [],
+      "summary_cards": [
+        {
+          "eyebrow": "Branch",
+          "title": "六轴运动映射和数字孪生同步已经打通",
+          "body": "把单位制、轴向符号和 J3 的 90° 零位偏置统一进 firmware_to_urdf()，再用 EMA 平滑把真机状态稳定映射到 MuJoCo 侧，真机与仿真终于站到同一坐标口径上。",
+          "metrics": [
+            {
+              "label": "映射轴数",
+              "value": "6"
+            },
+            {
+              "label": "仿真同步",
+              "value": "20 Hz"
+            },
+            {
+              "label": "J3 偏置",
+              "value": "90°"
+            }
+          ]
+        }
+      ]
+    },
     {
       "id": "pdit",
       "title": "PDIT 主线",
@@ -1821,15 +2436,15 @@ window.homepageData = {
             },
             {
               "badge": "Ablation",
-              "title": "H1 原始增强结论作废，H2 仍是待证候选",
-              "summary": "H1 的 stats+aug 路线之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；H2 在 valid loss 上更好，但还没形成新的行为锚点。",
+              "title": "统计特征增强对照作废，官方式动态候选仍待验证",
+              "summary": "统计特征归一化 + 原始增强这条对照之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；更接近官方 DiT 动态的候选在 valid loss 上更好，但还没形成新的行为锚点。",
               "metrics": [
                 {
-                  "label": "H1@100",
+                  "label": "增强对照@100",
                   "value": "0.55"
                 },
                 {
-                  "label": "H2 best valid",
+                  "label": "动态候选 best valid",
                   "value": "0.572"
                 },
                 {
@@ -1837,7 +2452,7 @@ window.homepageData = {
                   "value": "待行为验证"
                 }
               ],
-              "outcome": "H1 不再作为结构结论引用，当前锚点仍是 baseline@500。",
+              "outcome": "旧增强对照不再作为结构结论引用，当前锚点仍是 baseline@500。",
               "links": [
                 {
                   "title": "恢复进展文档",
@@ -1898,14 +2513,14 @@ window.homepageData = {
     {
       "id": "mdit",
       "title": "MDIT 研究线",
-      "summary": "围绕 RGB+Text faithful recipe 的主线探索，已经形成 journal、best path 与接管记录。",
+      "summary": "围绕 RGB+Text 主线、关键对照和续训接管形成的研究线，已经沉淀出日志、主线路径和接管记录。",
       "status": "推进中",
       "status_group": "in_progress",
       "page_path": "homepage/branches/mdit/",
       "latest_update": "2026-04-18",
       "hero_metrics": [
         {
-          "label": "current anchor",
+          "label": "当前锚点",
           "value": "0.55@100"
         },
         {
@@ -1913,7 +2528,7 @@ window.homepageData = {
           "value": "0.25"
         },
         {
-          "label": "resume",
+          "label": "续训进度",
           "value": "epoch 99"
         }
       ],
@@ -1926,8 +2541,8 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Mainline Resume",
-              "title": "Lane C strict 审计未过后，主线回退到 incumbent best route",
-              "summary": "严格 MTDP 验证线没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
+              "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
+              "summary": "严格 MTDP 对照没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
               "metrics": [
                 {
                   "label": "当前锚点",
@@ -1942,14 +2557,14 @@ window.homepageData = {
                   "value": "recipe drift"
                 }
               ],
-              "outcome": "MDIT 重新聚焦到 incumbent mainline，而不是继续同时养多个弱 lane。",
+              "outcome": "MDIT 重新聚焦到唯一可信的 RGB+Text 主线，而不是继续同时养多个弱对照。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "best path",
+                  "title": "当前主线路径",
                   "path": "docs/mdit/best_path.md"
                 }
               ],
@@ -1977,11 +2592,11 @@ window.homepageData = {
               "outcome": "后续 500 epoch 结果会继续积累在同一条主线 lineage 上，而不是再新开匿名 run。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "W&B summary",
+                  "title": "W&B 摘要",
                   "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
                 }
               ],
@@ -1995,8 +2610,8 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Anchor",
-              "title": "Lane A 被冻结为当前 RGB+Text 锚点",
-              "summary": "在共享 audit 链下，lane_a_mainline_100 是当时唯一完成锁定审计的 RGB+Text 候选，因此被正式冻结为主线锚点。",
+              "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
+              "summary": "在共享 audit 链下，当前 RGB+Text 主线是当时唯一完成锁定审计的候选，因此被正式冻结为主线锚点。",
               "metrics": [
                 {
                   "label": "epoch 50",
@@ -2011,14 +2626,14 @@ window.homepageData = {
                   "value": "121.75"
                 }
               ],
-              "outcome": "后续 challenger 只有在同一审计口径下超过 0.55，才有资格接管主线。",
+              "outcome": "后续其他对照只有在同一审计口径下超过 0.55，才有资格接管主线。",
               "links": [
                 {
-                  "title": "best path",
+                  "title": "当前主线路径",
                   "path": "docs/mdit/best_path.md"
                 },
                 {
-                  "title": "audit report",
+                  "title": "共享审计结果",
                   "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json"
                 }
               ],
@@ -2027,8 +2642,8 @@ window.homepageData = {
             },
             {
               "badge": "Comparison",
-              "title": "稳定化对照审计后确认弱于当前锚点",
-              "summary": "Lane A stabilized 的动作平滑改动没有真正触及核心失败模式，弱 lane 在 50 / 100 epoch 的表现都落在锚点之下。",
+              "title": "平滑动作对照审计后确认弱于当前主线",
+              "summary": "平滑动作这条对照没有真正触及核心失败模式，在 50 / 100 epoch 的表现都落在当前锚点之下。",
               "metrics": [
                 {
                   "label": "epoch 50",
@@ -2039,18 +2654,18 @@ window.homepageData = {
                   "value": "0.35"
                 },
                 {
-                  "label": "失败主因",
-                  "value": "at_horizon"
+                  "label": "主要失败",
+                  "value": "超时未完成"
                 }
               ],
               "outcome": "这条稳定化对照线被明确降级为参考线，而不是新主线。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "execution manual",
+                  "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
                 }
               ],
@@ -2059,8 +2674,8 @@ window.homepageData = {
             },
             {
               "badge": "Infra Fix",
-              "title": "Lane B 首次失败被确认是缓存 / 网络问题，不是模型质量",
-              "summary": "第一次 faithful lane 启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
+              "title": "faithful recipe 对照的首轮失败被确认是缓存 / 网络问题",
+              "summary": "第一次 faithful recipe 对照启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
               "metrics": [
                 {
                   "label": "HF 模式",
@@ -2075,14 +2690,14 @@ window.homepageData = {
                   "value": "未下结论"
                 }
               ],
-              "outcome": "Lane B 的首轮失败不再被误记成“faithful recipe 无效”。",
+              "outcome": "这条 faithful recipe 对照的首轮失败不再被误记成“方法本身无效”。",
               "links": [
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 },
                 {
-                  "title": "execution manual",
+                  "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
                 }
               ],
@@ -2115,11 +2730,11 @@ window.homepageData = {
               "outcome": "MDIT 开始从零散 run note 转成真正可持续维护的主线研究线。",
               "links": [
                 {
-                  "title": "execution manual",
+                  "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
                 },
                 {
-                  "title": "research journal",
+                  "title": "研究日志",
                   "path": "docs/mdit/research_journal.md"
                 }
               ],
@@ -2151,8 +2766,8 @@ window.homepageData = {
       "summary_cards": [
         {
           "eyebrow": "Branch",
-          "title": "RGB+Text 当前锚点是 0.55@100 的 Lane A",
-          "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有 challenger 必须超过的门槛。",
+          "title": "RGB+Text 当前锚点固定在 0.55@100",
+          "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有其他对照必须超过的门槛。",
           "metrics": [
             {
               "label": "epoch 50",
@@ -2163,8 +2778,8 @@ window.homepageData = {
               "value": "0.55"
             },
             {
-              "label": "status",
-              "value": "frozen best"
+              "label": "状态",
+              "value": "已冻结"
             }
           ]
         }
@@ -2180,16 +2795,16 @@ window.homepageData = {
       "latest_update": "2026-04-12",
       "hero_metrics": [
         {
-          "label": "主线",
-          "value": "5RGB / obs3"
+          "label": "输入",
+          "value": "5 路 RGB / 3 帧"
         },
         {
-          "label": "actions",
+          "label": "动作步数",
           "value": "8"
         },
         {
-          "label": "gate",
-          "value": "0.45@100"
+          "label": "100 epoch gate",
+          "value": "0.45"
         }
       ],
       "related_task_ids": [
@@ -2201,19 +2816,19 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Recipe",
-              "title": "LeLaN 主线 recipe 固定为 5RGB / obs3 / a8",
-              "summary": "这一轮先固定 5RGB、obs3、horizon=32、n_action_steps=8、smooth_actions=true 和 100 epoch / 20 episode gate，不急着改 backbone。",
+              "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
+              "summary": "这一轮先固定 5 路 RGB、3 帧观测、horizon=32、8 步动作和平滑动作，再用 100 epoch / 20 episode gate 管住节奏，不急着改 backbone。",
               "metrics": [
                 {
                   "label": "RGB",
-                  "value": "5"
+                  "value": "5 路"
                 },
                 {
-                  "label": "obs",
+                  "label": "观测帧",
                   "value": "3"
                 },
                 {
-                  "label": "action steps",
+                  "label": "动作步数",
                   "value": "8"
                 }
               ],
@@ -2273,11 +2888,11 @@ window.homepageData = {
                   "value": "7+"
                 },
                 {
-                  "label": "screening lanes",
+                  "label": "筛选分支",
                   "value": "3"
                 },
                 {
-                  "label": "stop gate",
+                  "label": "停止门槛",
                   "value": "0.45"
                 }
               ],
@@ -2319,18 +2934,18 @@ window.homepageData = {
         {
           "eyebrow": "Branch",
           "title": "第一轮 recipe 固定，不先碰 backbone",
-          "body": "先锁定 5RGB、obs3、horizon=32、n_action_steps=8 和 smooth_actions，把工程链路建立清楚再谈结构创新。",
+          "body": "先锁定 5 路 RGB、3 帧观测、horizon=32、8 步动作和 smooth_actions，把工程链路建立清楚再谈结构创新。",
           "metrics": [
             {
               "label": "RGB",
-              "value": "5"
+              "value": "5 路"
             },
             {
-              "label": "obs",
+              "label": "观测帧",
               "value": "3"
             },
             {
-              "label": "actions",
+              "label": "动作步数",
               "value": "8"
             }
           ]
@@ -2344,8 +2959,8 @@ window.homepageData = {
       "cards": [
         {
           "badge": "Mainline Resume",
-          "title": "Lane C strict 审计未过后，主线回退到 incumbent best route",
-          "summary": "严格 MTDP 验证线没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
+          "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
+          "summary": "严格 MTDP 对照没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
           "metrics": [
             {
               "label": "当前锚点",
@@ -2360,14 +2975,14 @@ window.homepageData = {
               "value": "recipe drift"
             }
           ],
-          "outcome": "MDIT 重新聚焦到 incumbent mainline，而不是继续同时养多个弱 lane。",
+          "outcome": "MDIT 重新聚焦到唯一可信的 RGB+Text 主线，而不是继续同时养多个弱对照。",
           "links": [
             {
-              "title": "research journal",
+              "title": "研究日志",
               "path": "docs/mdit/research_journal.md"
             },
             {
-              "title": "best path",
+              "title": "当前主线路径",
               "path": "docs/mdit/best_path.md"
             }
           ],
@@ -2396,11 +3011,11 @@ window.homepageData = {
           "outcome": "后续 500 epoch 结果会继续积累在同一条主线 lineage 上，而不是再新开匿名 run。",
           "links": [
             {
-              "title": "research journal",
+              "title": "研究日志",
               "path": "docs/mdit/research_journal.md"
             },
             {
-              "title": "W&B summary",
+              "title": "W&B 摘要",
               "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
             }
           ],
@@ -2560,8 +3175,8 @@ window.homepageData = {
       "cards": [
         {
           "badge": "Anchor",
-          "title": "Lane A 被冻结为当前 RGB+Text 锚点",
-          "summary": "在共享 audit 链下，lane_a_mainline_100 是当时唯一完成锁定审计的 RGB+Text 候选，因此被正式冻结为主线锚点。",
+          "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
+          "summary": "在共享 audit 链下，当前 RGB+Text 主线是当时唯一完成锁定审计的候选，因此被正式冻结为主线锚点。",
           "metrics": [
             {
               "label": "epoch 50",
@@ -2576,14 +3191,14 @@ window.homepageData = {
               "value": "121.75"
             }
           ],
-          "outcome": "后续 challenger 只有在同一审计口径下超过 0.55，才有资格接管主线。",
+          "outcome": "后续其他对照只有在同一审计口径下超过 0.55，才有资格接管主线。",
           "links": [
             {
-              "title": "best path",
+              "title": "当前主线路径",
               "path": "docs/mdit/best_path.md"
             },
             {
-              "title": "audit report",
+              "title": "共享审计结果",
               "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json"
             }
           ],
@@ -2593,8 +3208,8 @@ window.homepageData = {
         },
         {
           "badge": "Comparison",
-          "title": "稳定化对照审计后确认弱于当前锚点",
-          "summary": "Lane A stabilized 的动作平滑改动没有真正触及核心失败模式，弱 lane 在 50 / 100 epoch 的表现都落在锚点之下。",
+          "title": "平滑动作对照审计后确认弱于当前主线",
+          "summary": "平滑动作这条对照没有真正触及核心失败模式，在 50 / 100 epoch 的表现都落在当前锚点之下。",
           "metrics": [
             {
               "label": "epoch 50",
@@ -2605,18 +3220,18 @@ window.homepageData = {
               "value": "0.35"
             },
             {
-              "label": "失败主因",
-              "value": "at_horizon"
+              "label": "主要失败",
+              "value": "超时未完成"
             }
           ],
           "outcome": "这条稳定化对照线被明确降级为参考线，而不是新主线。",
           "links": [
             {
-              "title": "research journal",
+              "title": "研究日志",
               "path": "docs/mdit/research_journal.md"
             },
             {
-              "title": "execution manual",
+              "title": "执行手册",
               "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
             }
           ],
@@ -2626,8 +3241,8 @@ window.homepageData = {
         },
         {
           "badge": "Infra Fix",
-          "title": "Lane B 首次失败被确认是缓存 / 网络问题，不是模型质量",
-          "summary": "第一次 faithful lane 启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
+          "title": "faithful recipe 对照的首轮失败被确认是缓存 / 网络问题",
+          "summary": "第一次 faithful recipe 对照启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
           "metrics": [
             {
               "label": "HF 模式",
@@ -2642,14 +3257,14 @@ window.homepageData = {
               "value": "未下结论"
             }
           ],
-          "outcome": "Lane B 的首轮失败不再被误记成“faithful recipe 无效”。",
+          "outcome": "这条 faithful recipe 对照的首轮失败不再被误记成“方法本身无效”。",
           "links": [
             {
-              "title": "research journal",
+              "title": "研究日志",
               "path": "docs/mdit/research_journal.md"
             },
             {
-              "title": "execution manual",
+              "title": "执行手册",
               "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
             }
           ],
@@ -2712,11 +3327,11 @@ window.homepageData = {
           "outcome": "MDIT 开始从零散 run note 转成真正可持续维护的主线研究线。",
           "links": [
             {
-              "title": "execution manual",
+              "title": "执行手册",
               "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
             },
             {
-              "title": "research journal",
+              "title": "研究日志",
               "path": "docs/mdit/research_journal.md"
             }
           ],
@@ -2731,19 +3346,19 @@ window.homepageData = {
       "cards": [
         {
           "badge": "Recipe",
-          "title": "LeLaN 主线 recipe 固定为 5RGB / obs3 / a8",
-          "summary": "这一轮先固定 5RGB、obs3、horizon=32、n_action_steps=8、smooth_actions=true 和 100 epoch / 20 episode gate，不急着改 backbone。",
+          "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
+          "summary": "这一轮先固定 5 路 RGB、3 帧观测、horizon=32、8 步动作和平滑动作，再用 100 epoch / 20 episode gate 管住节奏，不急着改 backbone。",
           "metrics": [
             {
               "label": "RGB",
-              "value": "5"
+              "value": "5 路"
             },
             {
-              "label": "obs",
+              "label": "观测帧",
               "value": "3"
             },
             {
-              "label": "action steps",
+              "label": "动作步数",
               "value": "8"
             }
           ],
@@ -2805,11 +3420,11 @@ window.homepageData = {
               "value": "7+"
             },
             {
-              "label": "screening lanes",
+              "label": "筛选分支",
               "value": "3"
             },
             {
-              "label": "stop gate",
+              "label": "停止门槛",
               "value": "0.45"
             }
           ],
@@ -3009,15 +3624,15 @@ window.homepageData = {
         },
         {
           "badge": "Ablation",
-          "title": "H1 原始增强结论作废，H2 仍是待证候选",
-          "summary": "H1 的 stats+aug 路线之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；H2 在 valid loss 上更好，但还没形成新的行为锚点。",
+          "title": "统计特征增强对照作废，官方式动态候选仍待验证",
+          "summary": "统计特征归一化 + 原始增强这条对照之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；更接近官方 DiT 动态的候选在 valid loss 上更好，但还没形成新的行为锚点。",
           "metrics": [
             {
-              "label": "H1@100",
+              "label": "增强对照@100",
               "value": "0.55"
             },
             {
-              "label": "H2 best valid",
+              "label": "动态候选 best valid",
               "value": "0.572"
             },
             {
@@ -3025,7 +3640,7 @@ window.homepageData = {
               "value": "待行为验证"
             }
           ],
-          "outcome": "H1 不再作为结构结论引用，当前锚点仍是 baseline@500。",
+          "outcome": "旧增强对照不再作为结构结论引用，当前锚点仍是 baseline@500。",
           "links": [
             {
               "title": "恢复进展文档",
@@ -3039,6 +3654,150 @@ window.homepageData = {
           "task_id": "pdit-anchor",
           "task_title": "PDIT 基线恢复与锚点固化",
           "task_path": "homepage/tasks/pdit-anchor/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-02",
+      "cards": [
+        {
+          "badge": "Safety",
+          "title": "补齐 CAN 限流与示教退出保护，平台状态正式固化",
+          "summary": "采样节奏、回放上限、超时保护、RDP 稀疏化和退出示教时的平滑回退全部补齐后，这套六轴臂平台不再只是能演示，而是具备长期复用的数据采集稳定性。",
+          "metrics": [
+            {
+              "label": "阶段",
+              "value": "04"
+            },
+            {
+              "label": "最小采样",
+              "value": "50 ms"
+            },
+            {
+              "label": "回放上限",
+              "value": "20 Hz"
+            }
+          ],
+          "outcome": "平台从“功能打通”走到了“可以稳定拿来做真机轨迹采集”的状态，因此被固定进已完成区。",
+          "links": [
+            {
+              "title": "CAN 通信保护总结",
+              "path": "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md"
+            },
+            {
+              "title": "示教边界与退出处理",
+              "path": "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md"
+            }
+          ],
+          "task_id": "dummy-sim2real-platform",
+          "task_title": "六轴臂 Sim2Real 采集平台搭建",
+          "task_path": "homepage/tasks/dummy-sim2real-platform/"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-28",
+      "cards": [
+        {
+          "badge": "Kinematics",
+          "title": "用 MuJoCo 正解与数值逆解建立末端闭环控制",
+          "summary": "FK 直接复用 MuJoCo 的完整几何与 site 定义，IK 则用 L-BFGS-B 在关节限位内做多初始猜测优化，把“目标位姿 → 逆解 → 影子预览 → 真机下发”串成闭环。",
+          "metrics": [
+            {
+              "label": "阶段",
+              "value": "03"
+            },
+            {
+              "label": "IK 精度",
+              "value": "< 8 mm"
+            },
+            {
+              "label": "初始猜测",
+              "value": "6 组"
+            }
+          ],
+          "outcome": "这套平台已经具备服务模仿学习和世界模型的数据接口，不再只是一个可视化控制 Demo。",
+          "links": [
+            {
+              "title": "项目总览",
+              "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+            },
+            {
+              "title": "正逆运动学技术文档",
+              "path": "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
+            }
+          ],
+          "task_id": "dummy-sim2real-platform",
+          "task_title": "六轴臂 Sim2Real 采集平台搭建",
+          "task_path": "homepage/tasks/dummy-sim2real-platform/"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-22",
+      "cards": [
+        {
+          "badge": "Planning",
+          "title": "把仿真规划与示教录制做成连续轨迹链路",
+          "summary": "通过主体 / 影子 / IK 三套模型隔离运行状态，让规划预览和真机监控能够同屏；同时把示教记录改成带时间戳的 10 Hz 连续轨迹，并接入 RDP 稀疏化与按节奏回放。",
+          "metrics": [
+            {
+              "label": "阶段",
+              "value": "02"
+            },
+            {
+              "label": "模型数",
+              "value": "3"
+            },
+            {
+              "label": "示教录制",
+              "value": "10 Hz"
+            }
+          ],
+          "outcome": "规划、示教和回放开始共享同一种轨迹格式，这一步已经非常接近模仿学习数据采集。",
+          "links": [
+            {
+              "title": "项目总览",
+              "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+            }
+          ],
+          "task_id": "dummy-sim2real-platform",
+          "task_title": "六轴臂 Sim2Real 采集平台搭建",
+          "task_path": "homepage/tasks/dummy-sim2real-platform/"
+        }
+      ]
+    },
+    {
+      "date": "2026-03-15",
+      "cards": [
+        {
+          "badge": "Sim2Real",
+          "title": "打通六轴映射与真机-仿真数字孪生同步",
+          "summary": "围绕单位制、轴向符号和零位偏置统一出一套 firmware_to_urdf() 映射，再用 EMA 平滑把真机轮询稳定映射成 MuJoCo 侧的连续显示，解决了数字孪生最先卡住的坐标系问题。",
+          "metrics": [
+            {
+              "label": "阶段",
+              "value": "01"
+            },
+            {
+              "label": "六轴映射",
+              "value": "已打通"
+            },
+            {
+              "label": "同步节奏",
+              "value": "2 → 20 Hz"
+            }
+          ],
+          "outcome": "真机姿态现在可以稳定映射到 MuJoCo 侧，Sim2Real 这条基础链路已经成立。",
+          "links": [
+            {
+              "title": "项目总览",
+              "path": "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md"
+            }
+          ],
+          "task_id": "dummy-sim2real-platform",
+          "task_title": "六轴臂 Sim2Real 采集平台搭建",
+          "task_path": "homepage/tasks/dummy-sim2real-platform/"
         }
       ]
     }
@@ -4527,6 +5286,106 @@ window.homepageData = {
               "x": 247,
               "y": 0.014971090480685234,
               "label": "epoch 247"
+            },
+            {
+              "x": 248,
+              "y": 0.01203360129147768,
+              "label": "epoch 248"
+            },
+            {
+              "x": 249,
+              "y": 0.0537232868373394,
+              "label": "epoch 249"
+            },
+            {
+              "x": 250,
+              "y": 0.05592414736747742,
+              "label": "epoch 250"
+            },
+            {
+              "x": 251,
+              "y": 0.020801423117518425,
+              "label": "epoch 251"
+            },
+            {
+              "x": 252,
+              "y": 0.012048877775669098,
+              "label": "epoch 252"
+            },
+            {
+              "x": 253,
+              "y": 0.026979833841323853,
+              "label": "epoch 253"
+            },
+            {
+              "x": 254,
+              "y": 0.018970130011439323,
+              "label": "epoch 254"
+            },
+            {
+              "x": 255,
+              "y": 0.012775829993188381,
+              "label": "epoch 255"
+            },
+            {
+              "x": 256,
+              "y": 0.03355240821838379,
+              "label": "epoch 256"
+            },
+            {
+              "x": 257,
+              "y": 0.05489391088485718,
+              "label": "epoch 257"
+            },
+            {
+              "x": 258,
+              "y": 0.024954549968242645,
+              "label": "epoch 258"
+            },
+            {
+              "x": 259,
+              "y": 0.01595294289290905,
+              "label": "epoch 259"
+            },
+            {
+              "x": 260,
+              "y": 0.010764596983790398,
+              "label": "epoch 260"
+            },
+            {
+              "x": 261,
+              "y": 0.012433546595275402,
+              "label": "epoch 261"
+            },
+            {
+              "x": 262,
+              "y": 0.13464075326919556,
+              "label": "epoch 262"
+            },
+            {
+              "x": 263,
+              "y": 0.014933613128960133,
+              "label": "epoch 263"
+            },
+            {
+              "x": 264,
+              "y": 0.04025335609912872,
+              "label": "epoch 264"
+            },
+            {
+              "x": 265,
+              "y": 0.05015246570110321,
+              "label": "epoch 265"
+            },
+            {
+              "x": 266,
+              "y": 0.026323895901441574,
+              "label": "epoch 266"
+            },
+            {
+              "x": 267,
+              "y": 0.00908595323562622,
+              "label": "epoch 267"
             }
           ]
         },
@@ -5763,6 +6622,106 @@ window.homepageData = {
               "x": 247,
               "y": 1.3399730554144633,
               "label": "epoch 247"
+            },
+            {
+              "x": 248,
+              "y": 1.2315575631065785,
+              "label": "epoch 248"
+            },
+            {
+              "x": 249,
+              "y": 1.3149565344945968,
+              "label": "epoch 249"
+            },
+            {
+              "x": 250,
+              "y": 1.5169839721516167,
+              "label": "epoch 250"
+            },
+            {
+              "x": 251,
+              "y": 1.3141262185098113,
+              "label": "epoch 251"
+            },
+            {
+              "x": 252,
+              "y": 1.3011521865050064,
+              "label": "epoch 252"
+            },
+            {
+              "x": 253,
+              "y": 1.3801603629498889,
+              "label": "epoch 253"
+            },
+            {
+              "x": 254,
+              "y": 1.1508994311657978,
+              "label": "epoch 254"
+            },
+            {
+              "x": 255,
+              "y": 1.1631712976254915,
+              "label": "epoch 255"
+            },
+            {
+              "x": 256,
+              "y": 1.4341580879041238,
+              "label": "epoch 256"
+            },
+            {
+              "x": 257,
+              "y": 1.3348989894393046,
+              "label": "epoch 257"
+            },
+            {
+              "x": 258,
+              "y": 1.2506159347678094,
+              "label": "epoch 258"
+            },
+            {
+              "x": 259,
+              "y": 1.259147003268529,
+              "label": "epoch 259"
+            },
+            {
+              "x": 260,
+              "y": 1.4421305629963939,
+              "label": "epoch 260"
+            },
+            {
+              "x": 261,
+              "y": 1.1363540820434297,
+              "label": "epoch 261"
+            },
+            {
+              "x": 262,
+              "y": 1.428322004276867,
+              "label": "epoch 262"
+            },
+            {
+              "x": 263,
+              "y": 1.4229134904024632,
+              "label": "epoch 263"
+            },
+            {
+              "x": 264,
+              "y": 1.279999832377622,
+              "label": "epoch 264"
+            },
+            {
+              "x": 265,
+              "y": 1.3796920154096657,
+              "label": "epoch 265"
+            },
+            {
+              "x": 266,
+              "y": 1.3246685840728645,
+              "label": "epoch 266"
+            },
+            {
+              "x": 267,
+              "y": 1.340374958860737,
+              "label": "epoch 267"
             }
           ]
         }
@@ -7009,6 +7968,106 @@ window.homepageData = {
               "x": 247,
               "y": 0.004272638045030793,
               "label": "epoch 247"
+            },
+            {
+              "x": 248,
+              "y": 0.004280111226283847,
+              "label": "epoch 248"
+            },
+            {
+              "x": 249,
+              "y": 0.004257520521748934,
+              "label": "epoch 249"
+            },
+            {
+              "x": 250,
+              "y": 0.004265525237745973,
+              "label": "epoch 250"
+            },
+            {
+              "x": 251,
+              "y": 0.004282134371782089,
+              "label": "epoch 251"
+            },
+            {
+              "x": 252,
+              "y": 0.004279293850949647,
+              "label": "epoch 252"
+            },
+            {
+              "x": 253,
+              "y": 0.004260501178290916,
+              "label": "epoch 253"
+            },
+            {
+              "x": 254,
+              "y": 0.004268603864674285,
+              "label": "epoch 254"
+            },
+            {
+              "x": 255,
+              "y": 0.004283138506396331,
+              "label": "epoch 255"
+            },
+            {
+              "x": 256,
+              "y": 0.004260290890478676,
+              "label": "epoch 256"
+            },
+            {
+              "x": 257,
+              "y": 0.004248455718640655,
+              "label": "epoch 257"
+            },
+            {
+              "x": 258,
+              "y": 0.004281669405923151,
+              "label": "epoch 258"
+            },
+            {
+              "x": 259,
+              "y": 0.004247190798387716,
+              "label": "epoch 259"
+            },
+            {
+              "x": 260,
+              "y": 0.004242549196964032,
+              "label": "epoch 260"
+            },
+            {
+              "x": 261,
+              "y": 0.004259911334788501,
+              "label": "epoch 261"
+            },
+            {
+              "x": 262,
+              "y": 0.004252565326169133,
+              "label": "epoch 262"
+            },
+            {
+              "x": 263,
+              "y": 0.0042351610827608965,
+              "label": "epoch 263"
+            },
+            {
+              "x": 264,
+              "y": 0.004230348342389334,
+              "label": "epoch 264"
+            },
+            {
+              "x": 265,
+              "y": 0.0042455369770514634,
+              "label": "epoch 265"
+            },
+            {
+              "x": 266,
+              "y": 0.0042322122811272395,
+              "label": "epoch 266"
+            },
+            {
+              "x": 267,
+              "y": 0.004257977702333224,
+              "label": "epoch 267"
             }
           ]
         },
@@ -8245,6 +9304,106 @@ window.homepageData = {
               "x": 247,
               "y": 0.06326130902839634,
               "label": "epoch 247"
+            },
+            {
+              "x": 248,
+              "y": 0.06337993934300214,
+              "label": "epoch 248"
+            },
+            {
+              "x": 249,
+              "y": 0.06340112143669485,
+              "label": "epoch 249"
+            },
+            {
+              "x": 250,
+              "y": 0.06339071124736954,
+              "label": "epoch 250"
+            },
+            {
+              "x": 251,
+              "y": 0.06355738499290678,
+              "label": "epoch 251"
+            },
+            {
+              "x": 252,
+              "y": 0.06341790345935519,
+              "label": "epoch 252"
+            },
+            {
+              "x": 253,
+              "y": 0.06345577435039511,
+              "label": "epoch 253"
+            },
+            {
+              "x": 254,
+              "y": 0.06354248935914304,
+              "label": "epoch 254"
+            },
+            {
+              "x": 255,
+              "y": 0.06352986433500375,
+              "label": "epoch 255"
+            },
+            {
+              "x": 256,
+              "y": 0.06345446436056304,
+              "label": "epoch 256"
+            },
+            {
+              "x": 257,
+              "y": 0.06357440541385011,
+              "label": "epoch 257"
+            },
+            {
+              "x": 258,
+              "y": 0.06352187240286424,
+              "label": "epoch 258"
+            },
+            {
+              "x": 259,
+              "y": 0.06354541876154192,
+              "label": "epoch 259"
+            },
+            {
+              "x": 260,
+              "y": 0.06352355037999682,
+              "label": "epoch 260"
+            },
+            {
+              "x": 261,
+              "y": 0.06352358832143516,
+              "label": "epoch 261"
+            },
+            {
+              "x": 262,
+              "y": 0.06348845330610761,
+              "label": "epoch 262"
+            },
+            {
+              "x": 263,
+              "y": 0.06349218621720579,
+              "label": "epoch 263"
+            },
+            {
+              "x": 264,
+              "y": 0.06350471379655094,
+              "label": "epoch 264"
+            },
+            {
+              "x": 265,
+              "y": 0.06349792189384491,
+              "label": "epoch 265"
+            },
+            {
+              "x": 266,
+              "y": 0.0635577277379956,
+              "label": "epoch 266"
+            },
+            {
+              "x": 267,
+              "y": 0.0635712822190008,
+              "label": "epoch 267"
             }
           ]
         },
@@ -9481,6 +10640,106 @@ window.homepageData = {
               "x": 247,
               "y": 0.06437107006775022,
               "label": "epoch 247"
+            },
+            {
+              "x": 248,
+              "y": 0.06474546996881408,
+              "label": "epoch 248"
+            },
+            {
+              "x": 249,
+              "y": 0.06456247527042155,
+              "label": "epoch 249"
+            },
+            {
+              "x": 250,
+              "y": 0.06450260599118444,
+              "label": "epoch 250"
+            },
+            {
+              "x": 251,
+              "y": 0.06455227046806637,
+              "label": "epoch 251"
+            },
+            {
+              "x": 252,
+              "y": 0.06462288629569757,
+              "label": "epoch 252"
+            },
+            {
+              "x": 253,
+              "y": 0.06455447698978763,
+              "label": "epoch 253"
+            },
+            {
+              "x": 254,
+              "y": 0.06429118998922352,
+              "label": "epoch 254"
+            },
+            {
+              "x": 255,
+              "y": 0.06490978623379592,
+              "label": "epoch 255"
+            },
+            {
+              "x": 256,
+              "y": 0.06438233803929076,
+              "label": "epoch 256"
+            },
+            {
+              "x": 257,
+              "y": 0.0643785691770697,
+              "label": "epoch 257"
+            },
+            {
+              "x": 258,
+              "y": 0.064439505270987,
+              "label": "epoch 258"
+            },
+            {
+              "x": 259,
+              "y": 0.06474119111080774,
+              "label": "epoch 259"
+            },
+            {
+              "x": 260,
+              "y": 0.06466956197947052,
+              "label": "epoch 260"
+            },
+            {
+              "x": 261,
+              "y": 0.0648515635296606,
+              "label": "epoch 261"
+            },
+            {
+              "x": 262,
+              "y": 0.06479879697546141,
+              "label": "epoch 262"
+            },
+            {
+              "x": 263,
+              "y": 0.06521651656111926,
+              "label": "epoch 263"
+            },
+            {
+              "x": 264,
+              "y": 0.06506100836012545,
+              "label": "epoch 264"
+            },
+            {
+              "x": 265,
+              "y": 0.06521006050044625,
+              "label": "epoch 265"
+            },
+            {
+              "x": 266,
+              "y": 0.06465101591266294,
+              "label": "epoch 266"
+            },
+            {
+              "x": 267,
+              "y": 0.06495641929048863,
+              "label": "epoch 267"
             }
           ]
         }
@@ -9514,7 +10773,7 @@ window.homepageData = {
       "id": "results-status-overview",
       "type": "bar",
       "title": "任务状态分布",
-      "description": "首页只保留很少的概览图，用来快速判断当前哪些任务已经形成锚点、哪些仍在推进。",
+      "description": "首页只保留高层状态分布，帮助快速看当前有哪些任务已经形成锚点，哪些还在推进中。",
       "format": "int",
       "note": "",
       "categories": [
@@ -9527,10 +10786,10 @@ window.homepageData = {
         {
           "name": "任务状态分布",
           "values": [
-            1.0,
-            1.0,
-            1.0,
-            1.0
+            1,
+            1,
+            1,
+            1
           ],
           "color": "#b2573f"
         }
@@ -9559,28 +10818,156 @@ window.homepageData = {
           "color": "#3e7cb1"
         }
       ]
+    },
+    "task-anchor-overview": {
+      "id": "task-anchor-overview",
+      "type": "compare_cards",
+      "title": "当前主任务产出对照",
+      "description": "不用抽象进度圈，而是直接列出各任务当前最重要的成功率、里程碑或产出，让比较口径一眼可读。",
+      "cards": [
+        {
+          "badge": "Sim2Real 平台",
+          "title": "六轴臂 Sim2Real 采集平台搭建",
+          "summary": "六轴运动映射和数字孪生同步已经打通",
+          "metrics": [
+            {
+              "label": "机械臂",
+              "value": "6 轴"
+            },
+            {
+              "label": "IK 精度",
+              "value": "< 8 mm"
+            },
+            {
+              "label": "Demo",
+              "value": "3 个"
+            }
+          ]
+        },
+        {
+          "badge": "PDIT 主线",
+          "title": "PDIT 基线恢复与锚点固化",
+          "summary": "行为锚点已经稳定下来",
+          "metrics": [
+            {
+              "label": "best success@20",
+              "value": "0.95"
+            },
+            {
+              "label": "100 回合复核",
+              "value": "0.85"
+            },
+            {
+              "label": "best epoch",
+              "value": "500"
+            }
+          ]
+        },
+        {
+          "badge": "MDIT 主线",
+          "title": "MDIT RGB+Text 主线推进",
+          "summary": "RGB+Text 当前锚点固定在 0.55@100",
+          "metrics": [
+            {
+              "label": "当前锚点",
+              "value": "0.55@100"
+            },
+            {
+              "label": "epoch 50",
+              "value": "0.25"
+            },
+            {
+              "label": "续训进度",
+              "value": "epoch 99"
+            }
+          ]
+        },
+        {
+          "badge": "LeLaN",
+          "title": "LeLaN 自动研究链路固化",
+          "summary": "第一轮 recipe 固定，不先碰 backbone",
+          "metrics": [
+            {
+              "label": "输入",
+              "value": "5 路 RGB / 3 帧"
+            },
+            {
+              "label": "动作步数",
+              "value": "8"
+            },
+            {
+              "label": "100 epoch gate",
+              "value": "0.45"
+            }
+          ]
+        }
+      ]
     }
   },
   "home_chart_ids": [
+    "task-anchor-overview",
     "pdit-success-curve",
-    "mdit-success-curve",
-    "results-status-overview"
+    "mdit-success-curve"
   ],
   "showcase": {
     "items": [
+      {
+        "task_id": "dummy-sim2real-platform",
+        "kind": "image",
+        "title": "六轴臂平台封面",
+        "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
+        "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+        "showcase_preview": true
+      },
+      {
+        "task_id": "dummy-sim2real-platform",
+        "kind": "video",
+        "title": "正逆运动解算演示",
+        "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
+        "path": "homepage/media/tasks/dummy-sim2real-platform/videos/01-运动逆解算.mp4",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "dummy-sim2real-platform",
+        "kind": "video",
+        "title": "真机-仿真数字孪生同步",
+        "caption": "展示真机姿态如何实时映射到仿真侧，验证 Sim2Real 运动映射与数字孪生同步效果。",
+        "path": "homepage/media/tasks/dummy-sim2real-platform/videos/02-真机仿真数字孪生.mp4",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "dummy-sim2real-platform",
+        "kind": "video",
+        "title": "规划轨迹真机执行",
+        "caption": "展示规划好的关节轨迹如何按照记录节奏下发真机，体现示教回放与总线保护链路。",
+        "path": "homepage/media/tasks/dummy-sim2real-platform/videos/03-规划轨迹执行.mp4",
+        "showcase_preview": false
+      },
       {
         "task_id": "infra-audit",
         "kind": "image",
         "title": "修复现场截图 A",
         "caption": "记录工程修复过程中的现场证据。",
-        "path": "docs/image/fixes/1776007255805.png"
+        "path": "docs/image/fixes/1776007255805.png",
+        "showcase_preview": false
       },
       {
         "task_id": "infra-audit",
         "kind": "image",
         "title": "修复现场截图 B",
         "caption": "作为 fixes 时间线的图像补充。",
-        "path": "docs/image/fixes/1776007270781.png"
+        "path": "docs/image/fixes/1776007270781.png",
+        "showcase_preview": false
+      }
+    ],
+    "preview_items": [
+      {
+        "task_id": "dummy-sim2real-platform",
+        "kind": "image",
+        "title": "六轴臂平台封面",
+        "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
+        "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+        "showcase_preview": true
       }
     ]
   },

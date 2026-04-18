@@ -355,12 +355,21 @@ h3 {
   background: rgba(255, 255, 255, 0.74);
 }
 
+.focus-item-main {
+  gap: 0.65rem;
+}
+
 .focus-item strong {
   font-size: 1.02rem;
 }
 
-.focus-item span {
+.focus-item span,
+.focus-item p {
   color: var(--ink-soft);
+}
+
+.focus-item p {
+  margin: 0;
 }
 
 .section-block {
@@ -399,6 +408,7 @@ h3 {
 .card-grid,
 .summary-grid,
 .chart-grid,
+.compare-card-grid,
 .branch-grid,
 .finding-grid,
 .evidence-grid,
@@ -408,9 +418,15 @@ h3 {
   gap: 1rem;
 }
 
+.timeline-group-list {
+  display: grid;
+  gap: 1.4rem;
+}
+
 .card-grid,
 .summary-grid,
 .chart-grid,
+.compare-card-grid,
 .branch-grid,
 .finding-grid,
 .evidence-grid,
@@ -420,6 +436,10 @@ h3 {
 
 .media-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.media-grid-preview {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .result-card,
@@ -468,6 +488,66 @@ h3 {
   font-size: 1.3rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.timeline-group {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.timeline-group-rail {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 1rem;
+}
+
+.timeline-group-rail::after {
+  content: "";
+  position: absolute;
+  left: 0.65rem;
+  top: 1.85rem;
+  bottom: -1.4rem;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(43, 118, 111, 0.28), rgba(178, 87, 63, 0.22));
+}
+
+.timeline-group:last-child .timeline-group-rail::after {
+  display: none;
+}
+
+.timeline-group-date {
+  display: inline-block;
+  font-size: 0.86rem;
+  letter-spacing: 0.13em;
+  color: var(--rust);
+}
+
+.timeline-group-node {
+  position: absolute;
+  left: 0;
+  top: 1.45rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  border: 2px solid rgba(43, 118, 111, 0.35);
+  background: var(--paper-strong);
+  box-shadow: 0 0 0 8px rgba(43, 118, 111, 0.06);
+}
+
+.timeline-group-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.timeline-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--teal), var(--rust));
 }
 
 .card-desc,
@@ -668,6 +748,19 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.compare-mini-card {
+  border-radius: 20px;
+  border: 1px solid rgba(62, 52, 40, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1.1rem;
+}
+
+.compare-mini-card h4 {
+  margin: 0.18rem 0 0.5rem;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
 .media-card {
   padding: 0;
   overflow: hidden;
@@ -722,11 +815,14 @@ h3 {
   .card-grid,
   .summary-grid,
   .chart-grid,
+  .compare-card-grid,
   .branch-grid,
   .finding-grid,
   .evidence-grid,
   .media-grid,
-  .fix-grid {
+  .fix-grid,
+  .timeline-group,
+  .timeline-group-cards {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -742,6 +838,14 @@ h3 {
 
   .topbar {
     padding-inline: 1rem;
+  }
+
+  .timeline-group-rail {
+    padding-bottom: 0;
+  }
+
+  .timeline-group-rail::after {
+    display: none;
   }
 }
 

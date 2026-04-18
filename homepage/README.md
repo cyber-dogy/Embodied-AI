@@ -66,6 +66,7 @@ homepage/media/tasks/<task-id>/
 
 当前任务目录已预留：
 
+- `dummy-sim2real-platform`
 - `pdit-anchor`
 - `mdit-mainline`
 - `lelan-pipeline`
@@ -80,11 +81,17 @@ homepage/media/tasks/<task-id>/
 - `mp4`
 - `webm`
 
+如果任务材料来自兄弟项目仓库，公开证据建议先挂到：
+
+- `homepage/external/<project>/`
+
+然后在 `site-config.json` 里把这些路径当作 `featured_paths` 使用。这样公开页仍然走同一套任务页框架，不会退回成散乱的文档跳转页。
+
 ## 页面结构
 
 当前生成的公开页面包括：
 
-- 首页：大标题 hero + `已完成 / 进行中` 日期分组卡片 + 少量概览图表 + 研究线入口 + showcase
+- 首页：大标题 hero + `进行中 / 已完成` 日期分组卡片 + 少量概览图表 + 研究线入口 + showcase
 - `homepage/tasks/<task-id>/`
 - `homepage/branches/<branch-id>/`
 - `homepage/timeline/`
@@ -95,7 +102,7 @@ homepage/media/tasks/<task-id>/
 - 任务背景与当前判断
 - 关键成果卡片
 - success / total loss / mse 图表
-- 按日期分组的任务时间线
+- 按日期分组、带竖轴的任务时间线
 - 关键结论
 - 证据链接
 
