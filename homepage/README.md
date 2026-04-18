@@ -47,6 +47,14 @@ http://127.0.0.1:43429/
 - 重建 `homepage/assets/generated-homepage-data.js`
 - 重建 `cloudflare-pages-site/` 发布包
 
+## 当前公开地址
+
+当前 Cloudflare Pages 已成功对外发布：
+
+- `https://embodied-ai.pages.dev/homepage/`
+
+以后只要主页内容有更新，就要把最新改动同步到这个公开地址，不能只停留在本地预览。
+
 如果你想把这套主页长期挂出去，不只本地预览，部署方案放在：
 
 - `deploy/homepage/caddy/README.md`
@@ -76,6 +84,43 @@ http://127.0.0.1:43429/
 
 如果你只是想手修标题、摘要或时间线文案，优先改 `manual_overrides.json`，不用碰 Python。
 
+## 内容修改索引
+
+后续你自己打磨内容时，优先按下面这个索引改：
+
+- 改整站标题、副标题、简介：
+  - `homepage/config/site-config.json`
+  - `homepage/config/manual_overrides.json` 里的 `site`
+- 改某个任务的标题、一句话摘要、任务页顶部说明：
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.title`
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.summary`
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.report_intro`
+- 改首页成果卡：
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.home_entries`
+- 改任务页“关键成果卡片”：
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.summary_cards`
+- 改任务页时间线：
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.timeline_groups`
+- 改任务页结论与证据区：
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.findings`
+  - `homepage/config/manual_overrides.json` 里的 `tasks.<task_id>.evidence_links`
+- 改研究线页标题和摘要：
+  - `homepage/config/manual_overrides.json` 里的 `branches.<branch_id>.title`
+  - `homepage/config/manual_overrides.json` 里的 `branches.<branch_id>.summary`
+- 改首页/任务页素材标题、说明、是否上首页：
+  - `homepage/media/tasks/<task-id>/captions.json`
+- 改自动提炼逻辑本身：
+  - `scripts/build_homepage_data.py`
+- 改页面样式和布局：
+  - `homepage/assets/homepage-app.js`
+  - `homepage/assets/homepage.css`
+
+补充说明：
+
+- `manual_overrides.json` 里的数组字段是整段替换，不是局部 patch
+- 如果只是想润色公开文案，优先改 `manual_overrides.json`
+- 只有当自动生成逻辑本身不合理时，再改 `scripts/build_homepage_data.py`
+
 ## Cloudflare Pages 发布包
 
 当前仓库额外生成一个专门给 Cloudflare Pages 用的纯静态目录：
@@ -99,6 +144,35 @@ cloudflare-pages-site/
 - `Build output directory`: `.`
 
 不要把仓库根目录 `/` 作为 Pages 的工作目录，否则它会扫到主项目里的 `requirements.txt` 并尝试安装整仓依赖。
+
+## 后续更新工作流
+
+以后 homepage 的标准更新流程固定为：
+
+1. 修改 `docs/`、素材、`site-config.json` 或 `manual_overrides.json`
+2. 执行：
+
+```bash
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+./scripts/rebuild_homepage.sh
+```
+
+3. 本地预览检查：
+
+```bash
+python scripts/serve_homepage.py --port 43429
+```
+
+4. 确认没问题后提交以下内容：
+   - `homepage/assets/generated-homepage-data.js`
+   - `cloudflare-pages-site/`
+   - 你这次实际修改的配置、文档、素材文件
+5. `git push`
+6. 等 Cloudflare Pages 自动发布完成
+7. 最后访问并确认：
+   - `https://embodied-ai.pages.dev/homepage/`
+
+也就是说，后续每次改完都要形成“本地检查 -> push -> 公开页复核”的闭环。
 
 ## 素材入口
 
@@ -135,7 +209,7 @@ homepage/media/tasks/<task-id>/
 
 当前生成的公开页面包括：
 
-- 首页：大标题 hero + `进行中 / 已完成` 日期分组卡片 + 少量概览图表 + 研究线入口 + showcase
+- 首页：大标题 hero + 研究线入口 + `进行中 / 已完成` 日期分组卡片 + showcase
 - `homepage/tasks/<task-id>/`
 - `homepage/branches/<branch-id>/`
 - `homepage/timeline/`

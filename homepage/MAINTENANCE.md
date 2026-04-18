@@ -22,14 +22,19 @@
 首页结构固定为：
 
 - 大标题 hero
+- 研究线入口
 - `进行中 / 已完成` 两个主分区
 - 每个分区按日期分组
 - 每个日期下面放成果卡片
-- 少量概览图表
-- 研究线入口
 - showcase
 
 `Current Focus` 只展示当前主推进任务，不能再罗列多个卡片。
+
+首页卡片左上角标签遵循固定层级：
+
+- 第一标签优先显示所属任务主标签，例如 `PDIT 主线`、`MDIT 主线`
+- 第二标签才补充当前阶段或特殊动作，例如 `Baseline Recovery`、`RGB+Text Anchor`
+- 不允许只出现难以独立理解的实验内部代号标签
 
 ## 标题规则
 
@@ -175,6 +180,15 @@ homepage/media/tasks/<task-id>/
    - success 顺序是否正确
    - 页面主体是否仍然能不点文档就读懂
    - `cloudflare-pages-site/` 里是否已经带上最新素材、外部 Markdown 和 JSON 证据
+7. 提交并 push：
+   - `homepage/assets/generated-homepage-data.js`
+   - `cloudflare-pages-site/`
+   - 本次实际变更的配置 / 文档 / 素材
+8. 等 Cloudflare Pages 自动发布
+9. 访问公开地址复核：
+   - `https://embodied-ai.pages.dev/homepage/`
+
+这条发布链路是工作流的一部分，后续只要 homepage 内容有改动，就必须同步到线上页面，不能只改本地。
 
 ## Cloudflare Pages 发布规则
 
@@ -184,6 +198,7 @@ homepage/media/tasks/<task-id>/
 - 目录里的文件允许是生成产物，不要手工修改
 - Cloudflare Pages 应该发布它，而不是直接发布本地预览目录
 - 自动部署的正确含义是：push 后自动发布这个目录，而不是让云端重新跑本地实验抓取逻辑
+- 所以每次主页内容更新后，`cloudflare-pages-site/` 必须一起更新并提交
 
 这样做的原因有两个：
 

@@ -55,10 +55,9 @@
           <strong>${escapeHtml(data.site.title)}</strong>
         </a>
         <nav class="topnav" aria-label="主导航">
+          <a href="${navHref("#branches")}">研究线</a>
           <a href="${navHref("#in-progress")}">进行中</a>
           <a href="${navHref("#done")}">已完成</a>
-          <a href="${navHref("#atlas")}">结果</a>
-          <a href="${navHref("#branches")}">研究线</a>
           <a href="${pageMeta.type === "home" ? "#showcase" : pathUrl("homepage/showcase/")}">Showcase</a>
         </nav>
       </header>
@@ -73,9 +72,9 @@
   }
 
   function renderHomePage() {
-    const homeCharts = (data.home_chart_ids || []).map((chartId) => charts[chartId]).filter(Boolean);
     return `
       ${renderHero()}
+      ${renderBranchSection()}
       ${renderStatusSection({
         id: "in-progress",
         kicker: "In Progress",
@@ -94,16 +93,7 @@
         description: "已经形成稳定结论、锚点或可复核阶段成果的任务放在这里。",
         groups: home.done_groups || [],
       })}
-      ${renderChartSection({
-        id: "atlas",
-        kicker: "Result Atlas",
-        title: "核心结果",
-        description: "首页只保留少量高层结果块和关键曲线，详细训练过程统一收进任务页。",
-        charts: homeCharts,
-      })}
-      ${renderBranchSection()}
       ${renderShowcasePreview(showcasePreviewItems)}
-      ${renderFixHighlights()}
     `;
   }
 
@@ -139,7 +129,7 @@
               focus
                 ? `
                   <a class="focus-item focus-item-main" href="${pathUrl(focus.path)}">
-                    <span class="badge badge-soft">${escapeHtml(focus.badge || "Focus")}</span>
+                    <div class="badge-group">${renderBadgeGroup(buildCardBadges(focus))}</div>
                     <strong>${escapeHtml(focus.title)}</strong>
                     <p>${escapeHtml(focus.summary)}</p>
                     <span>${focus.metrics.map((item) => `${escapeHtml(item.label)} ${escapeHtml(item.value)}`).join(" · ")}</span>
@@ -197,7 +187,7 @@
       <article class="result-card">
         <span class="card-accent" aria-hidden="true"></span>
         <div class="card-topline">
-          <span class="badge">${escapeHtml(card.badge || "Task")}</span>
+          <div class="badge-group">${renderBadgeGroup(buildCardBadges(card))}</div>
           <span class="card-meta">${escapeHtml(card.meta || "")}</span>
         </div>
         <h3>${escapeHtml(card.title)}</h3>
@@ -243,7 +233,7 @@
     return `
       <article class="branch-card">
         <div class="card-topline">
-          <span class="badge">${escapeHtml(branch.title)}</span>
+          <div class="badge-group">${renderBadgeGroup([{ label: branch.title, tone: "primary" }])}</div>
           <span class="card-meta">${escapeHtml(branch.status)}</span>
         </div>
         <h3>${escapeHtml(branch.summary)}</h3>
@@ -300,7 +290,13 @@
             })
           : ""
       }
-      ${renderTimelineSection(task.timeline_groups, "Task Timeline", "任务时间线", "按日期分组，每天直接展开“做了什么 / 发现了什么 / 形成了什么判断”。")}
+      ${renderTimelineSection(
+        task.timeline_groups,
+        "Task Timeline",
+        "任务时间线",
+        "按日期分组，每天直接展开“做了什么 / 发现了什么 / 形成了什么判断”。",
+        { primaryBadge: task.task_badge || task.title },
+      )}
       ${renderFindingsSection(task.findings)}
       ${renderEvidenceSection(task.evidence_links)}
       ${renderTaskShowcase(task.media_items)}
@@ -337,7 +333,7 @@
     `;
   }
 
-  function renderTimelineSection(groups, kicker, title, description) {
+  function renderTimelineSection(groups, kicker, title, description, options = {}) {
     return `
       <section class="section-block">
         <div class="section-title-row">
@@ -349,28 +345,28 @@
         </div>
         ${
           groups.length
-            ? `<div class="timeline-group-list">${groups.map((group) => renderTimelineGroup(group)).join("")}</div>`
+            ? `<div class="timeline-group-list">${groups.map((group) => renderTimelineGroup(group, options)).join("")}</div>`
             : `<div class="empty-panel">当前页面还没有整理出可展示的时间线卡片。</div>`
         }
       </section>
     `;
   }
 
-  function renderTimelineGroup(group) {
+  function renderTimelineGroup(group, options = {}) {
     return `
       <div class="timeline-group">
         <div class="timeline-group-rail">
-          <span class="timeline-group-date">${escapeHtml(group.date)}</span>
+          ${renderTimelineDateCard(group.date)}
           <span class="timeline-group-node" aria-hidden="true"></span>
         </div>
         <div class="timeline-group-cards">
-          ${group.cards.map((card) => renderTimelineCard(card)).join("")}
+          ${group.cards.map((card) => renderTimelineCard(card, options)).join("")}
         </div>
       </div>
     `;
   }
 
-  function renderTimelineCard(card) {
+  function renderTimelineCard(card, options = {}) {
     const taskLink =
       card.task_id && taskMap.get(card.task_id)
         ? `<a class="entity-chip" href="${pathUrl(taskMap.get(card.task_id).page_path)}">${escapeHtml(taskMap.get(card.task_id).title)}</a>`
@@ -378,7 +374,7 @@
     return `
       <article class="timeline-card">
         <div class="card-topline">
-          <span class="badge">${escapeHtml(card.badge || "Event")}</span>
+          <div class="badge-group">${renderBadgeGroup(buildCardBadges(card, options))}</div>
           <span class="card-meta">${taskLink}</span>
         </div>
         <h3>${escapeHtml(card.title)}</h3>
@@ -640,6 +636,24 @@
   }
 
   function renderTaskShowcase(items) {
+    return renderMediaSection({
+      items,
+      kicker: "Showcase",
+      title: "Demo 与现场素材",
+      description: "素材会按任务目录递归抓取，图片、GIF、视频都直接继承进任务页；首页只展示关键预览。",
+    });
+  }
+
+  function renderBranchShowcase(items) {
+    return renderMediaSection({
+      items,
+      kicker: "Branch Demo",
+      title: "研究线 Demo 与现场素材",
+      description: "研究线页会聚合同一条线下各任务的现场素材，方便直接回看方法落地和系统演示。",
+    });
+  }
+
+  function renderMediaSection({ items, kicker, title, description }) {
     if (!items.length) {
       return "";
     }
@@ -647,10 +661,10 @@
       <section class="section-block">
         <div class="section-title-row">
           <div>
-            <p class="eyebrow">Showcase</p>
-            <h2>Demo 与现场素材</h2>
+            <p class="eyebrow">${escapeHtml(kicker)}</p>
+            <h2>${escapeHtml(title)}</h2>
           </div>
-          <p class="section-description">素材会按任务目录递归抓取，图片、GIF、视频都直接继承进任务页；首页只展示关键预览。</p>
+          <p class="section-description">${escapeHtml(description)}</p>
         </div>
         <div class="media-grid">
           ${items.map((item) => renderMediaCard(item)).join("")}
@@ -714,6 +728,7 @@
         charts: branchCharts,
       }) : ""}
       ${renderTimelineSection(branch.timeline_groups || [], "Timeline", "研究线时间线", "同一条研究线下的任务推进合并到同一时间轴里看。")}
+      ${renderBranchShowcase(branch.media_items || [])}
       ${renderEvidenceSection(branch.evidence_links || [])}
     `;
   }
@@ -865,6 +880,40 @@
 
   function renderInlineLink(link) {
     return `<a class="inline-link" href="${pathUrl(link.path)}">${escapeHtml(link.title)}</a>`;
+  }
+
+  function buildCardBadges(card, options = {}) {
+    const badges = [];
+    const primaryBadge =
+      options.primaryBadge ||
+      (card.task_id && taskMap.get(card.task_id) ? taskMap.get(card.task_id).task_badge || taskMap.get(card.task_id).title : "");
+    if (primaryBadge) {
+      badges.push({ label: primaryBadge, tone: "primary" });
+    }
+    if (card.badge && card.badge !== primaryBadge) {
+      badges.push({ label: card.badge, tone: "secondary" });
+    }
+    return badges.length ? badges : [{ label: "Task", tone: "primary" }];
+  }
+
+  function renderBadgeGroup(badges) {
+    return badges
+      .map((badge) => `<span class="badge ${badge.tone === "secondary" ? "badge-secondary" : ""}">${escapeHtml(badge.label)}</span>`)
+      .join("");
+  }
+
+  function renderTimelineDateCard(date) {
+    const matched = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ""));
+    if (!matched) {
+      return `<div class="timeline-date-card"><span class="timeline-group-date">${escapeHtml(String(date || ""))}</span></div>`;
+    }
+    return `
+      <div class="timeline-date-card">
+        <span class="timeline-date-ym">${escapeHtml(`${matched[1]}.${matched[2]}`)}</span>
+        <strong class="timeline-date-day">${escapeHtml(matched[3])}</strong>
+        <span class="timeline-group-date">${escapeHtml(date)}</span>
+      </div>
+    `;
   }
 
   function renderDetailHero({ kicker, title, summary, status, metrics, crumbs }) {

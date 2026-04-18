@@ -1697,6 +1697,15 @@ def build_branches(
             for chart_id in task["chart_ids"]:
                 if chart_id not in related_chart_ids:
                     related_chart_ids.append(chart_id)
+        related_media_items: list[dict[str, Any]] = []
+        seen_media_paths: set[str] = set()
+        for task in related_tasks:
+            for item in task.get("media_items", []):
+                media_path = str(item.get("path", ""))
+                if not media_path or media_path in seen_media_paths:
+                    continue
+                seen_media_paths.add(media_path)
+                related_media_items.append(copy.deepcopy(item))
         branches.append(
             {
                 "id": branch_id,
@@ -1711,6 +1720,7 @@ def build_branches(
                 "timeline_groups": merged_timeline,
                 "evidence_links": [make_link(humanize_file_name(path), path) for path in profile.get("featured_paths", [])],
                 "chart_ids": related_chart_ids[:3],
+                "media_items": related_media_items,
                 "summary_cards": [
                     {
                         "eyebrow": "Branch",
