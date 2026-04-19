@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 import json
 import time
 from pathlib import Path
@@ -87,6 +88,10 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _timestamp() -> str:
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
 def _find_existing_trial_record(
     *,
     experiment_name: str,
@@ -147,6 +152,29 @@ def _score(result: dict[str, Any]) -> float:
         return float(result.get("trial_score") or -1.0)
     except Exception:
         return -1.0
+
+
+def _write_best_path_doc(winner: dict[str, Any]) -> Path:
+    docs_dir = PROJECT_ROOT / "docs" / "lelan"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    path = docs_dir / "best_path.md"
+    lines = [
+        "# LeLaN Best Path",
+        "",
+        f"- Updated: {_timestamp()}",
+        f"- Status: `confirmed_winner`",
+        f"- Experiment: `{winner.get('experiment_name')}`",
+        f"- Run: `{winner.get('run_name')}`",
+        f"- Run dir: `{winner.get('run_dir')}`",
+        f"- Best checkpoint: `{winner.get('best_ckpt_path')}`",
+        f"- success@stage: `{winner.get('trial_score')}`",
+        f"- success@100confirm: `{winner.get('success_100')}`",
+        f"- Audit report: `{winner.get('audit_report_path')}`",
+        f"- Manifest: `{winner.get('experiment_manifest_path')}`",
+        "",
+    ]
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
 
 
 def _promote_spec(spec: SearchSpec, *, stage_epochs: int) -> SearchSpec:
@@ -349,6 +377,12 @@ def run_lelan_autoresearch_loop(
 
     final_pool = list(deep_results or promoted_results or screening_results)
     summary["winner"] = max(final_pool, key=_score) if final_pool else None
+    winner = summary.get("winner")
+    if isinstance(winner, dict):
+        winner = dict(winner)
+        best_path = _write_best_path_doc(winner)
+        winner["best_path_doc"] = str(best_path)
+        summary["winner"] = winner
     summary["finished_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
     _persist_loop_summary(summary_path, summary)
     return summary

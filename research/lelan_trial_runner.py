@@ -118,6 +118,129 @@ def _write_json(path: Path, payload: dict[str, Any]) -> Path:
     return path
 
 
+def _timestamp() -> str:
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _docs_lelan_dir(repo_root: Path) -> Path:
+    path = repo_root / "docs" / "lelan"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _research_journal_path(repo_root: Path) -> Path:
+    return _docs_lelan_dir(repo_root) / "research_journal.md"
+
+
+def _line_fixes_path(repo_root: Path) -> Path:
+    return _docs_lelan_dir(repo_root) / "fixes.md"
+
+
+def _write_research_note(
+    repo_root: Path,
+    *,
+    run_name: str,
+    title: str,
+    phase: str,
+    result: dict[str, Any],
+    audit_report: dict[str, Any] | None = None,
+) -> Path:
+    note_path = _research_journal_path(repo_root)
+    phenomenon = (
+        f"trial_score={result.get('trial_score')} | "
+        f"best_success_rate={result.get('best_success_rate')} | "
+        f"collapse={result.get('collapse_detected')}"
+    )
+    reasons = result.get("collapse_reasons") or []
+    likely_causes: list[str] = []
+    if audit_report is not None:
+        for row in audit_report.get("records") or []:
+            for cause in row.get("likely_causes") or []:
+                likely_causes.append(str(cause))
+    blocks: list[str] = []
+    if not note_path.exists():
+        blocks.extend(
+            [
+                "# LeLaN Research Journal",
+                "",
+                "- This file is append-only and maintained by the LeLaN line.",
+                "- Keep `best_path.md` and the execution manual as separate stable docs; run-by-run notes are consolidated here.",
+                "- Cross-line stage summaries still belong in `docs/research_desk.md`.",
+                "",
+            ]
+        )
+    blocks.extend(
+        [
+            f"## {_timestamp()} · {phase} · {run_name}",
+            "",
+            f"- Title: {title}",
+            f"- Run: `{run_name}`",
+            f"- Phase: `{phase}`",
+            f"- Phenomenon: {phenomenon}",
+            f"- Reasons: {'; '.join(str(item) for item in reasons) if reasons else 'none'}",
+            f"- Result: best_success_rate={result.get('best_success_rate')} trial_score={result.get('trial_score')}",
+            (
+                f"- Audit report: `{result.get('audit_report_path')}`"
+                if result.get("audit_report_path")
+                else "- Audit report: none"
+            ),
+            (
+                f"- Likely causes: {json.dumps(likely_causes[:5], ensure_ascii=False)}"
+                if likely_causes
+                else "- Likely causes: none"
+            ),
+            "",
+        ]
+    )
+    with note_path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(blocks))
+    return note_path
+
+
+def _append_line_fixes_entry(
+    repo_root: Path,
+    *,
+    title: str,
+    file_scope: str,
+    background: str,
+    action_text: str,
+    result_text: str,
+    dedupe_key: str | None = None,
+) -> Path:
+    fixes_path = _line_fixes_path(repo_root)
+    marker = None if dedupe_key is None else f"<!-- dedupe:{dedupe_key} -->"
+    if marker is not None and fixes_path.exists():
+        existing = fixes_path.read_text(encoding="utf-8")
+        if marker in existing:
+            return fixes_path
+    if not fixes_path.exists():
+        fixes_path.write_text(
+            "\n".join(
+                [
+                    "# LeLaN fixes.md — LeLaN 专线事实留痕",
+                    "",
+                    "- 这份文档只记录 LeLaN 线自己的修复、故障、实验结论与执行链事件。",
+                    "- 每条记录默认追加在末尾；跨线路阶段结论再提炼到 `docs/research_desk.md`。",
+                    "",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    entry = (
+        f"\n{marker}\n" if marker is not None else "\n"
+    ) + (
+        f"### {datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S %z')} · {title}\n"
+        f"范围：`{file_scope}`\n\n"
+        f"背景：{background}\n\n"
+        f"处理：{action_text}\n\n"
+        f"结果：{result_text}\n"
+    )
+    with fixes_path.open("a", encoding="utf-8") as handle:
+        handle.write(entry)
+    return fixes_path
+
+
 def _make_unique_run_name(base_name: str, experiment_name: str, stage_epochs: int) -> str:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     return f"{base_name}__{_slugify(experiment_name)}__e{int(stage_epochs):04d}__{timestamp}"
@@ -714,6 +837,58 @@ def _record_trial_output(
     return _write_json(record_dir / f"{run_name}.json", payload)
 
 
+def _format_metric(value: Any) -> str:
+    metric = _maybe_float(value)
+    if metric is None:
+        return "未解析"
+    return f"{metric:.3f}"
+
+
+def _format_value(value: Any) -> str:
+    return "未解析" if value is None else str(value)
+
+
+def _summarize_train_result(output: dict[str, Any]) -> str:
+    summary = output.get("train_summary") or {}
+    latest_epoch = summary.get("latest_epoch")
+    completed_epochs = None
+    if isinstance(latest_epoch, int) and latest_epoch >= 0:
+        completed_epochs = latest_epoch + 1
+    kept_ckpts = [Path(path).name for path in output.get("kept_ckpt_paths") or []]
+    parts = [
+        f"run_dir={_format_value(output.get('run_dir'))}",
+        (
+            f"训练已完成 {completed_epochs} 个 epoch（latest_epoch={latest_epoch}）"
+            if completed_epochs is not None
+            else "训练完成轮次未解析"
+        ),
+        f"best_success_rate={_format_metric(output.get('best_success_rate'))}",
+        (
+            f"保留检查点={', '.join(kept_ckpts)}"
+            if kept_ckpts
+            else "保留检查点=未解析"
+        ),
+        f"待离线审计={_format_value(output.get('pending_offline_audit'))}",
+        f"summary_path={_format_value(output.get('summary_path'))}",
+    ]
+    return "；".join(parts)
+
+
+def _summarize_audit_result(output: dict[str, Any]) -> str:
+    parts = [
+        f"run_dir={_format_value(output.get('run_dir'))}",
+        f"best_success_rate={_format_metric(output.get('best_success_rate'))}",
+        f"best_success_epoch={_format_value(output.get('best_success_epoch'))}",
+        f"trial_score={_format_metric(output.get('trial_score'))}",
+        f"collapse_detected={_format_value(output.get('collapse_detected'))}",
+        f"audit_report={_format_value(output.get('audit_report_path'))}",
+    ]
+    collapse_reasons = output.get("collapse_reasons") or []
+    if collapse_reasons:
+        parts.append(f"collapse_reasons={'; '.join(str(item) for item in collapse_reasons)}")
+    return "；".join(parts)
+
+
 def _training_error_output(
     *,
     request: LeLaNTrialRequest,
@@ -821,6 +996,27 @@ def train_lelan_autoresearch_trial(request: LeLaNTrialRequest, *, log_results: b
             "train_summary": summary,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
+        _write_research_note(
+            repo_root,
+            run_name=cfg.run_name,
+            title=f"LeLaN Train Note · {cfg.run_name}",
+            phase="train_only",
+            result=output,
+        )
+        _append_line_fixes_entry(
+            repo_root,
+            title=f"LeLaN Train Note · {cfg.run_name}",
+            file_scope="research/lelan_trial_runner.py + docs/lelan/research_journal.md + docs/lelan/fixes.md",
+            background=(
+                f"候选 run `{cfg.run_name}` 完成了 train_only 阶段，需要把训练产物、"
+                "待审计状态和关键路径写入 LeLaN 专属账本，避免后续只剩 ckpt 而没有上下文。"
+            ),
+            action_text=(
+                "将该 run 的 train_only 结果追加到 `docs/lelan/research_journal.md`，"
+                "并在 `docs/lelan/fixes.md` 记录训练摘要与后续状态。"
+            ),
+            result_text=_summarize_train_result(output),
+        )
         if log_results:
             _append_results_row(
                 repo_root,
@@ -835,6 +1031,24 @@ def train_lelan_autoresearch_trial(request: LeLaNTrialRequest, *, log_results: b
             shutil.rmtree(run_dir)
         output = _training_error_output(request=request, run_dir=run_dir, exc=exc)
         _record_trial_output(repo_root, run_name=run_dir.name, output=output)
+        _write_research_note(
+            repo_root,
+            run_name=run_dir.name,
+            title=f"LeLaN Train Failure · {run_dir.name}",
+            phase="train_only",
+            result=output,
+        )
+        _append_line_fixes_entry(
+            repo_root,
+            title=f"LeLaN Train Failure · {run_dir.name}",
+            file_scope="research/lelan_trial_runner.py + docs/lelan/research_journal.md + docs/lelan/fixes.md",
+            background=(
+                f"候选 run `{run_dir.name}` 在 train_only 阶段异常退出。"
+                "如果不及时记录，后续很难区分是代码问题、环境问题还是 run 本身已经塌陷。"
+            ),
+            action_text="将这次 train_only 失败追加到 LeLaN 专属研究日志与事实账本，保留错误类型和失败原因。",
+            result_text=_summarize_train_result(output),
+        )
         if log_results:
             _append_results_row(
                 repo_root,
@@ -983,6 +1197,33 @@ def finalize_lelan_autoresearch_trial(
         "error_type": None,
     }
     _record_trial_output(repo_root, run_name=run_dir.name, output=output, audit_report=audit_report)
+    audit_title = (
+        f"LeLaN Audit Failure · {run_dir.name}"
+        if collapse_detected
+        else f"LeLaN Audit Note · {run_dir.name}"
+    )
+    _write_research_note(
+        repo_root,
+        run_name=run_dir.name,
+        title=audit_title,
+        phase="audit_only",
+        result=output,
+        audit_report=audit_report,
+    )
+    _append_line_fixes_entry(
+        repo_root,
+        title=audit_title,
+        file_scope="research/lelan_trial_runner.py + docs/lelan/research_journal.md + docs/lelan/fixes.md",
+        background=(
+            f"候选 run `{run_dir.name}` 完成了 audit_only 阶段，需要固定留痕其闸门结果、"
+            "最佳 checkpoint 与 collapse 判定，方便 LeLaN 后续搜索与复盘。"
+        ),
+        action_text=(
+            "将 audit_only 结果追加到 `docs/lelan/research_journal.md`，"
+            "并在 `docs/lelan/fixes.md` 记录成功率、最佳 checkpoint 与 collapse 信息。"
+        ),
+        result_text=_summarize_audit_result(output),
+    )
     if log_results:
         _append_results_row(
             repo_root,

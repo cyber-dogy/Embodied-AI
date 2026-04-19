@@ -1,10 +1,21 @@
-# LeLaN 研究记录目录
+# LeLaN 研究记录归档目录
 
-每次正式实验结束后，在这里新增一份中文记录，文件名固定为：
+LeLaN 现在已经有稳定文档骨架：
+
+- `../fixes.md`
+- `../research_journal.md`
+- `../best_path.md`
+- `../2026-04-19-lelan-execution-manual-zh.md`
+
+这个 `research/` 目录只保留较长的中文实验记录或归档材料，不再承担唯一入口职责。
+
+## 文件命名
+
+每次需要单独写长文记录时，文件名固定为：
 
 - `YYYY-MM-DD-lelan-<run_name>-zh.md`
 
-每份记录必须包含以下标题：
+## 长文记录建议结构
 
 1. `背景`
 2. `本轮改动`

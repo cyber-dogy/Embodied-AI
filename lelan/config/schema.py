@@ -51,6 +51,7 @@ class FlowMatchingConfig:
     num_integration_steps: int = 50
     integration_method: str = "euler"
     timestep_sampling: TimestepSamplingConfig = field(default_factory=TimestepSamplingConfig)
+    loss_weights: dict[str, float] | None = None
 
 
 @dataclass
@@ -153,6 +154,10 @@ class LeLaNExperimentConfig:
         self.ckpt_root = Path(self.ckpt_root)
         self.camera_names = tuple(str(name) for name in self.camera_names)
         self.optimizer_betas = tuple(float(beta) for beta in self.optimizer_betas)
+        if self.objective.loss_weights is not None:
+            self.objective.loss_weights = {
+                str(key): float(value) for key, value in self.objective.loss_weights.items()
+            }
         if not isinstance(self.normalization_mode, NormalizationMode):
             self.normalization_mode = NormalizationMode(str(self.normalization_mode))
 
@@ -179,6 +184,13 @@ class LeLaNExperimentConfig:
             raise ValueError("offline_eval_ckpt_every_epochs must be >= 0.")
         if float(self.gripper_close_threshold) > float(self.gripper_open_threshold):
             raise ValueError("gripper_close_threshold must be <= gripper_open_threshold.")
+        if self.objective.loss_weights is not None:
+            valid_loss_keys = {"xyz", "rot6d", "grip"}
+            unknown_keys = set(self.objective.loss_weights) - valid_loss_keys
+            if unknown_keys:
+                raise ValueError(
+                    f"objective.loss_weights contains unsupported keys: {sorted(unknown_keys)}"
+                )
 
     @property
     def ckpt_dir(self) -> Path:

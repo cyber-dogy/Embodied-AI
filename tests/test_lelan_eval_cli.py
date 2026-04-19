@@ -35,8 +35,8 @@ class LeLaNEvalCliTest(unittest.TestCase):
             "success_rate": 0.2,
             "mean_steps": 37.0,
             "episode_records": [
-                {"episode": 0, "success": False, "steps": 5, "error": "simulator runtime error: boom"},
-                {"episode": 1, "success": False, "steps": 12, "error": "simulator runtime error: boom"},
+                {"episode": 0, "success": False, "steps": 5, "error": "V-REP side -1. Return value: -1"},
+                {"episode": 1, "success": False, "steps": 12, "error": "planning runtime error: rejected"},
                 {"episode": 2, "success": True, "steps": 80, "error": None},
                 {"episode": 3, "success": False, "steps": 200, "error": None},
                 {"episode": 4, "success": False, "steps": 40, "error": "invalid predicted action: nan"},
@@ -46,11 +46,29 @@ class LeLaNEvalCliTest(unittest.TestCase):
         analysis = build_episode_analysis(result)
 
         self.assertEqual(analysis["num_successes"], 1)
-        self.assertEqual(analysis["failure_error_buckets"]["simulator_runtime_error"], 2)
+        self.assertEqual(analysis["failure_error_buckets"]["planning_runtime_error"], 2)
         self.assertEqual(analysis["failure_error_buckets"]["invalid_predicted_action"], 1)
         self.assertEqual(analysis["failure_step_buckets"]["lt_20"], 2)
         self.assertEqual(analysis["failure_step_buckets"]["at_horizon"], 1)
-        self.assertIn("planner_or_simulator_rejecting_many_predicted_actions", analysis["likely_causes"])
+        self.assertIn("planner_rejecting_many_predicted_actions", analysis["likely_causes"])
+
+    def test_build_episode_analysis_separates_true_simulator_failures(self) -> None:
+        result = {
+            "num_episodes": 4,
+            "success_rate": 0.0,
+            "mean_steps": 10.0,
+            "episode_records": [
+                {"episode": 0, "success": False, "steps": 8, "error": "simulator runtime error: boom"},
+                {"episode": 1, "success": False, "steps": 9, "error": "simulator runtime error: boom"},
+                {"episode": 2, "success": False, "steps": 11, "error": "simulator runtime error: boom"},
+                {"episode": 3, "success": False, "steps": 12, "error": None},
+            ],
+        }
+
+        analysis = build_episode_analysis(result)
+
+        self.assertEqual(analysis["failure_error_buckets"]["simulator_runtime_error"], 3)
+        self.assertIn("true_simulator_runtime_failures_dominate", analysis["likely_causes"])
 
     def test_discover_checkpoints_falls_back_to_eval_ckpts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
