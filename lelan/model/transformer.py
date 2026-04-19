@@ -201,6 +201,8 @@ class DiffusionTransformer(nn.Module):
         for block in self.transformer_blocks:
             nn.init.constant_(block.adaLN_modulation[-1].weight, 0)
             nn.init.constant_(block.adaLN_modulation[-1].bias, 0)
+        nn.init.constant_(self.output_proj.weight, 0)
+        nn.init.constant_(self.output_proj.bias, 0)
 
     def forward(self, x: Tensor, timestep: Tensor, conditioning_vec: Tensor) -> Tensor:
         _, seq_len, _ = x.shape

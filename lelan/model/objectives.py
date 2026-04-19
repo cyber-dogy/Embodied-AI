@@ -35,6 +35,12 @@ class FlowMatchingObjective(BaseObjective):
     def __init__(self, config, action_dim: int, horizon: int, do_mask_loss_for_padding: bool = False):
         super().__init__(config, action_dim, horizon)
         self.do_mask_loss_for_padding = do_mask_loss_for_padding
+        base_weights = {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0}
+        configured = getattr(config, "loss_weights", None) or {}
+        self.loss_weights = {
+            key: float(configured.get(key, default))
+            for key, default in base_weights.items()
+        }
 
     def _sample_timesteps(self, batch_size: int, device: torch.device) -> Tensor:
         if self.config.timestep_sampling.strategy_name == "uniform":
@@ -64,12 +70,20 @@ class FlowMatchingObjective(BaseObjective):
         if self.do_mask_loss_for_padding and "action_is_pad" in batch:
             valid_mask = ~batch["action_is_pad"]
             loss = loss * valid_mask.unsqueeze(-1)
+        loss_xyz = loss[..., :3].mean()
+        loss_rot6d = loss[..., 3:9].mean()
+        loss_grip = loss[..., 9:].mean()
+        total_loss = (
+            self.loss_weights["xyz"] * loss_xyz
+            + self.loss_weights["rot6d"] * loss_rot6d
+            + self.loss_weights["grip"] * loss_grip
+        )
         loss_dict = {
-            "loss_xyz": loss[..., :3].mean(),
-            "loss_rot6d": loss[..., 3:9].mean(),
-            "loss_grip": loss[..., 9:].mean(),
+            "loss_xyz": loss_xyz,
+            "loss_rot6d": loss_rot6d,
+            "loss_grip": loss_grip,
         }
-        return loss.mean(), loss_dict
+        return total_loss, loss_dict
 
     def conditional_sample(self, model: nn.Module, batch_size: int, conditioning_vec: Tensor) -> Tensor:
         device = next(model.parameters()).device

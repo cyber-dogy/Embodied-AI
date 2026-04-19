@@ -7,11 +7,20 @@ import unittest
 from unittest import mock
 
 import _bootstrap  # noqa: F401
-from research.lelan_autoresearch_loop import SearchSpec, run_lelan_autoresearch_loop
+
+_RESEARCH_IMPORT_ERROR: ModuleNotFoundError | None = None
+try:
+    from research.lelan_autoresearch_loop import SearchSpec, run_lelan_autoresearch_loop
+except ModuleNotFoundError as exc:  # pragma: no cover - depends on optional shared deps
+    _RESEARCH_IMPORT_ERROR = exc
+    SearchSpec = None  # type: ignore[assignment]
+    run_lelan_autoresearch_loop = None  # type: ignore[assignment]
 
 
 class LeLaNAutoresearchLoopTest(unittest.TestCase):
     def test_resume_skips_existing_summary_and_record_entries(self) -> None:
+        if _RESEARCH_IMPORT_ERROR is not None:
+            self.skipTest(f"shared research deps unavailable: {_RESEARCH_IMPORT_ERROR}")
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)
             (repo_root / "autoresearch_records" / "logs").mkdir(parents=True, exist_ok=True)
@@ -92,6 +101,8 @@ class LeLaNAutoresearchLoopTest(unittest.TestCase):
             self.assertEqual(len(result["screening"]), 2)
 
     def test_gate_promotes_successful_spec_to_300_and_500(self) -> None:
+        if _RESEARCH_IMPORT_ERROR is not None:
+            self.skipTest(f"shared research deps unavailable: {_RESEARCH_IMPORT_ERROR}")
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)
             (repo_root / "autoresearch_records" / "logs").mkdir(parents=True, exist_ok=True)
@@ -138,6 +149,11 @@ class LeLaNAutoresearchLoopTest(unittest.TestCase):
             self.assertEqual(len(result["deep_runs_500"]), 1)
             self.assertEqual(result["winner"]["stage_epochs"], 500)
             self.assertAlmostEqual(result["winner"]["trial_score"], 0.62)
+            best_path = repo_root / "docs" / "lelan" / "best_path.md"
+            self.assertTrue(best_path.exists())
+            best_path_text = best_path.read_text(encoding="utf-8")
+            self.assertIn("baseline_500", best_path_text)
+            self.assertIn("confirmed_winner", best_path_text)
 
 
 if __name__ == "__main__":

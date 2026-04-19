@@ -10,16 +10,31 @@ import torch
 import _bootstrap  # noqa: F401
 from lelan.config import LeLaNExperimentConfig
 from lelan.train.checkpoints import build_checkpoint_payload, load_resume_state, save_checkpoint
-from research.lelan_trial_runner import (
-    LeLaNTrialRequest,
-    _materialize_best_success_checkpoint,
-    _prepare_cfg,
-    _select_best_success_record,
-)
+
+_RESEARCH_IMPORT_ERROR: ModuleNotFoundError | None = None
+try:
+    from research.lelan_trial_runner import (
+        LeLaNTrialRequest,
+        _append_line_fixes_entry,
+        _materialize_best_success_checkpoint,
+        _prepare_cfg,
+        _select_best_success_record,
+        _write_research_note,
+    )
+except ModuleNotFoundError as exc:  # pragma: no cover - depends on optional shared deps
+    _RESEARCH_IMPORT_ERROR = exc
+    LeLaNTrialRequest = None  # type: ignore[assignment]
+    _append_line_fixes_entry = None  # type: ignore[assignment]
+    _materialize_best_success_checkpoint = None  # type: ignore[assignment]
+    _prepare_cfg = None  # type: ignore[assignment]
+    _select_best_success_record = None  # type: ignore[assignment]
+    _write_research_note = None  # type: ignore[assignment]
 
 
 class LeLaNRuntimeAndTrialRunnerTest(unittest.TestCase):
     def test_prepare_cfg_disables_rlbench_runtime_when_success_eval_is_off(self) -> None:
+        if _RESEARCH_IMPORT_ERROR is not None:
+            self.skipTest(f"shared research deps unavailable: {_RESEARCH_IMPORT_ERROR}")
         with tempfile.TemporaryDirectory() as tmp_dir:
             config_path = Path(tmp_dir) / "config.json"
             config_path.write_text(
@@ -172,8 +187,67 @@ class LeLaNRuntimeAndTrialRunnerTest(unittest.TestCase):
                 [{"epoch": 5, "success_rate": 0.35, "num_episodes": 20}],
             )
             self.assertEqual(restored["wandb_run_id"], "wandb-resume-id")
+            self.assertEqual(restored["resume_notes"], [])
+
+    def test_resume_skips_incompatible_optimizer_state_and_refreshes_scheduler_lr(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cfg = LeLaNExperimentConfig(
+                ckpt_root=Path(tmp_dir),
+                run_name="resume_skips_bad_optimizer_state",
+                resume_from_latest=True,
+                train_epochs=20,
+                lr_warmup_steps=0,
+            )
+            model = torch.nn.Linear(4, 2)
+            optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+            scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda step: 0.5 ** step)
+            scaler = torch.cuda.amp.GradScaler(enabled=False)
+            model(torch.randn(2, 4)).sum().backward()
+            optimizer.step()
+            optimizer.zero_grad(set_to_none=True)
+            scheduler.step()
+            save_checkpoint(
+                cfg.latest_ckpt_path,
+                cfg=cfg,
+                model=model,
+                ema_model=None,
+                optimizer=optimizer,
+                scheduler=scheduler,
+                scaler=scaler,
+                dataset_stats={"action": {"min": [0.0], "max": [1.0]}},
+                epoch=2,
+                global_step=7,
+                best_metric=0.2,
+                best_epoch=2,
+                best_success_rate=0.35,
+                best_success_epoch=2,
+                train_loss_history=[1.0, 0.5, 0.25],
+                valid_loss_history=[0.9, 0.6, 0.4],
+                epoch_summaries=[{"epoch": 2, "train": {"loss_total": 0.25}}],
+                checkpoint_payload_mode="full",
+                wandb_run_id=None,
+            )
+
+            payload = torch.load(cfg.latest_ckpt_path, map_location="cpu")
+            first_state = next(iter(payload["optimizer_state_dict"]["state"].values()))
+            first_state["exp_avg"] = torch.zeros(99)
+            payload["scheduler_state_dict"]["_last_lr"] = [0.0]
+            torch.save(payload, cfg.latest_ckpt_path)
+
+            resumed = load_resume_state(cfg, model, optimizer, scheduler, scaler)
+
+            self.assertTrue(resumed["resumed"])
+            self.assertTrue(any("skip optimizer_state_dict" in note for note in resumed["resume_notes"]))
+            self.assertNotEqual(scheduler.get_last_lr()[0], 0.0)
+            self.assertAlmostEqual(
+                optimizer.param_groups[0]["lr"],
+                scheduler.get_last_lr()[0],
+                places=12,
+            )
 
     def test_select_best_success_prefers_periodic_checkpoint_on_ties(self) -> None:
+        if _RESEARCH_IMPORT_ERROR is not None:
+            self.skipTest(f"shared research deps unavailable: {_RESEARCH_IMPORT_ERROR}")
         periodic = {
             "label": "epoch_0100",
             "kind": "periodic",
@@ -196,6 +270,8 @@ class LeLaNRuntimeAndTrialRunnerTest(unittest.TestCase):
         self.assertEqual(best["label"], "epoch_0100")
 
     def test_materialize_best_success_checkpoint_writes_best_success_metadata(self) -> None:
+        if _RESEARCH_IMPORT_ERROR is not None:
+            self.skipTest(f"shared research deps unavailable: {_RESEARCH_IMPORT_ERROR}")
         with tempfile.TemporaryDirectory() as tmp_dir:
             run_dir = Path(tmp_dir)
             source = run_dir / "epochs" / "epoch_0100.pt"
@@ -211,6 +287,41 @@ class LeLaNRuntimeAndTrialRunnerTest(unittest.TestCase):
             payload = torch.load(path, map_location="cpu")
             self.assertEqual(payload["best_success_rate"], 0.6)
             self.assertEqual(payload["best_success_epoch"], 99)
+
+    def test_line_doc_helpers_write_research_journal_and_fixes(self) -> None:
+        if _RESEARCH_IMPORT_ERROR is not None:
+            self.skipTest(f"shared research deps unavailable: {_RESEARCH_IMPORT_ERROR}")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+
+            journal_path = _write_research_note(
+                repo_root,
+                run_name="lelan_demo_run",
+                title="LeLaN Train Note · lelan_demo_run",
+                phase="train_only",
+                result={
+                    "trial_score": None,
+                    "best_success_rate": None,
+                    "collapse_detected": False,
+                    "collapse_reasons": [],
+                    "audit_report_path": None,
+                },
+            )
+            fixes_path = _append_line_fixes_entry(
+                repo_root,
+                title="LeLaN Train Note · lelan_demo_run",
+                file_scope="research/lelan_trial_runner.py + docs/lelan/research_journal.md + docs/lelan/fixes.md",
+                background="demo background",
+                action_text="demo action",
+                result_text="demo result",
+            )
+
+            self.assertTrue(journal_path.exists())
+            self.assertTrue(fixes_path.exists())
+            self.assertIn("LeLaN Research Journal", journal_path.read_text(encoding="utf-8"))
+            self.assertIn("lelan_demo_run", journal_path.read_text(encoding="utf-8"))
+            self.assertIn("LeLaN fixes.md", fixes_path.read_text(encoding="utf-8"))
+            self.assertIn("demo result", fixes_path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

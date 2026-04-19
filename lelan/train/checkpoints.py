@@ -153,6 +153,70 @@ def save_checkpoint(
     _save_payload(path, payload)
 
 
+def _optimizer_state_is_compatible(
+    optimizer: torch.optim.Optimizer,
+    optimizer_state_dict: dict[str, Any] | None,
+) -> tuple[bool, str | None]:
+    if not optimizer_state_dict:
+        return False, "missing optimizer_state_dict"
+
+    saved_param_groups = list(optimizer_state_dict.get("param_groups") or [])
+    current_param_groups = list(optimizer.param_groups)
+    if len(saved_param_groups) != len(current_param_groups):
+        return (
+            False,
+            "optimizer param group count mismatch: "
+            f"saved={len(saved_param_groups)} current={len(current_param_groups)}",
+        )
+
+    saved_state = dict(optimizer_state_dict.get("state") or {})
+    for group_idx, (saved_group, current_group) in enumerate(zip(saved_param_groups, current_param_groups)):
+        saved_param_ids = list(saved_group.get("params") or [])
+        current_params = list(current_group.get("params") or [])
+        if len(saved_param_ids) != len(current_params):
+            return (
+                False,
+                "optimizer param count mismatch in group "
+                f"{group_idx}: saved={len(saved_param_ids)} current={len(current_params)}",
+            )
+        for param_idx, (saved_param_id, current_param) in enumerate(zip(saved_param_ids, current_params)):
+            param_state = saved_state.get(saved_param_id)
+            if not isinstance(param_state, dict):
+                continue
+            for tensor_key in ("exp_avg", "exp_avg_sq", "max_exp_avg_sq"):
+                saved_tensor = param_state.get(tensor_key)
+                if not torch.is_tensor(saved_tensor):
+                    continue
+                if tuple(saved_tensor.shape) != tuple(current_param.shape):
+                    return (
+                        False,
+                        "optimizer state shape mismatch in group "
+                        f"{group_idx}, param {param_idx}, key={tensor_key}: "
+                        f"saved={tuple(saved_tensor.shape)} current={tuple(current_param.shape)}",
+                    )
+    return True, None
+
+
+def _sync_optimizer_lrs_from_scheduler(
+    optimizer: torch.optim.Optimizer,
+    scheduler: LambdaLR,
+) -> None:
+    last_lrs = list(scheduler.get_last_lr())
+    for group_idx, param_group in enumerate(optimizer.param_groups):
+        if group_idx >= len(last_lrs):
+            break
+        param_group["lr"] = float(last_lrs[group_idx])
+
+
+def _refresh_lambda_scheduler_last_lr(scheduler: LambdaLR) -> None:
+    if not hasattr(scheduler, "lr_lambdas"):
+        return
+    refreshed_lrs: list[float] = []
+    for base_lr, lr_lambda in zip(scheduler.base_lrs, scheduler.lr_lambdas):
+        refreshed_lrs.append(float(base_lr) * float(lr_lambda(int(scheduler.last_epoch))))
+    scheduler._last_lr = refreshed_lrs
+
+
 def load_resume_state(
     cfg: LeLaNExperimentConfig,
     model: torch.nn.Module,
@@ -176,6 +240,7 @@ def load_resume_state(
             "success_eval_history": [],
             "wandb_run_id": None,
             "ema_state_dict": None,
+            "resume_notes": [],
         }
 
     payload = torch.load(cfg.latest_ckpt_path, map_location="cpu")
@@ -184,12 +249,29 @@ def load_resume_state(
             "Cannot resume from a lightweight LeLaN checkpoint. "
             "Re-run with checkpoint_payload_mode='full' or disable resume."
         )
+    resume_notes: list[str] = []
     model.load_state_dict(payload["model_state_dict"])
-    optimizer.load_state_dict(payload["optimizer_state_dict"])
-    scheduler.load_state_dict(payload["scheduler_state_dict"])
+    optimizer_state_dict = payload.get("optimizer_state_dict")
+    optimizer_state_ok, optimizer_reason = _optimizer_state_is_compatible(optimizer, optimizer_state_dict)
+    if optimizer_state_ok:
+        optimizer.load_state_dict(optimizer_state_dict)
+    else:
+        resume_notes.append(f"skip optimizer_state_dict: {optimizer_reason}")
+
+    scheduler_state = payload.get("scheduler_state_dict")
+    if scheduler_state is not None:
+        try:
+            scheduler.load_state_dict(scheduler_state)
+            _refresh_lambda_scheduler_last_lr(scheduler)
+            _sync_optimizer_lrs_from_scheduler(optimizer, scheduler)
+        except Exception as exc:  # noqa: BLE001
+            resume_notes.append(f"skip scheduler_state_dict: {exc}")
     scaler_state = payload.get("scaler_state_dict")
     if scaler_state:
-        scaler.load_state_dict(scaler_state)
+        try:
+            scaler.load_state_dict(scaler_state)
+        except Exception as exc:  # noqa: BLE001
+            resume_notes.append(f"skip scaler_state_dict: {exc}")
     completed_epoch = int(payload.get("completed_epoch", -1))
     return {
         "resumed": True,
@@ -206,6 +288,7 @@ def load_resume_state(
         "success_eval_history": list(payload.get("success_eval_history") or []),
         "wandb_run_id": payload.get("wandb_run_id"),
         "ema_state_dict": payload.get("ema_state_dict"),
+        "resume_notes": resume_notes,
     }
 
 

@@ -87,7 +87,16 @@ def train_experiment(cfg: LeLaNExperimentConfig) -> dict[str, Any]:
     best_success_epoch = resume_state["best_success_epoch"]
     global_step = int(resume_state["global_step"])
     start_epoch = int(resume_state["start_epoch"])
+    resume_notes = list(resume_state.get("resume_notes") or [])
     run_started_at = time.perf_counter()
+
+    if resume_state["dataset_stats"] is not None:
+        model.dataset_stats = dataset_stats
+        if ema_model is not None:
+            ema_model.dataset_stats = dataset_stats
+
+    for note in resume_notes:
+        LOGGER.warning("[resume] %s", note)
 
     sample_batch_cpu = next(iter(dataloader_train))
     nan_streak = 0

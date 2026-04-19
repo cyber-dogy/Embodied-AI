@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import sys
 from pathlib import Path
 
@@ -52,6 +51,4 @@ def bootstrap_local_cli_imports() -> Path:
     repo_root = Path(__file__).resolve().parents[2]
     _prioritize_repo_root(repo_root)
     _purge_foreign_local_modules(repo_root)
-    for name in ("common", "envs", "lelan"):
-        importlib.import_module(name)
     return repo_root
