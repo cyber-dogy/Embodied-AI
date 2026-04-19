@@ -1,5 +1,5 @@
 window.homepageData = {
-  "generated_at": "2026-04-18T20:39:21+08:00",
+  "generated_at": "2026-04-19T09:34:41+08:00",
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
@@ -8,7 +8,7 @@ window.homepageData = {
   "stats": {
     "task_count": 5,
     "branch_count": 4,
-    "timeline_count": 25,
+    "timeline_count": 19,
     "validated_rows": 9
   },
   "home": {
@@ -24,11 +24,11 @@ window.homepageData = {
               "pdit"
             ],
             "badge": "PDIT 主线",
-            "title": "PDIT baseline 在 500 epoch 锚定 0.95@20 / 0.85@100",
-            "summary": "修复训练与审计链后，点云主线不再在 300-500 epoch 崩塌，当前最强策略已经有 20 回合与 100 回合两轮复核。",
+            "title": "点云 baseline 恢复为行为锚点",
+            "summary": "PDIT 已经从“能不能学起来”的问题，转成“后期泛化能否继续稳定”的问题。点云 baseline 继续是整个仓库的行为锚点，后续任何新路线都应先与这条线对齐再比较。",
             "metrics": [
               {
-                "label": "success@20",
+                "label": "best success@20",
                 "value": "0.95"
               },
               {
@@ -36,11 +36,11 @@ window.homepageData = {
                 "value": "0.85"
               },
               {
-                "label": "锚点",
-                "value": "@500"
+                "label": "best epoch",
+                "value": "500"
               }
             ],
-            "meta": "PDIT 基线恢复与锚点固化",
+            "meta": "阶段总结 · Research Desk",
             "path": "homepage/tasks/pdit-anchor/"
           }
         ]
@@ -55,24 +55,105 @@ window.homepageData = {
             "branch_ids": [
               "pdit"
             ],
-            "badge": "Baseline Recovery",
-            "title": "点云训练栈修稳后，Baseline@100 重新回到 0.90 success@20",
-            "summary": "这一天的核心不是又跑了一次实验，而是把导致历史结论失真的训练、保存和审计问题真正修通了。",
+            "badge": "PDIT 主线",
+            "title": "DiT 动力学改良候选达到 0.65@100，但还不能直接替代 baseline",
+            "summary": "这条动力学候选证明“结构改进方向值得继续研究”，但它还没有完成对 500 epoch 行为锚点的替代。PDIT 当前仍应以 baseline 为主线，把这条路线当成有前景但证据未闭环的候选。",
             "metrics": [
               {
-                "label": "success@100",
-                "value": "0.90"
+                "label": "best success@20",
+                "value": "0.95"
               },
               {
-                "label": "关键修复",
-                "value": "6"
+                "label": "100 回合复核",
+                "value": "0.85"
               },
               {
-                "label": "best valid",
-                "value": "0.661"
+                "label": "best epoch",
+                "value": "500"
               }
             ],
-            "meta": "从“学不会”转向“后期如何稳住”",
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/pdit-anchor/"
+          },
+          {
+            "date": "2026-04-08",
+            "group": "done",
+            "task_id": "pdit-anchor",
+            "branch_ids": [
+              "pdit"
+            ],
+            "badge": "PDIT 主线",
+            "title": "数据统计增强路线被确认掺入观测语义错误，原有通过闸门的结果作废",
+            "summary": "原来那条 0.55 结果不能再作为“数据统计增强可行”的证据，应该被解释为被 bug 污染的历史记录。PDIT 后续不能再把这条路线当成结构改进支撑，只能把它作为一次重要的排雷工作归档。",
+            "metrics": [
+              {
+                "label": "best success@20",
+                "value": "0.95"
+              },
+              {
+                "label": "100 回合复核",
+                "value": "0.85"
+              },
+              {
+                "label": "best epoch",
+                "value": "500"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/pdit-anchor/"
+          },
+          {
+            "date": "2026-04-08",
+            "group": "done",
+            "task_id": "pdit-anchor",
+            "branch_ids": [
+              "pdit"
+            ],
+            "badge": "PDIT 主线",
+            "title": "500 epoch 主线通过补评估保住长期行为锚点",
+            "summary": "PDIT 不仅在短周期上恢复了可训练性，也在长周期上保住了可复核的行为锚点。后续新路线如果不能在同等级别的行为证据上超过这条主线，就不应该轻易替换它。",
+            "metrics": [
+              {
+                "label": "best success@20",
+                "value": "0.95"
+              },
+              {
+                "label": "100 回合复核",
+                "value": "0.85"
+              },
+              {
+                "label": "best epoch",
+                "value": "500"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/pdit-anchor/"
+          },
+          {
+            "date": "2026-04-08",
+            "group": "done",
+            "task_id": "pdit-anchor",
+            "branch_ids": [
+              "pdit"
+            ],
+            "badge": "PDIT 主线",
+            "title": "100 epoch 离线审计确认修复后 baseline 不再“学不会”",
+            "summary": "这一轮审计把问题从“PDIT 学不会”改写成“修复工程链后它其实能学起来，而且已经明显超过最低可用门槛”。从这里开始，PDIT 的研究重点不再是证明可训练性，而是进一步追稳定性和长期泛化。",
+            "metrics": [
+              {
+                "label": "best success@20",
+                "value": "0.95"
+              },
+              {
+                "label": "100 回合复核",
+                "value": "0.85"
+              },
+              {
+                "label": "best epoch",
+                "value": "500"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
             "path": "homepage/tasks/pdit-anchor/"
           }
         ]
@@ -112,6 +193,38 @@ window.homepageData = {
     ],
     "in_progress_groups": [
       {
+        "date": "2026-04-19",
+        "cards": [
+          {
+            "date": "2026-04-19",
+            "group": "in_progress",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 主线",
+            "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
+            "summary": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。后续工作重点不再是继续开相似对照，而是补齐 epoch_0100 点位、收束共享审计叙事，并把这条长训结果稳定固化为新的阶段证据。",
+            "metrics": [
+              {
+                "label": "早期锚点",
+                "value": "0.55@100"
+              },
+              {
+                "label": "best success",
+                "value": "0.75"
+              },
+              {
+                "label": "500 轮审计",
+                "value": "0.75"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/mdit-mainline/"
+          }
+        ]
+      },
+      {
         "date": "2026-04-18",
         "cards": [
           {
@@ -122,23 +235,50 @@ window.homepageData = {
               "mdit"
             ],
             "badge": "MDIT 主线",
-            "title": "MDIT 主线恢复 100→500 续训接管",
-            "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+            "title": "恢复 100→500 续训接管",
+            "summary": "MDIT 现在最重要的工作已经明确，不是再开更多相似候选，而是把当前最佳路线稳定推进到 500 epoch 并完成共享审计。主线终于从筛选期进入长训接管期。",
             "metrics": [
               {
-                "label": "当前锚点",
+                "label": "早期锚点",
                 "value": "0.55@100"
               },
               {
-                "label": "续训目标",
-                "value": "500"
+                "label": "best success",
+                "value": "0.75"
               },
               {
-                "label": "状态",
-                "value": "恢复中"
+                "label": "500 轮审计",
+                "value": "0.75"
               }
             ],
-            "meta": "主线从筛选期进入长训接管期",
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/mdit-mainline/"
+          },
+          {
+            "date": "2026-04-18",
+            "group": "in_progress",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 对照线",
+            "title": "严格 MTDP 对照未过共享闸门",
+            "summary": "严格 MTDP 对照已经完成“值得不值得继续投入”的首轮回答，目前结论是否定的。项目不再把预算继续铺在这条线上，而是回到唯一已过审的 RGB+文本主线。",
+            "metrics": [
+              {
+                "label": "早期锚点",
+                "value": "0.55@100"
+              },
+              {
+                "label": "best success",
+                "value": "0.75"
+              },
+              {
+                "label": "500 轮审计",
+                "value": "0.75"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
             "path": "homepage/tasks/mdit-mainline/"
           }
         ]
@@ -153,24 +293,147 @@ window.homepageData = {
             "branch_ids": [
               "mdit"
             ],
-            "badge": "RGB+Text Anchor",
-            "title": "RGB+Text 当前锚点固定为 0.55@100，所有对照暂未越线",
-            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，平滑动作对照和 faithful recipe 对照的首轮推进都没能完成接管。",
+            "badge": "MDIT 对照线",
+            "title": "稳定化与 faithful 对照完成分流，主线不再被弱候选带偏",
+            "summary": "稳定化对照已经被判定为弱线，不再作为主方向推进；faithful 对照可以继续保留为正式对照，但它的首轮失败不能被解释成结构结论。主线从这一天开始重新收束，而不是继续发散。",
             "metrics": [
               {
-                "label": "epoch 50",
-                "value": "0.25"
+                "label": "早期锚点",
+                "value": "0.55@100"
               },
               {
-                "label": "epoch 100",
-                "value": "0.55"
+                "label": "best success",
+                "value": "0.75"
               },
               {
-                "label": "对照线",
-                "value": "2"
+                "label": "500 轮审计",
+                "value": "0.75"
               }
             ],
-            "meta": "研究线开始从扩散筛选重新收束",
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/mdit-mainline/"
+          },
+          {
+            "date": "2026-04-17",
+            "group": "in_progress",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 主线",
+            "title": "共享审计确认 0.55@100 锚点并冻结当前最佳路线",
+            "summary": "0.55@100 是当前唯一经过共享审计链确认的 RGB+文本锚点。后续路线可以继续挑战，但必须先在同一口径下超过它，否则都只能算对照线。",
+            "metrics": [
+              {
+                "label": "早期锚点",
+                "value": "0.55@100"
+              },
+              {
+                "label": "best success",
+                "value": "0.75"
+              },
+              {
+                "label": "500 轮审计",
+                "value": "0.75"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/mdit-mainline/"
+          }
+        ]
+      },
+      {
+        "date": "2026-04-16",
+        "cards": [
+          {
+            "date": "2026-04-16",
+            "group": "in_progress",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 主线",
+            "title": "共享评估契约与后台守护链固化为标准执行方式",
+            "summary": "MDIT 从这一步起不再只是零散实验集合，而是一条可托管、可恢复、可比较的研究线；后面的锚点冻结和续训接管才有真正可追踪的 lineage。",
+            "metrics": [
+              {
+                "label": "早期锚点",
+                "value": "0.55@100"
+              },
+              {
+                "label": "best success",
+                "value": "0.75"
+              },
+              {
+                "label": "500 轮审计",
+                "value": "0.75"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/mdit-mainline/"
+          }
+        ]
+      },
+      {
+        "date": "2026-04-15",
+        "cards": [
+          {
+            "date": "2026-04-15",
+            "group": "in_progress",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 主线",
+            "title": "faithful RGB+文本默认路径与共享评估口径定版",
+            "summary": "从这一步开始，MDIT 主线终于拥有可以持续复现和解释的默认配方；后续任何锚点、对照和长训结果，才开始具有真正的可比性。",
+            "metrics": [
+              {
+                "label": "早期锚点",
+                "value": "0.55@100"
+              },
+              {
+                "label": "best success",
+                "value": "0.75"
+              },
+              {
+                "label": "500 轮审计",
+                "value": "0.75"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
+            "path": "homepage/tasks/mdit-mainline/"
+          }
+        ]
+      },
+      {
+        "date": "2026-04-13",
+        "cards": [
+          {
+            "date": "2026-04-13",
+            "group": "in_progress",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 主线",
+            "title": "早期兼容排查确认混合消融不能直接支持结构结论",
+            "summary": "MDIT 不能靠“把能跑的东西拼起来”推进；后续所有结论都必须建立在单一路径、单一评估语义和清晰命名上，否则主线会再次失真。",
+            "metrics": [
+              {
+                "label": "早期锚点",
+                "value": "0.55@100"
+              },
+              {
+                "label": "best success",
+                "value": "0.75"
+              },
+              {
+                "label": "500 轮审计",
+                "value": "0.75"
+              }
+            ],
+            "meta": "阶段总结 · Research Desk",
             "path": "homepage/tasks/mdit-mainline/"
           }
         ]
@@ -185,13 +448,13 @@ window.homepageData = {
             "branch_ids": [
               "lelan"
             ],
-            "badge": "LeLaN",
-            "title": "LeLaN 自动研究链路完成首轮固化",
-            "summary": "先把 5 路 RGB、3 帧观测、8 步动作的主线配方，以及 EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
+            "badge": "LeLaN 执行线",
+            "title": "自动研究链路与 100/300/500 闸门定版",
+            "summary": "LeLaN 现在首先是一条“执行线”，目标是把正式实验沉淀成可长期追加的研究档案；在 100 epoch 结果没有越过闸门前，不应优先把预算投入更激进的结构改动。",
             "metrics": [
               {
-                "label": "观测帧",
-                "value": "3"
+                "label": "输入",
+                "value": "5 路 RGB / 3 帧"
               },
               {
                 "label": "动作步数",
@@ -202,37 +465,37 @@ window.homepageData = {
                 "value": "0.45"
               }
             ],
-            "meta": "当前还是工程铺设期，结果页会在正式 run 后变厚",
+            "meta": "阶段总结 · Research Desk",
             "path": "homepage/tasks/lelan-pipeline/"
           }
         ]
       }
     ],
     "current_focus": {
-      "date": "2026-04-18",
+      "date": "2026-04-19",
       "group": "in_progress",
       "task_id": "mdit-mainline",
       "branch_ids": [
         "mdit"
       ],
       "badge": "MDIT 主线",
-      "title": "MDIT 主线恢复 100→500 续训接管",
-      "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+      "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
+      "summary": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。后续工作重点不再是继续开相似对照，而是补齐 epoch_0100 点位、收束共享审计叙事，并把这条长训结果稳定固化为新的阶段证据。",
       "metrics": [
         {
-          "label": "当前锚点",
+          "label": "早期锚点",
           "value": "0.55@100"
         },
         {
-          "label": "续训目标",
-          "value": "500"
+          "label": "best success",
+          "value": "0.75"
         },
         {
-          "label": "状态",
-          "value": "恢复中"
+          "label": "500 轮审计",
+          "value": "0.75"
         }
       ],
-      "meta": "主线从筛选期进入长训接管期",
+      "meta": "阶段总结 · Research Desk",
       "path": "homepage/tasks/mdit-mainline/"
     }
   },
@@ -590,7 +853,7 @@ window.homepageData = {
     {
       "id": "pdit-anchor",
       "title": "PDIT 基线恢复与锚点固化",
-      "summary": "把点云主线从工程不稳定状态修回到可复核的行为锚点，并留下 checkpoint、审计与回归证据。",
+      "summary": "PDIT 现在仍是全仓库最稳定的行为锚点。训练链、保存链和离线审计链修稳后，点云 baseline 在 100 epoch 上先证明“不是学不会”，在 500 epoch 上又通过补评估保住了 0.95 的最佳行为结果，根目录重整后的 100 回合成功率 复核仍有 0.85。同时，数据统计增强路线已经因为语义 bug 被作废，dropout=0.0 + 最终层零初始化 这条 DiT 动力学候选虽然到过 0.65@100，但还没有足够证据替代当前锚点。",
       "status": "已验证",
       "status_group": "done",
       "page_path": "homepage/tasks/pdit-anchor/",
@@ -612,7 +875,7 @@ window.homepageData = {
           "value": "500"
         }
       ],
-      "report_intro": "PDIT 这条线的任务不是继续堆实验数量，而是把点云主线从“曾经不可信的训练栈”修成一个能反复复核、能承接后续比较的稳定锚点。",
+      "report_intro": "PDIT 现在仍是全仓库最稳定的行为锚点。训练链、保存链和离线审计链修稳后，点云 baseline 在 100 epoch 上先证明“不是学不会”，在 500 epoch 上又通过补评估保住了 0.95 的最佳行为结果，根目录重整后的 100 回合成功率 复核仍有 0.85。同时，数据统计增强路线已经因为语义 bug 被作废，dropout=0.0 + 最终层零初始化 这条 DiT 动力学候选虽然到过 0.65@100，但还没有足够证据替代当前锚点。",
       "summary_cards": [
         {
           "eyebrow": "Anchor",
@@ -697,6 +960,42 @@ window.homepageData = {
           "cards": [
             {
               "badge": "PDIT 主线",
+              "title": "点云 baseline 恢复为行为锚点",
+              "summary": "PDIT 早期的低成功率同时混杂了训练、保存和离线审计链路的问题，导致当时很难判断是策略学不会，还是工程链路把原本可用的结果压坏了。 先把训练、保存和审计三条链修稳，再用同一套离线审计口径重新复核 baseline，只有工程链可信后，结构改动和泛化结论才有比较价值。",
+              "date_key": "2026-04-09",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-09"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "PDIT 已经从“能不能学起来”的问题，转成“后期泛化能否继续稳定”的问题。点云 baseline 继续是整个仓库的行为锚点，后续任何新路线都应先与这条线对齐再比较。",
+              "links": [
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                },
+                {
+                  "title": "训练模型审计",
+                  "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+                },
+                {
+                  "title": "checkpoint 清单",
+                  "path": "docs/top10-checkpoint-manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
               "title": "根目录重整后的最优策略复核通过",
               "summary": "对同一 best_success checkpoint 重新做行为复核，确认仓库结构重整没有把当前最优策略改坏。",
               "metrics": [
@@ -764,6 +1063,150 @@ window.homepageData = {
         {
           "date": "2026-04-08",
           "cards": [
+            {
+              "badge": "PDIT 主线",
+              "title": "DiT 动力学改良候选达到 0.65@100，但还不能直接替代 baseline",
+              "summary": "在 baseline 已经恢复后，项目需要判断晚期漂移有没有结构层面的改良方向，而不是只知道“当前基线能跑”。 把这组动力学改法单独拉成一条候选线，用同样的 100 epoch 行为审计检验它是否真比现有主线更强，同时观察 best_valid 是否仍然可靠。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "这条动力学候选证明“结构改进方向值得继续研究”，但它还没有完成对 500 epoch 行为锚点的替代。PDIT 当前仍应以 baseline 为主线，把这条路线当成有前景但证据未闭环的候选。",
+              "links": [
+                {
+                  "title": "DiT 动力学候选审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130.json"
+                },
+                {
+                  "title": "DiT 动力学候选审计日志",
+                  "path": "autoresearch_records/logs/h2_dit_dynamics_100_audit.log"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "数据统计增强路线被确认掺入观测语义错误，原有通过闸门的结果作废",
+              "summary": "最初“数据统计 + 数据增强”路线在 100 epoch 上一度拿到 0.55，表面上像是一条勉强可保留的候选，但这条结果后来被发现不能直接支持结构结论。 先修正增强语义，再重跑同一路线；只有在 bug 修掉后结果仍然成立，才有资格被解释成“数据统计增强有价值”。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "原来那条 0.55 结果不能再作为“数据统计增强可行”的证据，应该被解释为被 bug 污染的历史记录。PDIT 后续不能再把这条路线当成结构改进支撑，只能把它作为一次重要的排雷工作归档。",
+              "links": [
+                {
+                  "title": "原始数据统计增强审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914.json"
+                },
+                {
+                  "title": "修正后重跑审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_fixed_stats_aug_100__e0100__20260408_124213.json"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "500 epoch 主线通过补评估保住长期行为锚点",
+              "summary": "500 epoch 主线训练完成后，原始的全量 audit sweep 一度因为超时看起来像失败，如果直接把这件事解释成训练崩溃，就会把已经跑出来的长期主线误判为无效。 不把超时直接当成 collapse，而是把关键 checkpoint 的成功率逐个补齐，只要长期主线的关键行为证据还在，就继续把…",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "PDIT 不仅在短周期上恢复了可训练性，也在长周期上保住了可复核的行为锚点。后续新路线如果不能在同等级别的行为证据上超过这条主线，就不应该轻易替换它。",
+              "links": [
+                {
+                  "title": "baseline_500 审计报告",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json"
+                },
+                {
+                  "title": "epoch_0500 人工评估",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json"
+                },
+                {
+                  "title": "100 回合复核",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "100 epoch 离线审计确认修复后 baseline 不再“学不会”",
+              "summary": "在修复训练、保存和审计链之前，PDIT 的低成功率很难解释清楚，到底是任务本身太难，还是工程链路把本来可用的策略压坏了。 先用修复后的 100 epoch baseline 做一次最直接的共享审计，验证工程修复之后策略是否已经能稳定完成任务，而不是继续在不可信的训练栈上猜原因。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "这一轮审计把问题从“PDIT 学不会”改写成“修复工程链后它其实能学起来，而且已经明显超过最低可用门槛”。从这里开始，PDIT 的研究重点不再是证明可训练性，而是进一步追稳定性和长期泛化。",
+              "links": [
+                {
+                  "title": "baseline_100 审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048.json"
+                },
+                {
+                  "title": "baseline_100 审计日志",
+                  "path": "autoresearch_records/logs/baseline_100_audit.log"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
             {
               "badge": "Repair",
               "title": "训练与离线审计链关键 bug 修完",
@@ -1012,72 +1455,72 @@ window.homepageData = {
     {
       "id": "mdit-mainline",
       "title": "MDIT RGB+Text 主线推进",
-      "summary": "围绕 RGB+Text 主线、平滑动作对照、faithful recipe 对照与严格 MTDP 对照的筛选结果，逐步把 100→500 续训接管整理成一条可持续推进的研究主线。",
+      "summary": "MDIT 当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；在此基础上，同一路线的 100 -> 500 epoch 续训已经完成共享审计，并给出 0.75@300 与 0.75@500 的新结果，说明长训确实把行为上限抬了上去。不过这次 500 epoch 审计缺失了 epoch_0100 点位，trial 仍被自动标成 collapse，因此当前更准确的任务不是再开新线，而是补齐共享审计叙事。",
       "status": "推进中",
       "status_group": "in_progress",
       "page_path": "homepage/tasks/mdit-mainline/",
       "branch_ids": [
         "mdit"
       ],
-      "latest_update": "2026-04-18",
+      "latest_update": "2026-04-19",
       "hero_metrics": [
         {
-          "label": "当前锚点",
+          "label": "早期锚点",
           "value": "0.55@100"
         },
         {
-          "label": "epoch 50",
-          "value": "0.25"
+          "label": "best success",
+          "value": "0.75"
         },
         {
-          "label": "续训进度",
-          "value": "epoch 99"
+          "label": "500 轮审计",
+          "value": "0.75"
         }
       ],
-      "report_intro": "MDIT 这条线当前最重要的不是再开更多名字相似的 run，而是把 RGB+Text 主线的筛选、冻结、接管和 500 epoch 续训放在同一条研究叙事里看清楚。",
+      "report_intro": "MDIT 当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；在此基础上，同一路线的 100 -> 500 epoch 续训已经完成共享审计，并给出 0.75@300 与 0.75@500 的新结果，说明长训确实把行为上限抬了上去。不过这次 500 epoch 审计缺失了 epoch_0100 点位，trial 仍被自动标成 collapse，因此当前更准确的任务不是再开新线，而是补齐共享审计叙事。",
       "summary_cards": [
         {
           "eyebrow": "Anchor",
-          "title": "RGB+Text 当前锚点固定在 0.55@100",
-          "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有其他对照必须超过的门槛。",
+          "title": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
+          "body": "0.55@100 仍是当前锁定的早期锚点；在此基础上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明这条线不是只能停在 100 epoch。",
           "metrics": [
-            {
-              "label": "epoch 50",
-              "value": "0.25"
-            },
             {
               "label": "epoch 100",
               "value": "0.55"
             },
             {
-              "label": "状态",
-              "value": "已冻结"
+              "label": "epoch 300",
+              "value": "0.75"
+            },
+            {
+              "label": "epoch 500",
+              "value": "0.75"
             }
           ]
         },
         {
           "eyebrow": "Resume",
-          "title": "100→500 续训接管已经恢复",
-          "body": "这轮不是随便补跑，而是把 optimizer state 不兼容、scheduler lr 重算和 watchdog 假接管一起修好后，重新把长训挂到当前 best-route 上。",
+          "title": "100→500 续训接管已经真正跑通并完成共享审计",
+          "body": "这轮不只是把 supervisor 和 optimizer 兼容补上，而是已经让同一条 best-route lineage 从 epoch_0100 真正续到 500，并拿回可用于判断的共享审计结果。",
           "metrics": [
             {
-              "label": "目标",
-              "value": "500 epoch"
+              "label": "best success",
+              "value": "0.75"
             },
             {
-              "label": "当前 best",
-              "value": "0.55@100"
+              "label": "best epoch",
+              "value": "300"
             },
             {
               "label": "状态",
-              "value": "resume"
+              "value": "已审计"
             }
           ]
         },
         {
           "eyebrow": "Screening",
-          "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经分流",
-          "body": "平滑动作对照只到 0.35，faithful recipe 首败是缓存/网络问题，严格 MTDP 对照没过共享 gate。主线不再被弱候选反复打断。",
+          "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经完成出清",
+          "body": "平滑动作对照只到 0.35，faithful 首败被确认是缓存 / 网络问题，严格 MTDP 对照也没有越过共享闸门。主线预算已经重新收束，不再被相似弱候选打断。",
           "metrics": [
             {
               "label": "stabilized@100",
@@ -1085,7 +1528,7 @@ window.homepageData = {
             },
             {
               "label": "faithful",
-              "value": "offline fix"
+              "value": "启动链故障"
             },
             {
               "label": "严格 MTDP",
@@ -1094,29 +1537,138 @@ window.homepageData = {
           ]
         },
         {
-          "eyebrow": "Contract",
-          "title": "研究线已经有固定的执行与审计口径",
-          "body": "执行手册、当前主线路径和研究日志三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
+          "eyebrow": "Audit",
+          "title": "当前缺口是补齐 100 epoch 审计点位，而不是再开新 run",
+          "body": "500 续训 run 当前仍被自动标成 collapse，不是因为 300/500 表现差，而是因为这个续训 run 的共享审计缺了 epoch_0100 点位。下一步应该先把审计叙事补完整。",
           "metrics": [
             {
-              "label": "manual",
-              "value": "已固化"
+              "label": "trial_score",
+              "value": "-1.0"
             },
             {
-              "label": "journal",
-              "value": "append-only"
+              "label": "100 点位",
+              "value": "缺失"
             },
             {
-              "label": "audit chain",
-              "value": "共享"
+              "label": "recipe drift",
+              "value": "无"
             }
           ]
         }
       ],
       "timeline_groups": [
         {
+          "date": "2026-04-19",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
+              "summary": "100 epoch 锁定锚点之后，MDIT 一直缺一条真正跑完并完成同口径共享审计的长训主线。没有这一步，项目虽然知道当前最优是 0.55@100，却仍无法回答“同一路线继续训到 300/500 epoch 后能不能真正变强”。 先把 100 -> 500 epoch 的续训接管跑通，再用同一套共…",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-19"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。后续工作重点不再是继续开相似对照，而是补齐 epoch_0100 点位、收束共享审计叙事，并把这条长训结果稳定固化为新的阶段证据。",
+              "links": [
+                {
+                  "title": "500 续训审计记录",
+                  "path": "autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
           "date": "2026-04-18",
           "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "恢复 100→500 续训接管",
+              "summary": "严格 MTDP 对照未过闸门后，理论上应该立即把预算收回到当前最佳路线继续长训，但实际接管时暴露出旧 checkpoint 的优化器状态和当前参数顺序不兼容，后台还会误把旧心跳当成新进度。 把最佳路线的续训兼容和后台监督器一起修通，确保接管不是形式上的补记，而是真正能继续推进 500 epoch…",
+              "date_key": "2026-04-18",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-18"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 现在最重要的工作已经明确，不是再开更多相似候选，而是把当前最佳路线稳定推进到 500 epoch 并完成共享审计。主线终于从筛选期进入长训接管期。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            },
+            {
+              "badge": "MDIT 对照线",
+              "title": "严格 MTDP 对照未过共享闸门",
+              "summary": "在稳定化和 faithful 对照之后，项目需要回答一个更强的问题：严格 MTDP 语义在当前共享评估链下是否真的值得替代现有 RGB+文本主线。 单独建立严格 MTDP 对照线，用共享闸门做正式验证；只要它没有在同一口径下越过当前锚点，就立即停止扩张预算，并把研究焦点收回到最佳路线。",
+              "date_key": "2026-04-18",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 对照线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-18"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "严格 MTDP 对照已经完成“值得不值得继续投入”的首轮回答，目前结论是否定的。项目不再把预算继续铺在这条线上，而是回到唯一已过审的 RGB+文本主线。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            },
             {
               "badge": "Mainline Resume",
               "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
@@ -1182,6 +1734,74 @@ window.homepageData = {
         {
           "date": "2026-04-17",
           "cards": [
+            {
+              "badge": "MDIT 对照线",
+              "title": "稳定化与 faithful 对照完成分流，主线不再被弱候选带偏",
+              "summary": "在主线锚点出现后，仍需要确认稳定化对照和 faithful 对照到底是在挑战主线，还是只是在制造更多噪声；如果这一步不及时分流，主线会被多个弱候选反复打断。 用同一共享审计链先判定稳定化对照是否真的优于主线，再把 faithful 首轮失败从“方法失败”纠正回“启动链失败”，避免错杀可继续验证的路…",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 对照线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-17"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "稳定化对照已经被判定为弱线，不再作为主方向推进；faithful 对照可以继续保留为正式对照，但它的首轮失败不能被解释成结构结论。主线从这一天开始重新收束，而不是继续发散。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            },
+            {
+              "badge": "MDIT 主线",
+              "title": "共享审计确认 0.55@100 锚点并冻结当前最佳路线",
+              "summary": "当时需要一条已经过共享审计链验证的 RGB+文本锚点，否则后续所有候选都没有统一参照物，也很难决定谁该继续推进。 先用共享审计链确认 epoch_0050 与 epoch_0100 的行为结果，再把当前最佳 checkpoint、关键 epoch 和稳定别名一起冻结，让后续候选必须在同口径下超过它。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-17"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "0.55@100 是当前唯一经过共享审计链确认的 RGB+文本锚点。后续路线可以继续挑战，但必须先在同一口径下超过它，否则都只能算对照线。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            },
             {
               "badge": "Anchor",
               "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
@@ -1278,6 +1898,42 @@ window.homepageData = {
           "date": "2026-04-16",
           "cards": [
             {
+              "badge": "MDIT 主线",
+              "title": "共享评估契约与后台守护链固化为标准执行方式",
+              "summary": "即便主线配方已经回收完成，只要训练口径、评估口径、冠军冻结和后台接管没有锁死，后续 run 依然会因为配方漂移或中断恢复而失去继承关系。 把“如何训练、如何审计、如何冻结冠军、如何恢复后台运行”一起固化为主线基础设施，而不是让每一轮候选自己定义规则。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-16"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 从这一步起不再只是零散实验集合，而是一条可托管、可恢复、可比较的研究线；后面的锚点冻结和续训接管才有真正可追踪的 lineage。",
+              "links": [
+                {
+                  "title": "MDIT 执行手册",
+                  "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            },
+            {
               "badge": "Manual",
               "title": "MDIT 执行手册定版，主线推进开始有统一口径",
               "summary": "从训练命令、共享评估链、晋级门槛到接管方式，全部被整理成固定手册，后续不再靠零散命令和口口相传维持。",
@@ -1308,20 +1964,94 @@ window.homepageData = {
               ]
             }
           ]
+        },
+        {
+          "date": "2026-04-15",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "faithful RGB+文本默认路径与共享评估口径定版",
+              "summary": "在这一步之前，MDIT 主线仍混入了点云兼容默认路径、PDIT 语义残留和 EMA 默认分支，导致“当前到底在跑什么配方”无法一句话说清。 把默认路径彻底收回到 faithful 文本 + 5 路 RGB + MDIT + Flow Matching，并把不属于主线的路径全部降级为显式对照，让训练…",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-15"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "从这一步开始，MDIT 主线终于拥有可以持续复现和解释的默认配方；后续任何锚点、对照和长训结果，才开始具有真正的可比性。",
+              "links": [
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                },
+                {
+                  "title": "MDIT 执行手册",
+                  "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-13",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "早期兼容排查确认混合消融不能直接支持结构结论",
+              "summary": "MDIT 早期在 RGB、点云、PDIT backbone、PDIT 条件路径等多种改动之间来回排查时，表面上虽然不断有训练现象和验证损失，但很难说明到底是哪一个因素真正起作用。 先停止把混合消融当成主线证据，把问题拆成“哪条路径更接近 faithful MDIT 语义”和“哪条路径与共享审计口径…",
+              "date_key": "2026-04-13",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-13"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 不能靠“把能跑的东西拼起来”推进；后续所有结论都必须建立在单一路径、单一评估语义和清晰命名上，否则主线会再次失真。",
+              "links": [
+                {
+                  "title": "PDIT 与 MDIT 定位对照",
+                  "path": "docs/pdit-vs-mdit.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
         }
       ],
       "findings": [
         {
-          "title": "当前冠军仍然只有 0.55@100 的 RGB+Text 主线",
-          "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是当前这条 0.55@100 锚点线。所有对照都还没有超过它。"
+          "title": "早期锚点是 0.55@100，但长训主线已经把 300/500 拉到 0.75",
+          "body": "当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线；在同一条 best-route lineage 上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明长训确实把行为上限抬了上去。"
         },
         {
           "title": "平滑动作和其他弱对照没有解决核心失败模式",
           "body": "已知失败大头仍是“动作还没做完就到时间上限”，说明只是平滑 action head 或轻微换 recipe 并不能直接解决 MDIT 的行为瓶颈。"
         },
         {
-          "title": "真正的下一步是把 100→500 主线续训跑完并审完",
-          "body": "现在最重要的不是再开更多对照，而是在同一条 best-route lineage 上拿到完整 500 epoch 的共享 audit 结果。"
+          "title": "当前缺口不是再开新线，而是补齐 100 epoch 点位并收束共享审计叙事",
+          "body": "这次 500 续训 run 的共享审计已经证明 300/500 表现提升到 0.75，但因为 epoch_0100 点位缺失，trial_score 仍按 collapse 落档。下一步更像是补齐审计口径，而不是再新开相似路线。"
         }
       ],
       "evidence_links": [
@@ -1347,6 +2077,12 @@ window.homepageData = {
           "title": "共享审计报告",
           "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json",
           "summary": "0.25@50 / 0.55@100 的共享审计证据。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "500 续训审计记录",
+          "path": "autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json",
+          "summary": "记录了 100→500 续训主线的 0.75@300 / 0.75@500 结果，以及当前 trial_score 仍为 -1 的原因。",
           "label": "查看原始记录"
         },
         {
@@ -1466,13 +2202,20 @@ window.homepageData = {
           "Result": "Patched the autoresearch loop to inject HF_HUB_OFFLINE=1, TRANSFORMERS_OFFLINE=1, and HF_HUB_DISABLE_TELEMETRY=1 into child processes whenever the required cached checkpoints are present. Lane B should now restart from local cache instead of being blocked by external network handshakes.",
           "Audit report": "none",
           "Contract issues": "none"
+        },
+        "resume_audit": {
+          "best_success_rate": 0.75,
+          "best_success_epoch": 300,
+          "success_300": 0.75,
+          "success_500": 0.75,
+          "trial_score": -1.0
         }
       }
     },
     {
       "id": "lelan-pipeline",
       "title": "LeLaN 自动研究链路固化",
-      "summary": "优先把 LeLaN 的训练、评估、选模与审计留痕规范固定下来，为后续正式 run 和 demo 留出统一入口。",
+      "summary": "LeLaN 当前的重点仍是把执行链路固化成可长期追加的自动研究流程，而不是抢先做更激进的结构搜索。训练、评估、EMA 兼容、离线审计和 100/300/500 epoch 闸门规则已经定版，但正式 run 的行为结果还没有形成足够强的阶段结论，需要后续补齐。",
       "status": "待结果",
       "status_group": "in_progress",
       "page_path": "homepage/tasks/lelan-pipeline/",
@@ -1494,7 +2237,7 @@ window.homepageData = {
           "value": "0.45"
         }
       ],
-      "report_intro": "LeLaN 这页目前更像“执行链路报告”，因为它的首要目标是把训练、评估、选模和审计变成一套能长期追加的自动研究流程。",
+      "report_intro": "LeLaN 当前的重点仍是把执行链路固化成可长期追加的自动研究流程，而不是抢先做更激进的结构搜索。训练、评估、EMA 兼容、离线审计和 100/300/500 epoch 闸门规则已经定版，但正式 run 的行为结果还没有形成足够强的阶段结论，需要后续补齐。",
       "summary_cards": [
         {
           "eyebrow": "Recipe",
@@ -1577,6 +2320,38 @@ window.homepageData = {
         {
           "date": "2026-04-12",
           "cards": [
+            {
+              "badge": "LeLaN 执行线",
+              "title": "自动研究链路与 100/300/500 闸门定版",
+              "summary": "LeLaN 当时更缺的是训练、评估、选模和留痕的统一入口，而不是立即继续做新的结构尝试；没有固定执行口径时，即使跑出结果也难以稳定复用。 先把工程执行链和晋级门槛固定下来，把结构搜索后移，避免在基础链路还不稳定时就把一次实验的好坏解释成方法优劣。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "LeLaN 执行线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-12"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "LeLaN 现在首先是一条“执行线”，目标是把正式实验沉淀成可长期追加的研究档案；在 100 epoch 结果没有越过闸门前，不应优先把预算投入更激进的结构改动。",
+              "links": [
+                {
+                  "title": "LeLaN 执行计划",
+                  "path": "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md"
+                },
+                {
+                  "title": "LeLaN 研究记录约定",
+                  "path": "docs/lelan/research/README.md"
+                }
+              ],
+              "task_id": "lelan-pipeline"
+            },
             {
               "badge": "Recipe",
               "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
@@ -1741,16 +2516,16 @@ window.homepageData = {
     {
       "id": "infra-audit",
       "title": "训练与审计基础设施修复",
-      "summary": "把训练栈、评估栈、日志记录和修复链路统一起来，确保后续每条研究线都能留下清晰、可复盘的证据。",
+      "summary": "当前最重要的共性收敛不是再补一个日志文件，而是把“事实留痕”和“阶段总结”彻底分层。fixes.md 继续做事实源，research_desk.md 承担跨线路阶段总结，docs/mdit/research_journal.md、docs/mdit/best_path.md 以及各线路稳定文档继续保存可回查证据；homepage 后续应优先从这里提炼公开叙事，再回到底层事实源查细节。",
       "status": "长期维护",
       "status_group": "in_progress",
       "page_path": "homepage/tasks/infra-audit/",
       "branch_ids": [],
-      "latest_update": "2026-04-18",
+      "latest_update": "2026-04-19",
       "hero_metrics": [
         {
-          "label": "fixes",
-          "value": "6"
+          "label": "desk 条目",
+          "value": "15"
         },
         {
           "label": "PDIT docs",
@@ -1761,180 +2536,195 @@ window.homepageData = {
           "value": "16"
         }
       ],
-      "report_intro": "这页只保留真正影响研究推进的基础设施修复，不再把 maintenance 规则和 agent 说明写进公开首页。",
+      "report_intro": "当前最重要的共性收敛不是再补一个日志文件，而是把“事实留痕”和“阶段总结”彻底分层。fixes.md 继续做事实源，research_desk.md 承担跨线路阶段总结，docs/mdit/research_journal.md、docs/mdit/best_path.md 以及各线路稳定文档继续保存可回查证据；homepage 后续应优先从这里提炼公开叙事，再回到底层事实源查细节。",
       "summary_cards": [
         {
-          "eyebrow": "Fix Log",
-          "title": "全局修复账本已经固定成单一事实源",
-          "body": "后续每次改动、结论和关键 run 状态都在 fixes.md 里按统一模板追加，不再散落到多个临时文档里。",
+          "eyebrow": "Research Desk",
+          "title": "阶段总结已经从 fixes 日志中抽离出来",
+          "body": "research_desk 负责讲清“哪条线现在走到哪里、为什么这样判断、下一步是什么”，避免 homepage 继续从机械式记录里反向拼叙事。",
           "metrics": [
             {
-              "label": "事实源",
-              "value": "单一"
+              "label": "总结源",
+              "value": "research desk"
             },
             {
-              "label": "模板",
+              "label": "结构",
               "value": "固定"
             },
             {
-              "label": "状态",
-              "value": "追加式"
+              "label": "写法",
+              "value": "人工提炼"
             }
           ]
         },
         {
-          "eyebrow": "Archive",
-          "title": "研究文档开始按支线收束",
-          "body": "PDIT、MDIT、LeLaN 都逐步有自己的 docs 目录和稳定文档，不再把运行记录直接塞进首页或根目录。",
+          "eyebrow": "Evidence",
+          "title": "事实源和稳定证据文档继续保留",
+          "body": "fixes、研究日志、best_path 和各线路稳定文档仍然保留原始事实与证据，desk 只负责把真正改变研究判断的节点压缩出来。",
           "metrics": [
             {
-              "label": "PDIT docs",
-              "value": "8"
-            },
-            {
-              "label": "MDIT docs",
-              "value": "16"
+              "label": "fixes",
+              "value": "6"
             },
             {
               "label": "LeLaN docs",
               "value": "2"
+            },
+            {
+              "label": "状态",
+              "value": "并行保留"
             }
           ]
         }
       ],
       "timeline_groups": [
         {
+          "date": "2026-04-19",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
+              "summary": "100 epoch 锁定锚点之后，MDIT 一直缺一条真正跑完并完成同口径共享审计的长训主线。没有这一步，项目虽然知道当前最优是 0.55@100，却仍无法回答“同一路线继续训到 300/500 epoch 后能不能真正变强”。 先把 100 -> 500 epoch 的续训接管跑通，再用同一套共…",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-19"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。后续工作重点不再是继续开相似对照，而是补齐 epoch_0100 点位、收束共享审计叙事，并把这条长训结果稳定固化为新的阶段证据。",
+              "links": [
+                {
+                  "title": "500 续训审计记录",
+                  "path": "autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
           "date": "2026-04-18",
           "cards": [
             {
-              "badge": "Infra",
-              "title": "修复主线 100->500 续训兼容并恢复真实后台接管",
-              "summary": "范围：mdit/train/checkpoints.py + mdit/train/runner.py + research/mdit_takeover_controller.py + scripts/run_mdit_takeover_supervisor.py + tmux:mdit_auto…",
+              "badge": "基础设施",
+              "title": "建立 research desk 作为 homepage 的阶段总结总账本",
+              "summary": "fixes.md 继续追加之后逐渐同时承担了事实留痕、自动状态流和阶段总结三种职责，读者需要先跨过大量日志样式条目才能看见真正改变研究判断的节点，homepage 也只能从偏机械的记录里反向猜主线叙事。 保留 fixes.md 作为事实账本，新建人工维护的 research_desk.md 负责跨…",
+              "date_key": "2026-04-18",
               "metrics": [
+                {
+                  "label": "线路",
+                  "value": "基础设施"
+                },
                 {
                   "label": "日期",
                   "value": "2026-04-18"
                 },
                 {
-                  "label": "类型",
-                  "value": "修复"
-                },
-                {
-                  "label": "状态",
-                  "value": "已记录"
+                  "label": "来源",
+                  "value": "research desk"
                 }
               ],
-              "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+              "outcome": "从现在起，项目形成了 fixes.md 记事实、research_desk.md 做阶段总结、各线路稳定文档保留证据的三层文档结构。后续 homepage 整理应先看 research_desk.md，需要回查细节时再落到 fixes.md 和分线路文档。",
               "links": [
                 {
-                  "title": "fixes.md",
+                  "title": "修复留痕总表",
                   "path": "docs/fixes.md"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "Homepage 维护规则",
+                  "path": "homepage/MAINTENANCE.md"
                 }
-              ]
+              ],
+              "task_id": "infra-audit"
             },
             {
-              "badge": "Infra",
-              "title": "离线审计完成",
-              "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_…",
+              "badge": "MDIT 主线",
+              "title": "恢复 100→500 续训接管",
+              "summary": "严格 MTDP 对照未过闸门后，理论上应该立即把预算收回到当前最佳路线继续长训，但实际接管时暴露出旧 checkpoint 的优化器状态和当前参数顺序不兼容，后台还会误把旧心跳当成新进度。 把最佳路线的续训兼容和后台监督器一起修通，确保接管不是形式上的补记，而是真正能继续推进 500 epoch…",
+              "date_key": "2026-04-18",
               "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
                 {
                   "label": "日期",
                   "value": "2026-04-18"
                 },
                 {
-                  "label": "类型",
-                  "value": "修复"
-                },
-                {
-                  "label": "状态",
-                  "value": "已记录"
+                  "label": "来源",
+                  "value": "research desk"
                 }
               ],
-              "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+              "outcome": "MDIT 现在最重要的工作已经明确，不是再开更多相似候选，而是把当前最佳路线稳定推进到 500 epoch 并完成共享审计。主线终于从筛选期进入长训接管期。",
               "links": [
                 {
-                  "title": "fixes.md",
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                },
+                {
+                  "title": "修复留痕总表",
                   "path": "docs/fixes.md"
                 }
-              ]
+              ],
+              "task_id": "mdit-mainline"
             },
             {
-              "badge": "Infra",
-              "title": "接管器触发 500 epoch 最优路线 fallback",
-              "summary": "范围：research/mdit_takeover_controller.py + docs/fixes.md + docs/mdit/research_journal.md 背景：严格挑战线 unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c…",
+              "badge": "MDIT 对照线",
+              "title": "严格 MTDP 对照未过共享闸门",
+              "summary": "在稳定化和 faithful 对照之后，项目需要回答一个更强的问题：严格 MTDP 语义在当前共享评估链下是否真的值得替代现有 RGB+文本主线。 单独建立严格 MTDP 对照线，用共享闸门做正式验证；只要它没有在同一口径下越过当前锚点，就立即停止扩张预算，并把研究焦点收回到最佳路线。",
+              "date_key": "2026-04-18",
               "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 对照线"
+                },
                 {
                   "label": "日期",
                   "value": "2026-04-18"
                 },
                 {
-                  "label": "类型",
-                  "value": "修复"
-                },
-                {
-                  "label": "状态",
-                  "value": "已记录"
+                  "label": "来源",
+                  "value": "research desk"
                 }
               ],
-              "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+              "outcome": "严格 MTDP 对照已经完成“值得不值得继续投入”的首轮回答，目前结论是否定的。项目不再把预算继续铺在这条线上，而是回到唯一已过审的 RGB+文本主线。",
               "links": [
                 {
-                  "title": "fixes.md",
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
                   "path": "docs/fixes.md"
-                }
-              ]
-            },
-            {
-              "badge": "Infra",
-              "title": "接管已有 run 并补齐元数据",
-              "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：现有 run unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_5…",
-              "metrics": [
-                {
-                  "label": "日期",
-                  "value": "2026-04-18"
-                },
-                {
-                  "label": "类型",
-                  "value": "修复"
-                },
-                {
-                  "label": "状态",
-                  "value": "已记录"
                 }
               ],
-              "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-              "links": [
-                {
-                  "title": "fixes.md",
-                  "path": "docs/fixes.md"
-                }
-              ]
-            },
-            {
-              "badge": "Infra",
-              "title": "训练完成并进入待审计状态",
-              "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_…",
-              "metrics": [
-                {
-                  "label": "日期",
-                  "value": "2026-04-18"
-                },
-                {
-                  "label": "类型",
-                  "value": "修复"
-                },
-                {
-                  "label": "状态",
-                  "value": "已记录"
-                }
-              ],
-              "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-              "links": [
-                {
-                  "title": "fixes.md",
-                  "path": "docs/fixes.md"
-                }
-              ]
+              "task_id": "mdit-mainline"
             }
           ]
         },
@@ -1942,45 +2732,435 @@ window.homepageData = {
           "date": "2026-04-17",
           "cards": [
             {
-              "badge": "Infra",
-              "title": "更新接管器 fallback：最佳路线改为从 100 epoch latest 续到 500",
-              "summary": "范围：research/mdit_takeover_controller.py + scripts/run_mdit_takeover.py + tmux:mdit_autoresearch:takeover_guard + docs/fixes.md 背景：此前接管器在 MTDP strict…",
+              "badge": "MDIT 对照线",
+              "title": "稳定化与 faithful 对照完成分流，主线不再被弱候选带偏",
+              "summary": "在主线锚点出现后，仍需要确认稳定化对照和 faithful 对照到底是在挑战主线，还是只是在制造更多噪声；如果这一步不及时分流，主线会被多个弱候选反复打断。 用同一共享审计链先判定稳定化对照是否真的优于主线，再把 faithful 首轮失败从“方法失败”纠正回“启动链失败”，避免错杀可继续验证的路…",
+              "date_key": "2026-04-17",
               "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 对照线"
+                },
                 {
                   "label": "日期",
                   "value": "2026-04-17"
                 },
                 {
-                  "label": "类型",
-                  "value": "修复"
-                },
-                {
-                  "label": "状态",
-                  "value": "已记录"
+                  "label": "来源",
+                  "value": "research desk"
                 }
               ],
-              "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+              "outcome": "稳定化对照已经被判定为弱线，不再作为主方向推进；faithful 对照可以继续保留为正式对照，但它的首轮失败不能被解释成结构结论。主线从这一天开始重新收束，而不是继续发散。",
               "links": [
                 {
-                  "title": "fixes.md",
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
                   "path": "docs/fixes.md"
                 }
-              ]
+              ],
+              "task_id": "mdit-mainline"
+            },
+            {
+              "badge": "MDIT 主线",
+              "title": "共享审计确认 0.55@100 锚点并冻结当前最佳路线",
+              "summary": "当时需要一条已经过共享审计链验证的 RGB+文本锚点，否则后续所有候选都没有统一参照物，也很难决定谁该继续推进。 先用共享审计链确认 epoch_0050 与 epoch_0100 的行为结果，再把当前最佳 checkpoint、关键 epoch 和稳定别名一起冻结，让后续候选必须在同口径下超过它。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-17"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "0.55@100 是当前唯一经过共享审计链确认的 RGB+文本锚点。后续路线可以继续挑战，但必须先在同一口径下超过它，否则都只能算对照线。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-16",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "共享评估契约与后台守护链固化为标准执行方式",
+              "summary": "即便主线配方已经回收完成，只要训练口径、评估口径、冠军冻结和后台接管没有锁死，后续 run 依然会因为配方漂移或中断恢复而失去继承关系。 把“如何训练、如何审计、如何冻结冠军、如何恢复后台运行”一起固化为主线基础设施，而不是让每一轮候选自己定义规则。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-16"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 从这一步起不再只是零散实验集合，而是一条可托管、可恢复、可比较的研究线；后面的锚点冻结和续训接管才有真正可追踪的 lineage。",
+              "links": [
+                {
+                  "title": "MDIT 执行手册",
+                  "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-15",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "faithful RGB+文本默认路径与共享评估口径定版",
+              "summary": "在这一步之前，MDIT 主线仍混入了点云兼容默认路径、PDIT 语义残留和 EMA 默认分支，导致“当前到底在跑什么配方”无法一句话说清。 把默认路径彻底收回到 faithful 文本 + 5 路 RGB + MDIT + Flow Matching，并把不属于主线的路径全部降级为显式对照，让训练…",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-15"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "从这一步开始，MDIT 主线终于拥有可以持续复现和解释的默认配方；后续任何锚点、对照和长训结果，才开始具有真正的可比性。",
+              "links": [
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                },
+                {
+                  "title": "MDIT 执行手册",
+                  "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-13",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "早期兼容排查确认混合消融不能直接支持结构结论",
+              "summary": "MDIT 早期在 RGB、点云、PDIT backbone、PDIT 条件路径等多种改动之间来回排查时，表面上虽然不断有训练现象和验证损失，但很难说明到底是哪一个因素真正起作用。 先停止把混合消融当成主线证据，把问题拆成“哪条路径更接近 faithful MDIT 语义”和“哪条路径与共享审计口径…",
+              "date_key": "2026-04-13",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-13"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 不能靠“把能跑的东西拼起来”推进；后续所有结论都必须建立在单一路径、单一评估语义和清晰命名上，否则主线会再次失真。",
+              "links": [
+                {
+                  "title": "PDIT 与 MDIT 定位对照",
+                  "path": "docs/pdit-vs-mdit.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-12",
+          "cards": [
+            {
+              "badge": "LeLaN 执行线",
+              "title": "自动研究链路与 100/300/500 闸门定版",
+              "summary": "LeLaN 当时更缺的是训练、评估、选模和留痕的统一入口，而不是立即继续做新的结构尝试；没有固定执行口径时，即使跑出结果也难以稳定复用。 先把工程执行链和晋级门槛固定下来，把结构搜索后移，避免在基础链路还不稳定时就把一次实验的好坏解释成方法优劣。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "LeLaN 执行线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-12"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "LeLaN 现在首先是一条“执行线”，目标是把正式实验沉淀成可长期追加的研究档案；在 100 epoch 结果没有越过闸门前，不应优先把预算投入更激进的结构改动。",
+              "links": [
+                {
+                  "title": "LeLaN 执行计划",
+                  "path": "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md"
+                },
+                {
+                  "title": "LeLaN 研究记录约定",
+                  "path": "docs/lelan/research/README.md"
+                }
+              ],
+              "task_id": "lelan-pipeline"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-09",
+          "cards": [
+            {
+              "badge": "PDIT 主线",
+              "title": "点云 baseline 恢复为行为锚点",
+              "summary": "PDIT 早期的低成功率同时混杂了训练、保存和离线审计链路的问题，导致当时很难判断是策略学不会，还是工程链路把原本可用的结果压坏了。 先把训练、保存和审计三条链修稳，再用同一套离线审计口径重新复核 baseline，只有工程链可信后，结构改动和泛化结论才有比较价值。",
+              "date_key": "2026-04-09",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-09"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "PDIT 已经从“能不能学起来”的问题，转成“后期泛化能否继续稳定”的问题。点云 baseline 继续是整个仓库的行为锚点，后续任何新路线都应先与这条线对齐再比较。",
+              "links": [
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                },
+                {
+                  "title": "训练模型审计",
+                  "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+                },
+                {
+                  "title": "checkpoint 清单",
+                  "path": "docs/top10-checkpoint-manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-08",
+          "cards": [
+            {
+              "badge": "PDIT 主线",
+              "title": "DiT 动力学改良候选达到 0.65@100，但还不能直接替代 baseline",
+              "summary": "在 baseline 已经恢复后，项目需要判断晚期漂移有没有结构层面的改良方向，而不是只知道“当前基线能跑”。 把这组动力学改法单独拉成一条候选线，用同样的 100 epoch 行为审计检验它是否真比现有主线更强，同时观察 best_valid 是否仍然可靠。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "这条动力学候选证明“结构改进方向值得继续研究”，但它还没有完成对 500 epoch 行为锚点的替代。PDIT 当前仍应以 baseline 为主线，把这条路线当成有前景但证据未闭环的候选。",
+              "links": [
+                {
+                  "title": "DiT 动力学候选审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130.json"
+                },
+                {
+                  "title": "DiT 动力学候选审计日志",
+                  "path": "autoresearch_records/logs/h2_dit_dynamics_100_audit.log"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "数据统计增强路线被确认掺入观测语义错误，原有通过闸门的结果作废",
+              "summary": "最初“数据统计 + 数据增强”路线在 100 epoch 上一度拿到 0.55，表面上像是一条勉强可保留的候选，但这条结果后来被发现不能直接支持结构结论。 先修正增强语义，再重跑同一路线；只有在 bug 修掉后结果仍然成立，才有资格被解释成“数据统计增强有价值”。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "原来那条 0.55 结果不能再作为“数据统计增强可行”的证据，应该被解释为被 bug 污染的历史记录。PDIT 后续不能再把这条路线当成结构改进支撑，只能把它作为一次重要的排雷工作归档。",
+              "links": [
+                {
+                  "title": "原始数据统计增强审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914.json"
+                },
+                {
+                  "title": "修正后重跑审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_fixed_stats_aug_100__e0100__20260408_124213.json"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "500 epoch 主线通过补评估保住长期行为锚点",
+              "summary": "500 epoch 主线训练完成后，原始的全量 audit sweep 一度因为超时看起来像失败，如果直接把这件事解释成训练崩溃，就会把已经跑出来的长期主线误判为无效。 不把超时直接当成 collapse，而是把关键 checkpoint 的成功率逐个补齐，只要长期主线的关键行为证据还在，就继续把…",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "PDIT 不仅在短周期上恢复了可训练性，也在长周期上保住了可复核的行为锚点。后续新路线如果不能在同等级别的行为证据上超过这条主线，就不应该轻易替换它。",
+              "links": [
+                {
+                  "title": "baseline_500 审计报告",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json"
+                },
+                {
+                  "title": "epoch_0500 人工评估",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json"
+                },
+                {
+                  "title": "100 回合复核",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
+                }
+              ],
+              "task_id": "pdit-anchor"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "100 epoch 离线审计确认修复后 baseline 不再“学不会”",
+              "summary": "在修复训练、保存和审计链之前，PDIT 的低成功率很难解释清楚，到底是任务本身太难，还是工程链路把本来可用的策略压坏了。 先用修复后的 100 epoch baseline 做一次最直接的共享审计，验证工程修复之后策略是否已经能稳定完成任务，而不是继续在不可信的训练栈上猜原因。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "这一轮审计把问题从“PDIT 学不会”改写成“修复工程链后它其实能学起来，而且已经明显超过最低可用门槛”。从这里开始，PDIT 的研究重点不再是证明可训练性，而是进一步追稳定性和长期泛化。",
+              "links": [
+                {
+                  "title": "baseline_100 审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048.json"
+                },
+                {
+                  "title": "baseline_100 审计日志",
+                  "path": "autoresearch_records/logs/baseline_100_audit.log"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor"
             }
           ]
         }
       ],
       "findings": [
         {
-          "title": "fixes 账本只做事实源，不再占据公开主页中心",
-          "body": "infra 页面保留全局修复脉络，但首页只抽取少量关键转折，不再把调试流水账摆在最前面。"
+          "title": "research_desk 负责阶段总结，fixes 退回事实源",
+          "body": "首页与全局时间线优先展示人工提炼过的阶段进展；需要回查具体 bug、run 状态和路径时，再回到 fixes 账本。"
         },
         {
-          "title": "留痕格式已经进入可复用阶段",
-          "body": "训练、评估、审计和研究日志都开始有固定产物路径和记录口径，后续 agent 不需要重新发明首页结构。"
+          "title": "跨线路整理终于有了单一入口",
+          "body": "PDIT、MDIT、LeLaN 和文档治理的关键阶段变化现在可以汇总到同一份 desk 文档，homepage 不必再从多份自动日志里反向猜结论。"
         }
       ],
       "evidence_links": [
+        {
+          "title": "research_desk.md",
+          "path": "docs/research_desk.md",
+          "summary": "跨线路阶段总结总账本，供 homepage 优先提炼。",
+          "label": "查看原始记录"
+        },
         {
           "title": "fixes.md",
           "path": "docs/fixes.md",
@@ -2025,6 +3205,7 @@ window.homepageData = {
       "home_entries": [],
       "task_badge": "Infra",
       "docs": [
+        "docs/research_desk.md",
         "docs/fixes.md",
         "docs/code-structure-zh.md",
         "docs/pdit-vs-mdit.md"
@@ -2273,7 +3454,7 @@ window.homepageData = {
     {
       "id": "pdit",
       "title": "PDIT 主线",
-      "summary": "当前最稳定的点云行为锚点，负责提供可复核的 baseline 与 checkpoint 证据。",
+      "summary": "PDIT 现在仍是全仓库最稳定的行为锚点。训练链、保存链和离线审计链修稳后，点云 baseline 在 100 epoch 上先证明“不是学不会”，在 500 epoch 上又通过补评估保住了 0.95 的最佳行为结果，根目录重整后的 100 回合成功率 复核仍有 0.85。同时，数据统计增强路线已经因为语义 bug 被作废，dropout=0.0 + 最终层零初始化 这条 DiT 动力学候选虽然到过 0.65@100，但还没有足够证据替代当前锚点。",
       "status": "稳定锚点",
       "status_group": "done",
       "page_path": "homepage/branches/pdit/",
@@ -2299,6 +3480,43 @@ window.homepageData = {
         {
           "date": "2026-04-09",
           "cards": [
+            {
+              "badge": "PDIT 主线",
+              "title": "点云 baseline 恢复为行为锚点",
+              "summary": "PDIT 早期的低成功率同时混杂了训练、保存和离线审计链路的问题，导致当时很难判断是策略学不会，还是工程链路把原本可用的结果压坏了。 先把训练、保存和审计三条链修稳，再用同一套离线审计口径重新复核 baseline，只有工程链可信后，结构改动和泛化结论才有比较价值。",
+              "date_key": "2026-04-09",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-09"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "PDIT 已经从“能不能学起来”的问题，转成“后期泛化能否继续稳定”的问题。点云 baseline 继续是整个仓库的行为锚点，后续任何新路线都应先与这条线对齐再比较。",
+              "links": [
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                },
+                {
+                  "title": "训练模型审计",
+                  "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+                },
+                {
+                  "title": "checkpoint 清单",
+                  "path": "docs/top10-checkpoint-manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
             {
               "badge": "PDIT 主线",
               "title": "根目录重整后的最优策略复核通过",
@@ -2372,6 +3590,154 @@ window.homepageData = {
         {
           "date": "2026-04-08",
           "cards": [
+            {
+              "badge": "PDIT 主线",
+              "title": "DiT 动力学改良候选达到 0.65@100，但还不能直接替代 baseline",
+              "summary": "在 baseline 已经恢复后，项目需要判断晚期漂移有没有结构层面的改良方向，而不是只知道“当前基线能跑”。 把这组动力学改法单独拉成一条候选线，用同样的 100 epoch 行为审计检验它是否真比现有主线更强，同时观察 best_valid 是否仍然可靠。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "这条动力学候选证明“结构改进方向值得继续研究”，但它还没有完成对 500 epoch 行为锚点的替代。PDIT 当前仍应以 baseline 为主线，把这条路线当成有前景但证据未闭环的候选。",
+              "links": [
+                {
+                  "title": "DiT 动力学候选审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130.json"
+                },
+                {
+                  "title": "DiT 动力学候选审计日志",
+                  "path": "autoresearch_records/logs/h2_dit_dynamics_100_audit.log"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "数据统计增强路线被确认掺入观测语义错误，原有通过闸门的结果作废",
+              "summary": "最初“数据统计 + 数据增强”路线在 100 epoch 上一度拿到 0.55，表面上像是一条勉强可保留的候选，但这条结果后来被发现不能直接支持结构结论。 先修正增强语义，再重跑同一路线；只有在 bug 修掉后结果仍然成立，才有资格被解释成“数据统计增强有价值”。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "原来那条 0.55 结果不能再作为“数据统计增强可行”的证据，应该被解释为被 bug 污染的历史记录。PDIT 后续不能再把这条路线当成结构改进支撑，只能把它作为一次重要的排雷工作归档。",
+              "links": [
+                {
+                  "title": "原始数据统计增强审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914.json"
+                },
+                {
+                  "title": "修正后重跑审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_fixed_stats_aug_100__e0100__20260408_124213.json"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "500 epoch 主线通过补评估保住长期行为锚点",
+              "summary": "500 epoch 主线训练完成后，原始的全量 audit sweep 一度因为超时看起来像失败，如果直接把这件事解释成训练崩溃，就会把已经跑出来的长期主线误判为无效。 不把超时直接当成 collapse，而是把关键 checkpoint 的成功率逐个补齐，只要长期主线的关键行为证据还在，就继续把…",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "PDIT 不仅在短周期上恢复了可训练性，也在长周期上保住了可复核的行为锚点。后续新路线如果不能在同等级别的行为证据上超过这条主线，就不应该轻易替换它。",
+              "links": [
+                {
+                  "title": "baseline_500 审计报告",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json"
+                },
+                {
+                  "title": "epoch_0500 人工评估",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json"
+                },
+                {
+                  "title": "100 回合复核",
+                  "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "PDIT 主线",
+              "title": "100 epoch 离线审计确认修复后 baseline 不再“学不会”",
+              "summary": "在修复训练、保存和审计链之前，PDIT 的低成功率很难解释清楚，到底是任务本身太难，还是工程链路把本来可用的策略压坏了。 先用修复后的 100 epoch baseline 做一次最直接的共享审计，验证工程修复之后策略是否已经能稳定完成任务，而不是继续在不可信的训练栈上猜原因。",
+              "date_key": "2026-04-08",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "PDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-08"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "这一轮审计把问题从“PDIT 学不会”改写成“修复工程链后它其实能学起来，而且已经明显超过最低可用门槛”。从这里开始，PDIT 的研究重点不再是证明可训练性，而是进一步追稳定性和长期泛化。",
+              "links": [
+                {
+                  "title": "baseline_100 审计记录",
+                  "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048.json"
+                },
+                {
+                  "title": "baseline_100 审计日志",
+                  "path": "autoresearch_records/logs/baseline_100_audit.log"
+                },
+                {
+                  "title": "PDIT 恢复进展",
+                  "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
             {
               "badge": "Repair",
               "title": "训练与离线审计链关键 bug 修完",
@@ -2548,23 +3914,23 @@ window.homepageData = {
     {
       "id": "mdit",
       "title": "MDIT 研究线",
-      "summary": "围绕 RGB+Text 主线、关键对照和续训接管形成的研究线，已经沉淀出日志、主线路径和接管记录。",
+      "summary": "MDIT 当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；在此基础上，同一路线的 100 -> 500 epoch 续训已经完成共享审计，并给出 0.75@300 与 0.75@500 的新结果，说明长训确实把行为上限抬了上去。不过这次 500 epoch 审计缺失了 epoch_0100 点位，trial 仍被自动标成 collapse，因此当前更准确的任务不是再开新线，而是补齐共享审计叙事。",
       "status": "推进中",
       "status_group": "in_progress",
       "page_path": "homepage/branches/mdit/",
-      "latest_update": "2026-04-18",
+      "latest_update": "2026-04-19",
       "hero_metrics": [
         {
-          "label": "当前锚点",
+          "label": "早期锚点",
           "value": "0.55@100"
         },
         {
-          "label": "epoch 50",
-          "value": "0.25"
+          "label": "best success",
+          "value": "0.75"
         },
         {
-          "label": "续训进度",
-          "value": "epoch 99"
+          "label": "500 轮审计",
+          "value": "0.75"
         }
       ],
       "related_task_ids": [
@@ -2572,8 +3938,120 @@ window.homepageData = {
       ],
       "timeline_groups": [
         {
+          "date": "2026-04-19",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
+              "summary": "100 epoch 锁定锚点之后，MDIT 一直缺一条真正跑完并完成同口径共享审计的长训主线。没有这一步，项目虽然知道当前最优是 0.55@100，却仍无法回答“同一路线继续训到 300/500 epoch 后能不能真正变强”。 先把 100 -> 500 epoch 的续训接管跑通，再用同一套共…",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-19"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。后续工作重点不再是继续开相似对照，而是补齐 epoch_0100 点位、收束共享审计叙事，并把这条长训结果稳定固化为新的阶段证据。",
+              "links": [
+                {
+                  "title": "500 续训审计记录",
+                  "path": "autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            }
+          ]
+        },
+        {
           "date": "2026-04-18",
           "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "恢复 100→500 续训接管",
+              "summary": "严格 MTDP 对照未过闸门后，理论上应该立即把预算收回到当前最佳路线继续长训，但实际接管时暴露出旧 checkpoint 的优化器状态和当前参数顺序不兼容，后台还会误把旧心跳当成新进度。 把最佳路线的续训兼容和后台监督器一起修通，确保接管不是形式上的补记，而是真正能继续推进 500 epoch…",
+              "date_key": "2026-04-18",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-18"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 现在最重要的工作已经明确，不是再开更多相似候选，而是把当前最佳路线稳定推进到 500 epoch 并完成共享审计。主线终于从筛选期进入长训接管期。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "MDIT 对照线",
+              "title": "严格 MTDP 对照未过共享闸门",
+              "summary": "在稳定化和 faithful 对照之后，项目需要回答一个更强的问题：严格 MTDP 语义在当前共享评估链下是否真的值得替代现有 RGB+文本主线。 单独建立严格 MTDP 对照线，用共享闸门做正式验证；只要它没有在同一口径下越过当前锚点，就立即停止扩张预算，并把研究焦点收回到最佳路线。",
+              "date_key": "2026-04-18",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 对照线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-18"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "严格 MTDP 对照已经完成“值得不值得继续投入”的首轮回答，目前结论是否定的。项目不再把预算继续铺在这条线上，而是回到唯一已过审的 RGB+文本主线。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
             {
               "badge": "Mainline Resume",
               "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
@@ -2643,6 +4121,76 @@ window.homepageData = {
         {
           "date": "2026-04-17",
           "cards": [
+            {
+              "badge": "MDIT 对照线",
+              "title": "稳定化与 faithful 对照完成分流，主线不再被弱候选带偏",
+              "summary": "在主线锚点出现后，仍需要确认稳定化对照和 faithful 对照到底是在挑战主线，还是只是在制造更多噪声；如果这一步不及时分流，主线会被多个弱候选反复打断。 用同一共享审计链先判定稳定化对照是否真的优于主线，再把 faithful 首轮失败从“方法失败”纠正回“启动链失败”，避免错杀可继续验证的路…",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 对照线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-17"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "稳定化对照已经被判定为弱线，不再作为主方向推进；faithful 对照可以继续保留为正式对照，但它的首轮失败不能被解释成结构结论。主线从这一天开始重新收束，而不是继续发散。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "MDIT 主线",
+              "title": "共享审计确认 0.55@100 锚点并冻结当前最佳路线",
+              "summary": "当时需要一条已经过共享审计链验证的 RGB+文本锚点，否则后续所有候选都没有统一参照物，也很难决定谁该继续推进。 先用共享审计链确认 epoch_0050 与 epoch_0100 的行为结果，再把当前最佳 checkpoint、关键 epoch 和稳定别名一起冻结，让后续候选必须在同口径下超过它。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-17"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "0.55@100 是当前唯一经过共享审计链确认的 RGB+文本锚点。后续路线可以继续挑战，但必须先在同一口径下超过它，否则都只能算对照线。",
+              "links": [
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
             {
               "badge": "Anchor",
               "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
@@ -2745,6 +4293,43 @@ window.homepageData = {
           "date": "2026-04-16",
           "cards": [
             {
+              "badge": "MDIT 主线",
+              "title": "共享评估契约与后台守护链固化为标准执行方式",
+              "summary": "即便主线配方已经回收完成，只要训练口径、评估口径、冠军冻结和后台接管没有锁死，后续 run 依然会因为配方漂移或中断恢复而失去继承关系。 把“如何训练、如何审计、如何冻结冠军、如何恢复后台运行”一起固化为主线基础设施，而不是让每一轮候选自己定义规则。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-16"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 从这一步起不再只是零散实验集合，而是一条可托管、可恢复、可比较的研究线；后面的锚点冻结和续训接管才有真正可追踪的 lineage。",
+              "links": [
+                {
+                  "title": "MDIT 执行手册",
+                  "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                },
+                {
+                  "title": "MDIT 研究日志",
+                  "path": "docs/mdit/research_journal.md"
+                },
+                {
+                  "title": "当前主线路径",
+                  "path": "docs/mdit/best_path.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
               "badge": "Manual",
               "title": "MDIT 执行手册定版，主线推进开始有统一口径",
               "summary": "从训练命令、共享评估链、晋级门槛到接管方式，全部被整理成固定手册，后续不再靠零散命令和口口相传维持。",
@@ -2777,6 +4362,82 @@ window.homepageData = {
               "task_title": "MDIT RGB+Text 主线推进"
             }
           ]
+        },
+        {
+          "date": "2026-04-15",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "faithful RGB+文本默认路径与共享评估口径定版",
+              "summary": "在这一步之前，MDIT 主线仍混入了点云兼容默认路径、PDIT 语义残留和 EMA 默认分支，导致“当前到底在跑什么配方”无法一句话说清。 把默认路径彻底收回到 faithful 文本 + 5 路 RGB + MDIT + Flow Matching，并把不属于主线的路径全部降级为显式对照，让训练…",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-15"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "从这一步开始，MDIT 主线终于拥有可以持续复现和解释的默认配方；后续任何锚点、对照和长训结果，才开始具有真正的可比性。",
+              "links": [
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                },
+                {
+                  "title": "MDIT 执行手册",
+                  "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-13",
+          "cards": [
+            {
+              "badge": "MDIT 主线",
+              "title": "早期兼容排查确认混合消融不能直接支持结构结论",
+              "summary": "MDIT 早期在 RGB、点云、PDIT backbone、PDIT 条件路径等多种改动之间来回排查时，表面上虽然不断有训练现象和验证损失，但很难说明到底是哪一个因素真正起作用。 先停止把混合消融当成主线证据，把问题拆成“哪条路径更接近 faithful MDIT 语义”和“哪条路径与共享审计口径…",
+              "date_key": "2026-04-13",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "MDIT 主线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-13"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "MDIT 不能靠“把能跑的东西拼起来”推进；后续所有结论都必须建立在单一路径、单一评估语义和清晰命名上，否则主线会再次失真。",
+              "links": [
+                {
+                  "title": "PDIT 与 MDIT 定位对照",
+                  "path": "docs/pdit-vs-mdit.md"
+                },
+                {
+                  "title": "修复留痕总表",
+                  "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            }
+          ]
         }
       ],
       "evidence_links": [
@@ -2802,20 +4463,20 @@ window.homepageData = {
       "summary_cards": [
         {
           "eyebrow": "Branch",
-          "title": "RGB+Text 当前锚点固定在 0.55@100",
-          "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有其他对照必须超过的门槛。",
+          "title": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
+          "body": "0.55@100 仍是当前锁定的早期锚点；在此基础上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明这条线不是只能停在 100 epoch。",
           "metrics": [
-            {
-              "label": "epoch 50",
-              "value": "0.25"
-            },
             {
               "label": "epoch 100",
               "value": "0.55"
             },
             {
-              "label": "状态",
-              "value": "已冻结"
+              "label": "epoch 300",
+              "value": "0.75"
+            },
+            {
+              "label": "epoch 500",
+              "value": "0.75"
             }
           ]
         }
@@ -2824,7 +4485,7 @@ window.homepageData = {
     {
       "id": "lelan",
       "title": "LeLaN 执行线",
-      "summary": "先把训练与审计链路固定，再逐步长成正式实验档案和 demo 展示入口。",
+      "summary": "LeLaN 当前的重点仍是把执行链路固化成可长期追加的自动研究流程，而不是抢先做更激进的结构搜索。训练、评估、EMA 兼容、离线审计和 100/300/500 epoch 闸门规则已经定版，但正式 run 的行为结果还没有形成足够强的阶段结论，需要后续补齐。",
       "status": "铺设中",
       "status_group": "in_progress",
       "page_path": "homepage/branches/lelan/",
@@ -2850,6 +4511,39 @@ window.homepageData = {
         {
           "date": "2026-04-12",
           "cards": [
+            {
+              "badge": "LeLaN 执行线",
+              "title": "自动研究链路与 100/300/500 闸门定版",
+              "summary": "LeLaN 当时更缺的是训练、评估、选模和留痕的统一入口，而不是立即继续做新的结构尝试；没有固定执行口径时，即使跑出结果也难以稳定复用。 先把工程执行链和晋级门槛固定下来，把结构搜索后移，避免在基础链路还不稳定时就把一次实验的好坏解释成方法优劣。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "线路",
+                  "value": "LeLaN 执行线"
+                },
+                {
+                  "label": "日期",
+                  "value": "2026-04-12"
+                },
+                {
+                  "label": "来源",
+                  "value": "research desk"
+                }
+              ],
+              "outcome": "LeLaN 现在首先是一条“执行线”，目标是把正式实验沉淀成可长期追加的研究档案；在 100 epoch 结果没有越过闸门前，不应优先把预算投入更激进的结构改动。",
+              "links": [
+                {
+                  "title": "LeLaN 执行计划",
+                  "path": "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md"
+                },
+                {
+                  "title": "LeLaN 研究记录约定",
+                  "path": "docs/lelan/research/README.md"
+                }
+              ],
+              "task_id": "lelan-pipeline",
+              "task_title": "LeLaN 自动研究链路固化"
+            },
             {
               "badge": "Recipe",
               "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
@@ -2992,35 +4686,121 @@ window.homepageData = {
   ],
   "timeline_page_groups": [
     {
+      "date": "2026-04-19",
+      "cards": [
+        {
+          "badge": "MDIT 主线",
+          "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
+          "summary": "100 epoch 锁定锚点之后，MDIT 一直缺一条真正跑完并完成同口径共享审计的长训主线。没有这一步，项目虽然知道当前最优是 0.55@100，却仍无法回答“同一路线继续训到 300/500 epoch 后能不能真正变强”。 先把 100 -> 500 epoch 的续训接管跑通，再用同一套共…",
+          "date_key": "2026-04-19",
+          "metrics": [
+            {
+              "label": "线路",
+              "value": "MDIT 主线"
+            },
+            {
+              "label": "日期",
+              "value": "2026-04-19"
+            },
+            {
+              "label": "来源",
+              "value": "research desk"
+            }
+          ],
+          "outcome": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。后续工作重点不再是继续开相似对照，而是补齐 epoch_0100 点位、收束共享审计叙事，并把这条长训结果稳定固化为新的阶段证据。",
+          "links": [
+            {
+              "title": "500 续训审计记录",
+              "path": "autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json"
+            },
+            {
+              "title": "MDIT 研究日志",
+              "path": "docs/mdit/research_journal.md"
+            },
+            {
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
+            }
+          ],
+          "task_id": "mdit-mainline",
+          "task_title": "MDIT RGB+Text 主线推进",
+          "task_path": "homepage/tasks/mdit-mainline/"
+        }
+      ]
+    },
+    {
       "date": "2026-04-18",
       "cards": [
         {
-          "badge": "Mainline Resume",
-          "title": "严格 MTDP 对照未过共享审计后，研究重新收束到 RGB+Text 主线",
-          "summary": "严格 MTDP 对照没有通过共享 gate，项目没有继续把预算散到弱候选上，而是立即收回到唯一过审的 RGB+Text 主线。",
+          "badge": "基础设施",
+          "title": "建立 research desk 作为 homepage 的阶段总结总账本",
+          "summary": "fixes.md 继续追加之后逐渐同时承担了事实留痕、自动状态流和阶段总结三种职责，读者需要先跨过大量日志样式条目才能看见真正改变研究判断的节点，homepage 也只能从偏机械的记录里反向猜主线叙事。 保留 fixes.md 作为事实账本，新建人工维护的 research_desk.md 负责跨…",
+          "date_key": "2026-04-18",
           "metrics": [
             {
-              "label": "当前锚点",
-              "value": "0.55@100"
+              "label": "线路",
+              "value": "基础设施"
             },
             {
-              "label": "回退动作",
-              "value": "best500 fallback"
+              "label": "日期",
+              "value": "2026-04-18"
             },
             {
-              "label": "原因",
-              "value": "recipe drift"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "MDIT 重新聚焦到唯一可信的 RGB+Text 主线，而不是继续同时养多个弱对照。",
+          "outcome": "从现在起，项目形成了 fixes.md 记事实、research_desk.md 做阶段总结、各线路稳定文档保留证据的三层文档结构。后续 homepage 整理应先看 research_desk.md，需要回查细节时再落到 fixes.md 和分线路文档。",
           "links": [
             {
-              "title": "研究日志",
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
+            },
+            {
+              "title": "MDIT 研究日志",
+              "path": "docs/mdit/research_journal.md"
+            },
+            {
+              "title": "Homepage 维护规则",
+              "path": "homepage/MAINTENANCE.md"
+            }
+          ],
+          "task_id": "infra-audit",
+          "task_title": "训练与审计基础设施修复",
+          "task_path": "homepage/tasks/infra-audit/"
+        },
+        {
+          "badge": "MDIT 主线",
+          "title": "恢复 100→500 续训接管",
+          "summary": "严格 MTDP 对照未过闸门后，理论上应该立即把预算收回到当前最佳路线继续长训，但实际接管时暴露出旧 checkpoint 的优化器状态和当前参数顺序不兼容，后台还会误把旧心跳当成新进度。 把最佳路线的续训兼容和后台监督器一起修通，确保接管不是形式上的补记，而是真正能继续推进 500 epoch…",
+          "date_key": "2026-04-18",
+          "metrics": [
+            {
+              "label": "线路",
+              "value": "MDIT 主线"
+            },
+            {
+              "label": "日期",
+              "value": "2026-04-18"
+            },
+            {
+              "label": "来源",
+              "value": "research desk"
+            }
+          ],
+          "outcome": "MDIT 现在最重要的工作已经明确，不是再开更多相似候选，而是把当前最佳路线稳定推进到 500 epoch 并完成共享审计。主线终于从筛选期进入长训接管期。",
+          "links": [
+            {
+              "title": "MDIT 研究日志",
               "path": "docs/mdit/research_journal.md"
             },
             {
               "title": "当前主线路径",
               "path": "docs/mdit/best_path.md"
+            },
+            {
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
             }
           ],
           "task_id": "mdit-mainline",
@@ -3028,182 +4808,38 @@ window.homepageData = {
           "task_path": "homepage/tasks/mdit-mainline/"
         },
         {
-          "badge": "Takeover",
-          "title": "100→500 主线续训在 supervisor 下恢复",
-          "summary": "早先的 fallback run 首个 optimizer step 就崩掉，后来又确认 watchdog 误判了“已接管但其实空转”的状态；这一天把 optimizer / scheduler 兼容和 supervisor 都补上了。",
+          "badge": "MDIT 对照线",
+          "title": "严格 MTDP 对照未过共享闸门",
+          "summary": "在稳定化和 faithful 对照之后，项目需要回答一个更强的问题：严格 MTDP 语义在当前共享评估链下是否真的值得替代现有 RGB+文本主线。 单独建立严格 MTDP 对照线，用共享闸门做正式验证；只要它没有在同一口径下越过当前锚点，就立即停止扩张预算，并把研究焦点收回到最佳路线。",
+          "date_key": "2026-04-18",
           "metrics": [
             {
-              "label": "续训目标",
-              "value": "500 epoch"
+              "label": "线路",
+              "value": "MDIT 对照线"
             },
             {
-              "label": "当前 best",
-              "value": "0.55@100"
+              "label": "日期",
+              "value": "2026-04-18"
             },
             {
-              "label": "状态",
-              "value": "已恢复"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "后续 500 epoch 结果会继续积累在同一条主线 lineage 上，而不是再新开匿名 run。",
+          "outcome": "严格 MTDP 对照已经完成“值得不值得继续投入”的首轮回答，目前结论是否定的。项目不再把预算继续铺在这条线上，而是回到唯一已过审的 RGB+文本主线。",
           "links": [
             {
-              "title": "研究日志",
+              "title": "MDIT 研究日志",
               "path": "docs/mdit/research_journal.md"
             },
             {
-              "title": "W&B 摘要",
-              "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
             }
           ],
           "task_id": "mdit-mainline",
           "task_title": "MDIT RGB+Text 主线推进",
           "task_path": "homepage/tasks/mdit-mainline/"
-        },
-        {
-          "badge": "Infra",
-          "title": "修复主线 100->500 续训兼容并恢复真实后台接管",
-          "summary": "范围：mdit/train/checkpoints.py + mdit/train/runner.py + research/mdit_takeover_controller.py + scripts/run_mdit_takeover_supervisor.py + tmux:mdit_auto…",
-          "metrics": [
-            {
-              "label": "日期",
-              "value": "2026-04-18"
-            },
-            {
-              "label": "类型",
-              "value": "修复"
-            },
-            {
-              "label": "状态",
-              "value": "已记录"
-            }
-          ],
-          "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-          "links": [
-            {
-              "title": "fixes.md",
-              "path": "docs/fixes.md"
-            }
-          ],
-          "task_id": "infra-audit",
-          "task_title": "训练与审计基础设施修复",
-          "task_path": "homepage/tasks/infra-audit/"
-        },
-        {
-          "badge": "Infra",
-          "title": "离线审计完成",
-          "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_…",
-          "metrics": [
-            {
-              "label": "日期",
-              "value": "2026-04-18"
-            },
-            {
-              "label": "类型",
-              "value": "修复"
-            },
-            {
-              "label": "状态",
-              "value": "已记录"
-            }
-          ],
-          "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-          "links": [
-            {
-              "title": "fixes.md",
-              "path": "docs/fixes.md"
-            }
-          ],
-          "task_id": "infra-audit",
-          "task_title": "训练与审计基础设施修复",
-          "task_path": "homepage/tasks/infra-audit/"
-        },
-        {
-          "badge": "Infra",
-          "title": "接管器触发 500 epoch 最优路线 fallback",
-          "summary": "范围：research/mdit_takeover_controller.py + docs/fixes.md + docs/mdit/research_journal.md 背景：严格挑战线 unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c…",
-          "metrics": [
-            {
-              "label": "日期",
-              "value": "2026-04-18"
-            },
-            {
-              "label": "类型",
-              "value": "修复"
-            },
-            {
-              "label": "状态",
-              "value": "已记录"
-            }
-          ],
-          "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-          "links": [
-            {
-              "title": "fixes.md",
-              "path": "docs/fixes.md"
-            }
-          ],
-          "task_id": "infra-audit",
-          "task_title": "训练与审计基础设施修复",
-          "task_path": "homepage/tasks/infra-audit/"
-        },
-        {
-          "badge": "Infra",
-          "title": "接管已有 run 并补齐元数据",
-          "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：现有 run unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_5…",
-          "metrics": [
-            {
-              "label": "日期",
-              "value": "2026-04-18"
-            },
-            {
-              "label": "类型",
-              "value": "修复"
-            },
-            {
-              "label": "状态",
-              "value": "已记录"
-            }
-          ],
-          "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-          "links": [
-            {
-              "title": "fixes.md",
-              "path": "docs/fixes.md"
-            }
-          ],
-          "task_id": "infra-audit",
-          "task_title": "训练与审计基础设施修复",
-          "task_path": "homepage/tasks/infra-audit/"
-        },
-        {
-          "badge": "Infra",
-          "title": "训练完成并进入待审计状态",
-          "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_…",
-          "metrics": [
-            {
-              "label": "日期",
-              "value": "2026-04-18"
-            },
-            {
-              "label": "类型",
-              "value": "修复"
-            },
-            {
-              "label": "状态",
-              "value": "已记录"
-            }
-          ],
-          "outcome": "这条修复已被收入口径统一的 fixes 账本。",
-          "links": [
-            {
-              "title": "fixes.md",
-              "path": "docs/fixes.md"
-            }
-          ],
-          "task_id": "infra-audit",
-          "task_title": "训练与审计基础设施修复",
-          "task_path": "homepage/tasks/infra-audit/"
         }
       ]
     },
@@ -3211,132 +4847,76 @@ window.homepageData = {
       "date": "2026-04-17",
       "cards": [
         {
-          "badge": "Anchor",
-          "title": "RGB+Text 当前主线被正式冻结为阶段锚点",
-          "summary": "在共享 audit 链下，当前 RGB+Text 主线是当时唯一完成锁定审计的候选，因此被正式冻结为主线锚点。",
+          "badge": "MDIT 对照线",
+          "title": "稳定化与 faithful 对照完成分流，主线不再被弱候选带偏",
+          "summary": "在主线锚点出现后，仍需要确认稳定化对照和 faithful 对照到底是在挑战主线，还是只是在制造更多噪声；如果这一步不及时分流，主线会被多个弱候选反复打断。 用同一共享审计链先判定稳定化对照是否真的优于主线，再把 faithful 首轮失败从“方法失败”纠正回“启动链失败”，避免错杀可继续验证的路…",
+          "date_key": "2026-04-17",
           "metrics": [
             {
-              "label": "epoch 50",
-              "value": "0.25"
+              "label": "线路",
+              "value": "MDIT 对照线"
             },
-            {
-              "label": "epoch 100",
-              "value": "0.55"
-            },
-            {
-              "label": "mean steps",
-              "value": "121.75"
-            }
-          ],
-          "outcome": "后续其他对照只有在同一审计口径下超过 0.55，才有资格接管主线。",
-          "links": [
-            {
-              "title": "当前主线路径",
-              "path": "docs/mdit/best_path.md"
-            },
-            {
-              "title": "共享审计结果",
-              "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json"
-            }
-          ],
-          "task_id": "mdit-mainline",
-          "task_title": "MDIT RGB+Text 主线推进",
-          "task_path": "homepage/tasks/mdit-mainline/"
-        },
-        {
-          "badge": "Comparison",
-          "title": "平滑动作对照审计后确认弱于当前主线",
-          "summary": "平滑动作这条对照没有真正触及核心失败模式，在 50 / 100 epoch 的表现都落在当前锚点之下。",
-          "metrics": [
-            {
-              "label": "epoch 50",
-              "value": "0.20"
-            },
-            {
-              "label": "epoch 100",
-              "value": "0.35"
-            },
-            {
-              "label": "主要失败",
-              "value": "超时未完成"
-            }
-          ],
-          "outcome": "这条稳定化对照线被明确降级为参考线，而不是新主线。",
-          "links": [
-            {
-              "title": "研究日志",
-              "path": "docs/mdit/research_journal.md"
-            },
-            {
-              "title": "执行手册",
-              "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
-            }
-          ],
-          "task_id": "mdit-mainline",
-          "task_title": "MDIT RGB+Text 主线推进",
-          "task_path": "homepage/tasks/mdit-mainline/"
-        },
-        {
-          "badge": "Infra Fix",
-          "title": "faithful recipe 对照的首轮失败被确认是缓存 / 网络问题",
-          "summary": "第一次 faithful recipe 对照启动时卡在 Hugging Face 远程握手，而不是训练本身；autoresearch 随后改成优先吃本地缓存并强制 offline。",
-          "metrics": [
-            {
-              "label": "HF 模式",
-              "value": "offline"
-            },
-            {
-              "label": "问题归因",
-              "value": "启动链"
-            },
-            {
-              "label": "模型判断",
-              "value": "未下结论"
-            }
-          ],
-          "outcome": "这条 faithful recipe 对照的首轮失败不再被误记成“方法本身无效”。",
-          "links": [
-            {
-              "title": "研究日志",
-              "path": "docs/mdit/research_journal.md"
-            },
-            {
-              "title": "执行手册",
-              "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
-            }
-          ],
-          "task_id": "mdit-mainline",
-          "task_title": "MDIT RGB+Text 主线推进",
-          "task_path": "homepage/tasks/mdit-mainline/"
-        },
-        {
-          "badge": "Infra",
-          "title": "更新接管器 fallback：最佳路线改为从 100 epoch latest 续到 500",
-          "summary": "范围：research/mdit_takeover_controller.py + scripts/run_mdit_takeover.py + tmux:mdit_autoresearch:takeover_guard + docs/fixes.md 背景：此前接管器在 MTDP strict…",
-          "metrics": [
             {
               "label": "日期",
               "value": "2026-04-17"
             },
             {
-              "label": "类型",
-              "value": "修复"
-            },
-            {
-              "label": "状态",
-              "value": "已记录"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "这条修复已被收入口径统一的 fixes 账本。",
+          "outcome": "稳定化对照已经被判定为弱线，不再作为主方向推进；faithful 对照可以继续保留为正式对照，但它的首轮失败不能被解释成结构结论。主线从这一天开始重新收束，而不是继续发散。",
           "links": [
             {
-              "title": "fixes.md",
+              "title": "MDIT 研究日志",
+              "path": "docs/mdit/research_journal.md"
+            },
+            {
+              "title": "修复留痕总表",
               "path": "docs/fixes.md"
             }
           ],
-          "task_id": "infra-audit",
-          "task_title": "训练与审计基础设施修复",
-          "task_path": "homepage/tasks/infra-audit/"
+          "task_id": "mdit-mainline",
+          "task_title": "MDIT RGB+Text 主线推进",
+          "task_path": "homepage/tasks/mdit-mainline/"
+        },
+        {
+          "badge": "MDIT 主线",
+          "title": "共享审计确认 0.55@100 锚点并冻结当前最佳路线",
+          "summary": "当时需要一条已经过共享审计链验证的 RGB+文本锚点，否则后续所有候选都没有统一参照物，也很难决定谁该继续推进。 先用共享审计链确认 epoch_0050 与 epoch_0100 的行为结果，再把当前最佳 checkpoint、关键 epoch 和稳定别名一起冻结，让后续候选必须在同口径下超过它。",
+          "date_key": "2026-04-17",
+          "metrics": [
+            {
+              "label": "线路",
+              "value": "MDIT 主线"
+            },
+            {
+              "label": "日期",
+              "value": "2026-04-17"
+            },
+            {
+              "label": "来源",
+              "value": "research desk"
+            }
+          ],
+          "outcome": "0.55@100 是当前唯一经过共享审计链确认的 RGB+文本锚点。后续路线可以继续挑战，但必须先在同一口径下超过它，否则都只能算对照线。",
+          "links": [
+            {
+              "title": "MDIT 研究日志",
+              "path": "docs/mdit/research_journal.md"
+            },
+            {
+              "title": "当前主线路径",
+              "path": "docs/mdit/best_path.md"
+            },
+            {
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
+            }
+          ],
+          "task_id": "mdit-mainline",
+          "task_title": "MDIT RGB+Text 主线推进",
+          "task_path": "homepage/tasks/mdit-mainline/"
         }
       ]
     },
@@ -3344,32 +4924,115 @@ window.homepageData = {
       "date": "2026-04-16",
       "cards": [
         {
-          "badge": "Manual",
-          "title": "MDIT 执行手册定版，主线推进开始有统一口径",
-          "summary": "从训练命令、共享评估链、晋级门槛到接管方式，全部被整理成固定手册，后续不再靠零散命令和口口相传维持。",
+          "badge": "MDIT 主线",
+          "title": "共享评估契约与后台守护链固化为标准执行方式",
+          "summary": "即便主线配方已经回收完成，只要训练口径、评估口径、冠军冻结和后台接管没有锁死，后续 run 依然会因为配方漂移或中断恢复而失去继承关系。 把“如何训练、如何审计、如何冻结冠军、如何恢复后台运行”一起固化为主线基础设施，而不是让每一轮候选自己定义规则。",
+          "date_key": "2026-04-16",
           "metrics": [
             {
-              "label": "搜索线",
-              "value": "2"
+              "label": "线路",
+              "value": "MDIT 主线"
             },
             {
-              "label": "闸门",
-              "value": "100/300/500"
+              "label": "日期",
+              "value": "2026-04-16"
             },
             {
-              "label": "审计链",
-              "value": "锁定"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "MDIT 开始从零散 run note 转成真正可持续维护的主线研究线。",
+          "outcome": "MDIT 从这一步起不再只是零散实验集合，而是一条可托管、可恢复、可比较的研究线；后面的锚点冻结和续训接管才有真正可追踪的 lineage。",
           "links": [
             {
-              "title": "执行手册",
+              "title": "MDIT 执行手册",
               "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
             },
             {
-              "title": "研究日志",
+              "title": "MDIT 研究日志",
               "path": "docs/mdit/research_journal.md"
+            },
+            {
+              "title": "当前主线路径",
+              "path": "docs/mdit/best_path.md"
+            }
+          ],
+          "task_id": "mdit-mainline",
+          "task_title": "MDIT RGB+Text 主线推进",
+          "task_path": "homepage/tasks/mdit-mainline/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-15",
+      "cards": [
+        {
+          "badge": "MDIT 主线",
+          "title": "faithful RGB+文本默认路径与共享评估口径定版",
+          "summary": "在这一步之前，MDIT 主线仍混入了点云兼容默认路径、PDIT 语义残留和 EMA 默认分支，导致“当前到底在跑什么配方”无法一句话说清。 把默认路径彻底收回到 faithful 文本 + 5 路 RGB + MDIT + Flow Matching，并把不属于主线的路径全部降级为显式对照，让训练…",
+          "date_key": "2026-04-15",
+          "metrics": [
+            {
+              "label": "线路",
+              "value": "MDIT 主线"
+            },
+            {
+              "label": "日期",
+              "value": "2026-04-15"
+            },
+            {
+              "label": "来源",
+              "value": "research desk"
+            }
+          ],
+          "outcome": "从这一步开始，MDIT 主线终于拥有可以持续复现和解释的默认配方；后续任何锚点、对照和长训结果，才开始具有真正的可比性。",
+          "links": [
+            {
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
+            },
+            {
+              "title": "MDIT 执行手册",
+              "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+            }
+          ],
+          "task_id": "mdit-mainline",
+          "task_title": "MDIT RGB+Text 主线推进",
+          "task_path": "homepage/tasks/mdit-mainline/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-13",
+      "cards": [
+        {
+          "badge": "MDIT 主线",
+          "title": "早期兼容排查确认混合消融不能直接支持结构结论",
+          "summary": "MDIT 早期在 RGB、点云、PDIT backbone、PDIT 条件路径等多种改动之间来回排查时，表面上虽然不断有训练现象和验证损失，但很难说明到底是哪一个因素真正起作用。 先停止把混合消融当成主线证据，把问题拆成“哪条路径更接近 faithful MDIT 语义”和“哪条路径与共享审计口径…",
+          "date_key": "2026-04-13",
+          "metrics": [
+            {
+              "label": "线路",
+              "value": "MDIT 主线"
+            },
+            {
+              "label": "日期",
+              "value": "2026-04-13"
+            },
+            {
+              "label": "来源",
+              "value": "research desk"
+            }
+          ],
+          "outcome": "MDIT 不能靠“把能跑的东西拼起来”推进；后续所有结论都必须建立在单一路径、单一评估语义和清晰命名上，否则主线会再次失真。",
+          "links": [
+            {
+              "title": "PDIT 与 MDIT 定位对照",
+              "path": "docs/pdit-vs-mdit.md"
+            },
+            {
+              "title": "修复留痕总表",
+              "path": "docs/fixes.md"
             }
           ],
           "task_id": "mdit-mainline",
@@ -3382,97 +5045,32 @@ window.homepageData = {
       "date": "2026-04-12",
       "cards": [
         {
-          "badge": "Recipe",
-          "title": "LeLaN 主线配方先固定为 5 路 RGB、3 帧观测和 8 步动作",
-          "summary": "这一轮先固定 5 路 RGB、3 帧观测、horizon=32、8 步动作和平滑动作，再用 100 epoch / 20 episode gate 管住节奏，不急着改 backbone。",
+          "badge": "LeLaN 执行线",
+          "title": "自动研究链路与 100/300/500 闸门定版",
+          "summary": "LeLaN 当时更缺的是训练、评估、选模和留痕的统一入口，而不是立即继续做新的结构尝试；没有固定执行口径时，即使跑出结果也难以稳定复用。 先把工程执行链和晋级门槛固定下来，把结构搜索后移，避免在基础链路还不稳定时就把一次实验的好坏解释成方法优劣。",
+          "date_key": "2026-04-12",
           "metrics": [
             {
-              "label": "RGB",
-              "value": "5 路"
+              "label": "线路",
+              "value": "LeLaN 执行线"
             },
             {
-              "label": "观测帧",
-              "value": "3"
+              "label": "日期",
+              "value": "2026-04-12"
             },
             {
-              "label": "动作步数",
-              "value": "8"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "LeLaN 第一轮重点从“改模型”转成“先把工程链路立起来”。",
+          "outcome": "LeLaN 现在首先是一条“执行线”，目标是把正式实验沉淀成可长期追加的研究档案；在 100 epoch 结果没有越过闸门前，不应优先把预算投入更激进的结构改动。",
           "links": [
             {
-              "title": "执行计划",
+              "title": "LeLaN 执行计划",
               "path": "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md"
             },
             {
-              "title": "LeLaN research README",
-              "path": "docs/lelan/research/README.md"
-            }
-          ],
-          "task_id": "lelan-pipeline",
-          "task_title": "LeLaN 自动研究链路固化",
-          "task_path": "homepage/tasks/lelan-pipeline/"
-        },
-        {
-          "badge": "Eval Chain",
-          "title": "EMA、success eval 与 offline eval ckpt 双路径补齐",
-          "summary": "训练中 success gate 和不依赖 RLBench 的离线 eval ckpt 两条路径被明确分开，resume 和 prefer-ema 也都补齐了兼容。",
-          "metrics": [
-            {
-              "label": "EMA",
-              "value": "on"
-            },
-            {
-              "label": "success gate",
-              "value": "100@20"
-            },
-            {
-              "label": "eval ckpt",
-              "value": "100 epoch"
-            }
-          ],
-          "outcome": "LeLaN 后续 run 不会再出现“训练、评估、选模链路断开”的状态。",
-          "links": [
-            {
-              "title": "执行计划",
-              "path": "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md"
-            },
-            {
-              "title": "LeLaN research README",
-              "path": "docs/lelan/research/README.md"
-            }
-          ],
-          "task_id": "lelan-pipeline",
-          "task_title": "LeLaN 自动研究链路固化",
-          "task_path": "homepage/tasks/lelan-pipeline/"
-        },
-        {
-          "badge": "Trace",
-          "title": "autoresearch 留痕规范一次性固定下来",
-          "summary": "manifest、summary、dataset_stats、audit_report、trial_request 和 change_summary 都被写进固定产物约定里，后续可以直接追加而不是重新发明格式。",
-          "metrics": [
-            {
-              "label": "核心产物",
-              "value": "7+"
-            },
-            {
-              "label": "筛选分支",
-              "value": "3"
-            },
-            {
-              "label": "停止门槛",
-              "value": "0.45"
-            }
-          ],
-          "outcome": "LeLaN 后续最先长出来的是“可审计的工程链路”，而不是无上下文的零散 run。",
-          "links": [
-            {
-              "title": "执行计划",
-              "path": "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md"
-            },
-            {
-              "title": "LeLaN research README",
+              "title": "LeLaN 研究记录约定",
               "path": "docs/lelan/research/README.md"
             }
           ],
@@ -3487,68 +5085,36 @@ window.homepageData = {
       "cards": [
         {
           "badge": "PDIT 主线",
-          "title": "根目录重整后的最优策略复核通过",
-          "summary": "对同一 best_success checkpoint 重新做行为复核，确认仓库结构重整没有把当前最优策略改坏。",
+          "title": "点云 baseline 恢复为行为锚点",
+          "summary": "PDIT 早期的低成功率同时混杂了训练、保存和离线审计链路的问题，导致当时很难判断是策略学不会，还是工程链路把原本可用的结果压坏了。 先把训练、保存和审计三条链修稳，再用同一套离线审计口径重新复核 baseline，只有工程链可信后，结构改动和泛化结论才有比较价值。",
+          "date_key": "2026-04-09",
           "metrics": [
             {
-              "label": "20 回合",
-              "value": "1.00"
+              "label": "线路",
+              "value": "PDIT 主线"
             },
             {
-              "label": "100 回合",
-              "value": "0.85"
+              "label": "日期",
+              "value": "2026-04-09"
             },
             {
-              "label": "mean steps@100",
-              "value": "83.82"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "Baseline@500 继续作为当前 PDIT 行为锚点。",
+          "outcome": "PDIT 已经从“能不能学起来”的问题，转成“后期泛化能否继续稳定”的问题。点云 baseline 继续是整个仓库的行为锚点，后续任何新路线都应先与这条线对齐再比较。",
           "links": [
             {
-              "title": "20 回合复核",
-              "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json"
-            },
-            {
-              "title": "100 回合复核",
-              "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
-            },
-            {
-              "title": "checkpoint manifest",
-              "path": "docs/top10-checkpoint-manifest.json"
-            }
-          ],
-          "task_id": "pdit-anchor",
-          "task_title": "PDIT 基线恢复与锚点固化",
-          "task_path": "homepage/tasks/pdit-anchor/"
-        },
-        {
-          "badge": "Regression",
-          "title": "固定 batch 数值回归重新固化为新基准",
-          "summary": "根目录重整后旧 reference 不再 bitwise 对齐，于是把固定 batch regression 重新固化成新的 canonical baseline。",
-          "metrics": [
-            {
-              "label": "reference",
-              "value": "已重建"
-            },
-            {
-              "label": "脚本",
-              "value": "verify_baseline_regression.py"
-            },
-            {
-              "label": "状态",
-              "value": "可重复"
-            }
-          ],
-          "outcome": "后续代码重构有了统一的数值回归锚点。",
-          "links": [
-            {
-              "title": "新 regression reference",
-              "path": "docs/baseline-regression-reference.json"
-            },
-            {
-              "title": "恢复进展文档",
+              "title": "PDIT 恢复进展",
               "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+            },
+            {
+              "title": "训练模型审计",
+              "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+            },
+            {
+              "title": "checkpoint 清单",
+              "path": "docs/top10-checkpoint-manifest.json"
             }
           ],
           "task_id": "pdit-anchor",
@@ -3561,32 +5127,37 @@ window.homepageData = {
       "date": "2026-04-08",
       "cards": [
         {
-          "badge": "Repair",
-          "title": "训练与离线审计链关键 bug 修完",
-          "summary": "本地导入污染、FM 导入耦合、PointNet 导入、checkpoint 原子保存、子进程 audit 隔离和 audit-only stage 覆盖问题都在同一轮里修正。",
+          "badge": "PDIT 主线",
+          "title": "DiT 动力学改良候选达到 0.65@100，但还不能直接替代 baseline",
+          "summary": "在 baseline 已经恢复后，项目需要判断晚期漂移有没有结构层面的改良方向，而不是只知道“当前基线能跑”。 把这组动力学改法单独拉成一条候选线，用同样的 100 epoch 行为审计检验它是否真比现有主线更强，同时观察 best_valid 是否仍然可靠。",
+          "date_key": "2026-04-08",
           "metrics": [
             {
-              "label": "关键修复",
-              "value": "6"
+              "label": "线路",
+              "value": "PDIT 主线"
             },
             {
-              "label": "audit-only",
-              "value": "已修"
+              "label": "日期",
+              "value": "2026-04-08"
             },
             {
-              "label": "latest.pt",
-              "value": "原子保存"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "之前“模型完全学不会”的结论被重新归因为工程与评估链问题。",
+          "outcome": "这条动力学候选证明“结构改进方向值得继续研究”，但它还没有完成对 500 epoch 行为锚点的替代。PDIT 当前仍应以 baseline 为主线，把这条路线当成有前景但证据未闭环的候选。",
           "links": [
             {
-              "title": "恢复进展文档",
-              "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+              "title": "DiT 动力学候选审计记录",
+              "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130.json"
             },
             {
-              "title": "训练模型审计",
-              "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+              "title": "DiT 动力学候选审计日志",
+              "path": "autoresearch_records/logs/h2_dit_dynamics_100_audit.log"
+            },
+            {
+              "title": "PDIT 恢复进展",
+              "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
             }
           ],
           "task_id": "pdit-anchor",
@@ -3594,32 +5165,37 @@ window.homepageData = {
           "task_path": "homepage/tasks/pdit-anchor/"
         },
         {
-          "badge": "Baseline",
-          "title": "Baseline@100 恢复到 0.90 success@20",
-          "summary": "修复后的 baseline 不再早期崩掉，在 100 epoch 已经能稳定学出可用行为。",
+          "badge": "PDIT 主线",
+          "title": "数据统计增强路线被确认掺入观测语义错误，原有通过闸门的结果作废",
+          "summary": "最初“数据统计 + 数据增强”路线在 100 epoch 上一度拿到 0.55，表面上像是一条勉强可保留的候选，但这条结果后来被发现不能直接支持结构结论。 先修正增强语义，再重跑同一路线；只有在 bug 修掉后结果仍然成立，才有资格被解释成“数据统计增强有价值”。",
+          "date_key": "2026-04-08",
           "metrics": [
             {
-              "label": "success@100",
-              "value": "0.90"
+              "label": "线路",
+              "value": "PDIT 主线"
             },
             {
-              "label": "best valid",
-              "value": "0.661"
+              "label": "日期",
+              "value": "2026-04-08"
             },
             {
-              "label": "best epoch",
-              "value": "31"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "点云主线的可训练性已经重新被确认。",
+          "outcome": "原来那条 0.55 结果不能再作为“数据统计增强可行”的证据，应该被解释为被 bug 污染的历史记录。PDIT 后续不能再把这条路线当成结构改进支撑，只能把它作为一次重要的排雷工作归档。",
           "links": [
             {
-              "title": "恢复进展文档",
-              "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+              "title": "原始数据统计增强审计记录",
+              "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914.json"
             },
             {
-              "title": "训练模型审计",
-              "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+              "title": "修正后重跑审计记录",
+              "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_fixed_stats_aug_100__e0100__20260408_124213.json"
+            },
+            {
+              "title": "PDIT 恢复进展",
+              "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
             }
           ],
           "task_id": "pdit-anchor",
@@ -3627,32 +5203,37 @@ window.homepageData = {
           "task_path": "homepage/tasks/pdit-anchor/"
         },
         {
-          "badge": "Anchor",
-          "title": "Baseline@500 锚定 0.95 success@20",
-          "summary": "100/200/300/400/500 五个检查点的 success 曲线重新梳理后，最强点实际落在 500 epoch，而不是中途崩塌。",
+          "badge": "PDIT 主线",
+          "title": "500 epoch 主线通过补评估保住长期行为锚点",
+          "summary": "500 epoch 主线训练完成后，原始的全量 audit sweep 一度因为超时看起来像失败，如果直接把这件事解释成训练崩溃，就会把已经跑出来的长期主线误判为无效。 不把超时直接当成 collapse，而是把关键 checkpoint 的成功率逐个补齐，只要长期主线的关键行为证据还在，就继续把…",
+          "date_key": "2026-04-08",
           "metrics": [
             {
-              "label": "100",
-              "value": "0.75"
+              "label": "线路",
+              "value": "PDIT 主线"
             },
             {
-              "label": "300",
-              "value": "0.90"
+              "label": "日期",
+              "value": "2026-04-08"
             },
             {
-              "label": "500",
-              "value": "0.95"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "修复后的 baseline 没有出现之前 feared 的 300→500 崩塌。",
+          "outcome": "PDIT 不仅在短周期上恢复了可训练性，也在长周期上保住了可复核的行为锚点。后续新路线如果不能在同等级别的行为证据上超过这条主线，就不应该轻易替换它。",
           "links": [
             {
-              "title": "audit report",
+              "title": "baseline_500 审计报告",
               "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/audit_report.json"
             },
             {
-              "title": "summary",
-              "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/summary.json"
+              "title": "epoch_0500 人工评估",
+              "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epoch_0500_manual_eval.json"
+            },
+            {
+              "title": "100 回合复核",
+              "path": "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
             }
           ],
           "task_id": "pdit-anchor",
@@ -3660,32 +5241,37 @@ window.homepageData = {
           "task_path": "homepage/tasks/pdit-anchor/"
         },
         {
-          "badge": "Ablation",
-          "title": "统计特征增强对照作废，官方式动态候选仍待验证",
-          "summary": "统计特征归一化 + 原始增强这条对照之所以表现差，并不只是超参问题，而是增强实现把 rot6d 当成了可平移点；更接近官方 DiT 动态的候选在 valid loss 上更好，但还没形成新的行为锚点。",
+          "badge": "PDIT 主线",
+          "title": "100 epoch 离线审计确认修复后 baseline 不再“学不会”",
+          "summary": "在修复训练、保存和审计链之前，PDIT 的低成功率很难解释清楚，到底是任务本身太难，还是工程链路把本来可用的策略压坏了。 先用修复后的 100 epoch baseline 做一次最直接的共享审计，验证工程修复之后策略是否已经能稳定完成任务，而不是继续在不可信的训练栈上猜原因。",
+          "date_key": "2026-04-08",
           "metrics": [
             {
-              "label": "增强对照@100",
-              "value": "0.55"
+              "label": "线路",
+              "value": "PDIT 主线"
             },
             {
-              "label": "动态候选 best valid",
-              "value": "0.572"
+              "label": "日期",
+              "value": "2026-04-08"
             },
             {
-              "label": "状态",
-              "value": "待行为验证"
+              "label": "来源",
+              "value": "research desk"
             }
           ],
-          "outcome": "旧增强对照不再作为结构结论引用，当前锚点仍是 baseline@500。",
+          "outcome": "这一轮审计把问题从“PDIT 学不会”改写成“修复工程链后它其实能学起来，而且已经明显超过最低可用门槛”。从这里开始，PDIT 的研究重点不再是证明可训练性，而是进一步追稳定性和长期泛化。",
           "links": [
             {
-              "title": "恢复进展文档",
-              "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
+              "title": "baseline_100 审计记录",
+              "path": "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048.json"
             },
             {
-              "title": "训练模型审计",
-              "path": "docs/pdit/2026-04-07-training-model-audit-zh.md"
+              "title": "baseline_100 审计日志",
+              "path": "autoresearch_records/logs/baseline_100_audit.log"
+            },
+            {
+              "title": "PDIT 恢复进展",
+              "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md"
             }
           ],
           "task_id": "pdit-anchor",
@@ -4060,9 +5646,9 @@ window.homepageData = {
       "id": "mdit-success-curve",
       "type": "line",
       "title": "MDIT success by epoch",
-      "description": "当前锁定的 RGB+Text 主线只在 50 / 100 epoch 做了共享 audit，因此 success 曲线严格按这两个里程碑展示。",
+      "description": "这张曲线合并了锁定锚点 run 的 50/100 审计，以及同一路线 100→500 续训后的 200/300/400/500 审计，直接展示主线从早期锚点到长训表现的抬升过程。",
       "format": "percent",
-      "note": "排序严格按 epoch 升序，避免 100 在 50 前面或 500 插到前面。",
+      "note": "排序严格按 epoch 升序；当前 500 续训审计缺失 epoch_0100 点位，所以 trial 仍被自动标成 collapse，但 300/500 的成功率已经被共享审计确认。",
       "series": [
         {
           "name": "success@20",
@@ -4077,6 +5663,26 @@ window.homepageData = {
               "x": 100,
               "y": 0.55,
               "label": "epoch 100"
+            },
+            {
+              "x": 200,
+              "y": 0.6,
+              "label": "epoch 200"
+            },
+            {
+              "x": 300,
+              "y": 0.75,
+              "label": "epoch 300"
+            },
+            {
+              "x": 400,
+              "y": 0.75,
+              "label": "epoch 400"
+            },
+            {
+              "x": 500,
+              "y": 0.75,
+              "label": "epoch 500"
             }
           ]
         }
@@ -5563,6 +7169,1026 @@ window.homepageData = {
               "x": 295,
               "y": 0.02305569313466549,
               "label": "epoch 295"
+            },
+            {
+              "x": 296,
+              "y": 0.014153104275465012,
+              "label": "epoch 296"
+            },
+            {
+              "x": 297,
+              "y": 0.008638998493552208,
+              "label": "epoch 297"
+            },
+            {
+              "x": 298,
+              "y": 0.05365333706140518,
+              "label": "epoch 298"
+            },
+            {
+              "x": 299,
+              "y": 0.009703359566628933,
+              "label": "epoch 299"
+            },
+            {
+              "x": 300,
+              "y": 0.014794686809182167,
+              "label": "epoch 300"
+            },
+            {
+              "x": 301,
+              "y": 0.009071018546819687,
+              "label": "epoch 301"
+            },
+            {
+              "x": 302,
+              "y": 0.04177522659301758,
+              "label": "epoch 302"
+            },
+            {
+              "x": 303,
+              "y": 0.08622533082962036,
+              "label": "epoch 303"
+            },
+            {
+              "x": 304,
+              "y": 0.011648157611489296,
+              "label": "epoch 304"
+            },
+            {
+              "x": 305,
+              "y": 0.04870710149407387,
+              "label": "epoch 305"
+            },
+            {
+              "x": 306,
+              "y": 0.009539468213915825,
+              "label": "epoch 306"
+            },
+            {
+              "x": 307,
+              "y": 0.0774482786655426,
+              "label": "epoch 307"
+            },
+            {
+              "x": 308,
+              "y": 0.014391002245247364,
+              "label": "epoch 308"
+            },
+            {
+              "x": 309,
+              "y": 0.019627101719379425,
+              "label": "epoch 309"
+            },
+            {
+              "x": 310,
+              "y": 0.011616659350693226,
+              "label": "epoch 310"
+            },
+            {
+              "x": 311,
+              "y": 0.007713041268289089,
+              "label": "epoch 311"
+            },
+            {
+              "x": 312,
+              "y": 0.014408351853489876,
+              "label": "epoch 312"
+            },
+            {
+              "x": 313,
+              "y": 0.014642301946878433,
+              "label": "epoch 313"
+            },
+            {
+              "x": 314,
+              "y": 0.02009112387895584,
+              "label": "epoch 314"
+            },
+            {
+              "x": 315,
+              "y": 0.008359096013009548,
+              "label": "epoch 315"
+            },
+            {
+              "x": 316,
+              "y": 0.09913589805364609,
+              "label": "epoch 316"
+            },
+            {
+              "x": 317,
+              "y": 0.008515702560544014,
+              "label": "epoch 317"
+            },
+            {
+              "x": 318,
+              "y": 0.006958600599318743,
+              "label": "epoch 318"
+            },
+            {
+              "x": 319,
+              "y": 0.015804985538125038,
+              "label": "epoch 319"
+            },
+            {
+              "x": 320,
+              "y": 0.00821197871118784,
+              "label": "epoch 320"
+            },
+            {
+              "x": 321,
+              "y": 0.02469131536781788,
+              "label": "epoch 321"
+            },
+            {
+              "x": 322,
+              "y": 0.004510987550020218,
+              "label": "epoch 322"
+            },
+            {
+              "x": 323,
+              "y": 0.01099614892154932,
+              "label": "epoch 323"
+            },
+            {
+              "x": 324,
+              "y": 0.036898158490657806,
+              "label": "epoch 324"
+            },
+            {
+              "x": 325,
+              "y": 0.009736992418766022,
+              "label": "epoch 325"
+            },
+            {
+              "x": 326,
+              "y": 0.012066646479070187,
+              "label": "epoch 326"
+            },
+            {
+              "x": 327,
+              "y": 0.023209696635603905,
+              "label": "epoch 327"
+            },
+            {
+              "x": 328,
+              "y": 0.012524735182523727,
+              "label": "epoch 328"
+            },
+            {
+              "x": 329,
+              "y": 0.020074008032679558,
+              "label": "epoch 329"
+            },
+            {
+              "x": 330,
+              "y": 0.015455393120646477,
+              "label": "epoch 330"
+            },
+            {
+              "x": 331,
+              "y": 0.024939190596342087,
+              "label": "epoch 331"
+            },
+            {
+              "x": 332,
+              "y": 0.09857409447431564,
+              "label": "epoch 332"
+            },
+            {
+              "x": 333,
+              "y": 0.011254431679844856,
+              "label": "epoch 333"
+            },
+            {
+              "x": 334,
+              "y": 0.01529735792428255,
+              "label": "epoch 334"
+            },
+            {
+              "x": 335,
+              "y": 0.0676368698477745,
+              "label": "epoch 335"
+            },
+            {
+              "x": 336,
+              "y": 0.01491574477404356,
+              "label": "epoch 336"
+            },
+            {
+              "x": 337,
+              "y": 0.011625252664089203,
+              "label": "epoch 337"
+            },
+            {
+              "x": 338,
+              "y": 0.007422985043376684,
+              "label": "epoch 338"
+            },
+            {
+              "x": 339,
+              "y": 0.004705377854406834,
+              "label": "epoch 339"
+            },
+            {
+              "x": 340,
+              "y": 0.027171123772859573,
+              "label": "epoch 340"
+            },
+            {
+              "x": 341,
+              "y": 0.007528221234679222,
+              "label": "epoch 341"
+            },
+            {
+              "x": 342,
+              "y": 0.01628005877137184,
+              "label": "epoch 342"
+            },
+            {
+              "x": 343,
+              "y": 0.007407264783978462,
+              "label": "epoch 343"
+            },
+            {
+              "x": 344,
+              "y": 0.010224254801869392,
+              "label": "epoch 344"
+            },
+            {
+              "x": 345,
+              "y": 0.0066126687452197075,
+              "label": "epoch 345"
+            },
+            {
+              "x": 346,
+              "y": 0.07322601974010468,
+              "label": "epoch 346"
+            },
+            {
+              "x": 347,
+              "y": 0.06958091259002686,
+              "label": "epoch 347"
+            },
+            {
+              "x": 348,
+              "y": 0.012828045524656773,
+              "label": "epoch 348"
+            },
+            {
+              "x": 349,
+              "y": 0.05781381577253342,
+              "label": "epoch 349"
+            },
+            {
+              "x": 350,
+              "y": 0.008395376615226269,
+              "label": "epoch 350"
+            },
+            {
+              "x": 351,
+              "y": 0.032913561910390854,
+              "label": "epoch 351"
+            },
+            {
+              "x": 352,
+              "y": 0.0070051332004368305,
+              "label": "epoch 352"
+            },
+            {
+              "x": 353,
+              "y": 0.016287796199321747,
+              "label": "epoch 353"
+            },
+            {
+              "x": 354,
+              "y": 0.07294604182243347,
+              "label": "epoch 354"
+            },
+            {
+              "x": 355,
+              "y": 0.011353704147040844,
+              "label": "epoch 355"
+            },
+            {
+              "x": 356,
+              "y": 0.004226011224091053,
+              "label": "epoch 356"
+            },
+            {
+              "x": 357,
+              "y": 0.03749498724937439,
+              "label": "epoch 357"
+            },
+            {
+              "x": 358,
+              "y": 0.036338143050670624,
+              "label": "epoch 358"
+            },
+            {
+              "x": 359,
+              "y": 0.01695697195827961,
+              "label": "epoch 359"
+            },
+            {
+              "x": 360,
+              "y": 0.06803108006715775,
+              "label": "epoch 360"
+            },
+            {
+              "x": 361,
+              "y": 0.004896601662039757,
+              "label": "epoch 361"
+            },
+            {
+              "x": 362,
+              "y": 0.015511964447796345,
+              "label": "epoch 362"
+            },
+            {
+              "x": 363,
+              "y": 0.07278862595558167,
+              "label": "epoch 363"
+            },
+            {
+              "x": 364,
+              "y": 0.014850789681077003,
+              "label": "epoch 364"
+            },
+            {
+              "x": 365,
+              "y": 0.024884283542633057,
+              "label": "epoch 365"
+            },
+            {
+              "x": 366,
+              "y": 0.004860039334744215,
+              "label": "epoch 366"
+            },
+            {
+              "x": 367,
+              "y": 0.023944834247231483,
+              "label": "epoch 367"
+            },
+            {
+              "x": 368,
+              "y": 0.014236953109502792,
+              "label": "epoch 368"
+            },
+            {
+              "x": 369,
+              "y": 0.01877974532544613,
+              "label": "epoch 369"
+            },
+            {
+              "x": 370,
+              "y": 0.01876736432313919,
+              "label": "epoch 370"
+            },
+            {
+              "x": 371,
+              "y": 0.0062500168569386005,
+              "label": "epoch 371"
+            },
+            {
+              "x": 372,
+              "y": 0.013451597653329372,
+              "label": "epoch 372"
+            },
+            {
+              "x": 373,
+              "y": 0.055734213441610336,
+              "label": "epoch 373"
+            },
+            {
+              "x": 374,
+              "y": 0.0076903849840164185,
+              "label": "epoch 374"
+            },
+            {
+              "x": 375,
+              "y": 0.006560167297720909,
+              "label": "epoch 375"
+            },
+            {
+              "x": 376,
+              "y": 0.10988280177116394,
+              "label": "epoch 376"
+            },
+            {
+              "x": 377,
+              "y": 0.02112080715596676,
+              "label": "epoch 377"
+            },
+            {
+              "x": 378,
+              "y": 0.004427387844771147,
+              "label": "epoch 378"
+            },
+            {
+              "x": 379,
+              "y": 0.007912744767963886,
+              "label": "epoch 379"
+            },
+            {
+              "x": 380,
+              "y": 0.02496047504246235,
+              "label": "epoch 380"
+            },
+            {
+              "x": 381,
+              "y": 0.006759384647011757,
+              "label": "epoch 381"
+            },
+            {
+              "x": 382,
+              "y": 0.005740731488913298,
+              "label": "epoch 382"
+            },
+            {
+              "x": 383,
+              "y": 0.004252933897078037,
+              "label": "epoch 383"
+            },
+            {
+              "x": 384,
+              "y": 0.01034968625754118,
+              "label": "epoch 384"
+            },
+            {
+              "x": 385,
+              "y": 0.018785905092954636,
+              "label": "epoch 385"
+            },
+            {
+              "x": 386,
+              "y": 0.007904919795691967,
+              "label": "epoch 386"
+            },
+            {
+              "x": 387,
+              "y": 0.006096336059272289,
+              "label": "epoch 387"
+            },
+            {
+              "x": 388,
+              "y": 0.007688029203563929,
+              "label": "epoch 388"
+            },
+            {
+              "x": 389,
+              "y": 0.004722972400486469,
+              "label": "epoch 389"
+            },
+            {
+              "x": 390,
+              "y": 0.0058059170842170715,
+              "label": "epoch 390"
+            },
+            {
+              "x": 391,
+              "y": 0.006164760794490576,
+              "label": "epoch 391"
+            },
+            {
+              "x": 392,
+              "y": 0.039785418659448624,
+              "label": "epoch 392"
+            },
+            {
+              "x": 393,
+              "y": 0.010459511540830135,
+              "label": "epoch 393"
+            },
+            {
+              "x": 394,
+              "y": 0.0050719017162919044,
+              "label": "epoch 394"
+            },
+            {
+              "x": 395,
+              "y": 0.006749285385012627,
+              "label": "epoch 395"
+            },
+            {
+              "x": 396,
+              "y": 0.0442185252904892,
+              "label": "epoch 396"
+            },
+            {
+              "x": 397,
+              "y": 0.0065033878199756145,
+              "label": "epoch 397"
+            },
+            {
+              "x": 398,
+              "y": 0.009789364412426949,
+              "label": "epoch 398"
+            },
+            {
+              "x": 399,
+              "y": 0.008290504105389118,
+              "label": "epoch 399"
+            },
+            {
+              "x": 400,
+              "y": 0.022984016686677933,
+              "label": "epoch 400"
+            },
+            {
+              "x": 401,
+              "y": 0.00646132742986083,
+              "label": "epoch 401"
+            },
+            {
+              "x": 402,
+              "y": 0.004978284705430269,
+              "label": "epoch 402"
+            },
+            {
+              "x": 403,
+              "y": 0.0990067645907402,
+              "label": "epoch 403"
+            },
+            {
+              "x": 404,
+              "y": 0.03863397613167763,
+              "label": "epoch 404"
+            },
+            {
+              "x": 405,
+              "y": 0.01866036094725132,
+              "label": "epoch 405"
+            },
+            {
+              "x": 406,
+              "y": 0.010861922055482864,
+              "label": "epoch 406"
+            },
+            {
+              "x": 407,
+              "y": 0.009130235761404037,
+              "label": "epoch 407"
+            },
+            {
+              "x": 408,
+              "y": 0.00747115770354867,
+              "label": "epoch 408"
+            },
+            {
+              "x": 409,
+              "y": 0.0053983209654688835,
+              "label": "epoch 409"
+            },
+            {
+              "x": 410,
+              "y": 0.06903785467147827,
+              "label": "epoch 410"
+            },
+            {
+              "x": 411,
+              "y": 0.011531798169016838,
+              "label": "epoch 411"
+            },
+            {
+              "x": 412,
+              "y": 0.08585716038942337,
+              "label": "epoch 412"
+            },
+            {
+              "x": 413,
+              "y": 0.010756042785942554,
+              "label": "epoch 413"
+            },
+            {
+              "x": 414,
+              "y": 0.05596190690994263,
+              "label": "epoch 414"
+            },
+            {
+              "x": 415,
+              "y": 0.003261890960857272,
+              "label": "epoch 415"
+            },
+            {
+              "x": 416,
+              "y": 0.043394312262535095,
+              "label": "epoch 416"
+            },
+            {
+              "x": 417,
+              "y": 0.017365634441375732,
+              "label": "epoch 417"
+            },
+            {
+              "x": 418,
+              "y": 0.009077655151486397,
+              "label": "epoch 418"
+            },
+            {
+              "x": 419,
+              "y": 0.07380034774541855,
+              "label": "epoch 419"
+            },
+            {
+              "x": 420,
+              "y": 0.021563829854130745,
+              "label": "epoch 420"
+            },
+            {
+              "x": 421,
+              "y": 0.03221149742603302,
+              "label": "epoch 421"
+            },
+            {
+              "x": 422,
+              "y": 0.016730375587940216,
+              "label": "epoch 422"
+            },
+            {
+              "x": 423,
+              "y": 0.0040585813112556934,
+              "label": "epoch 423"
+            },
+            {
+              "x": 424,
+              "y": 0.0045020319521427155,
+              "label": "epoch 424"
+            },
+            {
+              "x": 425,
+              "y": 0.006441973615437746,
+              "label": "epoch 425"
+            },
+            {
+              "x": 426,
+              "y": 0.008063744753599167,
+              "label": "epoch 426"
+            },
+            {
+              "x": 427,
+              "y": 0.008091996423900127,
+              "label": "epoch 427"
+            },
+            {
+              "x": 428,
+              "y": 0.017478549852967262,
+              "label": "epoch 428"
+            },
+            {
+              "x": 429,
+              "y": 0.0230905469506979,
+              "label": "epoch 429"
+            },
+            {
+              "x": 430,
+              "y": 0.038141943514347076,
+              "label": "epoch 430"
+            },
+            {
+              "x": 431,
+              "y": 0.007977243512868881,
+              "label": "epoch 431"
+            },
+            {
+              "x": 432,
+              "y": 0.024665020406246185,
+              "label": "epoch 432"
+            },
+            {
+              "x": 433,
+              "y": 0.0051637375727295876,
+              "label": "epoch 433"
+            },
+            {
+              "x": 434,
+              "y": 0.004888805095106363,
+              "label": "epoch 434"
+            },
+            {
+              "x": 435,
+              "y": 0.008854949846863747,
+              "label": "epoch 435"
+            },
+            {
+              "x": 436,
+              "y": 0.013286516070365906,
+              "label": "epoch 436"
+            },
+            {
+              "x": 437,
+              "y": 0.009707369841635227,
+              "label": "epoch 437"
+            },
+            {
+              "x": 438,
+              "y": 0.02674684301018715,
+              "label": "epoch 438"
+            },
+            {
+              "x": 439,
+              "y": 0.06872086226940155,
+              "label": "epoch 439"
+            },
+            {
+              "x": 440,
+              "y": 0.01799952983856201,
+              "label": "epoch 440"
+            },
+            {
+              "x": 441,
+              "y": 0.015710441395640373,
+              "label": "epoch 441"
+            },
+            {
+              "x": 442,
+              "y": 0.04923626035451889,
+              "label": "epoch 442"
+            },
+            {
+              "x": 443,
+              "y": 0.004998111166059971,
+              "label": "epoch 443"
+            },
+            {
+              "x": 444,
+              "y": 0.00991745013743639,
+              "label": "epoch 444"
+            },
+            {
+              "x": 445,
+              "y": 0.0046872328966856,
+              "label": "epoch 445"
+            },
+            {
+              "x": 446,
+              "y": 0.02131691761314869,
+              "label": "epoch 446"
+            },
+            {
+              "x": 447,
+              "y": 0.0032988903112709522,
+              "label": "epoch 447"
+            },
+            {
+              "x": 448,
+              "y": 0.005617281887680292,
+              "label": "epoch 448"
+            },
+            {
+              "x": 449,
+              "y": 0.010895052924752235,
+              "label": "epoch 449"
+            },
+            {
+              "x": 450,
+              "y": 0.016925128176808357,
+              "label": "epoch 450"
+            },
+            {
+              "x": 451,
+              "y": 0.08590631932020187,
+              "label": "epoch 451"
+            },
+            {
+              "x": 452,
+              "y": 0.004226307384669781,
+              "label": "epoch 452"
+            },
+            {
+              "x": 453,
+              "y": 0.03094439208507538,
+              "label": "epoch 453"
+            },
+            {
+              "x": 454,
+              "y": 0.015294143930077553,
+              "label": "epoch 454"
+            },
+            {
+              "x": 455,
+              "y": 0.015509337186813354,
+              "label": "epoch 455"
+            },
+            {
+              "x": 456,
+              "y": 0.004918700084090233,
+              "label": "epoch 456"
+            },
+            {
+              "x": 457,
+              "y": 0.004090598318725824,
+              "label": "epoch 457"
+            },
+            {
+              "x": 458,
+              "y": 0.06200274080038071,
+              "label": "epoch 458"
+            },
+            {
+              "x": 459,
+              "y": 0.009024661034345627,
+              "label": "epoch 459"
+            },
+            {
+              "x": 460,
+              "y": 0.004067031666636467,
+              "label": "epoch 460"
+            },
+            {
+              "x": 461,
+              "y": 0.01140917744487524,
+              "label": "epoch 461"
+            },
+            {
+              "x": 462,
+              "y": 0.019525883719325066,
+              "label": "epoch 462"
+            },
+            {
+              "x": 463,
+              "y": 0.0038136588409543037,
+              "label": "epoch 463"
+            },
+            {
+              "x": 464,
+              "y": 0.008588316850364208,
+              "label": "epoch 464"
+            },
+            {
+              "x": 465,
+              "y": 0.00990120880305767,
+              "label": "epoch 465"
+            },
+            {
+              "x": 466,
+              "y": 0.003452846547588706,
+              "label": "epoch 466"
+            },
+            {
+              "x": 467,
+              "y": 0.0051016551442444324,
+              "label": "epoch 467"
+            },
+            {
+              "x": 468,
+              "y": 0.004318626131862402,
+              "label": "epoch 468"
+            },
+            {
+              "x": 469,
+              "y": 0.05473799630999565,
+              "label": "epoch 469"
+            },
+            {
+              "x": 470,
+              "y": 0.00841209851205349,
+              "label": "epoch 470"
+            },
+            {
+              "x": 471,
+              "y": 0.027981098741292953,
+              "label": "epoch 471"
+            },
+            {
+              "x": 472,
+              "y": 0.003952663391828537,
+              "label": "epoch 472"
+            },
+            {
+              "x": 473,
+              "y": 0.00658548204228282,
+              "label": "epoch 473"
+            },
+            {
+              "x": 474,
+              "y": 0.004369574133306742,
+              "label": "epoch 474"
+            },
+            {
+              "x": 475,
+              "y": 0.003759324550628662,
+              "label": "epoch 475"
+            },
+            {
+              "x": 476,
+              "y": 0.013722418807446957,
+              "label": "epoch 476"
+            },
+            {
+              "x": 477,
+              "y": 0.011249305680394173,
+              "label": "epoch 477"
+            },
+            {
+              "x": 478,
+              "y": 0.009636707603931427,
+              "label": "epoch 478"
+            },
+            {
+              "x": 479,
+              "y": 0.004219463095068932,
+              "label": "epoch 479"
+            },
+            {
+              "x": 480,
+              "y": 0.005724437069147825,
+              "label": "epoch 480"
+            },
+            {
+              "x": 481,
+              "y": 0.0539172925055027,
+              "label": "epoch 481"
+            },
+            {
+              "x": 482,
+              "y": 0.04067965969443321,
+              "label": "epoch 482"
+            },
+            {
+              "x": 483,
+              "y": 0.003887669648975134,
+              "label": "epoch 483"
+            },
+            {
+              "x": 484,
+              "y": 0.023556649684906006,
+              "label": "epoch 484"
+            },
+            {
+              "x": 485,
+              "y": 0.010309338569641113,
+              "label": "epoch 485"
+            },
+            {
+              "x": 486,
+              "y": 0.017315633594989777,
+              "label": "epoch 486"
+            },
+            {
+              "x": 487,
+              "y": 0.006511976011097431,
+              "label": "epoch 487"
+            },
+            {
+              "x": 488,
+              "y": 0.004867063369601965,
+              "label": "epoch 488"
+            },
+            {
+              "x": 489,
+              "y": 0.046696584671735764,
+              "label": "epoch 489"
+            },
+            {
+              "x": 490,
+              "y": 0.006624337285757065,
+              "label": "epoch 490"
+            },
+            {
+              "x": 491,
+              "y": 0.0061247460544109344,
+              "label": "epoch 491"
+            },
+            {
+              "x": 492,
+              "y": 0.005148465279489756,
+              "label": "epoch 492"
+            },
+            {
+              "x": 493,
+              "y": 0.011602011509239674,
+              "label": "epoch 493"
+            },
+            {
+              "x": 494,
+              "y": 0.01943100616335869,
+              "label": "epoch 494"
+            },
+            {
+              "x": 495,
+              "y": 0.01660173013806343,
+              "label": "epoch 495"
+            },
+            {
+              "x": 496,
+              "y": 0.025625085458159447,
+              "label": "epoch 496"
+            },
+            {
+              "x": 497,
+              "y": 0.01165518257766962,
+              "label": "epoch 497"
+            },
+            {
+              "x": 498,
+              "y": 0.0038114781491458416,
+              "label": "epoch 498"
+            },
+            {
+              "x": 499,
+              "y": 0.008870374411344528,
+              "label": "epoch 499"
             }
           ]
         },
@@ -7039,6 +9665,1026 @@ window.homepageData = {
               "x": 295,
               "y": 1.3140253729775155,
               "label": "epoch 295"
+            },
+            {
+              "x": 296,
+              "y": 1.5700806237414087,
+              "label": "epoch 296"
+            },
+            {
+              "x": 297,
+              "y": 1.5789533016688533,
+              "label": "epoch 297"
+            },
+            {
+              "x": 298,
+              "y": 1.379655856296028,
+              "label": "epoch 298"
+            },
+            {
+              "x": 299,
+              "y": 1.498857055619163,
+              "label": "epoch 299"
+            },
+            {
+              "x": 300,
+              "y": 1.378408466147161,
+              "label": "epoch 300"
+            },
+            {
+              "x": 301,
+              "y": 1.3053276907334006,
+              "label": "epoch 301"
+            },
+            {
+              "x": 302,
+              "y": 1.352474745215946,
+              "label": "epoch 302"
+            },
+            {
+              "x": 303,
+              "y": 1.411131699545015,
+              "label": "epoch 303"
+            },
+            {
+              "x": 304,
+              "y": 1.455908373218814,
+              "label": "epoch 304"
+            },
+            {
+              "x": 305,
+              "y": 1.351398035908412,
+              "label": "epoch 305"
+            },
+            {
+              "x": 306,
+              "y": 1.3650860267348195,
+              "label": "epoch 306"
+            },
+            {
+              "x": 307,
+              "y": 1.2101091298421747,
+              "label": "epoch 307"
+            },
+            {
+              "x": 308,
+              "y": 1.3304394172798646,
+              "label": "epoch 308"
+            },
+            {
+              "x": 309,
+              "y": 1.356860807337063,
+              "label": "epoch 309"
+            },
+            {
+              "x": 310,
+              "y": 1.5957387957329814,
+              "label": "epoch 310"
+            },
+            {
+              "x": 311,
+              "y": 1.5332107953849787,
+              "label": "epoch 311"
+            },
+            {
+              "x": 312,
+              "y": 1.5071364164009298,
+              "label": "epoch 312"
+            },
+            {
+              "x": 313,
+              "y": 1.2951535195308297,
+              "label": "epoch 313"
+            },
+            {
+              "x": 314,
+              "y": 1.3132261918539083,
+              "label": "epoch 314"
+            },
+            {
+              "x": 315,
+              "y": 1.2878159864094894,
+              "label": "epoch 315"
+            },
+            {
+              "x": 316,
+              "y": 1.4829810858998251,
+              "label": "epoch 316"
+            },
+            {
+              "x": 317,
+              "y": 1.5130737157244432,
+              "label": "epoch 317"
+            },
+            {
+              "x": 318,
+              "y": 1.5384085249449861,
+              "label": "epoch 318"
+            },
+            {
+              "x": 319,
+              "y": 1.4659934580130012,
+              "label": "epoch 319"
+            },
+            {
+              "x": 320,
+              "y": 1.3291948019085746,
+              "label": "epoch 320"
+            },
+            {
+              "x": 321,
+              "y": 1.4884413596928905,
+              "label": "epoch 321"
+            },
+            {
+              "x": 322,
+              "y": 1.4753174440150982,
+              "label": "epoch 322"
+            },
+            {
+              "x": 323,
+              "y": 1.412390863718955,
+              "label": "epoch 323"
+            },
+            {
+              "x": 324,
+              "y": 1.464497479156738,
+              "label": "epoch 324"
+            },
+            {
+              "x": 325,
+              "y": 1.3937975881547715,
+              "label": "epoch 325"
+            },
+            {
+              "x": 326,
+              "y": 1.3407255821297632,
+              "label": "epoch 326"
+            },
+            {
+              "x": 327,
+              "y": 1.492336196763637,
+              "label": "epoch 327"
+            },
+            {
+              "x": 328,
+              "y": 1.3326248362856477,
+              "label": "epoch 328"
+            },
+            {
+              "x": 329,
+              "y": 1.471493174199407,
+              "label": "epoch 329"
+            },
+            {
+              "x": 330,
+              "y": 1.4199864295752425,
+              "label": "epoch 330"
+            },
+            {
+              "x": 331,
+              "y": 1.4517445166007077,
+              "label": "epoch 331"
+            },
+            {
+              "x": 332,
+              "y": 1.3701017715134902,
+              "label": "epoch 332"
+            },
+            {
+              "x": 333,
+              "y": 1.591197965470584,
+              "label": "epoch 333"
+            },
+            {
+              "x": 334,
+              "y": 1.3744561730785982,
+              "label": "epoch 334"
+            },
+            {
+              "x": 335,
+              "y": 1.370813137067384,
+              "label": "epoch 335"
+            },
+            {
+              "x": 336,
+              "y": 1.5395926321905695,
+              "label": "epoch 336"
+            },
+            {
+              "x": 337,
+              "y": 1.642634472809732,
+              "label": "epoch 337"
+            },
+            {
+              "x": 338,
+              "y": 1.543405329257152,
+              "label": "epoch 338"
+            },
+            {
+              "x": 339,
+              "y": 1.5427940917005272,
+              "label": "epoch 339"
+            },
+            {
+              "x": 340,
+              "y": 1.2429965832025598,
+              "label": "epoch 340"
+            },
+            {
+              "x": 341,
+              "y": 1.510613225768075,
+              "label": "epoch 341"
+            },
+            {
+              "x": 342,
+              "y": 1.3442003587383384,
+              "label": "epoch 342"
+            },
+            {
+              "x": 343,
+              "y": 1.6138189651170058,
+              "label": "epoch 343"
+            },
+            {
+              "x": 344,
+              "y": 1.4534131812029762,
+              "label": "epoch 344"
+            },
+            {
+              "x": 345,
+              "y": 1.7392166150782846,
+              "label": "epoch 345"
+            },
+            {
+              "x": 346,
+              "y": 1.3984767863232839,
+              "label": "epoch 346"
+            },
+            {
+              "x": 347,
+              "y": 1.410945287133616,
+              "label": "epoch 347"
+            },
+            {
+              "x": 348,
+              "y": 1.4917750677191897,
+              "label": "epoch 348"
+            },
+            {
+              "x": 349,
+              "y": 1.2621544189015894,
+              "label": "epoch 349"
+            },
+            {
+              "x": 350,
+              "y": 1.4261120428135128,
+              "label": "epoch 350"
+            },
+            {
+              "x": 351,
+              "y": 1.3668593322417062,
+              "label": "epoch 351"
+            },
+            {
+              "x": 352,
+              "y": 1.5216860961365073,
+              "label": "epoch 352"
+            },
+            {
+              "x": 353,
+              "y": 1.3836526698432863,
+              "label": "epoch 353"
+            },
+            {
+              "x": 354,
+              "y": 1.510798665670384,
+              "label": "epoch 354"
+            },
+            {
+              "x": 355,
+              "y": 1.3501462725138194,
+              "label": "epoch 355"
+            },
+            {
+              "x": 356,
+              "y": 1.3546588962505524,
+              "label": "epoch 356"
+            },
+            {
+              "x": 357,
+              "y": 1.5685586953829778,
+              "label": "epoch 357"
+            },
+            {
+              "x": 358,
+              "y": 1.453540592013221,
+              "label": "epoch 358"
+            },
+            {
+              "x": 359,
+              "y": 1.428161661753333,
+              "label": "epoch 359"
+            },
+            {
+              "x": 360,
+              "y": 1.5996703002111692,
+              "label": "epoch 360"
+            },
+            {
+              "x": 361,
+              "y": 1.7024853070707697,
+              "label": "epoch 361"
+            },
+            {
+              "x": 362,
+              "y": 1.5188426008374478,
+              "label": "epoch 362"
+            },
+            {
+              "x": 363,
+              "y": 1.4606277709581743,
+              "label": "epoch 363"
+            },
+            {
+              "x": 364,
+              "y": 1.3660436478002291,
+              "label": "epoch 364"
+            },
+            {
+              "x": 365,
+              "y": 1.4703967184514593,
+              "label": "epoch 365"
+            },
+            {
+              "x": 366,
+              "y": 1.2656189911557656,
+              "label": "epoch 366"
+            },
+            {
+              "x": 367,
+              "y": 1.3878693416420567,
+              "label": "epoch 367"
+            },
+            {
+              "x": 368,
+              "y": 1.6311371979842846,
+              "label": "epoch 368"
+            },
+            {
+              "x": 369,
+              "y": 1.4856393052951287,
+              "label": "epoch 369"
+            },
+            {
+              "x": 370,
+              "y": 1.4733058422999947,
+              "label": "epoch 370"
+            },
+            {
+              "x": 371,
+              "y": 1.5252005766439987,
+              "label": "epoch 371"
+            },
+            {
+              "x": 372,
+              "y": 1.7542466519302444,
+              "label": "epoch 372"
+            },
+            {
+              "x": 373,
+              "y": 1.5513097614196962,
+              "label": "epoch 373"
+            },
+            {
+              "x": 374,
+              "y": 1.6431277965342528,
+              "label": "epoch 374"
+            },
+            {
+              "x": 375,
+              "y": 1.45358518906869,
+              "label": "epoch 375"
+            },
+            {
+              "x": 376,
+              "y": 1.3028117245259254,
+              "label": "epoch 376"
+            },
+            {
+              "x": 377,
+              "y": 1.5093876692392911,
+              "label": "epoch 377"
+            },
+            {
+              "x": 378,
+              "y": 1.490765480373643,
+              "label": "epoch 378"
+            },
+            {
+              "x": 379,
+              "y": 1.6767242128691195,
+              "label": "epoch 379"
+            },
+            {
+              "x": 380,
+              "y": 1.5434361255948286,
+              "label": "epoch 380"
+            },
+            {
+              "x": 381,
+              "y": 1.5145704419670725,
+              "label": "epoch 381"
+            },
+            {
+              "x": 382,
+              "y": 1.5220466373169697,
+              "label": "epoch 382"
+            },
+            {
+              "x": 383,
+              "y": 1.6414855284077163,
+              "label": "epoch 383"
+            },
+            {
+              "x": 384,
+              "y": 1.3580371019503985,
+              "label": "epoch 384"
+            },
+            {
+              "x": 385,
+              "y": 1.3204885249908425,
+              "label": "epoch 385"
+            },
+            {
+              "x": 386,
+              "y": 1.4487638719208342,
+              "label": "epoch 386"
+            },
+            {
+              "x": 387,
+              "y": 1.5082642840417593,
+              "label": "epoch 387"
+            },
+            {
+              "x": 388,
+              "y": 1.6644657011707558,
+              "label": "epoch 388"
+            },
+            {
+              "x": 389,
+              "y": 1.7169549991621782,
+              "label": "epoch 389"
+            },
+            {
+              "x": 390,
+              "y": 1.351188395956629,
+              "label": "epoch 390"
+            },
+            {
+              "x": 391,
+              "y": 1.348502494590847,
+              "label": "epoch 391"
+            },
+            {
+              "x": 392,
+              "y": 1.5014768482161391,
+              "label": "epoch 392"
+            },
+            {
+              "x": 393,
+              "y": 1.4294739587379521,
+              "label": "epoch 393"
+            },
+            {
+              "x": 394,
+              "y": 1.7703890327707326,
+              "label": "epoch 394"
+            },
+            {
+              "x": 395,
+              "y": 1.3696825773406185,
+              "label": "epoch 395"
+            },
+            {
+              "x": 396,
+              "y": 1.4242053311685787,
+              "label": "epoch 396"
+            },
+            {
+              "x": 397,
+              "y": 1.4194131751397723,
+              "label": "epoch 397"
+            },
+            {
+              "x": 398,
+              "y": 1.501289216691236,
+              "label": "epoch 398"
+            },
+            {
+              "x": 399,
+              "y": 1.7350181586256153,
+              "label": "epoch 399"
+            },
+            {
+              "x": 400,
+              "y": 1.3955077757372667,
+              "label": "epoch 400"
+            },
+            {
+              "x": 401,
+              "y": 1.4859090276724218,
+              "label": "epoch 401"
+            },
+            {
+              "x": 402,
+              "y": 1.5508399461641122,
+              "label": "epoch 402"
+            },
+            {
+              "x": 403,
+              "y": 1.4316985197855454,
+              "label": "epoch 403"
+            },
+            {
+              "x": 404,
+              "y": 1.6867876997413604,
+              "label": "epoch 404"
+            },
+            {
+              "x": 405,
+              "y": 1.4373352483012958,
+              "label": "epoch 405"
+            },
+            {
+              "x": 406,
+              "y": 1.4785801439398998,
+              "label": "epoch 406"
+            },
+            {
+              "x": 407,
+              "y": 1.6870253544153744,
+              "label": "epoch 407"
+            },
+            {
+              "x": 408,
+              "y": 1.7811223940531675,
+              "label": "epoch 408"
+            },
+            {
+              "x": 409,
+              "y": 1.6125203315046077,
+              "label": "epoch 409"
+            },
+            {
+              "x": 410,
+              "y": 1.6078555797912966,
+              "label": "epoch 410"
+            },
+            {
+              "x": 411,
+              "y": 1.650837188353762,
+              "label": "epoch 411"
+            },
+            {
+              "x": 412,
+              "y": 1.740709999576211,
+              "label": "epoch 412"
+            },
+            {
+              "x": 413,
+              "y": 1.6286797460756803,
+              "label": "epoch 413"
+            },
+            {
+              "x": 414,
+              "y": 1.6912191490103539,
+              "label": "epoch 414"
+            },
+            {
+              "x": 415,
+              "y": 1.4494189650163447,
+              "label": "epoch 415"
+            },
+            {
+              "x": 416,
+              "y": 1.7646213244021822,
+              "label": "epoch 416"
+            },
+            {
+              "x": 417,
+              "y": 1.479957316217846,
+              "label": "epoch 417"
+            },
+            {
+              "x": 418,
+              "y": 1.7183466376981844,
+              "label": "epoch 418"
+            },
+            {
+              "x": 419,
+              "y": 1.7108843745663762,
+              "label": "epoch 419"
+            },
+            {
+              "x": 420,
+              "y": 1.659455621602798,
+              "label": "epoch 420"
+            },
+            {
+              "x": 421,
+              "y": 1.5824566845733083,
+              "label": "epoch 421"
+            },
+            {
+              "x": 422,
+              "y": 1.7606427268443727,
+              "label": "epoch 422"
+            },
+            {
+              "x": 423,
+              "y": 1.8345387848584276,
+              "label": "epoch 423"
+            },
+            {
+              "x": 424,
+              "y": 1.5309340145536943,
+              "label": "epoch 424"
+            },
+            {
+              "x": 425,
+              "y": 1.855825756578461,
+              "label": "epoch 425"
+            },
+            {
+              "x": 426,
+              "y": 1.3775061659245311,
+              "label": "epoch 426"
+            },
+            {
+              "x": 427,
+              "y": 1.697054365171904,
+              "label": "epoch 427"
+            },
+            {
+              "x": 428,
+              "y": 1.7879433398085989,
+              "label": "epoch 428"
+            },
+            {
+              "x": 429,
+              "y": 1.747076618252322,
+              "label": "epoch 429"
+            },
+            {
+              "x": 430,
+              "y": 1.641814198148878,
+              "label": "epoch 430"
+            },
+            {
+              "x": 431,
+              "y": 1.61104297012973,
+              "label": "epoch 431"
+            },
+            {
+              "x": 432,
+              "y": 1.5075219018188746,
+              "label": "epoch 432"
+            },
+            {
+              "x": 433,
+              "y": 1.6905314160118763,
+              "label": "epoch 433"
+            },
+            {
+              "x": 434,
+              "y": 1.650489838254687,
+              "label": "epoch 434"
+            },
+            {
+              "x": 435,
+              "y": 1.6015873905761462,
+              "label": "epoch 435"
+            },
+            {
+              "x": 436,
+              "y": 1.6074719724588489,
+              "label": "epoch 436"
+            },
+            {
+              "x": 437,
+              "y": 1.8375825860145454,
+              "label": "epoch 437"
+            },
+            {
+              "x": 438,
+              "y": 1.8301372872665524,
+              "label": "epoch 438"
+            },
+            {
+              "x": 439,
+              "y": 1.4397124851514633,
+              "label": "epoch 439"
+            },
+            {
+              "x": 440,
+              "y": 1.6988878147431503,
+              "label": "epoch 440"
+            },
+            {
+              "x": 441,
+              "y": 1.8485193425348323,
+              "label": "epoch 441"
+            },
+            {
+              "x": 442,
+              "y": 1.7003111031127016,
+              "label": "epoch 442"
+            },
+            {
+              "x": 443,
+              "y": 1.6504366731785827,
+              "label": "epoch 443"
+            },
+            {
+              "x": 444,
+              "y": 1.4665763562447147,
+              "label": "epoch 444"
+            },
+            {
+              "x": 445,
+              "y": 1.7030332660008418,
+              "label": "epoch 445"
+            },
+            {
+              "x": 446,
+              "y": 1.7217225821590738,
+              "label": "epoch 446"
+            },
+            {
+              "x": 447,
+              "y": 1.6875343981297,
+              "label": "epoch 447"
+            },
+            {
+              "x": 448,
+              "y": 1.636250549486201,
+              "label": "epoch 448"
+            },
+            {
+              "x": 449,
+              "y": 1.547233894675676,
+              "label": "epoch 449"
+            },
+            {
+              "x": 450,
+              "y": 1.4400055339854014,
+              "label": "epoch 450"
+            },
+            {
+              "x": 451,
+              "y": 1.842954187261823,
+              "label": "epoch 451"
+            },
+            {
+              "x": 452,
+              "y": 1.5074579963754666,
+              "label": "epoch 452"
+            },
+            {
+              "x": 453,
+              "y": 1.7742008522250934,
+              "label": "epoch 453"
+            },
+            {
+              "x": 454,
+              "y": 1.714648314114464,
+              "label": "epoch 454"
+            },
+            {
+              "x": 455,
+              "y": 1.6429836406421505,
+              "label": "epoch 455"
+            },
+            {
+              "x": 456,
+              "y": 1.9312921222176795,
+              "label": "epoch 456"
+            },
+            {
+              "x": 457,
+              "y": 1.5814491168252731,
+              "label": "epoch 457"
+            },
+            {
+              "x": 458,
+              "y": 1.8023530088708197,
+              "label": "epoch 458"
+            },
+            {
+              "x": 459,
+              "y": 1.487269221749892,
+              "label": "epoch 459"
+            },
+            {
+              "x": 460,
+              "y": 1.7480672617491924,
+              "label": "epoch 460"
+            },
+            {
+              "x": 461,
+              "y": 1.8405343322573524,
+              "label": "epoch 461"
+            },
+            {
+              "x": 462,
+              "y": 1.6566056292626614,
+              "label": "epoch 462"
+            },
+            {
+              "x": 463,
+              "y": 1.6803839270785255,
+              "label": "epoch 463"
+            },
+            {
+              "x": 464,
+              "y": 1.682725512005977,
+              "label": "epoch 464"
+            },
+            {
+              "x": 465,
+              "y": 1.5794117262488918,
+              "label": "epoch 465"
+            },
+            {
+              "x": 466,
+              "y": 1.5518832745300115,
+              "label": "epoch 466"
+            },
+            {
+              "x": 467,
+              "y": 1.4938477770131278,
+              "label": "epoch 467"
+            },
+            {
+              "x": 468,
+              "y": 1.8607381174929047,
+              "label": "epoch 468"
+            },
+            {
+              "x": 469,
+              "y": 1.6944110714217746,
+              "label": "epoch 469"
+            },
+            {
+              "x": 470,
+              "y": 1.7552128858300613,
+              "label": "epoch 470"
+            },
+            {
+              "x": 471,
+              "y": 1.447006267078809,
+              "label": "epoch 471"
+            },
+            {
+              "x": 472,
+              "y": 1.5301123138419108,
+              "label": "epoch 472"
+            },
+            {
+              "x": 473,
+              "y": 1.5995879246926819,
+              "label": "epoch 473"
+            },
+            {
+              "x": 474,
+              "y": 1.6705540478180505,
+              "label": "epoch 474"
+            },
+            {
+              "x": 475,
+              "y": 1.6827423779146844,
+              "label": "epoch 475"
+            },
+            {
+              "x": 476,
+              "y": 1.5282328261895792,
+              "label": "epoch 476"
+            },
+            {
+              "x": 477,
+              "y": 1.8904600659826476,
+              "label": "epoch 477"
+            },
+            {
+              "x": 478,
+              "y": 1.703831814315268,
+              "label": "epoch 478"
+            },
+            {
+              "x": 479,
+              "y": 1.726648441662914,
+              "label": "epoch 479"
+            },
+            {
+              "x": 480,
+              "y": 1.7667041283198877,
+              "label": "epoch 480"
+            },
+            {
+              "x": 481,
+              "y": 1.5683377666496916,
+              "label": "epoch 481"
+            },
+            {
+              "x": 482,
+              "y": 1.5494545324656523,
+              "label": "epoch 482"
+            },
+            {
+              "x": 483,
+              "y": 1.5967467176654424,
+              "label": "epoch 483"
+            },
+            {
+              "x": 484,
+              "y": 1.786340750619083,
+              "label": "epoch 484"
+            },
+            {
+              "x": 485,
+              "y": 1.6716658029656268,
+              "label": "epoch 485"
+            },
+            {
+              "x": 486,
+              "y": 1.6614295706447018,
+              "label": "epoch 486"
+            },
+            {
+              "x": 487,
+              "y": 1.7439982498701858,
+              "label": "epoch 487"
+            },
+            {
+              "x": 488,
+              "y": 1.6601135016566044,
+              "label": "epoch 488"
+            },
+            {
+              "x": 489,
+              "y": 1.678948500365215,
+              "label": "epoch 489"
+            },
+            {
+              "x": 490,
+              "y": 1.4344791220501065,
+              "label": "epoch 490"
+            },
+            {
+              "x": 491,
+              "y": 1.733972992797039,
+              "label": "epoch 491"
+            },
+            {
+              "x": 492,
+              "y": 1.6479065041547936,
+              "label": "epoch 492"
+            },
+            {
+              "x": 493,
+              "y": 1.5452577660448457,
+              "label": "epoch 493"
+            },
+            {
+              "x": 494,
+              "y": 1.703324574192888,
+              "label": "epoch 494"
+            },
+            {
+              "x": 495,
+              "y": 1.595515463060062,
+              "label": "epoch 495"
+            },
+            {
+              "x": 496,
+              "y": 1.8189190769764154,
+              "label": "epoch 496"
+            },
+            {
+              "x": 497,
+              "y": 1.8159718683210055,
+              "label": "epoch 497"
+            },
+            {
+              "x": 498,
+              "y": 1.5269644329030263,
+              "label": "epoch 498"
+            },
+            {
+              "x": 499,
+              "y": 1.749937889656346,
+              "label": "epoch 499"
             }
           ]
         }
@@ -8525,6 +12171,1026 @@ window.homepageData = {
               "x": 295,
               "y": 0.0041851367752410865,
               "label": "epoch 295"
+            },
+            {
+              "x": 296,
+              "y": 0.004165858237492533,
+              "label": "epoch 296"
+            },
+            {
+              "x": 297,
+              "y": 0.004168677618221601,
+              "label": "epoch 297"
+            },
+            {
+              "x": 298,
+              "y": 0.004175173378730267,
+              "label": "epoch 298"
+            },
+            {
+              "x": 299,
+              "y": 0.0041737557246386515,
+              "label": "epoch 299"
+            },
+            {
+              "x": 300,
+              "y": 0.004162223195108757,
+              "label": "epoch 300"
+            },
+            {
+              "x": 301,
+              "y": 0.004176985158042761,
+              "label": "epoch 301"
+            },
+            {
+              "x": 302,
+              "y": 0.004185480988158624,
+              "label": "epoch 302"
+            },
+            {
+              "x": 303,
+              "y": 0.004177549915958049,
+              "label": "epoch 303"
+            },
+            {
+              "x": 304,
+              "y": 0.00418582262347244,
+              "label": "epoch 304"
+            },
+            {
+              "x": 305,
+              "y": 0.004181980562479063,
+              "label": "epoch 305"
+            },
+            {
+              "x": 306,
+              "y": 0.00416472999112509,
+              "label": "epoch 306"
+            },
+            {
+              "x": 307,
+              "y": 0.004156693803164863,
+              "label": "epoch 307"
+            },
+            {
+              "x": 308,
+              "y": 0.004175946162400865,
+              "label": "epoch 308"
+            },
+            {
+              "x": 309,
+              "y": 0.004173253225943833,
+              "label": "epoch 309"
+            },
+            {
+              "x": 310,
+              "y": 0.00417767181313952,
+              "label": "epoch 310"
+            },
+            {
+              "x": 311,
+              "y": 0.004155193096314753,
+              "label": "epoch 311"
+            },
+            {
+              "x": 312,
+              "y": 0.004184041578953743,
+              "label": "epoch 312"
+            },
+            {
+              "x": 313,
+              "y": 0.0041537999614344075,
+              "label": "epoch 313"
+            },
+            {
+              "x": 314,
+              "y": 0.004184994317352232,
+              "label": "epoch 314"
+            },
+            {
+              "x": 315,
+              "y": 0.004156772319555258,
+              "label": "epoch 315"
+            },
+            {
+              "x": 316,
+              "y": 0.004166653827843747,
+              "label": "epoch 316"
+            },
+            {
+              "x": 317,
+              "y": 0.0041777181069942585,
+              "label": "epoch 317"
+            },
+            {
+              "x": 318,
+              "y": 0.004186433836079423,
+              "label": "epoch 318"
+            },
+            {
+              "x": 319,
+              "y": 0.004188878179487993,
+              "label": "epoch 319"
+            },
+            {
+              "x": 320,
+              "y": 0.004190575967138437,
+              "label": "epoch 320"
+            },
+            {
+              "x": 321,
+              "y": 0.004191908751779824,
+              "label": "epoch 321"
+            },
+            {
+              "x": 322,
+              "y": 0.004174269424478744,
+              "label": "epoch 322"
+            },
+            {
+              "x": 323,
+              "y": 0.004170858960270907,
+              "label": "epoch 323"
+            },
+            {
+              "x": 324,
+              "y": 0.004188254914065749,
+              "label": "epoch 324"
+            },
+            {
+              "x": 325,
+              "y": 0.004198104525321948,
+              "label": "epoch 325"
+            },
+            {
+              "x": 326,
+              "y": 0.0042013778702790945,
+              "label": "epoch 326"
+            },
+            {
+              "x": 327,
+              "y": 0.004213951097259077,
+              "label": "epoch 327"
+            },
+            {
+              "x": 328,
+              "y": 0.004200700985261631,
+              "label": "epoch 328"
+            },
+            {
+              "x": 329,
+              "y": 0.004204633546913483,
+              "label": "epoch 329"
+            },
+            {
+              "x": 330,
+              "y": 0.004201191542961169,
+              "label": "epoch 330"
+            },
+            {
+              "x": 331,
+              "y": 0.004212017698400335,
+              "label": "epoch 331"
+            },
+            {
+              "x": 332,
+              "y": 0.004210454512136302,
+              "label": "epoch 332"
+            },
+            {
+              "x": 333,
+              "y": 0.004205156814254894,
+              "label": "epoch 333"
+            },
+            {
+              "x": 334,
+              "y": 0.0042250135712062105,
+              "label": "epoch 334"
+            },
+            {
+              "x": 335,
+              "y": 0.004204930196513152,
+              "label": "epoch 335"
+            },
+            {
+              "x": 336,
+              "y": 0.004218436388519446,
+              "label": "epoch 336"
+            },
+            {
+              "x": 337,
+              "y": 0.004226499620448234,
+              "label": "epoch 337"
+            },
+            {
+              "x": 338,
+              "y": 0.004212610006154711,
+              "label": "epoch 338"
+            },
+            {
+              "x": 339,
+              "y": 0.004208592018250401,
+              "label": "epoch 339"
+            },
+            {
+              "x": 340,
+              "y": 0.004219303156500437,
+              "label": "epoch 340"
+            },
+            {
+              "x": 341,
+              "y": 0.0042293562667174755,
+              "label": "epoch 341"
+            },
+            {
+              "x": 342,
+              "y": 0.004228437326673884,
+              "label": "epoch 342"
+            },
+            {
+              "x": 343,
+              "y": 0.004219250524137782,
+              "label": "epoch 343"
+            },
+            {
+              "x": 344,
+              "y": 0.004218115064998672,
+              "label": "epoch 344"
+            },
+            {
+              "x": 345,
+              "y": 0.004212083007012935,
+              "label": "epoch 345"
+            },
+            {
+              "x": 346,
+              "y": 0.00422011153530452,
+              "label": "epoch 346"
+            },
+            {
+              "x": 347,
+              "y": 0.004210734431245855,
+              "label": "epoch 347"
+            },
+            {
+              "x": 348,
+              "y": 0.004214158880610117,
+              "label": "epoch 348"
+            },
+            {
+              "x": 349,
+              "y": 0.00421202221945063,
+              "label": "epoch 349"
+            },
+            {
+              "x": 350,
+              "y": 0.0042381994770901085,
+              "label": "epoch 350"
+            },
+            {
+              "x": 351,
+              "y": 0.004223673801645514,
+              "label": "epoch 351"
+            },
+            {
+              "x": 352,
+              "y": 0.004215543727025904,
+              "label": "epoch 352"
+            },
+            {
+              "x": 353,
+              "y": 0.004194995781290345,
+              "label": "epoch 353"
+            },
+            {
+              "x": 354,
+              "y": 0.004205410723730701,
+              "label": "epoch 354"
+            },
+            {
+              "x": 355,
+              "y": 0.004207501526061127,
+              "label": "epoch 355"
+            },
+            {
+              "x": 356,
+              "y": 0.004220540264213923,
+              "label": "epoch 356"
+            },
+            {
+              "x": 357,
+              "y": 0.004217652352771869,
+              "label": "epoch 357"
+            },
+            {
+              "x": 358,
+              "y": 0.004216048485479979,
+              "label": "epoch 358"
+            },
+            {
+              "x": 359,
+              "y": 0.004221527596344363,
+              "label": "epoch 359"
+            },
+            {
+              "x": 360,
+              "y": 0.004234749210713505,
+              "label": "epoch 360"
+            },
+            {
+              "x": 361,
+              "y": 0.0042434231650795,
+              "label": "epoch 361"
+            },
+            {
+              "x": 362,
+              "y": 0.004231511896681408,
+              "label": "epoch 362"
+            },
+            {
+              "x": 363,
+              "y": 0.004241787111248796,
+              "label": "epoch 363"
+            },
+            {
+              "x": 364,
+              "y": 0.004224640513329129,
+              "label": "epoch 364"
+            },
+            {
+              "x": 365,
+              "y": 0.004228882671955752,
+              "label": "epoch 365"
+            },
+            {
+              "x": 366,
+              "y": 0.0042262333426103735,
+              "label": "epoch 366"
+            },
+            {
+              "x": 367,
+              "y": 0.004222662072080359,
+              "label": "epoch 367"
+            },
+            {
+              "x": 368,
+              "y": 0.00421209845233917,
+              "label": "epoch 368"
+            },
+            {
+              "x": 369,
+              "y": 0.004211106140773106,
+              "label": "epoch 369"
+            },
+            {
+              "x": 370,
+              "y": 0.004208684502947635,
+              "label": "epoch 370"
+            },
+            {
+              "x": 371,
+              "y": 0.0042034408010965165,
+              "label": "epoch 371"
+            },
+            {
+              "x": 372,
+              "y": 0.004218835331573102,
+              "label": "epoch 372"
+            },
+            {
+              "x": 373,
+              "y": 0.004219922792751612,
+              "label": "epoch 373"
+            },
+            {
+              "x": 374,
+              "y": 0.004222971316745603,
+              "label": "epoch 374"
+            },
+            {
+              "x": 375,
+              "y": 0.004228278215649832,
+              "label": "epoch 375"
+            },
+            {
+              "x": 376,
+              "y": 0.004229114814446994,
+              "label": "epoch 376"
+            },
+            {
+              "x": 377,
+              "y": 0.004224346171739805,
+              "label": "epoch 377"
+            },
+            {
+              "x": 378,
+              "y": 0.004214909274244411,
+              "label": "epoch 378"
+            },
+            {
+              "x": 379,
+              "y": 0.004230048686287391,
+              "label": "epoch 379"
+            },
+            {
+              "x": 380,
+              "y": 0.00422476599947243,
+              "label": "epoch 380"
+            },
+            {
+              "x": 381,
+              "y": 0.004228641282871219,
+              "label": "epoch 381"
+            },
+            {
+              "x": 382,
+              "y": 0.004228221371273608,
+              "label": "epoch 382"
+            },
+            {
+              "x": 383,
+              "y": 0.0042169048944120545,
+              "label": "epoch 383"
+            },
+            {
+              "x": 384,
+              "y": 0.004215380888413883,
+              "label": "epoch 384"
+            },
+            {
+              "x": 385,
+              "y": 0.0042004704465446255,
+              "label": "epoch 385"
+            },
+            {
+              "x": 386,
+              "y": 0.004199244439261843,
+              "label": "epoch 386"
+            },
+            {
+              "x": 387,
+              "y": 0.004206049851506434,
+              "label": "epoch 387"
+            },
+            {
+              "x": 388,
+              "y": 0.004205707166539996,
+              "label": "epoch 388"
+            },
+            {
+              "x": 389,
+              "y": 0.004190792532187372,
+              "label": "epoch 389"
+            },
+            {
+              "x": 390,
+              "y": 0.0041983344654957025,
+              "label": "epoch 390"
+            },
+            {
+              "x": 391,
+              "y": 0.0042099067014580785,
+              "label": "epoch 391"
+            },
+            {
+              "x": 392,
+              "y": 0.00421064731697123,
+              "label": "epoch 392"
+            },
+            {
+              "x": 393,
+              "y": 0.004211200341447501,
+              "label": "epoch 393"
+            },
+            {
+              "x": 394,
+              "y": 0.004177523735147827,
+              "label": "epoch 394"
+            },
+            {
+              "x": 395,
+              "y": 0.004194245545429447,
+              "label": "epoch 395"
+            },
+            {
+              "x": 396,
+              "y": 0.004182984016216851,
+              "label": "epoch 396"
+            },
+            {
+              "x": 397,
+              "y": 0.004173796155986278,
+              "label": "epoch 397"
+            },
+            {
+              "x": 398,
+              "y": 0.004185498249793646,
+              "label": "epoch 398"
+            },
+            {
+              "x": 399,
+              "y": 0.004187247451275317,
+              "label": "epoch 399"
+            },
+            {
+              "x": 400,
+              "y": 0.00417903118489592,
+              "label": "epoch 400"
+            },
+            {
+              "x": 401,
+              "y": 0.004169142327890241,
+              "label": "epoch 401"
+            },
+            {
+              "x": 402,
+              "y": 0.0041851410669072435,
+              "label": "epoch 402"
+            },
+            {
+              "x": 403,
+              "y": 0.004178597886685135,
+              "label": "epoch 403"
+            },
+            {
+              "x": 404,
+              "y": 0.004188611683754348,
+              "label": "epoch 404"
+            },
+            {
+              "x": 405,
+              "y": 0.004189753145175545,
+              "label": "epoch 405"
+            },
+            {
+              "x": 406,
+              "y": 0.004199766826978272,
+              "label": "epoch 406"
+            },
+            {
+              "x": 407,
+              "y": 0.004170414187109073,
+              "label": "epoch 407"
+            },
+            {
+              "x": 408,
+              "y": 0.004186890798767931,
+              "label": "epoch 408"
+            },
+            {
+              "x": 409,
+              "y": 0.00417356524657838,
+              "label": "epoch 409"
+            },
+            {
+              "x": 410,
+              "y": 0.004182380483574602,
+              "label": "epoch 410"
+            },
+            {
+              "x": 411,
+              "y": 0.004173847122537585,
+              "label": "epoch 411"
+            },
+            {
+              "x": 412,
+              "y": 0.004165718053531907,
+              "label": "epoch 412"
+            },
+            {
+              "x": 413,
+              "y": 0.004167322628889356,
+              "label": "epoch 413"
+            },
+            {
+              "x": 414,
+              "y": 0.004166161060167819,
+              "label": "epoch 414"
+            },
+            {
+              "x": 415,
+              "y": 0.004174614340100609,
+              "label": "epoch 415"
+            },
+            {
+              "x": 416,
+              "y": 0.004164786191770537,
+              "label": "epoch 416"
+            },
+            {
+              "x": 417,
+              "y": 0.004169511297062088,
+              "label": "epoch 417"
+            },
+            {
+              "x": 418,
+              "y": 0.004161013225951281,
+              "label": "epoch 418"
+            },
+            {
+              "x": 419,
+              "y": 0.004162257820242207,
+              "label": "epoch 419"
+            },
+            {
+              "x": 420,
+              "y": 0.0041746022145257725,
+              "label": "epoch 420"
+            },
+            {
+              "x": 421,
+              "y": 0.004164453162765743,
+              "label": "epoch 421"
+            },
+            {
+              "x": 422,
+              "y": 0.004171066610739983,
+              "label": "epoch 422"
+            },
+            {
+              "x": 423,
+              "y": 0.004176636018918974,
+              "label": "epoch 423"
+            },
+            {
+              "x": 424,
+              "y": 0.004161220133506791,
+              "label": "epoch 424"
+            },
+            {
+              "x": 425,
+              "y": 0.004174124981785242,
+              "label": "epoch 425"
+            },
+            {
+              "x": 426,
+              "y": 0.004173125835414363,
+              "label": "epoch 426"
+            },
+            {
+              "x": 427,
+              "y": 0.004170611647790984,
+              "label": "epoch 427"
+            },
+            {
+              "x": 428,
+              "y": 0.004174340178188255,
+              "label": "epoch 428"
+            },
+            {
+              "x": 429,
+              "y": 0.004175345212340625,
+              "label": "epoch 429"
+            },
+            {
+              "x": 430,
+              "y": 0.004172358770263504,
+              "label": "epoch 430"
+            },
+            {
+              "x": 431,
+              "y": 0.004178409065245528,
+              "label": "epoch 431"
+            },
+            {
+              "x": 432,
+              "y": 0.004168705594661572,
+              "label": "epoch 432"
+            },
+            {
+              "x": 433,
+              "y": 0.004175341464073618,
+              "label": "epoch 433"
+            },
+            {
+              "x": 434,
+              "y": 0.004174465002602358,
+              "label": "epoch 434"
+            },
+            {
+              "x": 435,
+              "y": 0.0041729436381597465,
+              "label": "epoch 435"
+            },
+            {
+              "x": 436,
+              "y": 0.004171975368272366,
+              "label": "epoch 436"
+            },
+            {
+              "x": 437,
+              "y": 0.004175238681981634,
+              "label": "epoch 437"
+            },
+            {
+              "x": 438,
+              "y": 0.004182034138801483,
+              "label": "epoch 438"
+            },
+            {
+              "x": 439,
+              "y": 0.0041806493482956855,
+              "label": "epoch 439"
+            },
+            {
+              "x": 440,
+              "y": 0.004181648618740789,
+              "label": "epoch 440"
+            },
+            {
+              "x": 441,
+              "y": 0.00417727786981758,
+              "label": "epoch 441"
+            },
+            {
+              "x": 442,
+              "y": 0.004179512374991502,
+              "label": "epoch 442"
+            },
+            {
+              "x": 443,
+              "y": 0.004176121082931978,
+              "label": "epoch 443"
+            },
+            {
+              "x": 444,
+              "y": 0.0041795987363959855,
+              "label": "epoch 444"
+            },
+            {
+              "x": 445,
+              "y": 0.0041858263950991,
+              "label": "epoch 445"
+            },
+            {
+              "x": 446,
+              "y": 0.004186897026604703,
+              "label": "epoch 446"
+            },
+            {
+              "x": 447,
+              "y": 0.004185185754307129,
+              "label": "epoch 447"
+            },
+            {
+              "x": 448,
+              "y": 0.004182086784184273,
+              "label": "epoch 448"
+            },
+            {
+              "x": 449,
+              "y": 0.004182777047007173,
+              "label": "epoch 449"
+            },
+            {
+              "x": 450,
+              "y": 0.0041796939924671804,
+              "label": "epoch 450"
+            },
+            {
+              "x": 451,
+              "y": 0.004179652719023197,
+              "label": "epoch 451"
+            },
+            {
+              "x": 452,
+              "y": 0.004178602235793062,
+              "label": "epoch 452"
+            },
+            {
+              "x": 453,
+              "y": 0.0041740681802988734,
+              "label": "epoch 453"
+            },
+            {
+              "x": 454,
+              "y": 0.004180353838340747,
+              "label": "epoch 454"
+            },
+            {
+              "x": 455,
+              "y": 0.004174635377574687,
+              "label": "epoch 455"
+            },
+            {
+              "x": 456,
+              "y": 0.00418406169506182,
+              "label": "epoch 456"
+            },
+            {
+              "x": 457,
+              "y": 0.004185566890794833,
+              "label": "epoch 457"
+            },
+            {
+              "x": 458,
+              "y": 0.004172732914938885,
+              "label": "epoch 458"
+            },
+            {
+              "x": 459,
+              "y": 0.004176031646860984,
+              "label": "epoch 459"
+            },
+            {
+              "x": 460,
+              "y": 0.004169683726152135,
+              "label": "epoch 460"
+            },
+            {
+              "x": 461,
+              "y": 0.0041735740550824345,
+              "label": "epoch 461"
+            },
+            {
+              "x": 462,
+              "y": 0.0041780645134215436,
+              "label": "epoch 462"
+            },
+            {
+              "x": 463,
+              "y": 0.004170525476327289,
+              "label": "epoch 463"
+            },
+            {
+              "x": 464,
+              "y": 0.00417299372049073,
+              "label": "epoch 464"
+            },
+            {
+              "x": 465,
+              "y": 0.004174387633515596,
+              "label": "epoch 465"
+            },
+            {
+              "x": 466,
+              "y": 0.004174723176938163,
+              "label": "epoch 466"
+            },
+            {
+              "x": 467,
+              "y": 0.004176551352812615,
+              "label": "epoch 467"
+            },
+            {
+              "x": 468,
+              "y": 0.004173859039024376,
+              "label": "epoch 468"
+            },
+            {
+              "x": 469,
+              "y": 0.004177159346765716,
+              "label": "epoch 469"
+            },
+            {
+              "x": 470,
+              "y": 0.0041756758368329,
+              "label": "epoch 470"
+            },
+            {
+              "x": 471,
+              "y": 0.004176497618333853,
+              "label": "epoch 471"
+            },
+            {
+              "x": 472,
+              "y": 0.004177502371021546,
+              "label": "epoch 472"
+            },
+            {
+              "x": 473,
+              "y": 0.004174890870911584,
+              "label": "epoch 473"
+            },
+            {
+              "x": 474,
+              "y": 0.004174887716209541,
+              "label": "epoch 474"
+            },
+            {
+              "x": 475,
+              "y": 0.004173819518703232,
+              "label": "epoch 475"
+            },
+            {
+              "x": 476,
+              "y": 0.004174827025532355,
+              "label": "epoch 476"
+            },
+            {
+              "x": 477,
+              "y": 0.004174826170415862,
+              "label": "epoch 477"
+            },
+            {
+              "x": 478,
+              "y": 0.004173443175539815,
+              "label": "epoch 478"
+            },
+            {
+              "x": 479,
+              "y": 0.004167905149331905,
+              "label": "epoch 479"
+            },
+            {
+              "x": 480,
+              "y": 0.004172735049858028,
+              "label": "epoch 480"
+            },
+            {
+              "x": 481,
+              "y": 0.004178099834749254,
+              "label": "epoch 481"
+            },
+            {
+              "x": 482,
+              "y": 0.004171623726602104,
+              "label": "epoch 482"
+            },
+            {
+              "x": 483,
+              "y": 0.004173256031016966,
+              "label": "epoch 483"
+            },
+            {
+              "x": 484,
+              "y": 0.004173276199205583,
+              "label": "epoch 484"
+            },
+            {
+              "x": 485,
+              "y": 0.004176075613941066,
+              "label": "epoch 485"
+            },
+            {
+              "x": 486,
+              "y": 0.004172609757102021,
+              "label": "epoch 486"
+            },
+            {
+              "x": 487,
+              "y": 0.004172811558084122,
+              "label": "epoch 487"
+            },
+            {
+              "x": 488,
+              "y": 0.004174581296147632,
+              "label": "epoch 488"
+            },
+            {
+              "x": 489,
+              "y": 0.004178538002107464,
+              "label": "epoch 489"
+            },
+            {
+              "x": 490,
+              "y": 0.004173545849258325,
+              "label": "epoch 490"
+            },
+            {
+              "x": 491,
+              "y": 0.004179282673392568,
+              "label": "epoch 491"
+            },
+            {
+              "x": 492,
+              "y": 0.004169728358024976,
+              "label": "epoch 492"
+            },
+            {
+              "x": 493,
+              "y": 0.004168466343942687,
+              "label": "epoch 493"
+            },
+            {
+              "x": 494,
+              "y": 0.004178931436112371,
+              "label": "epoch 494"
+            },
+            {
+              "x": 495,
+              "y": 0.004166469261690509,
+              "label": "epoch 495"
+            },
+            {
+              "x": 496,
+              "y": 0.004175285230494889,
+              "label": "epoch 496"
+            },
+            {
+              "x": 497,
+              "y": 0.004171556137551211,
+              "label": "epoch 497"
+            },
+            {
+              "x": 498,
+              "y": 0.004166641827109025,
+              "label": "epoch 498"
+            },
+            {
+              "x": 499,
+              "y": 0.004175552111854286,
+              "label": "epoch 499"
             }
           ]
         },
@@ -10001,6 +14667,1026 @@ window.homepageData = {
               "x": 295,
               "y": 0.06368970179698265,
               "label": "epoch 295"
+            },
+            {
+              "x": 296,
+              "y": 0.06372340524218376,
+              "label": "epoch 296"
+            },
+            {
+              "x": 297,
+              "y": 0.06362992487457202,
+              "label": "epoch 297"
+            },
+            {
+              "x": 298,
+              "y": 0.06363135109801844,
+              "label": "epoch 298"
+            },
+            {
+              "x": 299,
+              "y": 0.0635794792966695,
+              "label": "epoch 299"
+            },
+            {
+              "x": 300,
+              "y": 0.06355039233006353,
+              "label": "epoch 300"
+            },
+            {
+              "x": 301,
+              "y": 0.06364048701671939,
+              "label": "epoch 301"
+            },
+            {
+              "x": 302,
+              "y": 0.06364628889882863,
+              "label": "epoch 302"
+            },
+            {
+              "x": 303,
+              "y": 0.06363429413460453,
+              "label": "epoch 303"
+            },
+            {
+              "x": 304,
+              "y": 0.06362649247067136,
+              "label": "epoch 304"
+            },
+            {
+              "x": 305,
+              "y": 0.0636359618154912,
+              "label": "epoch 305"
+            },
+            {
+              "x": 306,
+              "y": 0.06373712980099586,
+              "label": "epoch 306"
+            },
+            {
+              "x": 307,
+              "y": 0.06358837356885105,
+              "label": "epoch 307"
+            },
+            {
+              "x": 308,
+              "y": 0.0635765903919635,
+              "label": "epoch 308"
+            },
+            {
+              "x": 309,
+              "y": 0.0636266548769383,
+              "label": "epoch 309"
+            },
+            {
+              "x": 310,
+              "y": 0.06362888773429931,
+              "label": "epoch 310"
+            },
+            {
+              "x": 311,
+              "y": 0.06362603000697593,
+              "label": "epoch 311"
+            },
+            {
+              "x": 312,
+              "y": 0.06370034705469152,
+              "label": "epoch 312"
+            },
+            {
+              "x": 313,
+              "y": 0.06365426684696056,
+              "label": "epoch 313"
+            },
+            {
+              "x": 314,
+              "y": 0.06359574262464057,
+              "label": "epoch 314"
+            },
+            {
+              "x": 315,
+              "y": 0.06359608819126918,
+              "label": "epoch 315"
+            },
+            {
+              "x": 316,
+              "y": 0.06374705245482466,
+              "label": "epoch 316"
+            },
+            {
+              "x": 317,
+              "y": 0.06367883168039905,
+              "label": "epoch 317"
+            },
+            {
+              "x": 318,
+              "y": 0.06368039113505419,
+              "label": "epoch 318"
+            },
+            {
+              "x": 319,
+              "y": 0.06373951486717774,
+              "label": "epoch 319"
+            },
+            {
+              "x": 320,
+              "y": 0.06374251005150941,
+              "label": "epoch 320"
+            },
+            {
+              "x": 321,
+              "y": 0.06374710343477905,
+              "label": "epoch 321"
+            },
+            {
+              "x": 322,
+              "y": 0.06373904164368134,
+              "label": "epoch 322"
+            },
+            {
+              "x": 323,
+              "y": 0.06373902997764067,
+              "label": "epoch 323"
+            },
+            {
+              "x": 324,
+              "y": 0.06376551854421116,
+              "label": "epoch 324"
+            },
+            {
+              "x": 325,
+              "y": 0.06376858327961313,
+              "label": "epoch 325"
+            },
+            {
+              "x": 326,
+              "y": 0.06376800301261124,
+              "label": "epoch 326"
+            },
+            {
+              "x": 327,
+              "y": 0.06384941139721807,
+              "label": "epoch 327"
+            },
+            {
+              "x": 328,
+              "y": 0.06384133767354988,
+              "label": "epoch 328"
+            },
+            {
+              "x": 329,
+              "y": 0.063855377477969,
+              "label": "epoch 329"
+            },
+            {
+              "x": 330,
+              "y": 0.06386332351853764,
+              "label": "epoch 330"
+            },
+            {
+              "x": 331,
+              "y": 0.06388931407165824,
+              "label": "epoch 331"
+            },
+            {
+              "x": 332,
+              "y": 0.06389978741533828,
+              "label": "epoch 332"
+            },
+            {
+              "x": 333,
+              "y": 0.0639105079629333,
+              "label": "epoch 333"
+            },
+            {
+              "x": 334,
+              "y": 0.06388097519964886,
+              "label": "epoch 334"
+            },
+            {
+              "x": 335,
+              "y": 0.06390258074373521,
+              "label": "epoch 335"
+            },
+            {
+              "x": 336,
+              "y": 0.06389646898012295,
+              "label": "epoch 336"
+            },
+            {
+              "x": 337,
+              "y": 0.06383631319113192,
+              "label": "epoch 337"
+            },
+            {
+              "x": 338,
+              "y": 0.0638830526657234,
+              "label": "epoch 338"
+            },
+            {
+              "x": 339,
+              "y": 0.06383765688243377,
+              "label": "epoch 339"
+            },
+            {
+              "x": 340,
+              "y": 0.06388947560021495,
+              "label": "epoch 340"
+            },
+            {
+              "x": 341,
+              "y": 0.06388428592962507,
+              "label": "epoch 341"
+            },
+            {
+              "x": 342,
+              "y": 0.06393223891599949,
+              "label": "epoch 342"
+            },
+            {
+              "x": 343,
+              "y": 0.06388714350798277,
+              "label": "epoch 343"
+            },
+            {
+              "x": 344,
+              "y": 0.06386747969793903,
+              "label": "epoch 344"
+            },
+            {
+              "x": 345,
+              "y": 0.06390190637102933,
+              "label": "epoch 345"
+            },
+            {
+              "x": 346,
+              "y": 0.0638501308073357,
+              "label": "epoch 346"
+            },
+            {
+              "x": 347,
+              "y": 0.0638508626631703,
+              "label": "epoch 347"
+            },
+            {
+              "x": 348,
+              "y": 0.06383512777182132,
+              "label": "epoch 348"
+            },
+            {
+              "x": 349,
+              "y": 0.06386335996495818,
+              "label": "epoch 349"
+            },
+            {
+              "x": 350,
+              "y": 0.06384519188539248,
+              "label": "epoch 350"
+            },
+            {
+              "x": 351,
+              "y": 0.0638117135447254,
+              "label": "epoch 351"
+            },
+            {
+              "x": 352,
+              "y": 0.06389877478144818,
+              "label": "epoch 352"
+            },
+            {
+              "x": 353,
+              "y": 0.0638709271040984,
+              "label": "epoch 353"
+            },
+            {
+              "x": 354,
+              "y": 0.0638025484900266,
+              "label": "epoch 354"
+            },
+            {
+              "x": 355,
+              "y": 0.06385675284093993,
+              "label": "epoch 355"
+            },
+            {
+              "x": 356,
+              "y": 0.06385097279646863,
+              "label": "epoch 356"
+            },
+            {
+              "x": 357,
+              "y": 0.06393816864300261,
+              "label": "epoch 357"
+            },
+            {
+              "x": 358,
+              "y": 0.06389123750130621,
+              "label": "epoch 358"
+            },
+            {
+              "x": 359,
+              "y": 0.06390481983965544,
+              "label": "epoch 359"
+            },
+            {
+              "x": 360,
+              "y": 0.0639391595667755,
+              "label": "epoch 360"
+            },
+            {
+              "x": 361,
+              "y": 0.06394200941079027,
+              "label": "epoch 361"
+            },
+            {
+              "x": 362,
+              "y": 0.06393558834756013,
+              "label": "epoch 362"
+            },
+            {
+              "x": 363,
+              "y": 0.06396233739054112,
+              "label": "epoch 363"
+            },
+            {
+              "x": 364,
+              "y": 0.06392884890546587,
+              "label": "epoch 364"
+            },
+            {
+              "x": 365,
+              "y": 0.0638887383100059,
+              "label": "epoch 365"
+            },
+            {
+              "x": 366,
+              "y": 0.06388320930024124,
+              "label": "epoch 366"
+            },
+            {
+              "x": 367,
+              "y": 0.06389811484194452,
+              "label": "epoch 367"
+            },
+            {
+              "x": 368,
+              "y": 0.06386639233670921,
+              "label": "epoch 368"
+            },
+            {
+              "x": 369,
+              "y": 0.06385790247192122,
+              "label": "epoch 369"
+            },
+            {
+              "x": 370,
+              "y": 0.0638560984560555,
+              "label": "epoch 370"
+            },
+            {
+              "x": 371,
+              "y": 0.0638303710199436,
+              "label": "epoch 371"
+            },
+            {
+              "x": 372,
+              "y": 0.0638534148818412,
+              "label": "epoch 372"
+            },
+            {
+              "x": 373,
+              "y": 0.06388059244292028,
+              "label": "epoch 373"
+            },
+            {
+              "x": 374,
+              "y": 0.06385267137451783,
+              "label": "epoch 374"
+            },
+            {
+              "x": 375,
+              "y": 0.0638803727922909,
+              "label": "epoch 375"
+            },
+            {
+              "x": 376,
+              "y": 0.06391217893848845,
+              "label": "epoch 376"
+            },
+            {
+              "x": 377,
+              "y": 0.06388730516635788,
+              "label": "epoch 377"
+            },
+            {
+              "x": 378,
+              "y": 0.06390903524688359,
+              "label": "epoch 378"
+            },
+            {
+              "x": 379,
+              "y": 0.06395567580540573,
+              "label": "epoch 379"
+            },
+            {
+              "x": 380,
+              "y": 0.0639365609410896,
+              "label": "epoch 380"
+            },
+            {
+              "x": 381,
+              "y": 0.06392148083499419,
+              "label": "epoch 381"
+            },
+            {
+              "x": 382,
+              "y": 0.0639195529185695,
+              "label": "epoch 382"
+            },
+            {
+              "x": 383,
+              "y": 0.0639316686842664,
+              "label": "epoch 383"
+            },
+            {
+              "x": 384,
+              "y": 0.06394847345750589,
+              "label": "epoch 384"
+            },
+            {
+              "x": 385,
+              "y": 0.0638861038839279,
+              "label": "epoch 385"
+            },
+            {
+              "x": 386,
+              "y": 0.06392340847416658,
+              "label": "epoch 386"
+            },
+            {
+              "x": 387,
+              "y": 0.06388888333075508,
+              "label": "epoch 387"
+            },
+            {
+              "x": 388,
+              "y": 0.06389904096584742,
+              "label": "epoch 388"
+            },
+            {
+              "x": 389,
+              "y": 0.06389636019268533,
+              "label": "epoch 389"
+            },
+            {
+              "x": 390,
+              "y": 0.06397170080986382,
+              "label": "epoch 390"
+            },
+            {
+              "x": 391,
+              "y": 0.06394636926377548,
+              "label": "epoch 391"
+            },
+            {
+              "x": 392,
+              "y": 0.06399554078559863,
+              "label": "epoch 392"
+            },
+            {
+              "x": 393,
+              "y": 0.06400055824173921,
+              "label": "epoch 393"
+            },
+            {
+              "x": 394,
+              "y": 0.06397158572814844,
+              "label": "epoch 394"
+            },
+            {
+              "x": 395,
+              "y": 0.06398872125723037,
+              "label": "epoch 395"
+            },
+            {
+              "x": 396,
+              "y": 0.06398229340304265,
+              "label": "epoch 396"
+            },
+            {
+              "x": 397,
+              "y": 0.06394045088764917,
+              "label": "epoch 397"
+            },
+            {
+              "x": 398,
+              "y": 0.06394033757265118,
+              "label": "epoch 398"
+            },
+            {
+              "x": 399,
+              "y": 0.06394844067242382,
+              "label": "epoch 399"
+            },
+            {
+              "x": 400,
+              "y": 0.06391492881793008,
+              "label": "epoch 400"
+            },
+            {
+              "x": 401,
+              "y": 0.0638961666451283,
+              "label": "epoch 401"
+            },
+            {
+              "x": 402,
+              "y": 0.06396747996941006,
+              "label": "epoch 402"
+            },
+            {
+              "x": 403,
+              "y": 0.06394145202227121,
+              "label": "epoch 403"
+            },
+            {
+              "x": 404,
+              "y": 0.06398421868135828,
+              "label": "epoch 404"
+            },
+            {
+              "x": 405,
+              "y": 0.0640268118915724,
+              "label": "epoch 405"
+            },
+            {
+              "x": 406,
+              "y": 0.06403213262283795,
+              "label": "epoch 406"
+            },
+            {
+              "x": 407,
+              "y": 0.0640223499706879,
+              "label": "epoch 407"
+            },
+            {
+              "x": 408,
+              "y": 0.06404023665948587,
+              "label": "epoch 408"
+            },
+            {
+              "x": 409,
+              "y": 0.06398026281960101,
+              "label": "epoch 409"
+            },
+            {
+              "x": 410,
+              "y": 0.0639733174759481,
+              "label": "epoch 410"
+            },
+            {
+              "x": 411,
+              "y": 0.06400023417958628,
+              "label": "epoch 411"
+            },
+            {
+              "x": 412,
+              "y": 0.06399039867832662,
+              "label": "epoch 412"
+            },
+            {
+              "x": 413,
+              "y": 0.06401204964200397,
+              "label": "epoch 413"
+            },
+            {
+              "x": 414,
+              "y": 0.06399952007862005,
+              "label": "epoch 414"
+            },
+            {
+              "x": 415,
+              "y": 0.0640578965337083,
+              "label": "epoch 415"
+            },
+            {
+              "x": 416,
+              "y": 0.06400660533912933,
+              "label": "epoch 416"
+            },
+            {
+              "x": 417,
+              "y": 0.06407306847713219,
+              "label": "epoch 417"
+            },
+            {
+              "x": 418,
+              "y": 0.06402397836504142,
+              "label": "epoch 418"
+            },
+            {
+              "x": 419,
+              "y": 0.06404818695514941,
+              "label": "epoch 419"
+            },
+            {
+              "x": 420,
+              "y": 0.06400775370811491,
+              "label": "epoch 420"
+            },
+            {
+              "x": 421,
+              "y": 0.06399231224809467,
+              "label": "epoch 421"
+            },
+            {
+              "x": 422,
+              "y": 0.06404711153970168,
+              "label": "epoch 422"
+            },
+            {
+              "x": 423,
+              "y": 0.06408853245260329,
+              "label": "epoch 423"
+            },
+            {
+              "x": 424,
+              "y": 0.06410634352141642,
+              "label": "epoch 424"
+            },
+            {
+              "x": 425,
+              "y": 0.06405639709364071,
+              "label": "epoch 425"
+            },
+            {
+              "x": 426,
+              "y": 0.06405134320984392,
+              "label": "epoch 426"
+            },
+            {
+              "x": 427,
+              "y": 0.06405141575171576,
+              "label": "epoch 427"
+            },
+            {
+              "x": 428,
+              "y": 0.06407244963798132,
+              "label": "epoch 428"
+            },
+            {
+              "x": 429,
+              "y": 0.06405442534225203,
+              "label": "epoch 429"
+            },
+            {
+              "x": 430,
+              "y": 0.06398938733649343,
+              "label": "epoch 430"
+            },
+            {
+              "x": 431,
+              "y": 0.0640017737320082,
+              "label": "epoch 431"
+            },
+            {
+              "x": 432,
+              "y": 0.06394755744680113,
+              "label": "epoch 432"
+            },
+            {
+              "x": 433,
+              "y": 0.0639813187733939,
+              "label": "epoch 433"
+            },
+            {
+              "x": 434,
+              "y": 0.06393848444790101,
+              "label": "epoch 434"
+            },
+            {
+              "x": 435,
+              "y": 0.06393786950847195,
+              "label": "epoch 435"
+            },
+            {
+              "x": 436,
+              "y": 0.06390489792159458,
+              "label": "epoch 436"
+            },
+            {
+              "x": 437,
+              "y": 0.06392320088228812,
+              "label": "epoch 437"
+            },
+            {
+              "x": 438,
+              "y": 0.06392171140492121,
+              "label": "epoch 438"
+            },
+            {
+              "x": 439,
+              "y": 0.06394234987486638,
+              "label": "epoch 439"
+            },
+            {
+              "x": 440,
+              "y": 0.06392172281343128,
+              "label": "epoch 440"
+            },
+            {
+              "x": 441,
+              "y": 0.06390038203971926,
+              "label": "epoch 441"
+            },
+            {
+              "x": 442,
+              "y": 0.06387626510465787,
+              "label": "epoch 442"
+            },
+            {
+              "x": 443,
+              "y": 0.06388064177793383,
+              "label": "epoch 443"
+            },
+            {
+              "x": 444,
+              "y": 0.06389928159708354,
+              "label": "epoch 444"
+            },
+            {
+              "x": 445,
+              "y": 0.06390079472916305,
+              "label": "epoch 445"
+            },
+            {
+              "x": 446,
+              "y": 0.06392417533176117,
+              "label": "epoch 446"
+            },
+            {
+              "x": 447,
+              "y": 0.06392044399916286,
+              "label": "epoch 447"
+            },
+            {
+              "x": 448,
+              "y": 0.06391271709588564,
+              "label": "epoch 448"
+            },
+            {
+              "x": 449,
+              "y": 0.06391613102153458,
+              "label": "epoch 449"
+            },
+            {
+              "x": 450,
+              "y": 0.0638956973416498,
+              "label": "epoch 450"
+            },
+            {
+              "x": 451,
+              "y": 0.06386253583102523,
+              "label": "epoch 451"
+            },
+            {
+              "x": 452,
+              "y": 0.06387183962751326,
+              "label": "epoch 452"
+            },
+            {
+              "x": 453,
+              "y": 0.06384251897543436,
+              "label": "epoch 453"
+            },
+            {
+              "x": 454,
+              "y": 0.06385341743283023,
+              "label": "epoch 454"
+            },
+            {
+              "x": 455,
+              "y": 0.0638482231948537,
+              "label": "epoch 455"
+            },
+            {
+              "x": 456,
+              "y": 0.06383793301632211,
+              "label": "epoch 456"
+            },
+            {
+              "x": 457,
+              "y": 0.06383116933763008,
+              "label": "epoch 457"
+            },
+            {
+              "x": 458,
+              "y": 0.06384203863337079,
+              "label": "epoch 458"
+            },
+            {
+              "x": 459,
+              "y": 0.0637832145473926,
+              "label": "epoch 459"
+            },
+            {
+              "x": 460,
+              "y": 0.0638232279467813,
+              "label": "epoch 460"
+            },
+            {
+              "x": 461,
+              "y": 0.06382107387999943,
+              "label": "epoch 461"
+            },
+            {
+              "x": 462,
+              "y": 0.06378871790519425,
+              "label": "epoch 462"
+            },
+            {
+              "x": 463,
+              "y": 0.06381528751195506,
+              "label": "epoch 463"
+            },
+            {
+              "x": 464,
+              "y": 0.06382914002939574,
+              "label": "epoch 464"
+            },
+            {
+              "x": 465,
+              "y": 0.06382642987649122,
+              "label": "epoch 465"
+            },
+            {
+              "x": 466,
+              "y": 0.06384602517745837,
+              "label": "epoch 466"
+            },
+            {
+              "x": 467,
+              "y": 0.06385231503449368,
+              "label": "epoch 467"
+            },
+            {
+              "x": 468,
+              "y": 0.06380455976996975,
+              "label": "epoch 468"
+            },
+            {
+              "x": 469,
+              "y": 0.06383014221328746,
+              "label": "epoch 469"
+            },
+            {
+              "x": 470,
+              "y": 0.06382320528179039,
+              "label": "epoch 470"
+            },
+            {
+              "x": 471,
+              "y": 0.06385896747949453,
+              "label": "epoch 471"
+            },
+            {
+              "x": 472,
+              "y": 0.06384078181068426,
+              "label": "epoch 472"
+            },
+            {
+              "x": 473,
+              "y": 0.06380512243374956,
+              "label": "epoch 473"
+            },
+            {
+              "x": 474,
+              "y": 0.06383493739562446,
+              "label": "epoch 474"
+            },
+            {
+              "x": 475,
+              "y": 0.06380935575936364,
+              "label": "epoch 475"
+            },
+            {
+              "x": 476,
+              "y": 0.0637854222385565,
+              "label": "epoch 476"
+            },
+            {
+              "x": 477,
+              "y": 0.06381961045860264,
+              "label": "epoch 477"
+            },
+            {
+              "x": 478,
+              "y": 0.06381019586019408,
+              "label": "epoch 478"
+            },
+            {
+              "x": 479,
+              "y": 0.06379957136308995,
+              "label": "epoch 479"
+            },
+            {
+              "x": 480,
+              "y": 0.06380150341283297,
+              "label": "epoch 480"
+            },
+            {
+              "x": 481,
+              "y": 0.06380752650894513,
+              "label": "epoch 481"
+            },
+            {
+              "x": 482,
+              "y": 0.06381339288667445,
+              "label": "epoch 482"
+            },
+            {
+              "x": 483,
+              "y": 0.06379708529091563,
+              "label": "epoch 483"
+            },
+            {
+              "x": 484,
+              "y": 0.0637472163675978,
+              "label": "epoch 484"
+            },
+            {
+              "x": 485,
+              "y": 0.06378694637226688,
+              "label": "epoch 485"
+            },
+            {
+              "x": 486,
+              "y": 0.06381101279877935,
+              "label": "epoch 486"
+            },
+            {
+              "x": 487,
+              "y": 0.06381274687086452,
+              "label": "epoch 487"
+            },
+            {
+              "x": 488,
+              "y": 0.06379194369391801,
+              "label": "epoch 488"
+            },
+            {
+              "x": 489,
+              "y": 0.06380039249377564,
+              "label": "epoch 489"
+            },
+            {
+              "x": 490,
+              "y": 0.06382712627830762,
+              "label": "epoch 490"
+            },
+            {
+              "x": 491,
+              "y": 0.06378801493720905,
+              "label": "epoch 491"
+            },
+            {
+              "x": 492,
+              "y": 0.06380467464202268,
+              "label": "epoch 492"
+            },
+            {
+              "x": 493,
+              "y": 0.06377689514403373,
+              "label": "epoch 493"
+            },
+            {
+              "x": 494,
+              "y": 0.0638270361339796,
+              "label": "epoch 494"
+            },
+            {
+              "x": 495,
+              "y": 0.06381811746369319,
+              "label": "epoch 495"
+            },
+            {
+              "x": 496,
+              "y": 0.06380807218872513,
+              "label": "epoch 496"
+            },
+            {
+              "x": 497,
+              "y": 0.06380706115056742,
+              "label": "epoch 497"
+            },
+            {
+              "x": 498,
+              "y": 0.06380123507781384,
+              "label": "epoch 498"
+            },
+            {
+              "x": 499,
+              "y": 0.06380291511787188,
+              "label": "epoch 499"
             }
           ]
         },
@@ -11477,6 +17163,1026 @@ window.homepageData = {
               "x": 295,
               "y": 0.06493405561866139,
               "label": "epoch 295"
+            },
+            {
+              "x": 296,
+              "y": 0.064843950823672,
+              "label": "epoch 296"
+            },
+            {
+              "x": 297,
+              "y": 0.06513539621992274,
+              "label": "epoch 297"
+            },
+            {
+              "x": 298,
+              "y": 0.06518049355437788,
+              "label": "epoch 298"
+            },
+            {
+              "x": 299,
+              "y": 0.06498432345154165,
+              "label": "epoch 299"
+            },
+            {
+              "x": 300,
+              "y": 0.06503707189366244,
+              "label": "epoch 300"
+            },
+            {
+              "x": 301,
+              "y": 0.06490477081514039,
+              "label": "epoch 301"
+            },
+            {
+              "x": 302,
+              "y": 0.06536619881879795,
+              "label": "epoch 302"
+            },
+            {
+              "x": 303,
+              "y": 0.06548446104277535,
+              "label": "epoch 303"
+            },
+            {
+              "x": 304,
+              "y": 0.0650437580735585,
+              "label": "epoch 304"
+            },
+            {
+              "x": 305,
+              "y": 0.06534426844172153,
+              "label": "epoch 305"
+            },
+            {
+              "x": 306,
+              "y": 0.06518090349678567,
+              "label": "epoch 306"
+            },
+            {
+              "x": 307,
+              "y": 0.06520888927461761,
+              "label": "epoch 307"
+            },
+            {
+              "x": 308,
+              "y": 0.06537873780680875,
+              "label": "epoch 308"
+            },
+            {
+              "x": 309,
+              "y": 0.06540076854722536,
+              "label": "epoch 309"
+            },
+            {
+              "x": 310,
+              "y": 0.06530786077287849,
+              "label": "epoch 310"
+            },
+            {
+              "x": 311,
+              "y": 0.06532216334245863,
+              "label": "epoch 311"
+            },
+            {
+              "x": 312,
+              "y": 0.06533711189175799,
+              "label": "epoch 312"
+            },
+            {
+              "x": 313,
+              "y": 0.06508706458058848,
+              "label": "epoch 313"
+            },
+            {
+              "x": 314,
+              "y": 0.06508218703717268,
+              "label": "epoch 314"
+            },
+            {
+              "x": 315,
+              "y": 0.06589161235160645,
+              "label": "epoch 315"
+            },
+            {
+              "x": 316,
+              "y": 0.0653591665812374,
+              "label": "epoch 316"
+            },
+            {
+              "x": 317,
+              "y": 0.06560906213624289,
+              "label": "epoch 317"
+            },
+            {
+              "x": 318,
+              "y": 0.06546817385650397,
+              "label": "epoch 318"
+            },
+            {
+              "x": 319,
+              "y": 0.06524086835765418,
+              "label": "epoch 319"
+            },
+            {
+              "x": 320,
+              "y": 0.06535521627282485,
+              "label": "epoch 320"
+            },
+            {
+              "x": 321,
+              "y": 0.06546869069005218,
+              "label": "epoch 321"
+            },
+            {
+              "x": 322,
+              "y": 0.06491964929733217,
+              "label": "epoch 322"
+            },
+            {
+              "x": 323,
+              "y": 0.06543704254798137,
+              "label": "epoch 323"
+            },
+            {
+              "x": 324,
+              "y": 0.065032438596247,
+              "label": "epoch 324"
+            },
+            {
+              "x": 325,
+              "y": 0.06508541474666099,
+              "label": "epoch 325"
+            },
+            {
+              "x": 326,
+              "y": 0.065681399419448,
+              "label": "epoch 326"
+            },
+            {
+              "x": 327,
+              "y": 0.06523014561705502,
+              "label": "epoch 327"
+            },
+            {
+              "x": 328,
+              "y": 0.06548711433832691,
+              "label": "epoch 328"
+            },
+            {
+              "x": 329,
+              "y": 0.06562052516492738,
+              "label": "epoch 329"
+            },
+            {
+              "x": 330,
+              "y": 0.06573016292589716,
+              "label": "epoch 330"
+            },
+            {
+              "x": 331,
+              "y": 0.0653089867989132,
+              "label": "epoch 331"
+            },
+            {
+              "x": 332,
+              "y": 0.06552577532485471,
+              "label": "epoch 332"
+            },
+            {
+              "x": 333,
+              "y": 0.0649975418727437,
+              "label": "epoch 333"
+            },
+            {
+              "x": 334,
+              "y": 0.06558986106200923,
+              "label": "epoch 334"
+            },
+            {
+              "x": 335,
+              "y": 0.06539647770777815,
+              "label": "epoch 335"
+            },
+            {
+              "x": 336,
+              "y": 0.06515758755572308,
+              "label": "epoch 336"
+            },
+            {
+              "x": 337,
+              "y": 0.0656168227809321,
+              "label": "epoch 337"
+            },
+            {
+              "x": 338,
+              "y": 0.06543141900622111,
+              "label": "epoch 338"
+            },
+            {
+              "x": 339,
+              "y": 0.06546422712953197,
+              "label": "epoch 339"
+            },
+            {
+              "x": 340,
+              "y": 0.06553068741745817,
+              "label": "epoch 340"
+            },
+            {
+              "x": 341,
+              "y": 0.06561161017938993,
+              "label": "epoch 341"
+            },
+            {
+              "x": 342,
+              "y": 0.06562139402914406,
+              "label": "epoch 342"
+            },
+            {
+              "x": 343,
+              "y": 0.06551153570735162,
+              "label": "epoch 343"
+            },
+            {
+              "x": 344,
+              "y": 0.06591086246054165,
+              "label": "epoch 344"
+            },
+            {
+              "x": 345,
+              "y": 0.06590165108768381,
+              "label": "epoch 345"
+            },
+            {
+              "x": 346,
+              "y": 0.06579695967329706,
+              "label": "epoch 346"
+            },
+            {
+              "x": 347,
+              "y": 0.06571467185710694,
+              "label": "epoch 347"
+            },
+            {
+              "x": 348,
+              "y": 0.06563434238634464,
+              "label": "epoch 348"
+            },
+            {
+              "x": 349,
+              "y": 0.06548259062707391,
+              "label": "epoch 349"
+            },
+            {
+              "x": 350,
+              "y": 0.06583159398698475,
+              "label": "epoch 350"
+            },
+            {
+              "x": 351,
+              "y": 0.06550513153243735,
+              "label": "epoch 351"
+            },
+            {
+              "x": 352,
+              "y": 0.06577978257124073,
+              "label": "epoch 352"
+            },
+            {
+              "x": 353,
+              "y": 0.06550934710401628,
+              "label": "epoch 353"
+            },
+            {
+              "x": 354,
+              "y": 0.06576054788301333,
+              "label": "epoch 354"
+            },
+            {
+              "x": 355,
+              "y": 0.06581501304502972,
+              "label": "epoch 355"
+            },
+            {
+              "x": 356,
+              "y": 0.06586913154569554,
+              "label": "epoch 356"
+            },
+            {
+              "x": 357,
+              "y": 0.06568614273691172,
+              "label": "epoch 357"
+            },
+            {
+              "x": 358,
+              "y": 0.06582136499578739,
+              "label": "epoch 358"
+            },
+            {
+              "x": 359,
+              "y": 0.06611103220209943,
+              "label": "epoch 359"
+            },
+            {
+              "x": 360,
+              "y": 0.06603325592152637,
+              "label": "epoch 360"
+            },
+            {
+              "x": 361,
+              "y": 0.06585438168911806,
+              "label": "epoch 361"
+            },
+            {
+              "x": 362,
+              "y": 0.06549511789883711,
+              "label": "epoch 362"
+            },
+            {
+              "x": 363,
+              "y": 0.0657530364959275,
+              "label": "epoch 363"
+            },
+            {
+              "x": 364,
+              "y": 0.06587106797208339,
+              "label": "epoch 364"
+            },
+            {
+              "x": 365,
+              "y": 0.06576827961549127,
+              "label": "epoch 365"
+            },
+            {
+              "x": 366,
+              "y": 0.06580476937817013,
+              "label": "epoch 366"
+            },
+            {
+              "x": 367,
+              "y": 0.06623587483820502,
+              "label": "epoch 367"
+            },
+            {
+              "x": 368,
+              "y": 0.06633208953820563,
+              "label": "epoch 368"
+            },
+            {
+              "x": 369,
+              "y": 0.06582102487332452,
+              "label": "epoch 369"
+            },
+            {
+              "x": 370,
+              "y": 0.06603865593423731,
+              "label": "epoch 370"
+            },
+            {
+              "x": 371,
+              "y": 0.06604220640022468,
+              "label": "epoch 371"
+            },
+            {
+              "x": 372,
+              "y": 0.06582644118511301,
+              "label": "epoch 372"
+            },
+            {
+              "x": 373,
+              "y": 0.06591923912710747,
+              "label": "epoch 373"
+            },
+            {
+              "x": 374,
+              "y": 0.06617651441727078,
+              "label": "epoch 374"
+            },
+            {
+              "x": 375,
+              "y": 0.06585176614898065,
+              "label": "epoch 375"
+            },
+            {
+              "x": 376,
+              "y": 0.06594251049688593,
+              "label": "epoch 376"
+            },
+            {
+              "x": 377,
+              "y": 0.06627139321668994,
+              "label": "epoch 377"
+            },
+            {
+              "x": 378,
+              "y": 0.06624931748674619,
+              "label": "epoch 378"
+            },
+            {
+              "x": 379,
+              "y": 0.06568915803852686,
+              "label": "epoch 379"
+            },
+            {
+              "x": 380,
+              "y": 0.0659965612940702,
+              "label": "epoch 380"
+            },
+            {
+              "x": 381,
+              "y": 0.06578249648665828,
+              "label": "epoch 381"
+            },
+            {
+              "x": 382,
+              "y": 0.06621368531736793,
+              "label": "epoch 382"
+            },
+            {
+              "x": 383,
+              "y": 0.0660050602178824,
+              "label": "epoch 383"
+            },
+            {
+              "x": 384,
+              "y": 0.06627468063955626,
+              "label": "epoch 384"
+            },
+            {
+              "x": 385,
+              "y": 0.06598829823653468,
+              "label": "epoch 385"
+            },
+            {
+              "x": 386,
+              "y": 0.06586397737049915,
+              "label": "epoch 386"
+            },
+            {
+              "x": 387,
+              "y": 0.066112382022608,
+              "label": "epoch 387"
+            },
+            {
+              "x": 388,
+              "y": 0.06621400162164773,
+              "label": "epoch 388"
+            },
+            {
+              "x": 389,
+              "y": 0.06606210815335083,
+              "label": "epoch 389"
+            },
+            {
+              "x": 390,
+              "y": 0.06591273020202387,
+              "label": "epoch 390"
+            },
+            {
+              "x": 391,
+              "y": 0.06579871954761829,
+              "label": "epoch 391"
+            },
+            {
+              "x": 392,
+              "y": 0.0657987580502919,
+              "label": "epoch 392"
+            },
+            {
+              "x": 393,
+              "y": 0.06592653802641547,
+              "label": "epoch 393"
+            },
+            {
+              "x": 394,
+              "y": 0.0662435904220084,
+              "label": "epoch 394"
+            },
+            {
+              "x": 395,
+              "y": 0.06592972335184075,
+              "label": "epoch 395"
+            },
+            {
+              "x": 396,
+              "y": 0.06591018367351496,
+              "label": "epoch 396"
+            },
+            {
+              "x": 397,
+              "y": 0.0659805340633886,
+              "label": "epoch 397"
+            },
+            {
+              "x": 398,
+              "y": 0.06596540464871443,
+              "label": "epoch 398"
+            },
+            {
+              "x": 399,
+              "y": 0.0662517816599042,
+              "label": "epoch 399"
+            },
+            {
+              "x": 400,
+              "y": 0.06575939619174533,
+              "label": "epoch 400"
+            },
+            {
+              "x": 401,
+              "y": 0.0657409173015169,
+              "label": "epoch 401"
+            },
+            {
+              "x": 402,
+              "y": 0.06588795628095985,
+              "label": "epoch 402"
+            },
+            {
+              "x": 403,
+              "y": 0.06582902118679843,
+              "label": "epoch 403"
+            },
+            {
+              "x": 404,
+              "y": 0.06591409941428894,
+              "label": "epoch 404"
+            },
+            {
+              "x": 405,
+              "y": 0.06605286119793088,
+              "label": "epoch 405"
+            },
+            {
+              "x": 406,
+              "y": 0.0661290396368555,
+              "label": "epoch 406"
+            },
+            {
+              "x": 407,
+              "y": 0.06578205709735242,
+              "label": "epoch 407"
+            },
+            {
+              "x": 408,
+              "y": 0.06610959718035608,
+              "label": "epoch 408"
+            },
+            {
+              "x": 409,
+              "y": 0.06607016544332785,
+              "label": "epoch 409"
+            },
+            {
+              "x": 410,
+              "y": 0.06634532678305498,
+              "label": "epoch 410"
+            },
+            {
+              "x": 411,
+              "y": 0.06612830538724823,
+              "label": "epoch 411"
+            },
+            {
+              "x": 412,
+              "y": 0.06615902101829774,
+              "label": "epoch 412"
+            },
+            {
+              "x": 413,
+              "y": 0.06624363870821301,
+              "label": "epoch 413"
+            },
+            {
+              "x": 414,
+              "y": 0.06601648738749931,
+              "label": "epoch 414"
+            },
+            {
+              "x": 415,
+              "y": 0.06609914586299974,
+              "label": "epoch 415"
+            },
+            {
+              "x": 416,
+              "y": 0.06622685760538168,
+              "label": "epoch 416"
+            },
+            {
+              "x": 417,
+              "y": 0.0662149646757451,
+              "label": "epoch 417"
+            },
+            {
+              "x": 418,
+              "y": 0.06612170242522397,
+              "label": "epoch 418"
+            },
+            {
+              "x": 419,
+              "y": 0.06605152819455602,
+              "label": "epoch 419"
+            },
+            {
+              "x": 420,
+              "y": 0.06642201956821032,
+              "label": "epoch 420"
+            },
+            {
+              "x": 421,
+              "y": 0.06606795985453685,
+              "label": "epoch 421"
+            },
+            {
+              "x": 422,
+              "y": 0.06665837832937134,
+              "label": "epoch 422"
+            },
+            {
+              "x": 423,
+              "y": 0.06614411404390845,
+              "label": "epoch 423"
+            },
+            {
+              "x": 424,
+              "y": 0.06586749120234751,
+              "label": "epoch 424"
+            },
+            {
+              "x": 425,
+              "y": 0.06656594983608581,
+              "label": "epoch 425"
+            },
+            {
+              "x": 426,
+              "y": 0.0659593303241911,
+              "label": "epoch 426"
+            },
+            {
+              "x": 427,
+              "y": 0.0663566712807258,
+              "label": "epoch 427"
+            },
+            {
+              "x": 428,
+              "y": 0.0664914586539217,
+              "label": "epoch 428"
+            },
+            {
+              "x": 429,
+              "y": 0.06665215516064536,
+              "label": "epoch 429"
+            },
+            {
+              "x": 430,
+              "y": 0.0663324603525287,
+              "label": "epoch 430"
+            },
+            {
+              "x": 431,
+              "y": 0.06660532511908214,
+              "label": "epoch 431"
+            },
+            {
+              "x": 432,
+              "y": 0.06667174685660159,
+              "label": "epoch 432"
+            },
+            {
+              "x": 433,
+              "y": 0.06667109314080785,
+              "label": "epoch 433"
+            },
+            {
+              "x": 434,
+              "y": 0.06658365711061152,
+              "label": "epoch 434"
+            },
+            {
+              "x": 435,
+              "y": 0.0666058276388638,
+              "label": "epoch 435"
+            },
+            {
+              "x": 436,
+              "y": 0.06678521832621735,
+              "label": "epoch 436"
+            },
+            {
+              "x": 437,
+              "y": 0.06637913921548078,
+              "label": "epoch 437"
+            },
+            {
+              "x": 438,
+              "y": 0.06669251744791127,
+              "label": "epoch 438"
+            },
+            {
+              "x": 439,
+              "y": 0.06698952646196107,
+              "label": "epoch 439"
+            },
+            {
+              "x": 440,
+              "y": 0.06640285900021699,
+              "label": "epoch 440"
+            },
+            {
+              "x": 441,
+              "y": 0.06661802105059778,
+              "label": "epoch 441"
+            },
+            {
+              "x": 442,
+              "y": 0.06657900335612958,
+              "label": "epoch 442"
+            },
+            {
+              "x": 443,
+              "y": 0.06696480859770809,
+              "label": "epoch 443"
+            },
+            {
+              "x": 444,
+              "y": 0.06685514266773901,
+              "label": "epoch 444"
+            },
+            {
+              "x": 445,
+              "y": 0.06656094087014025,
+              "label": "epoch 445"
+            },
+            {
+              "x": 446,
+              "y": 0.06658549870910328,
+              "label": "epoch 446"
+            },
+            {
+              "x": 447,
+              "y": 0.0666798536003906,
+              "label": "epoch 447"
+            },
+            {
+              "x": 448,
+              "y": 0.06664817265696574,
+              "label": "epoch 448"
+            },
+            {
+              "x": 449,
+              "y": 0.06668384486156385,
+              "label": "epoch 449"
+            },
+            {
+              "x": 450,
+              "y": 0.0668762766293358,
+              "label": "epoch 450"
+            },
+            {
+              "x": 451,
+              "y": 0.06704571022741528,
+              "label": "epoch 451"
+            },
+            {
+              "x": 452,
+              "y": 0.06693463391029578,
+              "label": "epoch 452"
+            },
+            {
+              "x": 453,
+              "y": 0.06676201165445743,
+              "label": "epoch 453"
+            },
+            {
+              "x": 454,
+              "y": 0.06676991202055367,
+              "label": "epoch 454"
+            },
+            {
+              "x": 455,
+              "y": 0.0667961499592797,
+              "label": "epoch 455"
+            },
+            {
+              "x": 456,
+              "y": 0.06692044086101209,
+              "label": "epoch 456"
+            },
+            {
+              "x": 457,
+              "y": 0.06667650615451155,
+              "label": "epoch 457"
+            },
+            {
+              "x": 458,
+              "y": 0.066656068743335,
+              "label": "epoch 458"
+            },
+            {
+              "x": 459,
+              "y": 0.0666524036029305,
+              "label": "epoch 459"
+            },
+            {
+              "x": 460,
+              "y": 0.06639076907445285,
+              "label": "epoch 460"
+            },
+            {
+              "x": 461,
+              "y": 0.06663662939553093,
+              "label": "epoch 461"
+            },
+            {
+              "x": 462,
+              "y": 0.06685907809133995,
+              "label": "epoch 462"
+            },
+            {
+              "x": 463,
+              "y": 0.06661362022453314,
+              "label": "epoch 463"
+            },
+            {
+              "x": 464,
+              "y": 0.06681146658344049,
+              "label": "epoch 464"
+            },
+            {
+              "x": 465,
+              "y": 0.06668081536439667,
+              "label": "epoch 465"
+            },
+            {
+              "x": 466,
+              "y": 0.06667422206654212,
+              "label": "epoch 466"
+            },
+            {
+              "x": 467,
+              "y": 0.06674469763800576,
+              "label": "epoch 467"
+            },
+            {
+              "x": 468,
+              "y": 0.06688488142841371,
+              "label": "epoch 468"
+            },
+            {
+              "x": 469,
+              "y": 0.06675885843322589,
+              "label": "epoch 469"
+            },
+            {
+              "x": 470,
+              "y": 0.06662894991210067,
+              "label": "epoch 470"
+            },
+            {
+              "x": 471,
+              "y": 0.06676205951870959,
+              "label": "epoch 471"
+            },
+            {
+              "x": 472,
+              "y": 0.0668837573911814,
+              "label": "epoch 472"
+            },
+            {
+              "x": 473,
+              "y": 0.0668966032645143,
+              "label": "epoch 473"
+            },
+            {
+              "x": 474,
+              "y": 0.06669926514783195,
+              "label": "epoch 474"
+            },
+            {
+              "x": 475,
+              "y": 0.06690150963679437,
+              "label": "epoch 475"
+            },
+            {
+              "x": 476,
+              "y": 0.06664045301870228,
+              "label": "epoch 476"
+            },
+            {
+              "x": 477,
+              "y": 0.06668076443284726,
+              "label": "epoch 477"
+            },
+            {
+              "x": 478,
+              "y": 0.06676426758638608,
+              "label": "epoch 478"
+            },
+            {
+              "x": 479,
+              "y": 0.06680466692684944,
+              "label": "epoch 479"
+            },
+            {
+              "x": 480,
+              "y": 0.06668827154317712,
+              "label": "epoch 480"
+            },
+            {
+              "x": 481,
+              "y": 0.06675158606540899,
+              "label": "epoch 481"
+            },
+            {
+              "x": 482,
+              "y": 0.06677666780502466,
+              "label": "epoch 482"
+            },
+            {
+              "x": 483,
+              "y": 0.06688627115469686,
+              "label": "epoch 483"
+            },
+            {
+              "x": 484,
+              "y": 0.06672176753526923,
+              "label": "epoch 484"
+            },
+            {
+              "x": 485,
+              "y": 0.06674788928420493,
+              "label": "epoch 485"
+            },
+            {
+              "x": 486,
+              "y": 0.06657663947627122,
+              "label": "epoch 486"
+            },
+            {
+              "x": 487,
+              "y": 0.06697096164665069,
+              "label": "epoch 487"
+            },
+            {
+              "x": 488,
+              "y": 0.06675684892685509,
+              "label": "epoch 488"
+            },
+            {
+              "x": 489,
+              "y": 0.06696064283650553,
+              "label": "epoch 489"
+            },
+            {
+              "x": 490,
+              "y": 0.0670177483965924,
+              "label": "epoch 490"
+            },
+            {
+              "x": 491,
+              "y": 0.06700386117962313,
+              "label": "epoch 491"
+            },
+            {
+              "x": 492,
+              "y": 0.0670047007172674,
+              "label": "epoch 492"
+            },
+            {
+              "x": 493,
+              "y": 0.06642849702513774,
+              "label": "epoch 493"
+            },
+            {
+              "x": 494,
+              "y": 0.06677995563590527,
+              "label": "epoch 494"
+            },
+            {
+              "x": 495,
+              "y": 0.066820809841946,
+              "label": "epoch 495"
+            },
+            {
+              "x": 496,
+              "y": 0.06666492998588502,
+              "label": "epoch 496"
+            },
+            {
+              "x": 497,
+              "y": 0.06695296165554902,
+              "label": "epoch 497"
+            },
+            {
+              "x": 498,
+              "y": 0.06688020705546512,
+              "label": "epoch 498"
+            },
+            {
+              "x": 499,
+              "y": 0.06671041135320789,
+              "label": "epoch 499"
             }
           ]
         }
@@ -11603,19 +18309,19 @@ window.homepageData = {
         {
           "badge": "MDIT 主线",
           "title": "MDIT RGB+Text 主线推进",
-          "summary": "RGB+Text 当前锚点固定在 0.55@100",
+          "summary": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
           "metrics": [
             {
-              "label": "当前锚点",
+              "label": "早期锚点",
               "value": "0.55@100"
             },
             {
-              "label": "epoch 50",
-              "value": "0.25"
+              "label": "best success",
+              "value": "0.75"
             },
             {
-              "label": "续训进度",
-              "value": "epoch 99"
+              "label": "500 轮审计",
+              "value": "0.75"
             }
           ]
         },
@@ -11706,6 +18412,18 @@ window.homepageData = {
   },
   "fix_highlights": [
     {
+      "date": "2026-04-19",
+      "title": "离线审计完成",
+      "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_5…",
+      "path": "docs/fixes.md"
+    },
+    {
+      "date": "2026-04-18",
+      "title": "建立 research_desk 阶段总账本，并让 homepage 优先读取阶段总结",
+      "summary": "范围：docs/research_desk.md + docs/fixes.md + docs/mdit/research_journal.md + homepage/MAINTENANCE.md + homepage/config/site-config.json + scripts/build…",
+      "path": "docs/fixes.md"
+    },
+    {
       "date": "2026-04-18",
       "title": "修复主线 100->500 续训兼容并恢复真实后台接管",
       "summary": "范围：mdit/train/checkpoints.py + mdit/train/runner.py + research/mdit_takeover_controller.py + scripts/run_mdit_takeover_supervisor.py + tmux:mdit_auto…",
@@ -11715,18 +18433,6 @@ window.homepageData = {
       "date": "2026-04-18",
       "title": "离线审计完成",
       "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_…",
-      "path": "docs/fixes.md"
-    },
-    {
-      "date": "2026-04-18",
-      "title": "接管器触发 500 epoch 最优路线 fallback",
-      "summary": "范围：research/mdit_takeover_controller.py + docs/fixes.md + docs/mdit/research_journal.md 背景：严格挑战线 unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c…",
-      "path": "docs/fixes.md"
-    },
-    {
-      "date": "2026-04-18",
-      "title": "接管已有 run 并补齐元数据",
-      "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：现有 run unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_5…",
       "path": "docs/fixes.md"
     }
   ]

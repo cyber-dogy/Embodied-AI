@@ -2,7 +2,7 @@
 
 这个目录现在是一个可复用的静态科研主页框架，核心目标只有两件事：
 
-- 把 `docs/`、`fixes.md`、本地实验产物整理成结构化首页与详情页
+- 把 `research_desk.md`、`docs/`、`fixes.md`、本地实验产物整理成结构化首页与详情页
 - 让后续新增任务、研究线、demo 素材时，不需要再重写页面骨架
 
 ## 目录结构
@@ -88,6 +88,12 @@ http://127.0.0.1:43429/
 
 后续你自己打磨内容时，优先按下面这个索引改：
 
+- 改首页和任务页的阶段叙事、时间线提炼、跨线路总结：
+  - `docs/research_desk.md`
+  - 这是 homepage 当前最优先读取的阶段总结源
+- 改事实留痕、排错细节和原始修复过程：
+  - `docs/fixes.md`
+  - 这里继续保留事实源，不直接承担公开卡片文案职责
 - 改整站标题、副标题、简介：
   - `homepage/config/site-config.json`
   - `homepage/config/manual_overrides.json` 里的 `site`
@@ -119,6 +125,7 @@ http://127.0.0.1:43429/
 
 - `manual_overrides.json` 里的数组字段是整段替换，不是局部 patch
 - 如果只是想润色公开文案，优先改 `manual_overrides.json`
+- 如果是“这一天到底做成了什么、主页应该怎么讲”，优先改 `docs/research_desk.md`
 - 只有当自动生成逻辑本身不合理时，再改 `scripts/build_homepage_data.py`
 
 ## Cloudflare Pages 发布包
@@ -149,7 +156,7 @@ cloudflare-pages-site/
 
 以后 homepage 的标准更新流程固定为：
 
-1. 修改 `docs/`、素材、`site-config.json` 或 `manual_overrides.json`
+1. 优先修改 `docs/research_desk.md`，必要时再补 `docs/fixes.md`、素材、`site-config.json` 或 `manual_overrides.json`
 2. 执行：
 
 ```bash

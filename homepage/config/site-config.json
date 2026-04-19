@@ -91,7 +91,8 @@
       "artifact_paths": {
         "summary": "ckpt/unplug_charger_mdit_rgb_text_3token_100/summary.json",
         "audit": "ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json",
-        "resume_wandb": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
+        "resume_wandb": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json",
+        "resume_record": "autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json"
       },
       "chart_ids": [
         "mdit-success-curve",

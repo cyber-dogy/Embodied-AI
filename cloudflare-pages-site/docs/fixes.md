@@ -20,6 +20,7 @@
 - 标题必须单看就能知道“这条记录在说什么”，不能只写文件名。
 - 结果必须尽量写清 `run_name / checkpoint / success rate / 下一步状态`，避免只写 `none`、`待观察` 这类模糊词。
 - 允许简略，但必须保证人和后续模型都能快速读懂上下文。
+- `fixes.md` 是事实留痕源；如果某次改动已经形成跨线路的阶段结论，应同步提炼到 `docs/research_desk.md`，不要只停留在这里。
 
 ---
 
@@ -1212,3 +1213,21 @@ except Exception as exc:
 处理：为续训加载增加优化器状态形状校验，遇到旧 Adam 动量错绑时只恢复模型/EMA/步数并重建优化器内部状态；同时按新的 `train_epochs` 重新计算 scheduler 当前学习率，避免 100->500 时带着 0 学习率空跑。接着修正接管状态机：支持从已有 `active_audit_result` / `fallback_run_dir` 直接恢复；活跃进程探测只认 Python 训练进程；旧 heartbeat 不再被当成新进度；新增 `run_mdit_takeover_supervisor.py` 常驻监督器，并重新挂到 `tmux` 的 `takeover_guard` 窗口。
 
 结果：当前 `best route` 已经由后台监督器重新拉起，run=`unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`；新的训练日志已经出现 `[resume] skip optimizer_state_dict: ...`，随后 `epoch 100` 继续推进且学习率恢复为约 `9.21e-05`，说明最佳路线的 `100 -> 500` 续训链路已经真正接通，不再依赖用户手动发消息。
+
+### 2026-04-18 23:16:42 +0800 · 建立 research_desk 阶段总账本，并让 homepage 优先读取阶段总结
+范围：`docs/research_desk.md + docs/fixes.md + docs/mdit/research_journal.md + homepage/MAINTENANCE.md + homepage/config/site-config.json + scripts/build_homepage_data.py`
+
+背景：`fixes.md` 长期同时承担事实留痕、自动状态流和阶段总结三种职责，读者与 homepage 生成链都需要先跨过大量日志样式条目，才能重新拼出当前主线判断。
+
+处理：新增 `docs/research_desk.md`，用 `发现问题 / 原因分析 / 解决思路 / 具体操作 / 当前判断 / 相关材料` 六段结构整理 PDIT、MDIT、LeLaN 和文档治理里程碑；同时让 homepage 的全局时间线、当前焦点候选和 `infra-audit` 页面优先解析 `research_desk.md`，`fixes.md` 退回为事实源和回查源；同步在维护文档中写清职责分工。
+
+结果：项目现在形成了 `fixes.md` 记事实、`research_desk.md` 做阶段总结、各线路稳定文档保留证据的三层结构；homepage 后续会优先展示人工提炼过的阶段进展，而不是自动状态流。
+
+### 2026-04-19 09:00:36 +0800 · 离线审计完成 · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：候选 run `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723` 已完成共享离线审计，需要固化关键成功率与后续筛选依据。
+
+处理：统一使用共享 audit chain 执行评估；episodes=20，stage_epochs=500。
+
+结果：success@epoch_0300=0.750；success@epoch_0500=0.750；最佳成功率=0.750；最佳 checkpoint epoch=300；trial_score=-1.000；是否 collapse=True；collapse 原因=epoch 100 success None below threshold 0.55；受控配方偏移=无

@@ -53,6 +53,12 @@ RESEARCH_DESK_LINE_TO_TASK = {
     "基础设施": "infra-audit",
     "文档治理": "infra-audit",
 }
+TASK_TO_PRIMARY_RESEARCH_DESK_LINE = {
+    "pdit-anchor": "PDIT 主线",
+    "mdit-mainline": "MDIT 主线",
+    "lelan-pipeline": "LeLaN 执行线",
+    "infra-audit": "基础设施",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -458,6 +464,30 @@ def parse_research_desk_entries() -> list[dict[str, Any]]:
     return entries
 
 
+def parse_research_desk_overview_map() -> dict[str, str]:
+    desk_path = ROOT / "docs/research_desk.md"
+    if not desk_path.exists():
+        return {}
+    text = read_text(desk_path)
+    matched = re.search(r"^##\s+当前总览\s*$", text, flags=re.MULTILINE)
+    if not matched:
+        return {}
+    overview_text = text[matched.end() :]
+    next_section = re.search(r"^##\s+", overview_text, flags=re.MULTILINE)
+    if next_section:
+        overview_text = overview_text[: next_section.start()]
+
+    sections = parse_markdown_sections(overview_text)
+    overview_map: dict[str, str] = {}
+    for section in sections:
+        if section["level"] != 3:
+            continue
+        summary = safe_excerpt(clean_text(section["body"]), limit=280)
+        if summary:
+            overview_map[section["title"]] = summary
+    return overview_map
+
+
 def build_research_desk_timeline_card(entry: dict[str, Any]) -> dict[str, Any]:
     summary_text = safe_excerpt(
         " ".join(part for part in [entry.get("finding", ""), entry.get("solution", "")] if part) or entry.get("judgment", ""),
@@ -495,14 +525,60 @@ def build_research_desk_home_entry(entry: dict[str, Any], task: dict[str, Any]) 
         "badge": entry["line_name"],
         "title": entry["title"],
         "summary": summary,
-        "metrics": [
-            make_metric("日期", entry["date"]),
-            make_metric("线路", entry["line_name"]),
-            make_metric("来源", "research desk"),
-        ],
+        "metrics": task.get("hero_metrics", [])[:3],
         "meta": "阶段总结 · Research Desk",
         "path": task["page_path"],
     }
+
+
+def merge_task_timeline_with_research_desk(task: dict[str, Any], research_desk_entries: list[dict[str, Any]]) -> dict[str, Any]:
+    if task["id"] == "infra-audit":
+        return task
+    task_entries = [entry for entry in research_desk_entries if entry["task_id"] == task["id"]]
+    if not task_entries:
+        return task
+
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for entry in task_entries:
+        grouped[entry["date"]].append(build_research_desk_timeline_card(entry))
+    for group in task.get("timeline_groups", []):
+        for card in group["cards"]:
+            grouped[group["date"]].append(card)
+
+    merged_timeline = []
+    for date in sorted(grouped.keys(), reverse=True):
+        merged_timeline.append({"date": date, "cards": grouped[date]})
+    task["timeline_groups"] = merged_timeline
+    latest_dates = [task.get("latest_update", "")] + [entry["date"] for entry in task_entries]
+    task["latest_update"] = max(date for date in latest_dates if date)
+    return task
+
+
+def apply_research_desk_overview(task: dict[str, Any], overview_map: dict[str, str]) -> dict[str, Any]:
+    line_name = TASK_TO_PRIMARY_RESEARCH_DESK_LINE.get(task["id"])
+    if not line_name:
+        return task
+    overview = overview_map.get(line_name)
+    if not overview:
+        return task
+    task["summary"] = overview
+    if task["id"] in {"pdit-anchor", "mdit-mainline", "lelan-pipeline", "infra-audit"}:
+        task["report_intro"] = overview
+    return task
+
+
+def apply_research_desk_overview_to_branch(branch: dict[str, Any], overview_map: dict[str, str]) -> dict[str, Any]:
+    line_name = None
+    for task_id in branch.get("related_task_ids", []):
+        if task_id in TASK_TO_PRIMARY_RESEARCH_DESK_LINE:
+            line_name = TASK_TO_PRIMARY_RESEARCH_DESK_LINE[task_id]
+            break
+    if not line_name:
+        return branch
+    overview = overview_map.get(line_name)
+    if overview:
+        branch["summary"] = overview
+    return branch
 
 
 def parse_mdit_journal_events(text: str) -> list[dict[str, Any]]:
@@ -955,16 +1031,30 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     audit_path = ROOT / task_cfg["artifact_paths"]["audit"]
     summary_path = ROOT / task_cfg["artifact_paths"]["summary"]
     wandb_summary_path = ROOT / task_cfg["artifact_paths"]["resume_wandb"]
+    resume_record_path = ROOT / task_cfg["artifact_paths"]["resume_record"]
 
     journal_text = read_text(journal_path)
     journal_events = parse_mdit_journal_events(journal_text)
     best_path = parse_best_path(best_path_path)
     audit = read_json(audit_path)
     summary = read_json(summary_path)
-    wandb_summary = read_json(wandb_summary_path)
+    # 500 续训的阶段结论以 autoresearch 记录和共享审计为准；
+    # 本地 wandb 快照只是补充展示，仓库里不一定长期保留。
+    wandb_summary = read_json_if_exists(wandb_summary_path)
+    resume_record = read_json_if_exists(resume_record_path)
+    resume_audit = resume_record.get("audit_report", {}) if resume_record else {}
     wandb_history = collect_wandb_history(summary.get("wandb_run_url"))
 
-    success_points = sorted_success_points(audit.get("success_by_epoch"))
+    merged_success_by_epoch = dict(audit.get("success_by_epoch") or {})
+    for epoch in ["200", "300", "400", "500"]:
+        value = (resume_audit.get("success_by_epoch") or {}).get(epoch)
+        if value is not None:
+            merged_success_by_epoch[epoch] = value
+    success_points = sorted_success_points(merged_success_by_epoch)
+    resume_best_success = resume_record.get("best_success_rate")
+    resume_best_epoch = resume_record.get("best_success_epoch")
+    resume_success_300 = resume_record.get("success_300")
+    resume_success_500 = resume_record.get("success_500")
 
     if wandb_history.get("train/loss_total") and wandb_history.get("valid/loss_total"):
         total_loss_note = "使用 W&B API 抓取完整 history，展示主线真实训练曲线。"
@@ -994,9 +1084,9 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     charts["mdit-success-curve"] = build_line_chart(
         "mdit-success-curve",
         title="MDIT success by epoch",
-        description="当前锁定的 RGB+Text 主线只在 50 / 100 epoch 做了共享 audit，因此 success 曲线严格按这两个里程碑展示。",
+        description="这张曲线合并了锁定锚点 run 的 50/100 审计，以及同一路线 100→500 续训后的 200/300/400/500 审计，直接展示主线从早期锚点到长训表现的抬升过程。",
         fmt="percent",
-        note="排序严格按 epoch 升序，避免 100 在 50 前面或 500 插到前面。",
+        note="排序严格按 epoch 升序；当前 500 续训审计缺失 epoch_0100 点位，所以 trial 仍被自动标成 collapse，但 300/500 的成功率已经被共享审计确认。",
         series=[{"name": "success@20", "color": LINE_COLORS["teal"], "points": success_points}],
     )
     charts["mdit-loss-curve"] = build_line_chart(
@@ -1139,16 +1229,16 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
 
     findings = [
         {
-            "title": "当前冠军仍然只有 0.55@100 的 RGB+Text 主线",
-            "body": "截至目前，唯一被共享 audit 链确认过的 RGB+Text 主线仍然是当前这条 0.55@100 锚点线。所有对照都还没有超过它。",
+            "title": "早期锚点是 0.55@100，但长训主线已经把 300/500 拉到 0.75",
+            "body": "当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线；在同一条 best-route lineage 上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明长训确实把行为上限抬了上去。",
         },
         {
             "title": "平滑动作和其他弱对照没有解决核心失败模式",
             "body": "已知失败大头仍是“动作还没做完就到时间上限”，说明只是平滑 action head 或轻微换 recipe 并不能直接解决 MDIT 的行为瓶颈。",
         },
         {
-            "title": "真正的下一步是把 100→500 主线续训跑完并审完",
-            "body": "现在最重要的不是再开更多对照，而是在同一条 best-route lineage 上拿到完整 500 epoch 的共享 audit 结果。",
+            "title": "当前缺口不是再开新线，而是补齐 100 epoch 点位并收束共享审计叙事",
+            "body": "这次 500 续训 run 的共享审计已经证明 300/500 表现提升到 0.75，但因为 epoch_0100 点位缺失，trial_score 仍按 collapse 落档。下一步更像是补齐审计口径，而不是再新开相似路线。",
         },
     ]
 
@@ -1157,6 +1247,7 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         make_link("当前主线路径", best_path_path, "当前主线锚点、best checkpoint 和晋级逻辑。"),
         make_link("执行手册", manual_path, "训练、审计、接管与晋级规则的固定手册。"),
         make_link("共享审计报告", audit_path, "0.25@50 / 0.55@100 的共享审计证据。"),
+        make_link("500 续训审计记录", resume_record_path, "记录了 100→500 续训主线的 0.75@300 / 0.75@500 结果，以及当前 trial_score 仍为 -1 的原因。"),
         make_link("主线 summary", summary_path, "1-100 epoch 主线的 summary 与 W&B run URL。"),
         make_link("W&B 摘要快照", wandb_summary_path, "500 续训接管后的本地 W&B 摘要快照。"),
     ]
@@ -1198,9 +1289,9 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
 
     latest_resume_epoch = wandb_summary.get("epoch")
     hero_metrics = [
-        make_metric("当前锚点", "0.55@100"),
-        make_metric("epoch 50", "0.25"),
-        make_metric("续训进度", f"epoch {latest_resume_epoch}" if latest_resume_epoch is not None else "100→500"),
+        make_metric("早期锚点", "0.55@100"),
+        make_metric("best success", format_ratio(resume_best_success) if resume_best_success is not None else "0.55"),
+        make_metric("500 轮审计", format_ratio(resume_success_500) if resume_success_500 is not None else (f"epoch {latest_resume_epoch}" if latest_resume_epoch is not None else "100→500")),
     ]
 
     return {
@@ -1211,48 +1302,48 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         "status_group": status_group(task_cfg["status"]),
         "page_path": f"homepage/tasks/{task_cfg['id']}/",
         "branch_ids": task_cfg["branch_ids"],
-        "latest_update": "2026-04-18",
+        "latest_update": "2026-04-19",
         "hero_metrics": hero_metrics,
-        "report_intro": "MDIT 这条线当前最重要的不是再开更多名字相似的 run，而是把 RGB+Text 主线的筛选、冻结、接管和 500 epoch 续训放在同一条研究叙事里看清楚。",
+        "report_intro": "MDIT 这条线现在已经不只是“把 100→500 续训接起来”，而是要把 0.55@100 的早期锚点与 0.75@300/500 的长训结果收进同一条共享审计叙事里，避免新结论继续散落在 fixes 和 run note 中。",
         "summary_cards": [
             {
                 "eyebrow": "Anchor",
-                "title": "RGB+Text 当前锚点固定在 0.55@100",
-                "body": "共享 audit 链确认过的最好结果仍是 epoch50=0.25、epoch100=0.55。这是现在所有其他对照必须超过的门槛。",
+                "title": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
+                "body": "0.55@100 仍是当前锁定的早期锚点；在此基础上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明这条线不是只能停在 100 epoch。",
                 "metrics": [
-                    make_metric("epoch 50", "0.25"),
                     make_metric("epoch 100", "0.55"),
-                    make_metric("状态", "已冻结"),
+                    make_metric("epoch 300", format_ratio(resume_success_300) if resume_success_300 is not None else "0.75"),
+                    make_metric("epoch 500", format_ratio(resume_success_500) if resume_success_500 is not None else "0.75"),
                 ],
             },
             {
                 "eyebrow": "Resume",
-                "title": "100→500 续训接管已经恢复",
-                "body": "这轮不是随便补跑，而是把 optimizer state 不兼容、scheduler lr 重算和 watchdog 假接管一起修好后，重新把长训挂到当前 best-route 上。",
+                "title": "100→500 续训接管已经真正跑通并完成共享审计",
+                "body": "这轮不只是把 supervisor 和 optimizer 兼容补上，而是已经让同一条 best-route lineage 从 epoch_0100 真正续到 500，并拿回可用于判断的共享审计结果。",
                 "metrics": [
-                    make_metric("目标", "500 epoch"),
-                    make_metric("当前 best", "0.55@100"),
-                    make_metric("状态", "resume"),
+                    make_metric("best success", format_ratio(resume_best_success) if resume_best_success is not None else "0.75"),
+                    make_metric("best epoch", resume_best_epoch if resume_best_epoch is not None else "300"),
+                    make_metric("状态", "已审计"),
                 ],
             },
             {
                 "eyebrow": "Screening",
-                "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经分流",
-                "body": "平滑动作对照只到 0.35，faithful recipe 首败是缓存/网络问题，严格 MTDP 对照没过共享 gate。主线不再被弱候选反复打断。",
+                "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经完成出清",
+                "body": "平滑动作对照只到 0.35，faithful 首败被确认是缓存 / 网络问题，严格 MTDP 对照也没有越过共享闸门。主线预算已经重新收束，不再被相似弱候选打断。",
                 "metrics": [
                     make_metric("stabilized@100", "0.35"),
-                    make_metric("faithful", "offline fix"),
+                    make_metric("faithful", "启动链故障"),
                     make_metric("严格 MTDP", "未过 gate"),
                 ],
             },
             {
-                "eyebrow": "Contract",
-                "title": "研究线已经有固定的执行与审计口径",
-                "body": "执行手册、当前主线路径和研究日志三份文档现在共同定义了 MDIT 的训练、审计、接管和晋级契约。",
+                "eyebrow": "Audit",
+                "title": "当前缺口是补齐 100 epoch 审计点位，而不是再开新 run",
+                "body": "500 续训 run 当前仍被自动标成 collapse，不是因为 300/500 表现差，而是因为这个续训 run 的共享审计缺了 epoch_0100 点位。下一步应该先把审计叙事补完整。",
                 "metrics": [
-                    make_metric("manual", "已固化"),
-                    make_metric("journal", "append-only"),
-                    make_metric("audit chain", "共享"),
+                    make_metric("trial_score", str(resume_record.get("trial_score", "-1.0"))),
+                    make_metric("100 点位", "缺失"),
+                    make_metric("recipe drift", "无"),
                 ],
             },
         ],
@@ -1269,6 +1360,13 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "fallback_triggered": fallback_event["fields"] if fallback_event else {},
             "stabilized_lane": stabilized_event["fields"] if stabilized_event else {},
             "lane_b_fix": lane_b_fix_event["fields"] if lane_b_fix_event else {},
+            "resume_audit": {
+                "best_success_rate": resume_best_success,
+                "best_success_epoch": resume_best_epoch,
+                "success_300": resume_success_300,
+                "success_500": resume_success_500,
+                "trial_score": resume_record.get("trial_score"),
+            },
         },
     }
 
@@ -1939,14 +2037,18 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
     task_overrides = overrides.get("tasks", {})
     branch_overrides = overrides.get("branches", {})
     research_desk_entries = parse_research_desk_entries()
+    research_desk_overview_map = parse_research_desk_overview_map()
 
     tasks = []
     for task_cfg in config["tasks"]:
         task = build_task(task_cfg, charts, research_desk_entries)
+        task = apply_research_desk_overview(task, research_desk_overview_map)
+        task = merge_task_timeline_with_research_desk(task, research_desk_entries)
         task = deep_merge(task, task_overrides.get(task["id"], {}))
         tasks.append(task)
 
     branches = build_branches(config["branch_profiles"], tasks, charts)
+    branches = [apply_research_desk_overview_to_branch(branch, research_desk_overview_map) for branch in branches]
     branches = [deep_merge(branch, branch_overrides.get(branch["id"], {})) for branch in branches]
     showcase_items = [item for task in tasks for item in task["media_items"]]
     showcase_preview_items = []

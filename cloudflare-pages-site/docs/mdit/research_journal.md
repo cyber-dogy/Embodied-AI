@@ -2,6 +2,7 @@
 
 - This file is append-only and maintained by autoresearch.
 - Keep `best_path.md` and the execution manual as separate stable docs; run-by-run notes are consolidated here.
+- Cross-line stage summaries now live in `docs/research_desk.md`; this file only keeps MDIT run-by-run notes and audit history.
 - Legacy one-file-per-run notes have been moved to `docs/mdit/archive/legacy_notes/` so the root `docs/mdit` directory stays clean.
 
 ## Historical Migration
@@ -284,3 +285,13 @@
 - Result: Resume now skips incompatible optimizer state, recomputes scheduler lr for the 500-epoch horizon, and is supervised by `run_mdit_takeover_supervisor.py`. Current log already shows `epoch 100` continuing with non-zero lr.
 - Audit report: pending after training reaches 500 and shared audit starts
 - Contract issues: none for the incumbent best-route resume path
+## 2026-04-19T09:00:36+08:00 · audit_only · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+
+- Title: MDIT Audit Note · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phase: `audit_only`
+- Phenomenon: trial_score=-1.0 | best_success_rate=0.75 | collapse=True
+- Reasons: epoch 100 success None below threshold 0.55
+- Result: best_success_rate=0.75 trial_score=-1.0
+- Audit report: none
+- Contract issues: none
