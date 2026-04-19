@@ -99,13 +99,16 @@
 
   function renderHero() {
     const focus = home.current_focus;
+    const inlineStats = home.hero_inline_stats || [];
     return `
       <section class="hero-section">
         <div class="hero-copy">
           <p class="eyebrow">Embodied AI Research Archive</p>
           <h1>${escapeHtml(data.site.title)}</h1>
           <p class="hero-slogan">${escapeHtml(data.site.slogan)}</p>
-          <p class="hero-summary">${escapeHtml(data.site.description)}</p>
+          <div class="hero-inline-stats">
+            ${inlineStats.map((metric) => renderHeroInlineStat(metric)).join("")}
+          </div>
           <div class="hero-chip-row">
             ${tasks
               .filter((task) => task.id !== "infra-audit")
@@ -114,15 +117,6 @@
           </div>
         </div>
         <aside class="hero-side">
-          <div class="hero-stat-card">
-            <span class="mini-kicker">Archive Snapshot</span>
-            <div class="hero-stat-grid">
-              ${renderHeroStat("任务", data.stats.task_count)}
-              ${renderHeroStat("研究线", data.stats.branch_count)}
-              ${renderHeroStat("时间线事件", data.stats.timeline_count)}
-              ${renderHeroStat("图表", data.stats.validated_rows)}
-            </div>
-          </div>
           <div class="hero-focus-card">
             <span class="mini-kicker">Current Focus</span>
             ${
@@ -143,11 +137,11 @@
     `;
   }
 
-  function renderHeroStat(label, value) {
+  function renderHeroInlineStat(metric) {
     return `
-      <div class="hero-stat">
-        <span>${escapeHtml(String(label))}</span>
-        <strong>${escapeHtml(String(value))}</strong>
+      <div class="hero-inline-stat">
+        <span class="stat-box-label">${escapeHtml(String(metric.label))}</span>
+        <strong>${escapeHtml(String(metric.value))}</strong>
       </div>
     `;
   }
@@ -233,10 +227,12 @@
     return `
       <article class="branch-card">
         <div class="card-topline">
-          <div class="badge-group">${renderBadgeGroup([{ label: branch.title, tone: "primary" }])}</div>
+          <div class="badge-group">${renderBadgeGroup([{ label: "研究线", tone: "secondary" }])}</div>
           <span class="card-meta">${escapeHtml(branch.status)}</span>
         </div>
-        <h3>${escapeHtml(branch.summary)}</h3>
+        <h3>${escapeHtml(branch.card_title || branch.title)}</h3>
+        <p class="card-desc">${escapeHtml(branch.card_summary || branch.summary)}</p>
+        <p class="branch-result"><strong>当前成果：</strong>${escapeHtml(branch.card_result || "")}</p>
         <div class="stats-row compact">
           ${branch.hero_metrics.slice(0, 3).map((metric) => renderMetric(metric)).join("")}
         </div>
@@ -269,24 +265,17 @@
           { label: task.title, path: task.page_path },
         ],
       })}
-      <section class="section-block">
-        <div class="section-title-row">
-          <div>
-            <p class="eyebrow">Overview</p>
-            <h2>任务背景与当前判断</h2>
-          </div>
-          <p class="section-description">${escapeHtml(task.summary)}</p>
-        </div>
-        <div class="entity-chip-row">${branchChips}</div>
-      </section>
-      ${renderSummaryCards(task.summary_cards)}
+      ${renderTaskShowcase(task.media_items)}
+      ${renderTaskCoreSection(task, branchChips)}
       ${
         taskCharts.length
           ? renderChartSection({
+              id: "task-charts",
               kicker: "Training Curves",
-              title: "训练图表区",
-              description: "图表顺序固定为 success → total loss → mse，尽量让训练过程一眼可读。",
+              title: "图表分析",
+              description: "优先用成功率柱状图、loss 曲线和排行条把结果关系讲清楚，减少只靠长段文字解释。",
               charts: taskCharts,
+              dashboard: true,
             })
           : ""
       }
@@ -299,7 +288,24 @@
       )}
       ${renderFindingsSection(task.findings)}
       ${renderEvidenceSection(task.evidence_links)}
-      ${renderTaskShowcase(task.media_items)}
+    `;
+  }
+
+  function renderTaskCoreSection(task, branchChips) {
+    return `
+      <section class="section-block">
+        <div class="section-title-row">
+          <div>
+            <p class="eyebrow">Core Work</p>
+            <h2>核心工作</h2>
+          </div>
+          <p class="section-description">${escapeHtml(task.summary)}</p>
+        </div>
+        <div class="entity-chip-row">${branchChips}</div>
+        <div class="summary-grid">
+          ${task.summary_cards.map((card) => renderSummaryCard(card)).join("")}
+        </div>
+      </section>
     `;
   }
 
@@ -390,7 +396,7 @@
     `;
   }
 
-  function renderChartSection({ id, kicker, title, description, charts: chartList }) {
+  function renderChartSection({ id, kicker, title, description, charts: chartList, dashboard = false }) {
     return `
       <section class="section-block" ${id ? `id="${escapeHtml(id)}"` : ""}>
         <div class="section-title-row">
@@ -402,18 +408,29 @@
         </div>
         ${
           chartList.length
-            ? `<div class="chart-grid">${chartList.map((chart) => renderChartCard(chart)).join("")}</div>`
+            ? `<div class="chart-grid ${dashboard ? "chart-grid-dashboard" : ""}">${chartList
+                .map((chart, index) => renderChartCard(chart, { index, dashboard }))
+                .join("")}</div>`
             : `<div class="empty-panel">当前还没有可展示的图表。</div>`
         }
       </section>
     `;
   }
 
-  function renderChartCard(chart) {
+  function renderChartCard(chart, options = {}) {
     const chartTypeLabel =
-      chart.type === "line" ? "折线图" : chart.type === "compare_cards" ? "结果卡片" : "柱状图";
+      chart.type === "line"
+        ? "折线图"
+        : chart.type === "compare_cards"
+          ? "结果卡片"
+          : chart.type === "rank_bar"
+            ? "排行条"
+            : chart.type === "grouped_bar"
+              ? "分组柱状图"
+              : "柱状图";
+    const chartClass = buildChartCardClass(chart, options);
     return `
-      <article class="chart-card" data-chart-card>
+      <article class="${escapeHtml(chartClass)}" data-chart-card>
         <div class="card-topline">
           <span class="badge badge-soft">${escapeHtml(chartTypeLabel)}</span>
         </div>
@@ -425,6 +442,10 @@
               ? renderLineChart(chart)
               : chart.type === "compare_cards"
                 ? renderCompareCardsChart(chart)
+                : chart.type === "grouped_bar"
+                  ? renderGroupedBarChart(chart)
+                  : chart.type === "rank_bar"
+                    ? renderRankBarChart(chart)
                 : renderBarChart(chart)
           }
         </div>
@@ -432,6 +453,19 @@
         <div class="chart-tooltip" hidden></div>
       </article>
     `;
+  }
+
+  function buildChartCardClass(chart, options = {}) {
+    const classes = ["chart-card"];
+    if (options.dashboard) {
+      classes.push("chart-card-dashboard");
+      if (chart.type === "rank_bar") {
+        classes.push("chart-card-wide");
+      } else if (options.index === 0) {
+        classes.push("chart-card-feature");
+      }
+    }
+    return classes.join(" ");
   }
 
   function renderLineChart(chart) {
@@ -547,6 +581,84 @@
                   <div class="bar-fill" style="height:${heightPercent}%; background:${series.color};"></div>
                 </div>
                 <span class="bar-label">${escapeHtml(category)}</span>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+    `;
+  }
+
+  function renderGroupedBarChart(chart) {
+    const seriesList = chart.series || [];
+    if (!seriesList.length || !chart.categories?.length) {
+      return `<div class="chart-empty">当前没有足够的分组柱状数据。</div>`;
+    }
+    const maxValue = Math.max(
+      1,
+      ...seriesList.flatMap((series) => (series.values || []).map((value) => Number(value) || 0)),
+    );
+    const legend = seriesList
+      .map(
+        (series) => `
+          <span class="legend-item">
+            <span class="legend-dot" style="background:${series.color}"></span>
+            ${escapeHtml(series.name)}
+          </span>
+        `,
+      )
+      .join("");
+    return `
+      <div class="grouped-bar-chart">
+        ${chart.categories
+          .map(
+            (category, index) => `
+              <div class="grouped-bar-group">
+                <div class="grouped-bar-bars">
+                  ${seriesList
+                    .map((series) => {
+                      const value = Number(series.values?.[index] || 0);
+                      const tip = `${series.name} · ${category}: ${formatValue(value, chart.format)}`;
+                      return `
+                        <div class="grouped-bar-column" data-tip="${escapeHtml(tip)}">
+                          <div class="grouped-bar-rail">
+                            <div class="grouped-bar-fill" style="height:${(value / maxValue) * 100}%; background:${series.color};"></div>
+                          </div>
+                          <span class="grouped-bar-value">${escapeHtml(formatValue(value, chart.format))}</span>
+                        </div>
+                      `;
+                    })
+                    .join("")}
+                </div>
+                <span class="grouped-bar-label">${escapeHtml(category)}</span>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+      <div class="chart-legend">${legend}</div>
+    `;
+  }
+
+  function renderRankBarChart(chart) {
+    const rows = chart.rows || [];
+    if (!rows.length) {
+      return `<div class="chart-empty">当前没有足够的排行数据。</div>`;
+    }
+    const maxValue = Math.max(1, ...rows.map((row) => Number(row.value) || 0));
+    return `
+      <div class="rank-bar-chart">
+        ${rows
+          .map((row) => {
+            const value = Number(row.value) || 0;
+            const tip = `${row.label}: ${formatValue(value, chart.format)}`;
+            return `
+              <div class="rank-bar-row" data-tip="${escapeHtml(tip)}">
+                <span class="rank-bar-label">${escapeHtml(row.label)}</span>
+                <div class="rank-bar-track">
+                  <div class="rank-bar-fill" style="width:${(value / maxValue) * 100}%; background:${row.color || "var(--rust)"};"></div>
+                </div>
+                <span class="rank-bar-value">${escapeHtml(formatValue(value, chart.format))}</span>
               </div>
             `;
           })
@@ -694,13 +806,13 @@
 
   function renderBranchPage(branch) {
     const relatedTasks = branch.related_task_ids.map((taskId) => taskMap.get(taskId)).filter(Boolean);
-    const branchCharts = branch.chart_ids.map((chartId) => charts[chartId]).filter(Boolean);
+    const branchCharts = (branch.dashboard_chart_ids || branch.chart_ids || []).map((chartId) => charts[chartId]).filter(Boolean);
 
     return `
       ${renderDetailHero({
         kicker: "Research Line",
         title: branch.title,
-        summary: branch.summary,
+        summary: branch.detail_intro || branch.summary,
         status: branch.status,
         metrics: branch.hero_metrics,
         crumbs: [
@@ -709,6 +821,14 @@
           { label: branch.title, path: branch.page_path },
         ],
       })}
+      ${renderBranchShowcase(branch.media_items || [])}
+      ${branchCharts.length ? renderChartSection({
+        kicker: "Branch Dashboard",
+        title: "图表分析",
+        description: "研究线页优先展示按这条线重画后的总览图，而不是简单复用任务页的图表顺序。",
+        charts: branchCharts,
+        dashboard: true,
+      }) : ""}
       <section class="section-block">
         <div class="section-title-row">
           <div>
@@ -721,14 +841,7 @@
           ${relatedTasks.map((task) => renderRelatedTaskCard(task)).join("")}
         </div>
       </section>
-      ${branchCharts.length ? renderChartSection({
-        kicker: "Branch Charts",
-        title: "支线图表",
-        description: "这里只放和这条研究线直接相关的图表，不重复整站所有图。",
-        charts: branchCharts,
-      }) : ""}
       ${renderTimelineSection(branch.timeline_groups || [], "Timeline", "研究线时间线", "同一条研究线下的任务推进合并到同一时间轴里看。")}
-      ${renderBranchShowcase(branch.media_items || [])}
       ${renderEvidenceSection(branch.evidence_links || [])}
     `;
   }

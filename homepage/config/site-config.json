@@ -2,7 +2,7 @@
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
-    "description": "围绕 unplug charger 任务的策略训练、行为审计、主线比较与执行资料。"
+    "description": ""
   },
   "home_charts": [
     "task-anchor-overview",

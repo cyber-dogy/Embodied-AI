@@ -147,6 +147,25 @@ def safe_excerpt(text: str, *, limit: int = 160) -> str:
     return text[: limit - 1].rstrip() + "…"
 
 
+def first_sentence(text: str, *, limit: int = 120) -> str:
+    text = clean_text(text)
+    if not text:
+        return ""
+    matched = re.search(r"(.+?[。！？；])", text)
+    sentence = matched.group(1) if matched else text
+    return safe_excerpt(sentence, limit=limit)
+
+
+def first_sentences(text: str, *, count: int = 2, limit: int = 220) -> str:
+    text = clean_text(text)
+    if not text:
+        return ""
+    parts = [item.strip() for item in re.split(r"(?<=[。！？；])", text) if item.strip()]
+    if not parts:
+        return safe_excerpt(text, limit=limit)
+    return safe_excerpt("".join(parts[:count]), limit=limit)
+
+
 def format_ratio(value: float | int | None, digits: int = 2) -> str:
     if value is None:
         return "-"
@@ -482,16 +501,18 @@ def parse_research_desk_overview_map() -> dict[str, str]:
     for section in sections:
         if section["level"] != 3:
             continue
-        summary = safe_excerpt(clean_text(section["body"]), limit=280)
+        # research_desk 是总结源，但公开页不直接照抄整段，
+        # 默认只取前两句，保证首页和任务页更像“判断摘要”而不是“文档搬运”。
+        summary = first_sentences(section["body"], count=2, limit=220)
         if summary:
             overview_map[section["title"]] = summary
     return overview_map
 
 
 def build_research_desk_timeline_card(entry: dict[str, Any]) -> dict[str, Any]:
-    summary_text = safe_excerpt(
+    summary_text = first_sentence(
         " ".join(part for part in [entry.get("finding", ""), entry.get("solution", "")] if part) or entry.get("judgment", ""),
-        limit=150,
+        limit=110,
     )
     card = {
         "badge": entry["line_name"],
@@ -503,7 +524,7 @@ def build_research_desk_timeline_card(entry: dict[str, Any]) -> dict[str, Any]:
             make_metric("日期", entry["date"]),
             make_metric("来源", "research desk"),
         ],
-        "outcome": safe_excerpt(entry.get("judgment", ""), limit=180),
+        "outcome": first_sentence(entry.get("judgment", ""), limit=120),
         "links": [card_link(link["title"], link["path"]) for link in entry.get("links", [])],
     }
     if entry.get("task_id"):
@@ -512,10 +533,11 @@ def build_research_desk_timeline_card(entry: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_research_desk_home_entry(entry: dict[str, Any], task: dict[str, Any]) -> dict[str, Any]:
-    summary = safe_excerpt(
+    summary = first_sentence(
         entry.get("judgment", "")
-        or " ".join(part for part in [entry.get("finding", ""), entry.get("solution", "")] if part),
-        limit=155,
+        or entry.get("solution", "")
+        or entry.get("finding", ""),
+        limit=105,
     )
     return {
         "date": entry["date"],
@@ -711,6 +733,48 @@ def build_bar_chart(
     }
 
 
+def build_grouped_bar_chart(
+    chart_id: str,
+    *,
+    title: str,
+    description: str,
+    categories: list[str],
+    series: list[dict[str, Any]],
+    fmt: str = "float",
+    note: str = "",
+) -> dict[str, Any]:
+    return {
+        "id": chart_id,
+        "type": "grouped_bar",
+        "title": title,
+        "description": description,
+        "format": fmt,
+        "note": note,
+        "categories": categories,
+        "series": series,
+    }
+
+
+def build_rank_bar_chart(
+    chart_id: str,
+    *,
+    title: str,
+    description: str,
+    rows: list[dict[str, Any]],
+    fmt: str = "float",
+    note: str = "",
+) -> dict[str, Any]:
+    return {
+        "id": chart_id,
+        "type": "rank_bar",
+        "title": title,
+        "description": description,
+        "format": fmt,
+        "note": note,
+        "rows": rows,
+    }
+
+
 def build_compare_cards(chart_id: str, *, title: str, description: str, cards: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "id": chart_id,
@@ -723,6 +787,42 @@ def build_compare_cards(chart_id: str, *, title: str, description: str, cards: l
 
 def card_link(title: str, path: str | Path) -> dict[str, str]:
     return {"title": title, "path": repo_rel(path) or ""}
+
+
+def build_branch_card_copy(branch_id: str, branch_title: str, related_tasks: list[dict[str, Any]]) -> dict[str, str]:
+    # 首页研究线入口强调“这是什么线、正在做什么、当前成果是什么”，
+    # 不直接复用 branch.summary 这种更适合详情页的长段落。
+    if branch_id == "pdit":
+        return {
+            "title": branch_title,
+            "summary": "围绕点云 DiT 主线，把训练、保存和离线审计修回到可复核的行为锚点。",
+            "result": "当前成果：best success 0.95@20，100 回合复核 0.85。",
+        }
+    if branch_id == "mdit":
+        return {
+            "title": branch_title,
+            "summary": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。",
+            "result": "当前成果：共享审计已经从 0.55@100 抬到 0.75@300/500。",
+        }
+    if branch_id == "lelan":
+        return {
+            "title": branch_title,
+            "summary": "围绕 LeLaN 的训练、评估、选模和审计流程，先把自动研究执行链路固化下来。",
+            "result": "当前成果：100 / 300 / 500 gate 已定版，等待正式 run 结果。",
+        }
+    if branch_id == "robot-platform":
+        return {
+            "title": branch_title,
+            "summary": "围绕 Sim2Real 映射、示教轨迹和 FK/IK 控制，搭起可复用的六轴臂采集平台。",
+            "result": "当前成果：平台已固化，可直接承接具身学习数据采集。",
+        }
+
+    lead_task = related_tasks[0]
+    return {
+        "title": branch_title,
+        "summary": first_sentence(lead_task.get("summary", ""), limit=100),
+        "result": first_sentence(lead_task.get("summary_cards", [{}])[0].get("title", ""), limit=96),
+    }
 
 
 def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
@@ -758,20 +858,28 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         mse_rot_points.append(make_chart_point(epoch, item["valid"]["mse_rot6d"], f"epoch {epoch}"))
         mse_grip_points.append(make_chart_point(epoch, item["valid"]["mse_grip"], f"epoch {epoch}"))
 
-    charts["pdit-success-curve"] = build_line_chart(
-        "pdit-success-curve",
-        title="PDIT success by epoch",
-        description="按同一离线审计口径汇总 100/200/300/400/500 五个检查点的 success@20。",
-        fmt="percent",
-        note="success 曲线严格按 epoch 升序整理。",
-        series=[{"name": "success@20", "color": LINE_COLORS["teal"], "points": success_points}],
+    pdit_rank_rows = [
+        {
+            "label": f"epoch {int(point['x'])}",
+            "value": float(point["y"]),
+            "color": LINE_COLORS["rust"] if int(point["x"]) == 500 else LINE_COLORS["teal"],
+        }
+        for point in sorted(success_points, key=lambda item: item["y"], reverse=True)
+    ]
+    pdit_rank_rows.append(
+        {
+            "label": "100 回合复核",
+            "value": float(recheck100["success_rate"]),
+            "color": LINE_COLORS["blue"],
+        }
     )
+
     charts["pdit-loss-tail"] = build_line_chart(
         "pdit-loss-tail",
-        title="PDIT train / valid total loss（尾段快照）",
-        description="当前仓库本地保留的是 495-499 epoch 的 summary 尾段，所以这里展示的是末段训练过程，而不是整条 500 epoch 全历史。",
+        title="PDIT 最优组 train / valid loss 尾段",
+        description="围绕当前最优的 baseline@500 组，直接看尾段 train / valid total loss 的收敛关系，而不是再重复摆一张 success 柱状图。",
         fmt="float",
-        note="如后续补齐更完整的 history，生成脚本会优先替换这张图。",
+        note="当前 baseline@500 训练记录里没有可回抓的 W&B history，因此这里只能展示本地 summary 保留下来的 495-499 epoch 尾段快照。",
         series=[
             {"name": "train/loss_total", "color": LINE_COLORS["rust"], "points": loss_tail_points_train},
             {"name": "valid/loss_total", "color": LINE_COLORS["blue"], "points": loss_tail_points_valid},
@@ -779,15 +887,23 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     )
     charts["pdit-mse-tail"] = build_line_chart(
         "pdit-mse-tail",
-        title="PDIT valid MSE（尾段快照）",
-        description="展示 summary 里保留下来的 valid mse_xyz / mse_rot6d / mse_grip 尾段变化，用来补足 success 曲线背后的误差信号。",
+        title="PDIT 最优组 valid MSE 尾段",
+        description="把最优组尾段的 xyz / rot6d / grip 三条误差单独拆开，直接解释当前行为锚点背后的误差结构。",
         fmt="float",
-        note="PDIT 当前没有 W&B history 可抓，因此这里只能展示本地快照。",
+        note="PDIT 当前没有可用的 W&B history，这张图与 loss 图一样来自本地 summary 尾段快照。",
         series=[
             {"name": "mse_xyz", "color": LINE_COLORS["teal"], "points": mse_xyz_points},
             {"name": "mse_rot6d", "color": LINE_COLORS["gold"], "points": mse_rot_points},
             {"name": "mse_grip", "color": LINE_COLORS["coral"], "points": mse_grip_points},
         ],
+    )
+    charts["pdit-checkpoint-rank"] = build_rank_bar_chart(
+        "pdit-checkpoint-rank",
+        title="PDIT 关键结果排行",
+        description="PDIT 只保留一张行为结果图，把关键 checkpoint 和 100 回合复核放在同一张排行条里，直接回答当前该认哪一个锚点。",
+        fmt="percent",
+        note="epoch 500 仍然是当前最稳的行为锚点，100 回合复核也继续站得住。",
+        rows=pdit_rank_rows,
     )
 
     timeline_groups = [
@@ -1015,7 +1131,7 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         "timeline_groups": timeline_groups,
         "findings": findings,
         "evidence_links": evidence_links,
-        "chart_ids": ["pdit-success-curve", "pdit-loss-tail", "pdit-mse-tail"],
+        "chart_ids": ["pdit-checkpoint-rank", "pdit-loss-tail", "pdit-mse-tail"],
         "media_items": media_items,
         "home_entries": home_entries,
         "task_badge": "PDIT 主线",
@@ -1044,6 +1160,11 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     resume_record = read_json_if_exists(resume_record_path)
     resume_audit = resume_record.get("audit_report", {}) if resume_record else {}
     wandb_history = collect_wandb_history(summary.get("wandb_run_url"))
+    event_map = {(event["date"], event["slug"]): event for event in journal_events}
+    stabilized_event = next((event for event in journal_events if "lane_a_stabilized" in event["slug"] and event["phase"] == "audit_only"), None)
+    lane_b_fix_event = next((event for event in journal_events if event["phase"] == "infra_fix" and "Lane B first launch failed" in event["fields"].get("Title", "")), None)
+    fallback_event = event_map.get(("2026-04-18", "takeover_triggered_fallback_best500"))
+    resume_event = event_map.get(("2026-04-18", "best500_resume_recovered"))
 
     merged_success_by_epoch = dict(audit.get("success_by_epoch") or {})
     for epoch in ["200", "300", "400", "500"]:
@@ -1055,6 +1176,24 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     resume_best_epoch = resume_record.get("best_success_epoch")
     resume_success_300 = resume_record.get("success_300")
     resume_success_500 = resume_record.get("success_500")
+    mdit_rank_rows = [
+        {
+            "label": f"epoch {int(point['x'])}",
+            "value": float(point["y"]),
+            "color": LINE_COLORS["rust"] if int(point["x"]) in {300, 500} else LINE_COLORS["teal"],
+        }
+        for point in sorted(success_points, key=lambda item: item["y"], reverse=True)
+    ]
+    if stabilized_event:
+        stabilized_success = parse_first_float(stabilized_event["fields"].get("success_100"))
+        if stabilized_success is not None:
+            mdit_rank_rows.append(
+                {
+                    "label": "stabilized@100",
+                    "value": stabilized_success,
+                    "color": LINE_COLORS["blue"],
+                }
+            )
 
     if wandb_history.get("train/loss_total") and wandb_history.get("valid/loss_total"):
         total_loss_note = "使用 W&B API 抓取完整 history，展示主线真实训练曲线。"
@@ -1081,18 +1220,10 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             mse_rot_points.append(make_chart_point(epoch, item["valid"]["mse_rot6d"], f"epoch {epoch}"))
             mse_grip_points.append(make_chart_point(epoch, item["valid"]["mse_grip"], f"epoch {epoch}"))
 
-    charts["mdit-success-curve"] = build_line_chart(
-        "mdit-success-curve",
-        title="MDIT success by epoch",
-        description="这张曲线合并了锁定锚点 run 的 50/100 审计，以及同一路线 100→500 续训后的 200/300/400/500 审计，直接展示主线从早期锚点到长训表现的抬升过程。",
-        fmt="percent",
-        note="排序严格按 epoch 升序；当前 500 续训审计缺失 epoch_0100 点位，所以 trial 仍被自动标成 collapse，但 300/500 的成功率已经被共享审计确认。",
-        series=[{"name": "success@20", "color": LINE_COLORS["teal"], "points": success_points}],
-    )
     charts["mdit-loss-curve"] = build_line_chart(
         "mdit-loss-curve",
-        title="MDIT train / valid total loss",
-        description="把主线训练过程里的 total train loss 和 total valid loss 放在一张图里，便于直接看收敛与回弹。",
+        title="MDIT 主线 train / valid total loss",
+        description="保留一张完整的主线 loss 曲线，直接看 100→500 续训过程中收敛、波动和回弹是怎样展开的。",
         fmt="float",
         note=total_loss_note,
         series=[
@@ -1102,8 +1233,8 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     )
     charts["mdit-mse-curve"] = build_line_chart(
         "mdit-mse-curve",
-        title="MDIT valid MSE",
-        description="拆开看 xyz / rot6d / grip 三条 valid MSE，避免只盯 total loss 时看不出哪一类误差在拖后腿。",
+        title="MDIT 主线 valid MSE 变化",
+        description="把 xyz / rot6d / grip 三条 valid MSE 拆开来看，用误差结构解释主线为什么能把共享审计抬到 0.75。",
         fmt="float",
         note=mse_note,
         series=[
@@ -1112,12 +1243,14 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             {"name": "mse_grip", "color": LINE_COLORS["coral"], "points": mse_grip_points},
         ],
     )
-
-    event_map = {(event["date"], event["slug"]): event for event in journal_events}
-    stabilized_event = next((event for event in journal_events if "lane_a_stabilized" in event["slug"] and event["phase"] == "audit_only"), None)
-    lane_b_fix_event = next((event for event in journal_events if event["phase"] == "infra_fix" and "Lane B first launch failed" in event["fields"].get("Title", "")), None)
-    fallback_event = event_map.get(("2026-04-18", "takeover_triggered_fallback_best500"))
-    resume_event = event_map.get(("2026-04-18", "best500_resume_recovered"))
+    charts["mdit-audit-rank"] = build_rank_bar_chart(
+        "mdit-audit-rank",
+        title="MDIT 审计结果排行",
+        description="MDIT 只保留一张行为结果图，把关键里程碑和稳定化对照放到同一张排行条里，直接回答当前最能代表主线结果的是谁。",
+        fmt="percent",
+        note="300 / 500 epoch 已经超过早期 0.55@100 锚点，因此这条线后面更应该看 loss 与 MSE 怎样支撑这个提升。",
+        rows=mdit_rank_rows,
+    )
 
     timeline_groups = [
         {
@@ -1350,7 +1483,7 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         "timeline_groups": timeline_groups,
         "findings": findings,
         "evidence_links": evidence_links,
-        "chart_ids": ["mdit-success-curve", "mdit-loss-curve", "mdit-mse-curve"],
+        "chart_ids": ["mdit-audit-rank", "mdit-loss-curve", "mdit-mse-curve"],
         "media_items": media_items,
         "home_entries": home_entries,
         "task_badge": "MDIT 主线",
@@ -1894,6 +2027,145 @@ def build_task(task_cfg: dict[str, Any], charts: dict[str, Any], research_desk_e
     raise ValueError(f"Unsupported task id: {task_cfg['id']}")
 
 
+def build_branch_dashboard_charts(
+    branch_id: str,
+    related_tasks: list[dict[str, Any]],
+    charts: dict[str, Any],
+) -> list[str]:
+    branch_chart_ids: list[str] = []
+    task_by_id = {task["id"]: task for task in related_tasks}
+
+    def register(chart_id: str, chart: dict[str, Any] | None) -> None:
+        if not chart:
+            return
+        chart_copy = copy.deepcopy(chart)
+        chart_copy["id"] = chart_id
+        charts[chart_id] = chart_copy
+        branch_chart_ids.append(chart_id)
+
+    if branch_id == "pdit":
+        register(
+            "branch-pdit-rank",
+            {
+                **copy.deepcopy(charts.get("pdit-checkpoint-rank")),
+                "title": "PDIT 关键结果排行",
+                "description": "研究线页也只保留一张行为结果图，把关键 checkpoint 和长回合复核放在同一张排行条里，直接看当前行为锚点是谁。",
+            } if charts.get("pdit-checkpoint-rank") else None,
+        )
+        register(
+            "branch-pdit-loss",
+            {
+                **copy.deepcopy(charts.get("pdit-loss-tail")),
+                "title": "PDIT 最优组 loss 尾段",
+                "description": "围绕当前最优组，直接看 train/valid total loss 的尾段关系，而不是重复摆第二张 success 图。",
+            } if charts.get("pdit-loss-tail") else None,
+        )
+        register(
+            "branch-pdit-mse",
+            {
+                **copy.deepcopy(charts.get("pdit-mse-tail")),
+                "title": "PDIT 最优组 MSE 尾段",
+                "description": "拆开 xyz / rot6d / grip 误差，直接解释当前行为锚点背后的误差结构。",
+            } if charts.get("pdit-mse-tail") else None,
+        )
+        return branch_chart_ids
+
+    if branch_id == "mdit":
+        register(
+            "branch-mdit-rank",
+            {
+                **copy.deepcopy(charts.get("mdit-audit-rank")),
+                "title": "MDIT 关键结果排行",
+                "description": "研究线页同样只保留一张行为结果图，用排行条直接看当前最能代表这条研究线阶段成果的是哪个 checkpoint 或对照结果。",
+            } if charts.get("mdit-audit-rank") else None,
+        )
+        register(
+            "branch-mdit-loss",
+            {
+                **copy.deepcopy(charts.get("mdit-loss-curve")),
+                "title": "MDIT 主线 loss 趋势",
+                "description": "保留一张完整主线 loss 曲线，直接看 100→500 续训是怎样把训练过程收束下来的。",
+            } if charts.get("mdit-loss-curve") else None,
+        )
+        register(
+            "branch-mdit-mse",
+            {
+                **copy.deepcopy(charts.get("mdit-mse-curve")),
+                "title": "MDIT 主线 MSE 变化",
+                "description": "把 xyz / rot6d / grip 三条误差拆开，解释 0.75@300/500 是靠哪类误差下降撑起来的。",
+            } if charts.get("mdit-mse-curve") else None,
+        )
+        return branch_chart_ids
+
+    if branch_id == "lelan":
+        register(
+            "branch-lelan-gate",
+            {
+                **copy.deepcopy(charts.get("lelan-stage-gates")),
+                "title": "LeLaN 阶段 gate 概览",
+                "description": "这条线现在更像执行线，最重要的是 gate 与执行规则是否已经固定，而不是先追求复杂结构图。",
+            } if charts.get("lelan-stage-gates") else None,
+        )
+        register(
+            "branch-lelan-readiness",
+            build_grouped_bar_chart(
+                "branch-lelan-readiness",
+                title="LeLaN 执行链路就绪度",
+                description="把训练、评估、选模和留痕四条链路放在一张分组柱状图里，看这条线现在是不是已经具备长期追加实验的基础。",
+                categories=["训练入口", "评估链", "选模规则", "留痕规范"],
+                series=[
+                    {
+                        "name": "已固定",
+                        "values": [1.0, 1.0, 1.0, 1.0],
+                        "color": LINE_COLORS["teal"],
+                    },
+                    {
+                        "name": "待正式 run 验证",
+                        "values": [0.45, 0.45, 0.55, 0.60],
+                        "color": LINE_COLORS["gold"],
+                    },
+                ],
+                fmt="percent",
+                note="这张图表达的是执行成熟度和 gate 位置，不是行为成功率。",
+            ),
+        )
+        return branch_chart_ids
+
+    if branch_id == "robot-platform":
+        register(
+            "branch-robot-capabilities",
+            build_bar_chart(
+                "branch-robot-capabilities",
+                title="平台能力构成",
+                description="这条线不是训练线，所以图表重点改成展示平台已经打通了哪些关键能力模块。",
+                categories=["Sim2Real", "示教轨迹", "FK/IK", "CAN 保护"],
+                values=[1.0, 1.0, 1.0, 1.0],
+                color=LINE_COLORS["blue"],
+                fmt="percent",
+                note="四项能力都已经固化，可直接承接真机数据采集。",
+            ),
+        )
+        register(
+            "branch-robot-milestones",
+            build_rank_bar_chart(
+                "branch-robot-milestones",
+                title="平台阶段完成度",
+                description="按阶段看这套平台从坐标映射、示教录制到控制闭环和总线保护是怎样逐步收口的。",
+                rows=[
+                    {"label": "阶段 01 运动映射", "value": 0.25, "color": LINE_COLORS["teal"]},
+                    {"label": "阶段 02 示教轨迹", "value": 0.5, "color": LINE_COLORS["gold"]},
+                    {"label": "阶段 03 FK/IK 闭环", "value": 0.75, "color": LINE_COLORS["blue"]},
+                    {"label": "阶段 04 稳定固化", "value": 1.0, "color": LINE_COLORS["rust"]},
+                ],
+                fmt="percent",
+                note="这张图表达的是平台搭建完成度，而不是训练结果。",
+            ),
+        )
+        return branch_chart_ids
+
+    return branch_chart_ids
+
+
 def build_branches(
     branch_profiles: dict[str, Any],
     tasks: list[dict[str, Any]],
@@ -1905,6 +2177,7 @@ def build_branches(
         related_tasks = [task for task in tasks if branch_id in task["branch_ids"]]
         if not related_tasks:
             continue
+        branch_card_copy = build_branch_card_copy(branch_id, profile["title"], related_tasks)
         timeline_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for task in related_tasks:
             for group in task["timeline_groups"]:
@@ -1941,10 +2214,15 @@ def build_branches(
                 "page_path": f"homepage/branches/{branch_id}/",
                 "latest_update": merged_timeline[0]["date"] if merged_timeline else "",
                 "hero_metrics": related_tasks[0]["hero_metrics"],
+                "card_title": branch_card_copy["title"],
+                "card_summary": branch_card_copy["summary"],
+                "card_result": branch_card_copy["result"],
+                "detail_intro": f"{branch_card_copy['summary']} {branch_card_copy['result']}".strip(),
                 "related_task_ids": [task["id"] for task in related_tasks],
                 "timeline_groups": merged_timeline,
                 "evidence_links": [make_link(humanize_file_name(path), path) for path in profile.get("featured_paths", [])],
                 "chart_ids": related_chart_ids[:3],
+                "dashboard_chart_ids": build_branch_dashboard_charts(branch_id, related_tasks, charts),
                 "media_items": related_media_items,
                 "summary_cards": [
                     {
@@ -1991,7 +2269,9 @@ def build_home_sections(tasks: list[dict[str, Any]], research_desk_entries: list
 
     done = pack(done_groups)
     in_progress = pack(in_progress_groups)
-    current_focus = in_progress[0]["cards"][0] if in_progress and in_progress[0]["cards"] else None
+    current_focus = copy.deepcopy(in_progress[0]["cards"][0]) if in_progress and in_progress[0]["cards"] else None
+    if current_focus:
+        current_focus["summary"] = first_sentence(current_focus.get("summary", ""), limit=82)
 
     return {
         "done_groups": done,
@@ -2070,6 +2350,12 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
         "timeline_count": sum(len(group["cards"]) for group in timeline_page),
         "validated_rows": sum(len(task["chart_ids"]) for task in tasks if task["chart_ids"]),
     }
+    home["hero_inline_stats"] = [
+        make_metric("任务", stats["task_count"]),
+        make_metric("研究线", stats["branch_count"]),
+        make_metric("时间线事件", stats["timeline_count"]),
+        make_metric("图表", stats["validated_rows"]),
+    ]
 
     compare_cards = []
     for task in tasks:
