@@ -295,3 +295,12 @@
 - Result: best_success_rate=0.75 trial_score=-1.0
 - Audit report: none
 - Contract issues: none
+
+## 2026-04-19T10:59:00+08:00 · postmortem · champion_ckpt_pruned_by_collapse_cleanup
+
+- Title: MDIT Postmortem · `0.75@300/500` 冠军产物误删
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phenomenon: `autoresearch_records` 里保留了 `best_success_rate=0.75`，但真实 ckpt run dir 已不存在，`ckpt/mdit_best` 仍指向旧的 `0.55@100` 主线。
+- Cause: 共享审计把缺失 `epoch_0100` 的续训 run 误判为 `collapse=True`；`finalize_autoresearch_trial()` 在 `cleanup_failed=True` 下直接删除整条 run；takeover 又没有把新的最优结果冻结到稳定快照。
+- Fix: 审计后无论 `collapse` 与否都只允许受控裁剪；新增 takeover 最优冻结链路，把最佳产物硬链接到 `autoresearch_records/frozen_best/` 并回写 `ckpt/mdit_best`。
+- Result: 新逻辑已通过回归测试；本次丢失的 `0.75` ckpt 无法从 WandB 直接恢复，因为远端没有同步 `.pt` 文件。

@@ -365,6 +365,130 @@ def _link_or_copy_file(src: Path, dst: Path) -> None:
         shutil.copy2(src, dst)
 
 
+def _safe_remove_within(path: Path, parent: Path) -> None:
+    try:
+        path.resolve().relative_to(parent.resolve())
+    except Exception as exc:
+        raise ValueError(f"Refusing to remove path outside parent: {path}") from exc
+    if not path.exists() and not path.is_symlink():
+        return
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+    else:
+        shutil.rmtree(path)
+
+
+def _freeze_best_snapshot(
+    *,
+    run_dir: Path,
+    audit_result: dict[str, Any],
+    minimum_score: float,
+) -> dict[str, str] | None:
+    best_success_rate = audit_result.get("best_success_rate")
+    best_ckpt_value = audit_result.get("best_ckpt_path")
+    if best_success_rate is None or float(best_success_rate) < float(minimum_score) or not best_ckpt_value:
+        return None
+
+    best_ckpt_path = Path(str(best_ckpt_value)).expanduser().resolve()
+    if not best_ckpt_path.exists():
+        return None
+
+    frozen_root = _record_dir() / "frozen_best"
+    frozen_root.mkdir(parents=True, exist_ok=True)
+    score_tag = str(f"{float(best_success_rate):.3f}").replace(".", "")
+    snapshot_dir = frozen_root / f"{datetime.now().strftime('%Y-%m-%d-%H%M%S')}__{_slugify(run_dir.name)}__s{score_tag}"
+    snapshot_dir.mkdir(parents=True, exist_ok=False)
+
+    # 这里用硬链接优先，把“当前最优”从源 run 中独立出来，避免后续清理把冠军产物一起带走。
+    keep_paths: list[Path] = []
+    for value in audit_result.get("kept_ckpt_paths") or []:
+        path = Path(str(value)).expanduser().resolve()
+        if path.exists():
+            keep_paths.append(path)
+
+    for candidate in (
+        run_dir / "config.json",
+        run_dir / "experiment_manifest.json",
+        run_dir / "trial_request.json",
+        run_dir / "summary.json",
+        run_dir / "audit_report.json",
+        run_dir / "latest.pt",
+        run_dir / "best_valid.pt",
+        best_ckpt_path,
+        *keep_paths,
+    ):
+        if not candidate.exists():
+            continue
+        try:
+            relative = candidate.relative_to(run_dir)
+        except ValueError:
+            relative = Path(candidate.name)
+        _link_or_copy_file(candidate, snapshot_dir / relative)
+
+    meta_dir = snapshot_dir / "meta"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    (meta_dir / "source_run_dir.txt").write_text(str(run_dir) + "\n", encoding="utf-8")
+    _write_json(
+        meta_dir / "snapshot.json",
+        {
+            "created_at": _timestamp(),
+            "source_run_dir": str(run_dir),
+            "best_success_rate": float(best_success_rate),
+            "best_success_epoch": audit_result.get("best_success_epoch"),
+            "best_ckpt_path": str(best_ckpt_path),
+        },
+    )
+
+    current_alias = frozen_root / "current_provisional_best"
+    if current_alias.exists() or current_alias.is_symlink():
+        _safe_remove_within(current_alias, frozen_root)
+    try:
+        current_alias.symlink_to(snapshot_dir, target_is_directory=True)
+    except OSError:
+        pass
+    snapshot_best_ckpt = snapshot_dir / best_ckpt_path.relative_to(run_dir)
+    _write_json(
+        frozen_root / "current_provisional_best.json",
+        {
+            "updated_at": _timestamp(),
+            "snapshot_dir": str(snapshot_dir),
+            "source_run_dir": str(run_dir),
+            "best_success_rate": float(best_success_rate),
+            "best_success_epoch": audit_result.get("best_success_epoch"),
+            "best_ckpt_path": str(snapshot_best_ckpt),
+        },
+    )
+
+    ckpt_root = PROJECT_ROOT / "ckpt"
+    ckpt_root.mkdir(parents=True, exist_ok=True)
+    alias_path = ckpt_root / "mdit_best"
+    alias_json = ckpt_root / "mdit_best.json"
+    if alias_path.exists() or alias_path.is_symlink():
+        _safe_remove_within(alias_path, ckpt_root)
+    try:
+        alias_path.symlink_to(snapshot_dir, target_is_directory=True)
+    except OSError:
+        pass
+    _write_json(
+        alias_json,
+        {
+            "updated_at": _timestamp(),
+            "snapshot_dir": str(snapshot_dir),
+            "source_run_dir": str(run_dir),
+            "best_success_rate": float(best_success_rate),
+            "best_success_epoch": audit_result.get("best_success_epoch"),
+            "best_ckpt_path": str(snapshot_best_ckpt),
+            "trial_score": audit_result.get("trial_score"),
+            "collapse_detected": bool(audit_result.get("collapse_detected")),
+        },
+    )
+    return {
+        "snapshot_dir": str(snapshot_dir),
+        "best_ckpt_path": str(snapshot_best_ckpt),
+        "alias_path": str(alias_path),
+    }
+
+
 def _prepare_fallback_resume_run(
     *,
     incumbent_run_dir: Path,
@@ -472,6 +596,13 @@ def run_mdit_takeover_controller(config: TakeoverConfig) -> dict[str, Any]:
         )
         state["fallback_triggered"] = bool(should_fallback)
         state["fallback_reason"] = str(fallback_reason)
+        freeze_result = _freeze_best_snapshot(
+            run_dir=config.active_run_dir,
+            audit_result=active_audit_result,
+            minimum_score=config.incumbent_score,
+        )
+        if freeze_result is not None:
+            state["frozen_best_snapshot"] = freeze_result
         _persist_state(state_path, state)
     else:
         active_audit_result = dict(state["active_audit_result"])
@@ -593,6 +724,14 @@ def run_mdit_takeover_controller(config: TakeoverConfig) -> dict[str, Any]:
     else:
         fallback_audit_result = dict(state["fallback_audit_result"])
         _log(f"reuse cached fallback audit result: {fallback_run_dir.name}")
+
+    freeze_result = _freeze_best_snapshot(
+        run_dir=fallback_run_dir,
+        audit_result=fallback_audit_result,
+        minimum_score=config.incumbent_score,
+    )
+    if freeze_result is not None:
+        state["frozen_best_snapshot"] = freeze_result
 
     state["status"] = "completed_with_fallback"
     state["finished_at"] = _timestamp()

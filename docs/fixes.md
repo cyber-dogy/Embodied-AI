@@ -1231,3 +1231,12 @@ except Exception as exc:
 处理：统一使用共享 audit chain 执行评估；episodes=20，stage_epochs=500。
 
 结果：success@epoch_0300=0.750；success@epoch_0500=0.750；最佳成功率=0.750；最佳 checkpoint epoch=300；trial_score=-1.000；是否 collapse=True；collapse 原因=epoch 100 success None below threshold 0.55；受控配方偏移=无
+
+### 2026-04-19 10:59:00 +0800 · 修复冠军产物被误删的审计清理漏洞 · MDIT autoresearch / takeover
+范围：`research/mdit_trial_runner.py` + `research/mdit_takeover_controller.py` + `tests/test_mdit_takeover_and_trial_runner.py`
+
+背景：排查发现 `0.75@300/500` 的 MDIT 主线长训结果只剩 `autoresearch_records` 和文档记录，实际 ckpt 目录已丢失。根因是共享审计阶段把这条续训 run 误标成 `collapse=True` 后，`finalize_autoresearch_trial()` 仍按 `cleanup_failed=True` 直接删除整条 run 目录；与此同时，takeover 路径没有把新的最优结果冻结到稳定快照，导致冠军产物既没有被 `ckpt/mdit_best` 更新，也没有进入 `frozen_best`。
+
+处理：取消“审计后因 collapse 直接 `rmtree(run_dir)`”的危险逻辑，改为无论 `collapse` 与否都只做受控裁剪并保留 `latest.pt`、周期 checkpoint、`best_success.pt`、`best_valid.pt`、`audit_report.json` 等关键产物；新增 takeover 冻结逻辑，在审计结果达到当前最优阈值时立刻把最佳产物硬链接快照到 `autoresearch_records/frozen_best/`，并同步回写 `ckpt/mdit_best` 与 `ckpt/mdit_best.json`。
+
+结果：回归测试已覆盖“`collapse=True` 也不能删 run”和“冻结快照在源 run 删除后仍可独立存活”两条关键场景；WandB 远端仅保存 `config/output/summary/manifest`，没有可下载的 `.pt` 文件，因此本次已经丢失的 `0.75` ckpt 无法从 WandB 直接回收，后续必须重新续训并依赖新冻结链路保住最佳产物。

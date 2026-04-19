@@ -754,6 +754,8 @@ def _prune_run_dir(run_dir: Path, keep_paths: list[Path]) -> None:
 def _build_train_keep_paths(run_dir: Path, cfg: ExperimentConfig) -> list[Path]:
     keep_paths = [
         run_dir / "config.json",
+        # latest.pt 是续训入口，不能在 train-only / audit-only 清理时丢掉。
+        run_dir / "latest.pt",
         cfg.summary_path,
         cfg.experiment_manifest_path,
         cfg.train_heartbeat_path,
@@ -1079,22 +1081,20 @@ def finalize_autoresearch_trial(
         }
         _write_json(cfg.audit_report_path, audit_report)
 
-        kept_ckpt_paths: list[str] = []
-        if collapse_detected and request.cleanup_failed:
-            shutil.rmtree(run_dir)
-        else:
-            keep_paths = [
-                path
-                for path in [
-                    *training_keep_paths,
-                    cfg.audit_report_path,
-                    best_success_path,
-                    *_keep_epoch_paths(records),
-                ]
-                if path is not None and Path(path).exists()
+        # 审计已经拿到了真实 rollout 结果后，即便被规则标成 collapse，也不能再删除整条 run。
+        # 否则会把后续还能复核/续训/回溯的 checkpoint 一起删掉。
+        keep_paths = [
+            path
+            for path in [
+                *training_keep_paths,
+                cfg.audit_report_path,
+                best_success_path,
+                *_keep_epoch_paths(records),
             ]
-            _prune_run_dir(run_dir, keep_paths)
-            kept_ckpt_paths = _collect_kept_ckpt_paths(keep_paths)
+            if path is not None and Path(path).exists()
+        ]
+        _prune_run_dir(run_dir, keep_paths)
+        kept_ckpt_paths: list[str] = _collect_kept_ckpt_paths(keep_paths)
 
         best_success_path_out = (
             None if best_success_path is None or (not Path(best_success_path).exists()) else str(best_success_path)
