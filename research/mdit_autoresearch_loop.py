@@ -1009,9 +1009,105 @@ def _safe_remove_path(path: Path, parent: Path) -> None:
         shutil.rmtree(path)
 
 
+def _link_or_copy_file(src: Path, dst: Path) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        dst.unlink()
+    try:
+        os.link(src, dst)
+    except OSError:
+        shutil.copy2(src, dst)
+
+
+def _freeze_winner_snapshot(winner: dict[str, Any]) -> dict[str, str] | None:
+    run_dir_value = winner.get("run_dir")
+    if not run_dir_value:
+        return None
+    run_dir = Path(str(run_dir_value)).expanduser().resolve()
+    best_ckpt_value = winner.get("best_ckpt_path")
+    if not best_ckpt_value:
+        return None
+    best_ckpt_path = Path(str(best_ckpt_value)).expanduser().resolve()
+    if not run_dir.exists() or not best_ckpt_path.exists():
+        return None
+
+    frozen_root = _record_dir() / "frozen_best"
+    frozen_root.mkdir(parents=True, exist_ok=True)
+    success_value = winner.get("confirmed_success_100", winner.get("trial_score"))
+    score_tag = "na" if success_value is None else str(f"{float(success_value):.3f}").replace(".", "")
+    snapshot_dir = frozen_root / f"{datetime.now().strftime('%Y-%m-%d-%H%M%S')}__{_slugify(run_dir.name)}__s{score_tag}"
+    snapshot_dir.mkdir(parents=True, exist_ok=False)
+
+    keep_paths: list[Path] = []
+    for value in winner.get("kept_ckpt_paths") or []:
+        path = Path(str(value)).expanduser().resolve()
+        if path.exists():
+            keep_paths.append(path)
+
+    for candidate in (
+        run_dir / "config.json",
+        run_dir / "experiment_manifest.json",
+        run_dir / "trial_request.json",
+        run_dir / "summary.json",
+        run_dir / "audit_report.json",
+        run_dir / "latest.pt",
+        run_dir / "best_valid.pt",
+        best_ckpt_path,
+        *keep_paths,
+    ):
+        if not candidate.exists():
+            continue
+        try:
+            relative = candidate.relative_to(run_dir)
+        except ValueError:
+            relative = Path(candidate.name)
+        _link_or_copy_file(candidate, snapshot_dir / relative)
+
+    meta_dir = snapshot_dir / "meta"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    (meta_dir / "source_run_dir.txt").write_text(str(run_dir) + "\n", encoding="utf-8")
+    _write_json(
+        meta_dir / "snapshot.json",
+        {
+            "created_at": _timestamp(),
+            "source_run_dir": str(run_dir),
+            "best_success_rate": winner.get("best_success_rate"),
+            "best_success_epoch": winner.get("best_success_epoch"),
+            "best_ckpt_path": str(best_ckpt_path),
+        },
+    )
+
+    current_alias = frozen_root / "current_provisional_best"
+    if current_alias.exists() or current_alias.is_symlink():
+        _safe_remove_path(current_alias, frozen_root)
+    try:
+        current_alias.symlink_to(snapshot_dir, target_is_directory=True)
+    except OSError:
+        pass
+    snapshot_best_ckpt = snapshot_dir / best_ckpt_path.relative_to(run_dir)
+    _write_json(
+        frozen_root / "current_provisional_best.json",
+        {
+            "updated_at": _timestamp(),
+            "snapshot_dir": str(snapshot_dir),
+            "source_run_dir": str(run_dir),
+            "best_success_rate": winner.get("best_success_rate"),
+            "best_success_epoch": winner.get("best_success_epoch"),
+            "best_ckpt_path": str(snapshot_best_ckpt),
+            "trial_score": winner.get("trial_score"),
+            "confirmed_success_100": winner.get("confirmed_success_100"),
+        },
+    )
+    return {
+        "snapshot_dir": str(snapshot_dir),
+        "best_ckpt_path": str(snapshot_best_ckpt),
+    }
+
+
 def _refresh_champion_alias(winner: dict[str, Any]) -> None:
-    run_dir = Path(winner["run_dir"]).expanduser().resolve()
-    ckpt_root = run_dir.parent
+    alias_run_dir_value = winner.get("frozen_snapshot_dir", winner["run_dir"])
+    run_dir = Path(str(alias_run_dir_value)).expanduser().resolve()
+    ckpt_root = PROJECT_ROOT / "ckpt"
     alias_path = ckpt_root / CHAMPION_ALIAS_NAME
     alias_json = ckpt_root / CHAMPION_ALIAS_JSON
     if alias_path.exists() or alias_path.is_symlink():
@@ -1026,7 +1122,8 @@ def _refresh_champion_alias(winner: dict[str, Any]) -> None:
             "updated_at": _timestamp(),
             "run_name": winner.get("run_name"),
             "run_dir": str(run_dir),
-            "best_ckpt_path": winner.get("best_ckpt_path"),
+            "source_run_dir": winner.get("run_dir"),
+            "best_ckpt_path": winner.get("frozen_best_ckpt_path", winner.get("best_ckpt_path")),
             "trial_score": winner.get("trial_score"),
             "confirmed_success_100": winner.get("confirmed_success_100"),
         },
@@ -1037,15 +1134,24 @@ def _write_best_path_doc(winner: dict[str, Any]) -> Path:
     docs_dir = PROJECT_ROOT / "docs" / "mdit"
     docs_dir.mkdir(parents=True, exist_ok=True)
     path = docs_dir / "best_path.md"
+    ckpt_root = PROJECT_ROOT / "ckpt"
+    actual_alias = ckpt_root / "mdit_best"
+    actual_alias_json = ckpt_root / "mdit_best.json"
+    reference_dir = ckpt_root / "mdit_reference_line"
+    reference_json = ckpt_root / "mdit_reference_line.json"
     lines = [
-        "# MDIT Best Path",
+        "# MDIT Stable Artifacts",
         "",
         f"- Updated: {_timestamp()}",
+        "",
+        "## Current Winner",
+        "",
         f"- Experiment: `{winner.get('experiment_name')}`",
         f"- Lane: `{winner.get('lane')}`",
         f"- Run: `{winner.get('run_name')}`",
-        f"- Run dir: `{winner.get('run_dir')}`",
-        f"- Best checkpoint: `{winner.get('best_ckpt_path')}`",
+        f"- Source run dir: `{winner.get('run_dir')}`",
+        f"- Frozen snapshot dir: `{winner.get('frozen_snapshot_dir', '')}`",
+        f"- Best checkpoint: `{winner.get('frozen_best_ckpt_path', winner.get('best_ckpt_path'))}`",
         f"- success@stage: `{winner.get('trial_score')}`",
         f"- success@100confirm: `{winner.get('confirmed_success_100')}`",
         f"- Audit report: `{winner.get('audit_report_path')}`",
@@ -1053,6 +1159,28 @@ def _write_best_path_doc(winner: dict[str, Any]) -> Path:
         f"- WandB: `{winner.get('wandb_run_url') if winner.get('wandb_run_url') else ''}`",
         "",
     ]
+    if actual_alias.exists() or actual_alias.is_symlink():
+        lines.extend(
+            [
+                "## Actual CKPT Anchor",
+                "",
+                f"- Alias: `{actual_alias}`",
+                f"- Target: `{actual_alias.resolve()}`",
+                f"- Metadata: `{actual_alias_json}`",
+                "",
+            ]
+        )
+    if reference_dir.exists():
+        lines.extend(
+            [
+                "## Reference Method Line",
+                "",
+                f"- Reference dir: `{reference_dir}`",
+                f"- Metadata: `{reference_json}`",
+                "- Note: `0.75@300/500` 当前只固化为方法参考线，原始长训 ckpt 已在历史漏洞中丢失。",
+                "",
+            ]
+        )
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
 
@@ -1316,6 +1444,11 @@ def run_mdit_autoresearch_loop(
     _persist_state(summary_path, state)
 
     if winner is not None:
+        freeze_result = _freeze_winner_snapshot(winner)
+        if freeze_result is not None:
+            winner = dict(winner)
+            winner["frozen_snapshot_dir"] = freeze_result["snapshot_dir"]
+            winner["frozen_best_ckpt_path"] = freeze_result["best_ckpt_path"]
         _refresh_champion_alias(winner)
         best_path = _write_best_path_doc(winner)
         winner["best_path_doc"] = str(best_path)
