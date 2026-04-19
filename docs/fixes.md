@@ -1231,3 +1231,39 @@ except Exception as exc:
 处理：统一使用共享 audit chain 执行评估；episodes=20，stage_epochs=500。
 
 结果：success@epoch_0300=0.750；success@epoch_0500=0.750；最佳成功率=0.750；最佳 checkpoint epoch=300；trial_score=-1.000；是否 collapse=True；collapse 原因=epoch 100 success None below threshold 0.55；受控配方偏移=无
+
+### 2026-04-19 10:59:00 +0800 · 修复冠军产物被误删的审计清理漏洞 · MDIT autoresearch / takeover
+范围：`research/mdit_trial_runner.py` + `research/mdit_takeover_controller.py` + `tests/test_mdit_takeover_and_trial_runner.py`
+
+背景：排查发现 `0.75@300/500` 的 MDIT 主线长训结果只剩 `autoresearch_records` 和文档记录，实际 ckpt 目录已丢失。根因是共享审计阶段把这条续训 run 误标成 `collapse=True` 后，`finalize_autoresearch_trial()` 仍按 `cleanup_failed=True` 直接删除整条 run 目录；与此同时，takeover 路径没有把新的最优结果冻结到稳定快照，导致冠军产物既没有被 `ckpt/mdit_best` 更新，也没有进入 `frozen_best`。
+
+处理：取消“审计后因 collapse 直接 `rmtree(run_dir)`”的危险逻辑，改为无论 `collapse` 与否都只做受控裁剪并保留 `latest.pt`、周期 checkpoint、`best_success.pt`、`best_valid.pt`、`audit_report.json` 等关键产物；新增 takeover 冻结逻辑，在审计结果达到当前最优阈值时立刻把最佳产物硬链接快照到 `autoresearch_records/frozen_best/`，并同步回写 `ckpt/mdit_best` 与 `ckpt/mdit_best.json`。
+
+结果：回归测试已覆盖“`collapse=True` 也不能删 run”和“冻结快照在源 run 删除后仍可独立存活”两条关键场景；WandB 远端仅保存 `config/output/summary/manifest`，没有可下载的 `.pt` 文件，因此本次已经丢失的 `0.75` ckpt 无法从 WandB 直接回收，后续必须重新续训并依赖新冻结链路保住最佳产物。
+
+### 2026-04-19 12:10:00 +0800 · 固化 MDIT 0.75 方法参考线并修复 mdit_best 锚点 · MDIT artifacts
+范围：`scripts/solidify_mdit_reference_line.py` + `ckpt/mdit_best` + `ckpt/mdit_reference_line` + `docs/mdit/best_path.md`
+
+背景：历史清理漏洞已经导致 `0.75@300/500` 的原始长训 ckpt 丢失，但这条线的方法和共享审计结论仍然是当前 MDIT 最重要的阶段证据。同时，旧的 `ckpt/mdit_best` 目录处于新旧元数据混杂状态，容易误导后续训练和评估。
+
+处理：新增 `scripts/solidify_mdit_reference_line.py`，把 `0.75` 长训结果固化为独立的 `ckpt/mdit_reference_line` 方法参考线；同时把 `ckpt/mdit_best` 修复回干净的一致性实际 ckpt 锚点，统一指向 `autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055`；并重写 `docs/mdit/best_path.md`，明确区分“实际可用 ckpt 锚点”和“0.75 方法参考线”。
+
+结果：当前 `ckpt/mdit_best` 是可直接加载的 `0.55@100` 实际锚点；当前 `ckpt/mdit_reference_line` 保存了 `0.75@300/500` 的方法、审计证据和复训 recipe；后续 autoresearch / takeover 会先冻结冠军产物，再更新 alias，不再把最优结果挂在可被清理的原始 run 目录上。
+
+### 2026-04-19 16:56:21 +0800 · close_door 主线续训切换到 64x2
+范围：`scripts/run_mdit_train_guard.sh`、`ckpt/close_door_mdit_rgb_text_3token_500/config.json`
+
+背景：`close_door_mdit_rgb_text_3token_500` 已具备 `latest.pt`，需要在不换 run 的前提下把 micro-batch 从 `32x4` 调整为 `64x2`，保持 global batch=128。
+
+处理：增强守护脚本，支持批大小覆盖与非零退出后继续守护；随后停止旧会话并从同一条 run 的 `latest.pt` 续训，覆盖参数为 `batch_size=64`、`grad_accum_steps=2`、`batch_fallback_tiers=[[64,2],[32,4],[16,8],[8,16]]`。
+
+结果：训练已从 `epoch=8` 续上，新配置已落盘，当前实际命令为 `train.py --resume --set batch_size=64 --set grad_accum_steps=2`，epoch 迭代总 batch 数从 `428` 变为 `214`。
+
+### 2026-04-19 17:09:14 +0800 · MDIT 训练保留清单追加 best_success 强保留
+范围：`research/mdit_trial_runner.py`
+
+背景：用户要求最优线路 ckpt 严禁删除；虽然当前 `close_door` 只有一条主线并且 `latest.pt` 已强保留，但训练期如果未来启用 success selection，`best_success.pt` 也应进入默认保留集合。
+
+处理：在 `_build_train_keep_paths(...)` 中加入 `cfg.best_success_ckpt_path`，并保留中文注释说明这是强保留产物。
+
+结果：当前托管链在 train-only / audit-only 收尾清理时会继续保留 `latest.pt`、`best_valid.pt`、周期 checkpoint，并额外强保留 `best_success.pt`。

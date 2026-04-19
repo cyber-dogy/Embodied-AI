@@ -13,6 +13,11 @@ from typing import Any
 
 import torch
 
+try:
+    import wandb
+except ImportError:  # pragma: no cover
+    wandb = None
+
 from common.runtime import PROJECT_ROOT
 from mdit.config import (
     ExperimentConfig,
@@ -567,12 +572,120 @@ def _enrich_record_with_checkpoint_stats(record: dict[str, Any]) -> dict[str, An
         sample_summary = epoch_row.get("sample") or {}
         enriched["train_loss_at_epoch"] = _maybe_float(train_summary.get("loss_total"))
         enriched["valid_loss_at_epoch"] = _maybe_float(valid_summary.get("loss_total"))
+        enriched["valid_loss_xyz_at_epoch"] = _maybe_float(valid_summary.get("loss_xyz"))
+        enriched["valid_loss_rot6d_at_epoch"] = _maybe_float(valid_summary.get("loss_rot6d"))
+        enriched["valid_loss_grip_at_epoch"] = _maybe_float(valid_summary.get("loss_grip"))
+        enriched["valid_mse_xyz_at_epoch"] = _maybe_float(valid_summary.get("mse_xyz"))
+        enriched["valid_mse_rot6d_at_epoch"] = _maybe_float(valid_summary.get("mse_rot6d"))
+        enriched["valid_mse_grip_at_epoch"] = _maybe_float(valid_summary.get("mse_grip"))
         enriched["sample_mse_at_epoch"] = _maybe_float(sample_summary.get("train_action_mse_error"))
     else:
         enriched["train_loss_at_epoch"] = None
         enriched["valid_loss_at_epoch"] = None
+        enriched["valid_loss_xyz_at_epoch"] = None
+        enriched["valid_loss_rot6d_at_epoch"] = None
+        enriched["valid_loss_grip_at_epoch"] = None
+        enriched["valid_mse_xyz_at_epoch"] = None
+        enriched["valid_mse_rot6d_at_epoch"] = None
+        enriched["valid_mse_grip_at_epoch"] = None
         enriched["sample_mse_at_epoch"] = None
     return enriched
+
+
+def _epoch_metric_value(records: list[dict[str, Any]], epoch: int, key: str) -> float | int | None:
+    for row in records:
+        if row.get("epoch") is None or int(row["epoch"]) != int(epoch):
+            continue
+        value = row.get(key)
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, int):
+            return value
+        return _maybe_float(value)
+    return None
+
+
+def _log_audit_metrics_to_wandb(
+    *,
+    cfg: ExperimentConfig,
+    request: TrialRequest,
+    run_dir: Path,
+    final_payload: dict[str, Any] | None,
+    periodic_records: list[dict[str, Any]],
+    output: dict[str, Any],
+) -> None:
+    if not cfg.wandb_enable:
+        return
+    if cfg.wandb_mode == "disabled":
+        return
+    if wandb is None:
+        raise ImportError("wandb is not installed.")
+    if final_payload is None:
+        return
+
+    wandb_run_id = final_payload.get("wandb_run_id")
+    if not wandb_run_id:
+        return
+
+    wandb_run = wandb.init(
+        project=cfg.wandb_project,
+        entity=cfg.wandb_entity,
+        mode=cfg.wandb_mode,
+        name=f"{cfg.run_name}_{request.strategy}",
+        dir=str(run_dir),
+        resume="allow",
+        id=str(wandb_run_id),
+    )
+    try:
+        payload: dict[str, float | int] = {
+            "audit/trial_score": float(output["trial_score"]),
+            "audit/collapse_detected": int(bool(output["collapse_detected"])),
+            "audit/recipe_drift": int(bool(output["recipe_drift"])),
+        }
+        best_success_rate = output.get("best_success_rate")
+        if best_success_rate is not None:
+            payload["audit/best_success_rate"] = float(best_success_rate)
+        best_success_epoch = output.get("best_success_epoch")
+        if best_success_epoch is not None:
+            payload["audit/best_success_epoch"] = int(best_success_epoch)
+
+        # 审计指标按 checkpoint epoch 展开，方便直接在 W&B 面板对照 50/100/300/500。
+        metric_keys = {
+            "success_rate": "success_rate",
+            "mean_steps": "mean_steps",
+            "num_successes": "num_successes",
+            "num_episodes": "num_episodes",
+            "valid_loss_at_epoch": "valid_loss_total",
+            "valid_loss_xyz_at_epoch": "valid_loss_xyz",
+            "valid_loss_rot6d_at_epoch": "valid_loss_rot6d",
+            "valid_loss_grip_at_epoch": "valid_loss_grip",
+            "valid_mse_xyz_at_epoch": "valid_mse_xyz",
+            "valid_mse_rot6d_at_epoch": "valid_mse_rot6d",
+            "valid_mse_grip_at_epoch": "valid_mse_grip",
+        }
+        audit_epochs = sorted(
+            {
+                int(row["epoch"])
+                for row in periodic_records
+                if row.get("epoch") is not None and row.get("success_rate") is not None
+            }
+        )
+        for epoch in audit_epochs:
+            for record_key, wandb_suffix in metric_keys.items():
+                value = _epoch_metric_value(periodic_records, epoch, record_key)
+                if value is None:
+                    continue
+                payload[f"audit/{wandb_suffix}_epoch_{int(epoch):04d}"] = value
+
+        step = int(final_payload.get("global_step", 0))
+        wandb_run.log(payload, step=step)
+        for key, value in payload.items():
+            if not key.startswith("audit/"):
+                continue
+            summary_key = key.replace("/", "_")
+            wandb_run.summary[summary_key] = value
+    finally:
+        wandb_run.finish()
 
 
 def _load_final_payload(run_dir: Path) -> dict[str, Any] | None:
@@ -754,11 +867,15 @@ def _prune_run_dir(run_dir: Path, keep_paths: list[Path]) -> None:
 def _build_train_keep_paths(run_dir: Path, cfg: ExperimentConfig) -> list[Path]:
     keep_paths = [
         run_dir / "config.json",
+        # latest.pt 是续训入口，不能在 train-only / audit-only 清理时丢掉。
+        run_dir / "latest.pt",
         cfg.summary_path,
         cfg.experiment_manifest_path,
         cfg.train_heartbeat_path,
         _trial_request_path(run_dir),
         cfg.best_ckpt_path,
+        # 如果训练阶段启用了 success selection，best_success.pt 也属于强保留产物。
+        cfg.best_success_ckpt_path,
         *_collect_periodic_ckpts(run_dir),
     ]
     return [path for path in keep_paths if path.exists()]
@@ -1079,22 +1196,20 @@ def finalize_autoresearch_trial(
         }
         _write_json(cfg.audit_report_path, audit_report)
 
-        kept_ckpt_paths: list[str] = []
-        if collapse_detected and request.cleanup_failed:
-            shutil.rmtree(run_dir)
-        else:
-            keep_paths = [
-                path
-                for path in [
-                    *training_keep_paths,
-                    cfg.audit_report_path,
-                    best_success_path,
-                    *_keep_epoch_paths(records),
-                ]
-                if path is not None and Path(path).exists()
+        # 审计已经拿到了真实 rollout 结果后，即便被规则标成 collapse，也不能再删除整条 run。
+        # 否则会把后续还能复核/续训/回溯的 checkpoint 一起删掉。
+        keep_paths = [
+            path
+            for path in [
+                *training_keep_paths,
+                cfg.audit_report_path,
+                best_success_path,
+                *_keep_epoch_paths(records),
             ]
-            _prune_run_dir(run_dir, keep_paths)
-            kept_ckpt_paths = _collect_kept_ckpt_paths(keep_paths)
+            if path is not None and Path(path).exists()
+        ]
+        _prune_run_dir(run_dir, keep_paths)
+        kept_ckpt_paths: list[str] = _collect_kept_ckpt_paths(keep_paths)
 
         best_success_path_out = (
             None if best_success_path is None or (not Path(best_success_path).exists()) else str(best_success_path)
@@ -1134,6 +1249,14 @@ def finalize_autoresearch_trial(
             "summary_path": summary_path_out,
             "error_type": None,
         }
+        _log_audit_metrics_to_wandb(
+            cfg=cfg,
+            request=request,
+            run_dir=run_dir,
+            final_payload=final_payload,
+            periodic_records=periodic_records,
+            output=output,
+        )
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output, audit_report=audit_report)
         _write_research_note(
             repo_root,
