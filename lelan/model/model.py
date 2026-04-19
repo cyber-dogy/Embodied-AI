@@ -1,104 +1,137 @@
 from __future__ import annotations
 
-from collections import deque
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
-from torch import Tensor
 
 from common.runtime import get_device
 from lelan.config import LeLaNExperimentConfig
 from lelan.constants import ACTION, CAMERA_NAME_TO_INDEX, OBS_IMAGES, OBS_STATE, TASK
-from .action_postprocess import postprocess_robot_state_command
-from .objectives import FlowMatchingObjective
+from mdit.model.backbones.dit import DiTTrajectoryBackbone
+from mdit.policy.fm_policy import FMPolicyConfig, FMTransformerPolicy
 from .observation_encoder import ObservationEncoder
-from .transformer import DiffusionTransformer
-from .utils import NormalizationMode, normalize_tensor, populate_queues, unnormalize_tensor
 
 
-class LeLaNPolicy(nn.Module):
-    """LeLaN policy: FiLM vision + EfficientNet history encoder + DiT + Flow Matching.
-
-    Observation encoding: LeLaN's FiLM conditioning + EfficientNet temporal
-    history encoder + Transformer fusion with sinusoidal PE.
-    Action generation: DiT + Flow Matching (same as MDIT).
-
-    This combines LeLaN's core encoder innovation (the key differentiator)
-    with MDIT's proven DiT action decoder.
-    """
+class LeLaNPolicy(FMTransformerPolicy):
+    """LeLaN policy rebased onto reconstructed MDIT FM policy + history encoder."""
 
     name = "lelan"
 
     def __init__(self, config: LeLaNExperimentConfig, dataset_stats: dict[str, dict[str, Any]]) -> None:
-        super().__init__()
         self.config = config
+        self.cfg = config
         self.dataset_stats = dataset_stats
 
-        self.observation_encoder = ObservationEncoder(config)
-        conditioning_dim = self.observation_encoder.conditioning_dim
-
-        self.noise_predictor = DiffusionTransformer(config, conditioning_dim=conditioning_dim)
-        self.objective = FlowMatchingObjective(
-            config.objective,
-            action_dim=int(config.action_dim),
-            horizon=int(config.horizon),
-            do_mask_loss_for_padding=False,
+        obs_encoder = ObservationEncoder(config)
+        backbone = DiTTrajectoryBackbone(
+            input_dim=int(config.y_dim),
+            output_dim=int(config.y_dim),
+            cond_dim=int(config.x_dim),
+            horizon=int(config.n_pred_steps),
+            time_dim=int(config.time_dim),
+            hidden_dim=int(config.hidden_dim),
+            num_blocks=int(config.num_blocks),
+            dropout=float(config.dropout),
+            dim_feedforward=int(config.dim_feedforward),
+            nhead=int(config.nhead),
+            activation=str(config.activation),
+            debug_finiteness=bool(config.debug_finiteness),
+            final_layer_zero_init=bool(config.final_layer_zero_init),
+            decoder_condition_mode=str(config.decoder_condition_mode),
         )
-
-        self._queues: dict[str, deque] | None = None
-        self.reset()
-
-    def _stat_tensors(self, key: str, device: torch.device, dtype: torch.dtype) -> dict[str, Tensor]:
-        stats = self.dataset_stats[key]
-        return {
-            name: torch.as_tensor(value, device=device, dtype=dtype)
-            for name, value in stats.items()
-        }
-
-    def normalize_state(self, state: Tensor) -> Tensor:
-        return normalize_tensor(
-            state,
-            self._stat_tensors(OBS_STATE, state.device, state.dtype),
-            self.config.normalization_mode,
+        policy_cfg = FMPolicyConfig(
+            x_dim=int(config.x_dim),
+            y_dim=int(config.y_dim),
+            n_obs_steps=int(config.n_obs_steps),
+            n_pred_steps=int(config.n_pred_steps),
+            num_k_infer=int(config.fm_num_k_infer),
+            time_conditioning=bool(config.fm_time_conditioning),
+            default_task_text=str(config.effective_task_text),
+            norm_pcd_center=tuple(float(v) for v in config.norm_pcd_center),
+            robot_state_mean=config.robot_state_mean,
+            robot_state_std=config.robot_state_std,
+            augment_data=False,
+            augment_translation_sigma=0.0,
+            augment_rotation_sigma=0.0,
+            noise_type=str(config.fm_noise_type),
+            noise_scale=float(config.fm_noise_scale),
+            loss_type=str(config.loss_type),
+            flow_schedule=str(config.fm_flow_schedule),
+            exp_scale=config.fm_exp_scale,
+            snr_sampler=str(config.fm_snr_sampler),
+            subs_factor=int(config.subs_factor),
+            pos_emb_scale=20,
+            loss_weights=config.fm_loss_weights or {"xyz": 1.0, "rot6d": 1.0, "grip": 1.0},
         )
+        super().__init__(policy_cfg, obs_encoder=obs_encoder, backbone=backbone)
 
-    def unnormalize_action(self, action: Tensor) -> Tensor:
-        return unnormalize_tensor(
-            action,
-            self._stat_tensors(ACTION, action.device, action.dtype),
-            self.config.normalization_mode,
-        )
+    def _minmax_normalize(
+        self,
+        tensor: torch.Tensor,
+        min_values: tuple[float, ...] | None,
+        max_values: tuple[float, ...] | None,
+    ) -> torch.Tensor:
+        if min_values is None or max_values is None:
+            raise ValueError("mtdp_strict normalization requires explicit min/max stats.")
+        min_th = torch.tensor(min_values, device=tensor.device, dtype=tensor.dtype)
+        max_th = torch.tensor(max_values, device=tensor.device, dtype=tensor.dtype)
+        denom = (max_th - min_th).clamp_min(1e-6)
+        return 2.0 * (tensor - min_th) / denom - 1.0
 
-    def get_optim_params(self) -> list[dict[str, Any]]:
-        """Separate parameters into groups with different learning rates.
+    def _minmax_unnormalize(
+        self,
+        tensor: torch.Tensor,
+        min_values: tuple[float, ...] | None,
+        max_values: tuple[float, ...] | None,
+    ) -> torch.Tensor:
+        if min_values is None or max_values is None:
+            raise ValueError("mtdp_strict normalization requires explicit min/max stats.")
+        min_th = torch.tensor(min_values, device=tensor.device, dtype=tensor.dtype)
+        max_th = torch.tensor(max_values, device=tensor.device, dtype=tensor.dtype)
+        denom = (max_th - min_th).clamp_min(1e-6)
+        return (tensor + 1.0) * 0.5 * denom + min_th
 
-        Per-camera vision encoders (FiLM, EfficientNet, compress projections)
-        get 0.1x LR. Everything else (DiT, fusion transformer, text projection)
-        at full LR.
-        """
-        non_vision_params = []
-        vision_params = []
-        for name, param in self.named_parameters():
-            if not param.requires_grad:
-                continue
-            if "film_encoder" in name or "history_encoder" in name or "film_compress" in name:
-                vision_params.append(param)
-            else:
-                non_vision_params.append(param)
-        params = [{"params": non_vision_params}]
-        if vision_params:
-            params.append({"params": vision_params, "lr": self.config.optimizer_lr * 0.1})
-        return params
+    def _norm_state_tensor(self, robot_state: torch.Tensor) -> torch.Tensor:
+        if str(self.config.normalization_profile) == "mtdp_strict":
+            return self._minmax_normalize(robot_state, self.config.state_min, self.config.state_max)
+        return super()._norm_robot_state(robot_state)
 
-    def reset(self) -> None:
-        self._queues = {
-            OBS_STATE: deque(maxlen=self.config.n_obs_steps),
-            OBS_IMAGES: deque(maxlen=self.config.n_obs_steps),
-            TASK: deque(maxlen=self.config.n_obs_steps),
-            ACTION: deque(maxlen=self.config.n_action_steps),
-        }
+    def _norm_action_tensor(self, robot_state: torch.Tensor) -> torch.Tensor:
+        if str(self.config.normalization_profile) == "mtdp_strict":
+            action_min = self.config.action_min if self.config.action_min is not None else self.config.state_min
+            action_max = self.config.action_max if self.config.action_max is not None else self.config.state_max
+            return self._minmax_normalize(robot_state, action_min, action_max)
+        return super()._norm_robot_state(robot_state)
+
+    def _norm_robot_state(self, robot_state: torch.Tensor) -> torch.Tensor:
+        return self._norm_state_tensor(robot_state)
+
+    def _denorm_robot_state(self, robot_state: torch.Tensor) -> torch.Tensor:
+        if str(self.config.normalization_profile) == "mtdp_strict":
+            action_min = self.config.action_min if self.config.action_min is not None else self.config.state_min
+            action_max = self.config.action_max if self.config.action_max is not None else self.config.state_max
+            return self._minmax_unnormalize(robot_state, action_min, action_max)
+        return super()._denorm_robot_state(robot_state)
+
+    def _norm_data(self, batch: tuple[torch.Tensor, ...]):
+        if len(batch) == 4:
+            obs, robot_state_obs, robot_state_pred, task_text = batch
+            return (
+                self._norm_obs(obs),
+                self._norm_state_tensor(robot_state_obs),
+                self._norm_action_tensor(robot_state_pred),
+                task_text,
+            )
+        if len(batch) == 3:
+            obs, robot_state_obs, robot_state_pred = batch
+            return (
+                self._norm_obs(obs),
+                self._norm_state_tensor(robot_state_obs),
+                self._norm_action_tensor(robot_state_pred),
+            )
+        raise ValueError(f"Unexpected batch structure (len={len(batch)}).")
 
     def _select_runtime_cameras(self, images: torch.Tensor) -> torch.Tensor:
         if images.ndim != 4:
@@ -115,85 +148,54 @@ class LeLaNPolicy(nn.Module):
         selected_indices = [CAMERA_NAME_TO_INDEX[name] for name in self.config.camera_names]
         return images[selected_indices]
 
-    def _normalize_batch(self, batch: dict[str, Tensor | list[str]]) -> dict[str, Tensor | list[str]]:
-        normalized = dict(batch)
-        normalized[OBS_STATE] = normalize_tensor(
-            batch[OBS_STATE],
-            self._stat_tensors(OBS_STATE, batch[OBS_STATE].device, batch[OBS_STATE].dtype),
-            self.config.normalization_mode,
+    def _images_to_channel_last(self, images: torch.Tensor) -> torch.Tensor:
+        if images.ndim != 6:
+            raise ValueError(
+                "Expected observation images with shape (B, T_obs, N_cam, H, W, C) "
+                f"or (B, T_obs, N_cam, C, H, W), got {tuple(images.shape)}"
+            )
+        if images.shape[-1] == 3:
+            return images
+        if images.shape[3] == 3:
+            return images.permute(0, 1, 2, 4, 5, 3)
+        raise ValueError(f"Could not identify channel dimension in {tuple(images.shape)}")
+
+    def _batch_to_policy_tuple(
+        self,
+        batch: dict[str, torch.Tensor | Sequence[str]],
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, str | Sequence[str] | None]:
+        obs = self._images_to_channel_last(batch[OBS_IMAGES])
+        robot_state_obs = batch[OBS_STATE]
+        robot_state_pred = batch[ACTION]
+        task_text = batch.get(TASK)
+        return obs, robot_state_obs, robot_state_pred, task_text
+
+    def forward(
+        self,
+        batch: dict[str, torch.Tensor | Sequence[str]],
+    ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        loss_dict = self.compute_loss_dict(self._batch_to_policy_tuple(batch))
+        return loss_dict["loss_total"], loss_dict
+
+    def infer_from_np(
+        self,
+        obs: np.ndarray,
+        robot_state: np.ndarray,
+        task_text: str | Sequence[str] | None = None,
+    ) -> np.ndarray:
+        device = get_device()
+        obs_th = torch.tensor(obs, device=device).unsqueeze(0)
+        robot_state_th = torch.tensor(robot_state, device=device).unsqueeze(0)
+        obs_th = self._norm_obs(obs_th)
+        robot_state_th = self._norm_robot_state(robot_state_th)
+        ny = self.infer_y(
+            obs_th,
+            robot_state_th,
+            task_text=[self.default_task_text] if task_text is None else task_text,
+            return_traj=True,
         )
-        normalized[ACTION] = normalize_tensor(
-            batch[ACTION],
-            self._stat_tensors(ACTION, batch[ACTION].device, batch[ACTION].dtype),
-            self.config.normalization_mode,
-        )
-        return normalized
-
-    def forward(self, batch: dict[str, Tensor | list[str]]) -> tuple[Tensor, dict[str, Tensor]]:
-        """Training forward: encode observations + compute flow matching loss."""
-        normalized_batch = self._normalize_batch(batch)
-        conditioning_vec = self.observation_encoder.encode(normalized_batch)
-        loss, loss_dict = self.objective.compute_loss(self.noise_predictor, normalized_batch, conditioning_vec)
-        return loss, loss_dict
-
-    def _generate_action_chunk(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
-        """Generate action chunk via ODE integration (flow matching sampling)."""
-        batch_size = int(batch[OBS_STATE].shape[0])
-        normalized_batch = dict(batch)
-        normalized_batch[OBS_STATE] = normalize_tensor(
-            batch[OBS_STATE],
-            self._stat_tensors(OBS_STATE, batch[OBS_STATE].device, batch[OBS_STATE].dtype),
-            self.config.normalization_mode,
-        )
-        conditioning_vec = self.observation_encoder.encode(normalized_batch)
-        actions = self.objective.conditional_sample(self.noise_predictor, batch_size, conditioning_vec)
-        start_idx = self.config.n_obs_steps - 1
-        end_idx = start_idx + self.config.n_action_steps
-        return actions[:, start_idx:end_idx]
-
-    def predict_action_chunk(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
-        self.eval()
-        if self._queues is None:
-            self.reset()
-        stacked: dict[str, Tensor | list[str]] = {}
-        for key, queue in self._queues.items():
-            if key == ACTION or len(queue) == 0:
-                continue
-            if key == TASK:
-                latest_task = queue[-1]
-                stacked[key] = list(latest_task) if isinstance(latest_task, list) else [latest_task]
-            else:
-                stacked[key] = torch.stack(list(queue), dim=1)
-        return self._generate_action_chunk(stacked)
-
-    def select_action(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
-        if self._queues is None:
-            self.reset()
-        self._queues = populate_queues(self._queues, batch)
-        if len(self._queues[ACTION]) == 0:
-            action_chunk = self.predict_action_chunk(batch)
-            if str(self.config.command_mode) == "first":
-                self._queues[ACTION].extend(action_chunk.transpose(0, 1))
-            else:
-                self._queues[ACTION].append(self._select_runtime_action_from_chunk(action_chunk))
-        return self._queues[ACTION].popleft()
-
-    def _select_runtime_action_from_chunk(self, action_chunk: Tensor) -> Tensor:
-        if action_chunk.ndim != 3:
-            raise ValueError(f"Expected action chunk with shape (B,T,D), got {tuple(action_chunk.shape)}")
-        horizon_len = int(action_chunk.shape[1])
-        mode = str(self.config.command_mode).lower()
-        if mode == "first":
-            return action_chunk[:, 0]
-        if mode == "horizon_index":
-            index = int(np.clip(int(self.config.horizon_index), 0, max(0, horizon_len - 1)))
-            return action_chunk[:, index]
-        if mode == "mean_first_n":
-            count = int(np.clip(int(self.config.average_first_n), 1, horizon_len))
-            reduced = action_chunk[:, :count].mean(dim=1)
-            reduced[..., 9] = (action_chunk[:, :count, 9].mean(dim=1) >= 0.5).to(reduced.dtype)
-            return reduced
-        raise ValueError(f"Unsupported command_mode: {self.config.command_mode}")
+        ny = self._denorm_robot_state(ny)
+        return ny.squeeze().detach().cpu().numpy()
 
     def predict_action(
         self,
@@ -201,29 +203,38 @@ class LeLaNPolicy(nn.Module):
         robot_state: np.ndarray,
         task_text: str | None = None,
     ) -> np.ndarray:
-        device = get_device()
-        images = torch.from_numpy(np.asarray(obs))
-        images = self._select_runtime_cameras(images)
-        if images.shape[-1] == 3:
-            images = images.permute(0, 3, 1, 2)
-        images = images.to(device=device, dtype=torch.float32).unsqueeze(0)
-        state = torch.from_numpy(np.asarray(robot_state, dtype=np.float32)).to(device=device).unsqueeze(0)
-        action = self.select_action(
-            {
-                OBS_IMAGES: images,
-                OBS_STATE: state,
-                TASK: [task_text or self.config.task_name],
-            }
+        obs_th = torch.from_numpy(np.asarray(obs))
+        obs_th = self._select_runtime_cameras(obs_th)
+        obs_arr = obs_th.detach().cpu().numpy()
+        robot_state_arr = np.asarray(robot_state, dtype=np.float32)
+        self.update_obs_lists(obs_arr, robot_state_arr)
+        obs_stacked, robot_state_stacked = self.sample_stacked_obs()
+        return self.infer_from_np(obs_stacked, robot_state_stacked, task_text=task_text)
+
+    def get_optimizer(
+        self,
+        learning_rate: float,
+        betas: tuple[float, float],
+        eps: float,
+        transformer_weight_decay: float,
+        obs_encoder_weight_decay: float,
+    ) -> torch.optim.Optimizer:
+        return torch.optim.AdamW(
+            [
+                {
+                    "params": list(self.backbone.parameters()),
+                    "weight_decay": float(transformer_weight_decay),
+                },
+                {
+                    "params": list(self.obs_encoder.parameters()),
+                    "weight_decay": float(obs_encoder_weight_decay),
+                    "lr": float(learning_rate) * float(self.config.vision_lr_multiplier),
+                },
+            ],
+            lr=float(learning_rate),
+            betas=tuple(float(beta) for beta in betas),
+            eps=float(eps),
         )
-        action = self.unnormalize_action(action)
-        action_np = action.squeeze(0).detach().cpu().numpy().astype(np.float32, copy=False)
-        return postprocess_robot_state_command(
-            np.asarray(robot_state, dtype=np.float32),
-            action_np,
-            enabled=bool(self.config.smooth_actions),
-            position_alpha=float(self.config.position_alpha),
-            rotation_alpha=float(self.config.rotation_alpha),
-            max_position_step=self.config.max_position_step,
-            gripper_open_threshold=float(self.config.gripper_open_threshold),
-            gripper_close_threshold=float(self.config.gripper_close_threshold),
-        )
+
+    def reset(self) -> None:
+        self.reset_obs()

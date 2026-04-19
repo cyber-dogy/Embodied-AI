@@ -48,12 +48,12 @@ def build_policy(cfg: LeLaNExperimentConfig, dataset_stats: dict[str, Any]) -> L
 
 
 def build_optimizer(policy: LeLaNPolicy, cfg: LeLaNExperimentConfig) -> torch.optim.Optimizer:
-    return torch.optim.AdamW(
-        policy.get_optim_params(),
-        lr=cfg.optimizer_lr,
-        betas=cfg.optimizer_betas,
-        eps=cfg.optimizer_eps,
-        weight_decay=cfg.optimizer_weight_decay,
+    return policy.get_optimizer(
+        learning_rate=cfg.learning_rate,
+        betas=cfg.betas,
+        eps=cfg.eps,
+        transformer_weight_decay=cfg.transformer_weight_decay,
+        obs_encoder_weight_decay=cfg.obs_encoder_weight_decay,
     )
 
 

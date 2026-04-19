@@ -1,210 +1,249 @@
-"""Full observation encoder assembling FiLM + HistoryEncoder + Text + Transformer fusion.
-
-This is the core architectural distinction from MDIT:
-- MDIT: separate CLIP ViT per camera -> flat concatenation across obs steps -> conditioning vec
-- LeLaN: FiLM(current frame, text) + EfficientNet(all frames) per camera (independent weights)
-         -> Transformer self-attention fusion
-
-Key differences:
-- Condition injection: FiLM (feature-level affine) vs MDIT's AdaLN-Zero (norm-level modulation)
-- Temporal fusion: Transformer encoder with sinusoidal PE vs MDIT's flat concatenation
-- Positional encoding: Sinusoidal (fixed) vs MDIT's learned absolute or RoPE
-- Vision encoders: Independent per camera (not shared), trainable at 0.1x LR
-"""
 from __future__ import annotations
 
-import math
+from collections.abc import Sequence
 
-import einops
 import torch
 import torch.nn as nn
-import torchvision
-from torch import Tensor
+import torch.nn.functional as F
 
-from lelan.constants import OBS_IMAGES, OBS_STATE, TASK
-from .film_encoder import FiLMNetwork
+from common.task_text import resolve_task_text
+from mdit.model.encoders.clip_rgb_text_token import (
+    CLIPTextModel,
+    CLIPTokenizer,
+    _CLIPVisionBranch,
+    _set_requires_grad,
+)
 from .history_encoder import HistoryEncoder
-from .text_encoder import CLIPTextEncoder
-
-
-class SinusoidalPositionalEncoding(nn.Module):
-    """Fixed sinusoidal positional encoding (no learnable params, no RoPE)."""
-
-    def __init__(self, d_model: int, max_seq_len: int = 64) -> None:
-        super().__init__()
-        pos_enc = torch.zeros(max_seq_len, d_model)
-        pos = torch.arange(0, max_seq_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pos_enc[:, 0::2] = torch.sin(pos * div_term)
-        pos_enc[:, 1::2] = torch.cos(pos * div_term)
-        self.register_buffer("pos_enc", pos_enc.unsqueeze(0))
-
-    def forward(self, x: Tensor) -> Tensor:
-        return x + self.pos_enc[:, : x.size(1), :]
 
 
 class ObservationEncoder(nn.Module):
-    """Encodes multi-camera observations with FiLM + history + Transformer fusion.
+    """Reconstructed MDIT RGB+text token encoder with a LeLaN history branch.
 
-    Each camera gets its OWN independent FiLM encoder and history encoder
-    (not shared weights), matching mdit's use_separate_encoder_per_camera=True.
+    Contract matches the current MDIT mainline encoder:
+    output shape is (B, T_obs, obs_features_dim + y_dim).
 
-    Per camera (independent weights):
-      1. Current frame (last obs step) -> FiLMNetwork_i(text) -> compress_i -> 1 token
-      2. All obs steps -> HistoryEncoder_i(EfficientNet) -> n_obs_steps tokens
-      3. Total: (n_obs_steps + 1) tokens per camera
-
-    All camera tokens -> Sinusoidal PE -> TransformerEncoder -> mean pool
-    Concatenated with robot_state -> flat conditioning vector
+    LeLaN keeps one extra branch per camera:
+    each observation frame is encoded both by the MDIT CLIP vision backbone and
+    by a dedicated EfficientNet history encoder, then fused back into the
+    step-wise conditioning token.
     """
 
     def __init__(self, config) -> None:
         super().__init__()
+        if CLIPTokenizer is None or CLIPTextModel is None:
+            raise ImportError("LeLaN text encoder requires transformers to be installed.")
         self.config = config
-        self.camera_names = list(config.camera_names)
+        self.obs_features_dim = int(config.obs_features_dim)
+        self.robot_state_dim = int(config.y_dim)
+        self.camera_names = tuple(config.camera_names)
         self.num_cameras = len(self.camera_names)
-        self.robot_state_dim = int(config.robot_state_dim)
-        self.n_obs_steps = int(config.n_obs_steps)
+        self.image_size = tuple(int(v) for v in config.vision_image_size)
+        self.default_task_text = resolve_task_text(
+            task_name=str(config.task_name),
+            text_source=str(config.text_source),
+            descriptions=None,
+            override_text=config.task_text_override,
+        )
 
-        fusion_dim = int(config.fusion_transformer.hidden_dim)
-        self.fusion_dim = fusion_dim
+        self.vision_branches = nn.ModuleList(
+            [
+                _CLIPVisionBranch(
+                    backbone_name=str(config.vision_backbone_name),
+                    pretrained=bool(config.vision_pretrained),
+                    train_mode=str(config.vision_train_mode),
+                    num_unfreeze_blocks=int(config.vision_num_unfreeze_blocks),
+                    activation_checkpointing=bool(config.activation_checkpointing),
+                )
+                for _ in self.camera_names
+            ]
+        )
+        vision_dim = int(self.vision_branches[0].output_dim)
 
-        # Text encoder (frozen CLIP) — shared across cameras (text is camera-independent)
-        text_model = str(config.text_encoder.model)
-        self.text_encoder = CLIPTextEncoder(model_name=text_model, projection_dim=fusion_dim)
-        text_raw_dim = self.text_encoder.text_embed_dim
-
-        # Per-camera independent FiLM encoders (NOT shared)
-        self.film_encoders = nn.ModuleList()
-        self.film_compresses = nn.ModuleList()
-        for _ in range(self.num_cameras):
-            film_enc = FiLMNetwork(
-                num_res_blocks=int(config.film.num_res_blocks),
-                num_channels=int(config.film.num_channels),
-                text_dim=text_raw_dim,
-                use_coord_conv=bool(config.film.use_coord_conv),
-            )
-            self.film_encoders.append(film_enc)
-
-        # Compute FiLM output dim by running a dummy forward pass on the first encoder
-        with torch.no_grad():
-            dummy_img = torch.zeros(1, 3, 224, 224)
-            dummy_text = torch.zeros(1, text_raw_dim)
-            film_out = self.film_encoders[0](dummy_img, dummy_text)
-            self._film_feature_dim = film_out.shape[1]
-
-        for _ in range(self.num_cameras):
-            self.film_compresses.append(nn.Linear(self._film_feature_dim, fusion_dim))
-
-        # Per-camera independent history encoders (NOT shared)
-        self.history_encoders = nn.ModuleList()
-        for _ in range(self.num_cameras):
-            self.history_encoders.append(
+        self.history_encoders = nn.ModuleList(
+            [
                 HistoryEncoder(
                     backbone=str(config.history_encoder.backbone),
-                    encoding_dim=fusion_dim,
+                    encoding_dim=int(self.obs_features_dim),
                     features_per_group=int(config.history_encoder.features_per_group),
+                    pretrained=bool(config.history_encoder.pretrained),
                 )
-            )
-
-        # Image preprocessing
-        self._setup_preprocessing()
-
-        # Transformer fusion (sinusoidal PE, standard self-attention — no AdaLN-Zero, no RoPE)
-        max_seq_len = (self.n_obs_steps + 1) * self.num_cameras
-        self.positional_encoding = SinusoidalPositionalEncoding(fusion_dim, max_seq_len=max(max_seq_len, 64))
-        sa_layer = nn.TransformerEncoderLayer(
-            d_model=fusion_dim,
-            nhead=int(config.fusion_transformer.num_heads),
-            dim_feedforward=int(config.fusion_transformer.ff_dim_factor) * fusion_dim,
-            activation="gelu",
-            batch_first=True,
-            norm_first=True,
-            dropout=float(config.fusion_transformer.dropout),
+                for _ in self.camera_names
+            ]
         )
-        self.fusion_transformer = nn.TransformerEncoder(sa_layer, num_layers=int(config.fusion_transformer.num_layers))
 
-        # Conditioning dim = transformer_output + robot_state
-        self.conditioning_dim = fusion_dim + self.robot_state_dim * self.n_obs_steps
-
-    def _setup_preprocessing(self) -> None:
-        self.resize = torchvision.transforms.Resize(
-            size=(224, 224),
-            interpolation=torchvision.transforms.InterpolationMode.BILINEAR,
-            antialias=True,
+        self.text_tokenizer = CLIPTokenizer.from_pretrained(str(config.text_model_name))
+        self.text_encoder = CLIPTextModel.from_pretrained(str(config.text_model_name))
+        _set_requires_grad(self.text_encoder, False)
+        self.text_projection_dim = int(config.text_projection_dim)
+        self.text_projection = nn.Sequential(
+            nn.Linear(int(self.text_encoder.config.hidden_size), self.text_projection_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.text_projection_dim, self.text_projection_dim),
         )
-        clip_mean = (0.48145466, 0.4578275, 0.40821073)
-        clip_std = (0.26862954, 0.26130258, 0.27577711)
-        self.register_buffer("_img_mean", torch.tensor(clip_mean).view(1, 3, 1, 1), persistent=False)
-        self.register_buffer("_img_std", torch.tensor(clip_std).view(1, 3, 1, 1), persistent=False)
+        self.text_to_fusion = (
+            nn.Identity()
+            if self.text_projection_dim == self.obs_features_dim
+            else nn.Linear(self.text_projection_dim, self.obs_features_dim)
+        )
 
-    def _preprocess_images(self, images: Tensor) -> Tensor:
-        """Normalize images to CLIP-compatible range."""
-        images = images.to(dtype=torch.float32)
+        self.camera_feature_adapter = nn.Sequential(
+            nn.Linear(vision_dim, self.obs_features_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+        )
+        self.history_feature_adapter = nn.Sequential(
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+        )
+        self.camera_history_fuser = nn.Sequential(
+            nn.Linear(self.obs_features_dim * 2, self.obs_features_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+        )
+        self.robot_state_adapter = nn.Sequential(
+            nn.Linear(self.robot_state_dim, self.obs_features_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+        )
+        fusion_in_dim = self.obs_features_dim * (self.num_cameras + 2)
+        self.step_fusion_adapter = nn.Sequential(
+            nn.Linear(fusion_in_dim, self.obs_features_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+        )
+        self.cond_token_projector = nn.Sequential(
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(self.obs_features_dim, self.obs_features_dim),
+        )
+
+        self.register_buffer(
+            "_clip_mean",
+            torch.tensor([0.48145466, 0.4578275, 0.40821073], dtype=torch.float32).view(1, 3, 1, 1),
+            persistent=False,
+        )
+        self.register_buffer(
+            "_clip_std",
+            torch.tensor([0.26862954, 0.26130258, 0.27577711], dtype=torch.float32).view(1, 3, 1, 1),
+            persistent=False,
+        )
+
+    @property
+    def conditioning_dim(self) -> int:
+        return int(self.obs_features_dim + self.robot_state_dim)
+
+    @staticmethod
+    def _ensure_text_batch(task_text: str | Sequence[str] | None, batch_size: int, default_text: str) -> list[str]:
+        if task_text is None:
+            return [default_text for _ in range(batch_size)]
+        if isinstance(task_text, str):
+            return [task_text for _ in range(batch_size)]
+        text_list = [str(item) for item in task_text]
+        if len(text_list) == batch_size:
+            return text_list
+        if len(text_list) == 1:
+            return text_list * batch_size
+        raise ValueError(f"task_text batch mismatch: got {len(text_list)} texts for batch_size={batch_size}")
+
+    def _normalize_images(self, images_bchw: torch.Tensor) -> torch.Tensor:
+        images = images_bchw.float()
         if images.max() > 1.0:
             images = images / 255.0
-        images = self.resize(images)
-        mean = self._img_mean.to(device=images.device, dtype=images.dtype)
-        std = self._img_std.to(device=images.device, dtype=images.dtype)
+        if images.shape[-2:] != self.image_size:
+            images = F.interpolate(
+                images,
+                size=self.image_size,
+                mode="bilinear",
+                align_corners=False,
+                antialias=True,
+            )
+        mean = self._clip_mean.to(device=images.device, dtype=images.dtype)
+        std = self._clip_std.to(device=images.device, dtype=images.dtype)
         return (images - mean) / std
 
-    def _get_raw_text_features(self, text: str | list[str]) -> Tensor:
-        """Get raw CLIP text features (before projection) for FiLM conditioning."""
-        if isinstance(text, str):
-            text = [text]
-        tokenized = self.text_encoder.tokenizer(text, padding=True, truncation=True, return_tensors="pt")
-        tokenized = {k: v.to(next(self.parameters()).device) for k, v in tokenized.items()}
+    def _encode_text(
+        self,
+        task_text: str | Sequence[str] | None,
+        batch_size: int,
+        device: torch.device,
+    ) -> torch.Tensor:
+        texts = self._ensure_text_batch(task_text, batch_size, self.default_task_text)
+        text_inputs = self.text_tokenizer(
+            texts,
+            padding=True,
+            truncation=True,
+            return_tensors="pt",
+        )
+        text_inputs = {key: value.to(device=device) for key, value in text_inputs.items()}
         with torch.no_grad():
-            outputs = self.text_encoder.text_encoder(**tokenized)
-        return outputs.pooler_output
+            text_outputs = self.text_encoder(**text_inputs)
+            if getattr(text_outputs, "pooler_output", None) is not None:
+                pooled = text_outputs.pooler_output
+            else:
+                pooled = text_outputs.last_hidden_state[:, 0]
+        return self.text_to_fusion(self.text_projection(pooled))
 
-    def encode(self, batch: dict[str, Tensor | list[str]]) -> Tensor:
-        """Encode observations into a flat conditioning vector.
-
-        Args:
-            batch: Dict with OBS_STATE (B, n_obs, state_dim), OBS_IMAGES (B, n_obs, n_cam, C, H, W), TASK.
-
-        Returns:
-            (B, conditioning_dim) flat conditioning vector.
-        """
-        obs_state = batch[OBS_STATE]
-        batch_size = obs_state.shape[0]
-        images = batch[OBS_IMAGES]
-        if images.ndim == 5:
-            images = images.unsqueeze(1)
-
-        task = batch.get(TASK)
-        raw_text_feat = self._get_raw_text_features(task)
-
-        all_tokens = []
-
-        for cam_idx in range(self.num_cameras):
-            cam_images = images[:, :, cam_idx]  # (B, n_obs, C, H, W)
-
-            # --- History tokens: all obs steps through per-camera EfficientNet ---
-            history_flat = einops.rearrange(cam_images, "b s c h w -> (b s) c h w")
-            history_flat = self._preprocess_images(history_flat)
-            history_tokens = self.history_encoders[cam_idx](history_flat)
-            history_tokens = einops.rearrange(
-                history_tokens, "(b s) d -> b s d", b=batch_size, s=self.n_obs_steps
+    def _to_bthwc(self, obs_rgb: torch.Tensor) -> torch.Tensor:
+        if obs_rgb.ndim != 6:
+            raise ValueError(
+                "Expected obs_rgb with shape (B, T_obs, N_cam, H, W, C) or (B, T_obs, N_cam, C, H, W), "
+                f"got {tuple(obs_rgb.shape)}"
             )
-            all_tokens.append(history_tokens)
+        if obs_rgb.shape[-1] == 3:
+            return obs_rgb.float()
+        if obs_rgb.shape[3] == 3:
+            return obs_rgb.permute(0, 1, 2, 4, 5, 3).float()
+        raise ValueError(f"RGB obs must have channel dim of size 3, got {tuple(obs_rgb.shape)}")
 
-            # --- FiLM token: current frame (last obs step) conditioned on text ---
-            current_frame = cam_images[:, -1]  # (B, C, H, W)
-            current_frame = self._preprocess_images(current_frame)
-            film_feat = self.film_encoders[cam_idx](current_frame, raw_text_feat)
-            film_token = self.film_compresses[cam_idx](film_feat).unsqueeze(1)  # (B, 1, fusion_dim)
-            all_tokens.append(film_token)
+    def forward(
+        self,
+        obs_rgb: torch.Tensor,
+        robot_state_obs: torch.Tensor,
+        task_text: str | Sequence[str] | None = None,
+    ) -> torch.Tensor:
+        obs_rgb = self._to_bthwc(obs_rgb)
+        if robot_state_obs.ndim != 3:
+            raise ValueError(
+                "Expected robot_state_obs with shape (B, T_obs, state_dim), "
+                f"got {tuple(robot_state_obs.shape)}"
+            )
 
-        # (B, total_tokens, fusion_dim)
-        token_seq = torch.cat(all_tokens, dim=1)
+        batch_size, n_obs_steps, n_cam, _, _, channels = obs_rgb.shape
+        if channels != 3:
+            raise ValueError(f"RGB obs must have 3 channels, got {channels}")
+        if n_cam != self.num_cameras:
+            raise ValueError(f"Expected {self.num_cameras} cameras, got {n_cam}")
 
-        # Transformer fusion with sinusoidal positional encoding
-        token_seq = self.positional_encoding(token_seq)
-        fused = self.fusion_transformer(token_seq)
-        fused_pooled = fused.mean(dim=1)  # (B, fusion_dim)
+        text_token = self._encode_text(task_text, batch_size, obs_rgb.device)
+        text_tokens = text_token.unsqueeze(1).expand(-1, n_obs_steps, -1)
 
-        # Concatenate with robot state
-        flat_state = obs_state.flatten(start_dim=1)  # (B, n_obs * state_dim)
-        return torch.cat([fused_pooled, flat_state], dim=-1)
+        camera_tokens: list[torch.Tensor] = []
+        for cam_idx, vision_branch in enumerate(self.vision_branches):
+            cam_bthwc = obs_rgb[:, :, cam_idx]
+            cam_bchw = cam_bthwc.reshape(batch_size * n_obs_steps, *cam_bthwc.shape[-3:]).permute(0, 3, 1, 2)
+            cam_bchw = self._normalize_images(cam_bchw)
+
+            clip_features = vision_branch(cam_bchw)
+            clip_features = self.camera_feature_adapter(clip_features)
+
+            history_features = self.history_encoders[cam_idx](cam_bchw)
+            history_features = self.history_feature_adapter(history_features)
+
+            fused_camera_features = self.camera_history_fuser(
+                torch.cat([clip_features, history_features], dim=-1)
+            )
+            camera_tokens.append(fused_camera_features.reshape(batch_size, n_obs_steps, -1))
+
+        state_tokens = self.robot_state_adapter(robot_state_obs.float())
+        fusion_features = torch.cat([*camera_tokens, state_tokens, text_tokens], dim=-1)
+        step_tokens = self.step_fusion_adapter(fusion_features)
+        cond_obs_tokens = self.cond_token_projector(step_tokens)
+        return torch.cat([cond_obs_tokens, robot_state_obs.float()], dim=-1)
+
+    def encode(self, batch: dict[str, torch.Tensor | Sequence[str]]) -> torch.Tensor:
+        return self(
+            batch["observation.images"],
+            batch["observation.state"],
+            task_text=batch.get("task"),
+        )

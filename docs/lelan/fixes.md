@@ -24,6 +24,15 @@
 
 ## 记录
 
+### 2026-04-19 17:47:57 +0800 · LeLaN 回归到重构后 MDIT 主线并只保留 history encoder 增量
+范围：`lelan/config/schema.py + lelan/config/loader.py + lelan/model/observation_encoder.py + lelan/model/model.py + lelan/model/history_encoder.py + lelan/train/builders.py + lelan/train/eval.py + lelan/cli/train.py + lelan/cli/run_autoresearch_trial.py + configs/lelan/baseline.json + configs/lelan/obs3_rgb5_a8_gate100.json + tests/test_lelan_config_alignment.py`
+
+背景：当前 LeLaN 虽然名义上是从 `mdit` 演化出来的，但实际实现仍然保留了旧的 `FiLM + EfficientNet + 自己的 fusion transformer` 结构，配置命名、policy contract 和评估路径也都没有跟重构后的 `mdit` 主线对齐。这样会让 LeLaN 和 MDIT 之间的实验对比失真，也很难确认“LeLaN 只是多了 history encoder”这件事是否真的成立。
+
+处理：把 LeLaN 配置层重构成与当前 `mdit` 相同的公共超参命名，只保留 `history_encoder` 作为 LeLaN 专属增量；在 loader 和 override 层补上对 `horizon / optimizer_lr / objective.* / transformer.*` 等旧键的兼容映射；重写 observation encoder，让它变成 `mdit` 的 CLIP RGB+text step-token 主干上叠加 EfficientNet history branch；把 `LeLaNPolicy` 改成基于 `mdit` FM policy/backbone contract 的包装层，并让评估路径回到 `predict full trajectory -> select command -> smooth` 的主线语义。
+
+结果：LeLaN 现在不再是旧分支架构，而是“重构后 MDIT 主线 + LeLaN history encoder”。`configs/lelan/*.json` 也已经切到与 `mdit` 可直接逐项对照的字段体系。回归验证结果：`python -m unittest discover -s tests -p 'test_lelan_*.py'` 通过，`Ran 23 tests ... OK`；`python -m lelan.cli.train --help` 可用；在 `lelan_env` 中完成了真实单步训练 smoke，输出 `device cuda:0`、`loss_total 7.930025100708008`、`smoke_train_step_ok`。
+
 ### 2026-04-19 00:20:07 +0800 · 建立 LeLaN 专属文档骨架与自动留痕入口
 范围：`docs/lelan/README.md + docs/lelan/fixes.md + docs/lelan/research_journal.md + docs/lelan/best_path.md + docs/lelan/2026-04-19-lelan-execution-manual-zh.md + docs/lelan/research/README.md + research/lelan_trial_runner.py + research/lelan_autoresearch_loop.py`
 

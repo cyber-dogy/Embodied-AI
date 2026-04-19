@@ -53,11 +53,15 @@ class HistoryEncoder(nn.Module):
         backbone: str = "efficientnet-b0",
         encoding_dim: int = 512,
         features_per_group: int = 16,
+        pretrained: bool = False,
     ) -> None:
         super().__init__()
         self.encoding_dim = encoding_dim
 
-        self.encoder = EfficientNet.from_name(backbone, in_channels=3)
+        if pretrained:
+            self.encoder = EfficientNet.from_pretrained(backbone, in_channels=3)
+        else:
+            self.encoder = EfficientNet.from_name(backbone, in_channels=3)
         _replace_bn_with_gn(self.encoder, features_per_group)
 
         self.num_features = self.encoder._fc.in_features

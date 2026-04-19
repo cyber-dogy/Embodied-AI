@@ -8,13 +8,14 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
+from common.runtime import set_device
 from common.rlbench_rollout import (
     make_progress_iter,
     run_success_rate_eval as run_shared_success_rate_eval,
 )
-from common.runtime import set_device
+from pdit.train.action_postprocess import select_robot_state_from_prediction, smooth_robot_state_command
+
 from lelan.config import LeLaNExperimentConfig
-from lelan.model.model import LeLaNPolicy
 from .builders import build_policy, get_autocast_context, move_batch_to_device
 
 
@@ -26,8 +27,12 @@ def summarize_metrics(metrics: list[dict[str, float]]) -> dict[str, float]:
     return summary
 
 
+def _unpack_batch(batch: dict[str, Any], model) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, Any]:
+    return model._batch_to_policy_tuple(batch)
+
+
 def evaluate_model_on_loader(
-    model: LeLaNPolicy,
+    model: torch.nn.Module,
     loader: DataLoader,
     cfg: LeLaNExperimentConfig,
     max_batches: int | None = None,
@@ -39,13 +44,23 @@ def evaluate_model_on_loader(
             if max_batches is not None and batch_idx >= max_batches:
                 break
             batch = move_batch_to_device(batch_cpu)
-            with get_autocast_context(cfg.use_amp):
-                loss, loss_dict = model(batch)
-            row = {"loss_total": float(loss.detach().cpu())}
-            if loss_dict is not None:
-                for key, value in loss_dict.items():
-                    row[key] = float(value.detach().cpu())
-            metrics_list.append(row)
+            with get_autocast_context(cfg.train_use_amp):
+                loss_dict = model.compute_loss_dict(model._batch_to_policy_tuple(batch))
+                obs, robot_state_obs, robot_state_pred, task_text = _unpack_batch(batch, model)
+                normed_obs, normed_state_obs, normed_state_pred, task_text = model._norm_data(
+                    (obs, robot_state_obs, robot_state_pred, task_text)
+                )
+                pred_y = model.infer_y(normed_obs, normed_state_obs, task_text=task_text)
+                metrics = {
+                    "loss_total": float(loss_dict["loss_total"].detach().cpu()),
+                    "loss_xyz": float(loss_dict["loss_xyz"].detach().cpu()),
+                    "loss_rot6d": float(loss_dict["loss_rot6d"].detach().cpu()),
+                    "loss_grip": float(loss_dict["loss_grip"].detach().cpu()),
+                    "mse_xyz": float(F.mse_loss(pred_y[..., :3], normed_state_pred[..., :3]).detach().cpu()),
+                    "mse_rot6d": float(F.mse_loss(pred_y[..., 3:9], normed_state_pred[..., 3:9]).detach().cpu()),
+                    "mse_grip": float(F.mse_loss(pred_y[..., 9], normed_state_pred[..., 9]).detach().cpu()),
+                }
+            metrics_list.append(metrics)
     if not metrics_list:
         return None
     summary = summarize_metrics(metrics_list)
@@ -54,21 +69,23 @@ def evaluate_model_on_loader(
 
 
 def compute_sample_metric(
-    model: LeLaNPolicy,
+    model: torch.nn.Module,
     batch_cpu: dict[str, Any],
     cfg: LeLaNExperimentConfig,
 ) -> float:
+    del cfg
     batch = move_batch_to_device(batch_cpu)
-    model.eval()
-    with torch.inference_mode(), get_autocast_context(cfg.use_amp):
-        pred_actions = model._generate_action_chunk(batch)
-    pred_actions = model.unnormalize_action(pred_actions)
-    target_actions = batch["action"][:, model.config.n_obs_steps - 1 : model.config.n_obs_steps - 1 + model.config.n_action_steps]
-    return float(F.mse_loss(pred_actions, target_actions).detach().cpu())
+    obs, robot_state_obs, robot_state_pred, task_text = _unpack_batch(batch, model)
+    normed_obs, normed_state_obs, normed_state_pred, task_text = model._norm_data(
+        (obs, robot_state_obs, robot_state_pred, task_text)
+    )
+    with torch.inference_mode():
+        pred_y = model.infer_y(normed_obs, normed_state_obs, task_text=task_text)
+    return float(F.mse_loss(pred_y, normed_state_pred).detach().cpu())
 
 
 def run_success_rate_eval(
-    model: LeLaNPolicy,
+    model: torch.nn.Module,
     cfg: LeLaNExperimentConfig,
     *,
     num_episodes: int,
@@ -85,22 +102,38 @@ def run_success_rate_eval(
         return RLBenchEnv(
             task_name=cfg.task_name,
             voxel_size=0.01,
-            n_points=2048,
-            use_pc_color=False,
+            n_points=int(cfg.n_points),
+            use_pc_color=bool(cfg.use_pc_color),
             headless=headless,
             vis=False,
-            obs_mode="rgb",
+            obs_mode=cfg.obs_mode,
             responsive_ui=True,
         )
 
-    def on_episode_start(env: RLBenchEnv, _descriptions: list[str]) -> str:
+    def on_episode_start(env: RLBenchEnv, descriptions: list[str]) -> str:
         return env.get_task_instruction(
-            override_text=cfg.task_text_override if cfg.task_text_mode == "override" else None,
-            use_env_descriptions=cfg.task_text_mode != "template",
+            override_text=cfg.task_text_override if str(cfg.text_source) == "task_template" else None,
+            use_env_descriptions=str(cfg.text_source) == "dataset",
         )
 
     def predict_command(obs: np.ndarray, robot_state: np.ndarray, instruction: str) -> np.ndarray:
-        return model.predict_action(obs, robot_state, task_text=instruction)
+        prediction = model.predict_action(obs, robot_state, task_text=instruction)
+        predicted_robot_state = select_robot_state_from_prediction(
+            prediction,
+            mode=cfg.command_mode,
+            horizon_index=cfg.horizon_index,
+            average_first_n=cfg.average_first_n,
+        )
+        return smooth_robot_state_command(
+            robot_state,
+            predicted_robot_state,
+            enabled=cfg.smooth_actions,
+            position_alpha=cfg.position_alpha,
+            rotation_alpha=cfg.rotation_alpha,
+            max_position_step=cfg.max_position_step,
+            gripper_open_threshold=cfg.gripper_open_threshold,
+            gripper_close_threshold=cfg.gripper_close_threshold,
+        )
 
     return run_shared_success_rate_eval(
         make_env=make_env,
@@ -141,7 +174,7 @@ def load_model_for_eval(
     if payload is None:
         payload = torch.load(ckpt_path, map_location="cpu")
     device = set_device(cfg.device)
-    model = build_policy(cfg, payload["dataset_stats"])
+    model = build_policy(cfg, payload.get("dataset_stats") or {})
     if prefer_ema and payload.get("ema_state_dict") is not None:
         model.load_state_dict(payload["ema_state_dict"])
     else:

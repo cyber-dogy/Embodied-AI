@@ -78,7 +78,7 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=None,
         metavar="KEY=VALUE",
-        help="Override a config field using JSON-parsed VALUE, e.g. --set fusion_transformer.dropout=0.0.",
+        help="Override a config field using JSON-parsed VALUE, e.g. --set learning_rate=1e-5.",
     )
     return parser.parse_args()
 
