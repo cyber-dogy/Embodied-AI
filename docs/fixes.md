@@ -1222,3 +1222,12 @@ except Exception as exc:
 处理：新增 `docs/research_desk.md`，用 `发现问题 / 原因分析 / 解决思路 / 具体操作 / 当前判断 / 相关材料` 六段结构整理 PDIT、MDIT、LeLaN 和文档治理里程碑；同时让 homepage 的全局时间线、当前焦点候选和 `infra-audit` 页面优先解析 `research_desk.md`，`fixes.md` 退回为事实源和回查源；同步在维护文档中写清职责分工。
 
 结果：项目现在形成了 `fixes.md` 记事实、`research_desk.md` 做阶段总结、各线路稳定文档保留证据的三层结构；homepage 后续会优先展示人工提炼过的阶段进展，而不是自动状态流。
+
+### 2026-04-19 09:00:36 +0800 · 离线审计完成 · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：候选 run `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723` 已完成共享离线审计，需要固化关键成功率与后续筛选依据。
+
+处理：统一使用共享 audit chain 执行评估；episodes=20，stage_epochs=500。
+
+结果：success@epoch_0300=0.750；success@epoch_0500=0.750；最佳成功率=0.750；最佳 checkpoint epoch=300；trial_score=-1.000；是否 collapse=True；collapse 原因=epoch 100 success None below threshold 0.55；受控配方偏移=无
