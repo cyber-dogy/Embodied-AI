@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual",
+  "assets": [],
+  "media_assets": [],
+  "notes": [
+    "report/report.md"
+  ]
+}

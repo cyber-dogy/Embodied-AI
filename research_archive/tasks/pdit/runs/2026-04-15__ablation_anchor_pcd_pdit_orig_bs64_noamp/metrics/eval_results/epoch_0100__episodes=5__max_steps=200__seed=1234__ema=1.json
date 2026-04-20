@@ -1,0 +1,85 @@
+{
+  "ckpt": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0100.pt",
+  "seed": 1234,
+  "success_rate": 0.8,
+  "mean_steps": 81.0,
+  "num_episodes": 5,
+  "duration_sec": 121.0548328549994,
+  "episode_records": [
+    {
+      "episode": 0,
+      "success": true,
+      "steps": 52,
+      "duration_sec": 16.204942075999497,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 1,
+      "success": false,
+      "steps": 200,
+      "duration_sec": 50.97412917100155,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 2,
+      "success": true,
+      "steps": 45,
+      "duration_sec": 12.779455486001098,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 3,
+      "success": true,
+      "steps": 51,
+      "duration_sec": 20.826123188000565,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    },
+    {
+      "episode": 4,
+      "success": true,
+      "steps": 57,
+      "duration_sec": 14.52970734399969,
+      "descriptions": [
+        "unplug charger",
+        "take the charger out of the wall",
+        "grip the black charger and pull it out of its socket",
+        "slide the plug out from the wall",
+        "remove the charger from the mains",
+        "get the charger from the wall plug"
+      ],
+      "error": null
+    }
+  ]
+}

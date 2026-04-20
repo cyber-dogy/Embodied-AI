@@ -1,0 +1,29 @@
+{
+  "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/ablation/pcd_pdit_anchor_100_fair_bs224_noamp.json",
+  "strategy": "fm",
+  "config_overrides": {
+    "wandb_mode": "online",
+    "batch_size": 64,
+    "train_use_amp": false
+  },
+  "stage_epochs": 100,
+  "checkpoint_every": 50,
+  "eval_episodes": 20,
+  "eval_seed": 1234,
+  "device": "cuda",
+  "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+  "data_root": null,
+  "run_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "experiment_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp_eval50_100",
+  "description": "strict fair anchor A: original pdit line, pcd+pdit, bs64, no-amp, eval@50/100",
+  "max_steps": 200,
+  "heartbeat_every": 50,
+  "prefer_ema": true,
+  "headless": true,
+  "show_progress": true,
+  "cleanup_failed": true,
+  "enable_wandb": true,
+  "audit_timeout_sec": 1800,
+  "collapse_thresholds": null,
+  "collapse_drop_tolerance": 0.1
+}

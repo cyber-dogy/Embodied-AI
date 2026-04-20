@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-19__code_structure_zh",
+  "record_name": "code-structure-zh",
+  "source_doc": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure-zh.md",
+  "metadata": {
+    "category": "infra_doc"
+  },
+  "status": "complete",
+  "missing_items": []
+}

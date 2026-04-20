@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-10__dummy_smoke_root_layout",
+  "items": [
+    {
+      "role": "trial_record",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/dummy_smoke_root_layout.json",
+      "archive_path": "metrics/trial_record.json",
+      "mode": "copied",
+      "size_bytes": 5606
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "note::fixes",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
+      "archive_path": "notes/fixes.md",
+      "mode": "copied",
+      "size_bytes": 90862
+    },
+    {
+      "role": "note::code-structure",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure.md",
+      "archive_path": "notes/code-structure.md",
+      "mode": "copied",
+      "size_bytes": 5323
+    },
+    {
+      "role": "note::code-structure-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure-zh.md",
+      "archive_path": "notes/code-structure-zh.md",
+      "mode": "copied",
+      "size_bytes": 6606
+    },
+    {
+      "role": "note::pdit_job_packaging",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/job/pdit_job_packaging.md",
+      "archive_path": "notes/pdit_job_packaging.md",
+      "mode": "copied",
+      "size_bytes": 33414
+    }
+  ]
+}

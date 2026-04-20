@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-19__homepage_media_dummy_sim2real_platform",
+  "record_name": "homepage_media__dummy-sim2real-platform",
+  "source_doc": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/homepage/media/README.md",
+  "metadata": {
+    "category": "homepage_media",
+    "media_task": "dummy-sim2real-platform"
+  },
+  "status": "complete",
+  "missing_items": []
+}

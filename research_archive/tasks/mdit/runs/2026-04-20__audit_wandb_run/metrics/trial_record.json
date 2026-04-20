@@ -1,0 +1,109 @@
+{
+  "line": "mdit",
+  "phase": "audit_only",
+  "experiment_name": "audit_wandb_run",
+  "description": "",
+  "stage_epochs": 100,
+  "eval_episodes": 20,
+  "trial_score": 0.6,
+  "pending_offline_audit": false,
+  "offline_audit_command": "/home/gjw/.conda/envs/mdit_env/bin/python /tmp/tmp1rgr6a63/scripts/run_autoresearch_trial.py --line mdit --phase audit-only --run-dir /tmp/tmp1rgr6a63/ckpt/audit_wandb_run",
+  "success_100": 0.6,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": false,
+  "collapse_reasons": [],
+  "best_ckpt_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_success.pt",
+  "best_success_rate": 0.6,
+  "best_success_epoch": 100,
+  "best_valid_ckpt_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_valid.pt",
+  "kept_ckpt_paths": [
+    "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/latest.pt",
+    "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_valid.pt",
+    "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/epochs/epoch_0100.pt",
+    "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_success.pt",
+    "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/epochs/epoch_0100.pt"
+  ],
+  "run_name": "audit_wandb_run",
+  "run_dir": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run",
+  "experiment_manifest_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/experiment_manifest.json",
+  "recipe_drift": false,
+  "recipe_drift_details": [],
+  "audit_report_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/audit_report.json",
+  "summary_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/summary.json",
+  "error_type": null,
+  "audit_report": {
+    "experiment_name": "audit_wandb_run",
+    "description": "",
+    "run_name": "audit_wandb_run",
+    "strategy": "fm",
+    "run_dir": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run",
+    "config_path": "/tmp/tmp1rgr6a63/configs/mdit.json",
+    "experiment_manifest_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/experiment_manifest.json",
+    "recipe_drift": false,
+    "recipe_drift_details": [],
+    "stage_epochs": 100,
+    "checkpoint_every": 100,
+    "eval_episodes": 20,
+    "eval_seed": 1234,
+    "trial_score": 0.6,
+    "collapse_detected": false,
+    "collapse_reasons": [],
+    "collapse_checks": [
+      {
+        "type": "threshold",
+        "epoch": 100,
+        "threshold": 0.55,
+        "value": 0.6,
+        "passed": true
+      }
+    ],
+    "thresholds": {
+      "100": 0.55,
+      "300": 0.65,
+      "500": 0.68
+    },
+    "success_by_epoch": {
+      "100": 0.6
+    },
+    "audit_records": [
+      {
+        "label": "epoch_0100",
+        "kind": "periodic",
+        "path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/epochs/epoch_0100.pt",
+        "epoch": 100,
+        "success_rate": 0.6,
+        "mean_steps": 98.0,
+        "num_successes": 12,
+        "num_episodes": 20,
+        "completed_epoch": 99,
+        "best_metric": 0.1,
+        "best_epoch": 99,
+        "best_success_rate": null,
+        "best_success_epoch": null,
+        "train_loss_at_epoch": 0.2,
+        "valid_loss_at_epoch": 0.1,
+        "valid_loss_xyz_at_epoch": 0.01,
+        "valid_loss_rot6d_at_epoch": 0.02,
+        "valid_loss_grip_at_epoch": 0.03,
+        "valid_mse_xyz_at_epoch": 0.11,
+        "valid_mse_rot6d_at_epoch": 0.12,
+        "valid_mse_grip_at_epoch": 0.13,
+        "sample_mse_at_epoch": 0.05
+      }
+    ],
+    "best_success_epoch": 100,
+    "best_success_rate": 0.6,
+    "best_success_ckpt_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_success.pt",
+    "best_valid_ckpt_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_valid.pt",
+    "train_summary": {
+      "ok": true
+    },
+    "train_loss_history": [
+      0.2
+    ],
+    "valid_loss_history": [
+      0.1
+    ]
+  }
+}

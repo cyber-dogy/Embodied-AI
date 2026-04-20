@@ -1,0 +1,214 @@
+{
+  "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741",
+  "strategy": "fm",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741",
+  "wandb_run_id": null,
+  "wandb_run_url": null,
+  "config": {
+    "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741",
+    "task_name": "unplug_charger",
+    "obs_mode": "pcd",
+    "train_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/train",
+    "valid_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/valid",
+    "seed": 1234,
+    "device": "cuda",
+    "resume_from_latest": false,
+    "n_obs_steps": 3,
+    "n_pred_steps": 32,
+    "subs_factor": 3,
+    "n_points": 2048,
+    "use_pc_color": false,
+    "obs_features_dim": 256,
+    "y_dim": 10,
+    "hidden_dim": 512,
+    "time_dim": 256,
+    "num_blocks": 6,
+    "nhead": 8,
+    "dim_feedforward": 2048,
+    "dropout": 0.1,
+    "activation": "gelu",
+    "debug_finiteness": true,
+    "final_layer_zero_init": false,
+    "decoder_condition_mode": "mean_pool",
+    "batch_size": 32,
+    "grad_accum_steps": 2,
+    "num_workers": 4,
+    "train_epochs": 500,
+    "train_use_amp": false,
+    "train_amp_dtype": "bfloat16",
+    "grad_clip_norm": 1.0,
+    "empty_cuda_cache": true,
+    "learning_rate": 0.0001,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "eps": 1e-08,
+    "transformer_weight_decay": 0.001,
+    "obs_encoder_weight_decay": 1e-06,
+    "lr_scheduler_name": "cosine",
+    "lr_warmup_steps": 1000,
+    "ema_enable": true,
+    "ema_decay": 0.9993,
+    "val_every_epochs": 1,
+    "success_selection_every_epochs": 0,
+    "checkpoint_every_epochs": 100,
+    "sample_every_epochs": 5,
+    "success_selection_episodes": 0,
+    "success_max_steps": 200,
+    "standard_eval_episodes": 0,
+    "eval_step_heartbeat_every": 50,
+    "smooth_actions": false,
+    "command_mode": "first",
+    "horizon_index": 0,
+    "average_first_n": 1,
+    "position_alpha": 0.35,
+    "rotation_alpha": 0.25,
+    "max_position_step": 0.03,
+    "gripper_open_threshold": 0.6,
+    "gripper_close_threshold": 0.4,
+    "norm_pcd_center": [
+      0.4,
+      0.0,
+      1.4
+    ],
+    "robot_state_mean": null,
+    "robot_state_std": null,
+    "augment_data": false,
+    "augment_translation_sigma": 0.02,
+    "augment_rotation_sigma": 0.1,
+    "loss_type": "l2",
+    "fm_num_k_infer": 10,
+    "fm_time_conditioning": true,
+    "fm_noise_type": "gaussian",
+    "fm_noise_scale": 1.0,
+    "fm_flow_schedule": "exp",
+    "fm_exp_scale": 4.0,
+    "fm_snr_sampler": "uniform",
+    "fm_loss_weights": null,
+    "diffusion_train_steps": 100,
+    "diffusion_eval_steps": 100,
+    "diffusion_num_infer_steps": 100,
+    "diffusion_prediction_type": "epsilon",
+    "diffusion_noise_scale": 1.0,
+    "wandb_enable": false,
+    "wandb_project": "pfp-autodl-transformer-fm",
+    "wandb_entity": null,
+    "wandb_mode": "disabled",
+    "wandb_resume": false,
+    "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+    "print_every": 50
+  },
+  "best_metric": 0.622098089048737,
+  "best_epoch": 53,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "latest_epoch": 499,
+  "train_loss_last": 0.014862022939450431,
+  "valid_loss_last": 1.421892151187517,
+  "epoch_summaries": [
+    {
+      "epoch": 495,
+      "train": {
+        "loss_total": 0.014166783119391459,
+        "num_batches": 331,
+        "lr": 6.327843838993541e-09
+      },
+      "valid": {
+        "loss_total": 1.4317840543624603,
+        "loss_xyz": 0.11668178320274149,
+        "loss_rot6d": 0.8159484895969447,
+        "loss_grip": 0.49915378382483094,
+        "mse_xyz": 0.004171040956479325,
+        "mse_rot6d": 0.06826130063027928,
+        "mse_grip": 0.06348084537614533,
+        "num_batches": 38
+      },
+      "sample": null
+    },
+    {
+      "epoch": 496,
+      "train": {
+        "loss_total": 0.013624852395185981,
+        "num_batches": 331,
+        "lr": 2.270723768033056e-09
+      },
+      "valid": {
+        "loss_total": 1.4330971696732664,
+        "loss_xyz": 0.10531908512961022,
+        "loss_rot6d": 0.8767622368904995,
+        "loss_grip": 0.4510158397978031,
+        "mse_xyz": 0.0041353397617441305,
+        "mse_rot6d": 0.06807597444391209,
+        "mse_grip": 0.06315782979952442,
+        "num_batches": 38
+      },
+      "sample": null
+    },
+    {
+      "epoch": 497,
+      "train": {
+        "loss_total": 0.015204953813357026,
+        "num_batches": 331,
+        "lr": 2.4825132593497833e-10
+      },
+      "valid": {
+        "loss_total": 1.3742421385464503,
+        "loss_xyz": 0.11309830952852376,
+        "loss_rot6d": 0.8261190986101467,
+        "loss_grip": 0.4350247350050363,
+        "mse_xyz": 0.004182077718149613,
+        "mse_rot6d": 0.06836638722444677,
+        "mse_grip": 0.06345517631166658,
+        "num_batches": 38
+      },
+      "sample": null
+    },
+    {
+      "epoch": 498,
+      "train": {
+        "loss_total": 0.015675228350764854,
+        "num_batches": 331,
+        "lr": 0.0
+      },
+      "valid": {
+        "loss_total": 1.3065816750933759,
+        "loss_xyz": 0.0941208104348717,
+        "loss_rot6d": 0.7316039316141733,
+        "loss_grip": 0.4808569238812197,
+        "mse_xyz": 0.004180583501836641,
+        "mse_rot6d": 0.0682842567592065,
+        "mse_grip": 0.0635907913636476,
+        "num_batches": 38
+      },
+      "sample": null
+    },
+    {
+      "epoch": 499,
+      "train": {
+        "loss_total": 0.014862022939450431,
+        "num_batches": 331,
+        "lr": 0.0
+      },
+      "valid": {
+        "loss_total": 1.421892151187517,
+        "loss_xyz": 0.1266518996777258,
+        "loss_rot6d": 0.8494549398708745,
+        "loss_grip": 0.44578533254599806,
+        "mse_xyz": 0.004185949971112055,
+        "mse_rot6d": 0.06828843722144627,
+        "mse_grip": 0.06363932739659539,
+        "num_batches": 38
+      },
+      "sample": {
+        "train_action_mse_error": 9.562283958075568e-05
+      }
+    }
+  ],
+  "final_standard_eval": null,
+  "wall_clock_hours": 3.6987535548849944,
+  "dataset_sizes": {
+    "train": 10573,
+    "valid": 1189
+  }
+}

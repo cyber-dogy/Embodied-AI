@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741",
+  "items": [
+    {
+      "role": "run::best_success.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/best_success.pt",
+      "size_bytes": 970946964,
+      "mtime": "2026-04-15T17:24:19+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0500.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/epochs/epoch_0500.pt",
+      "size_bytes": 970946964,
+      "mtime": "2026-04-15T17:23:41+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
+}

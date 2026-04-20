@@ -1,0 +1,47 @@
+{
+  "line": "mdit",
+  "phase": "train_only",
+  "experiment_name": "lane_a_stabilized_100",
+  "description": "Lane A stabilized audit recipe: mean_first_n + smooth_actions",
+  "stage_epochs": 100,
+  "eval_episodes": 20,
+  "trial_score": -1.0,
+  "pending_offline_audit": false,
+  "offline_audit_command": null,
+  "success_100": null,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": true,
+  "collapse_reasons": [
+    "[enforce fail at inline_container.cc:664] . unexpected pos 2602795840 vs 2602795728"
+  ],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": null,
+  "kept_ckpt_paths": [],
+  "run_name": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544",
+  "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544/experiment_manifest.json",
+  "recipe_drift": true,
+  "recipe_drift_details": [
+    {
+      "key": "command_mode",
+      "base_value": "first",
+      "resolved_value": "mean_first_n"
+    },
+    {
+      "key": "average_first_n",
+      "base_value": 1,
+      "resolved_value": 2
+    },
+    {
+      "key": "smooth_actions",
+      "base_value": false,
+      "resolved_value": true
+    }
+  ],
+  "audit_report_path": null,
+  "summary_path": null,
+  "error_type": "RuntimeError"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-19T20:00:00+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-17__lane_a_mainline_100",
+  "items": [
+    {
+      "role": "summary",
+      "source_path": "/abs/path/to/run_dir/summary.json",
+      "archive_path": "metrics/summary.json",
+      "mode": "copied",
+      "size_bytes": 12345
+    }
+  ]
+}

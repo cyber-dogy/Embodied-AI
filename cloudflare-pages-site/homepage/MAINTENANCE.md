@@ -42,6 +42,12 @@
 - `fixes.md` 负责“底层事实和排错过程是什么”
 - 不要再从 `fixes.md` 机械拼接首页卡片
 
+homepage 现在已经开始直接消费 `research_archive/`：
+
+- 任务页和研究线页的证据区、archive 时间线、归档摘要卡都优先读取 `research_archive/`
+- 如果页面内容与 archive 不一致，优先修 archive，不要先在 homepage 里手工打补丁
+- 新 run 的标准顺序是：`solidify archive -> validate -> rebuild homepage`
+
 ## 标题规则
 
 标题必须像成果条目，不像日志行。
@@ -178,21 +184,29 @@ homepage/media/tasks/<task-id>/
 2. 必要时补 `fixes.md`
 3. 提炼并更新 `research_desk.md`
 4. 如果是新的一级任务，再更新 `homepage/config/site-config.json`
-5. 运行 `./scripts/rebuild_homepage.sh`
-6. 用 `python scripts/serve_homepage.py --port 43429` 本地检查
-7. 本地检查重点：
+5. 如果这次改动涉及新 run、milestone 或证据固化，先运行 archive 流程：
+
+```bash
+python scripts/archive/solidify_run.py ...
+python scripts/archive/validate.py
+```
+
+6. 运行 `./scripts/rebuild_homepage.sh`
+7. 用 `python scripts/serve_homepage.py --port 43429` 本地检查
+8. 本地检查重点：
    - 首页卡片标题是否还是成果标题
    - 有没有漏出原始 run name / 绝对路径
+   - archive 的 run / milestone 是否已经出现在任务页和研究线页
    - 任务页时间线是否按日期分组
    - success 顺序是否正确
    - 页面主体是否仍然能不点文档就读懂
    - `cloudflare-pages-site/` 里是否已经带上最新素材、外部 Markdown 和 JSON 证据
-8. 提交并 push：
+9. 提交并 push：
    - `homepage/assets/generated-homepage-data.js`
    - `cloudflare-pages-site/`
    - 本次实际变更的配置 / 文档 / 素材
-9. 等 Cloudflare Pages 自动发布
-10. 访问公开地址复核：
+10. 等 Cloudflare Pages 自动发布
+11. 访问公开地址复核：
    - `https://embodied-ai.pages.dev/homepage/`
 
 这条发布链路是工作流的一部分，后续只要 homepage 内容有改动，就必须同步到线上页面，不能只改本地。
@@ -211,6 +225,67 @@ homepage/media/tasks/<task-id>/
 
 - 主页里有一部分证据和素材来自兄弟仓库软链接
 - 主页里还有一部分证据来自本地 `ckpt/` / JSON 快照，云端未必能重新构造
+
+### `mdit` 支线发布与 Cloudflare 复核
+
+当前这套 homepage 的正式发布链，默认以 `autoresearch/20260409-mdit` 作为 Cloudflare Pages 生产分支。
+
+后续如果 homepage 有改动，发布时按下面这条链走，不要再只推 `main`：
+
+1. 本地重建：
+
+```bash
+cd /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm
+./scripts/rebuild_homepage.sh
+```
+
+2. 本地检查：
+
+```bash
+python scripts/serve_homepage.py --port 43429
+```
+
+重点检查：
+
+- `http://127.0.0.1:43429/homepage/`
+- `http://127.0.0.1:43429/homepage/tasks/mdit-mainline/`
+- `http://127.0.0.1:43429/homepage/branches/mdit/`
+
+3. 只提交 homepage 相关文件，不要顺手带上训练代码、实验文档和临时脚本：
+
+- `homepage/`
+- `cloudflare-pages-site/`
+- `scripts/build_homepage_data.py`
+- 这次确实属于主页的配置文件
+
+4. 推送到 `mdit` 支线时，强制屏蔽全局 git 的 GitHub URL 重写：
+
+```bash
+GIT_CONFIG_GLOBAL=/dev/null git push origin HEAD:autoresearch/20260409-mdit
+```
+
+原因：
+
+- 当前机器的全局 git 配置里存在 GitHub `insteadOf` 重写
+- 不屏蔽时，SSH 远端可能会被改写回 HTTPS，导致推送失败
+
+5. Cloudflare Pages 线上复核时，优先用带版本参数的网址绕过缓存：
+
+- `https://embodied-ai.pages.dev/homepage/?v=<commit>`
+- `https://embodied-ai.pages.dev/homepage/tasks/mdit-mainline/?v=<commit>`
+- `https://embodied-ai.pages.dev/homepage/branches/mdit/?v=<commit>`
+
+6. 如果线上看起来还是旧页面，不要先怀疑“没推上去”，先检查三件事：
+
+- Cloudflare Pages 的 Production branch 是否仍然是 `autoresearch/20260409-mdit`
+- 线上 `homepage/assets/generated-homepage-data.js` 的 `generated_at` 是否已经变化
+- 浏览器是否仍在命中旧缓存
+
+7. 排查线上版本时，先比对这三个静态文件是否已经同步：
+
+- `homepage/assets/generated-homepage-data.js`
+- `homepage/assets/homepage-app.js`
+- `homepage/assets/homepage.css`
 
 ## 当前生成器职责
 

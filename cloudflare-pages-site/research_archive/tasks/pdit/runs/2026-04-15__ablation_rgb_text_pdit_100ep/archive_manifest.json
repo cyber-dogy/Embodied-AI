@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-15__ablation_rgb_text_pdit_100ep",
+  "run_name": "ablation_rgb_text_pdit_100ep",
+  "experiment_name": "rgb_text_pdit_ablation_100",
+  "description": "ablation: 5RGB+text + PDIT DiTTrajectory backbone + PDIT FM uniform+exp",
+  "line": "mdit",
+  "phase": "train_only",
+  "source_run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100ep",
+  "source_trial_record": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100ep.json",
+  "status": "incomplete",
+  "missing_items": [
+    "summary",
+    "audit_report",
+    "experiment_manifest"
+  ],
+  "trial_score": -1.0,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "collapse_detected": true
+}

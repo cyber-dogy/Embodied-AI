@@ -30,6 +30,14 @@ PDIT 现在仍是全仓库最稳定的行为锚点。训练链、保存链和离
 
 MDIT 当前最稳的早期锚点仍是 `0.55@100` 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；在此基础上，同一路线的 `100 -> 500 epoch` 续训已经完成共享审计，并给出 `0.75@300` 与 `0.75@500` 的新结果，说明长训确实把行为上限抬了上去。不过这次 `500 epoch` 审计缺失了 `epoch_0100` 点位，trial 仍被自动标成 collapse，因此当前更准确的任务不是再开新线，而是补齐共享审计叙事。
 
+相对 `multitask_dit_policy` 原版，当前 MDIT 主线的关键技术调整可以压缩成 5 点：
+
+1. **条件组织改成 `3-token` 序列，而不是全局 conditioning vector**：原版把 `robot state + 多相机 CLS + text` 在时间维展平成单个全局条件向量；当前主线改成“每个观测步 1 个 cond token”，最终只向 backbone 提供 `3` 个条件 token。
+2. **输入融合改成分阶段适配，而不是直接 concat flatten**：当前主线先做 `5` 路独立 CLIP 视觉编码、`last block` 微调、文本投影和状态适配，再在 step 内融合；这比原版更偏 `PDIT` 的条件组织，而不是 `MTDP` 的原生 observation encoder 语义。
+3. **骨干从单塔 DiT 改成了更接近 PDIT 的 encoder-decoder DiT**：原版更像“动作序列 + conditioning vector”的单塔噪声预测器；当前主线先编码 cond tokens，再用 decoder 生成动作轨迹，控制语义已经明显向 `PDIT` 靠拢。
+4. **FM 动力学没有沿用原版的 `beta` 采样与长 ODE 积分**：当前主线去掉了 `beta timestep sampling`，使用 `uniform` 采样、`exp` flow schedule 和 `10-step` 推理，而不是原版更强调的 `beta + 100-step Euler` 路径。
+5. **时序、归一化和执行口径整体工程化重构**：当前主线采用 `3 obs / 32 pred`，没有沿用原版 `2 obs / 100 horizon`；同时保留现有主线的 legacy 状态归一化和共享动作后处理链，而不是原版那套严格的 `state/action min-max + 原生推理接口`。
+
 ### LeLaN 执行线
 
 LeLaN 当前的重点仍是把执行链路固化成可长期追加的自动研究流程，而不是抢先做更激进的结构搜索。训练、评估、EMA 兼容、离线审计和 `100/300/500 epoch` 闸门规则已经定版，但正式 run 的行为结果还没有形成足够强的阶段结论，需要后续补齐。

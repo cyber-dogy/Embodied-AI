@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "mdit",
+  "bucket": "milestones",
+  "slug": "2026-04-17__current_provisional_best",
+  "milestone_name": "current_provisional_best",
+  "source_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055",
+  "metadata": {
+    "category": "frozen_best_snapshot"
+  },
+  "status": "complete",
+  "missing_items": []
+}

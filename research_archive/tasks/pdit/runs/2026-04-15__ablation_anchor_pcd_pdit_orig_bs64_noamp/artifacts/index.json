@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "items": [
+    {
+      "role": "run::best_valid.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/best_valid.pt",
+      "size_bytes": 970850017,
+      "mtime": "2026-04-15T20:59:35+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0050.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0050.pt",
+      "size_bytes": 970852513,
+      "mtime": "2026-04-15T21:01:52+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0100.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0100.pt",
+      "size_bytes": 970863009,
+      "mtime": "2026-04-15T21:11:19+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
+}

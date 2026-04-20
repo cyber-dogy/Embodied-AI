@@ -1,7 +1,7 @@
 {
   "_guide": {
     "site": "这里可以手工覆盖站点 title / slogan / description。",
-    "tasks": "tasks 下用 task_id 做键，例如 dummy-sim2real-platform、pdit-anchor、mdit-mainline。",
+    "tasks": "tasks 下用 task_id 做键，例如 dummy-sim2real-platform、pdit-anchor、mdit-mainline、lingbot-va-world-model。",
     "branches": "branches 下用 branch_id 做键，例如 robot-platform、pdit、mdit、lelan。",
     "lists": "summary_cards、timeline_groups、findings、evidence_links、home_entries、hero_metrics、home_chart_ids 这类数组字段采用整段替换，不做局部 patch。",
     "payload": "只有非常特殊的情况才直接改 payload，常规标题和 summary 优先改 site / tasks / branches。"

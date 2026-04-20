@@ -1,0 +1,7 @@
+{
+  "demo/images/00-lingbot-va-cover.png": {
+    "title": "LingBot-VA 世界模型线封面",
+    "caption": "用 RoboTwin 任务场景作为切入口，展示这条线当前聚焦的视频 latent + 动作联合后训练方向。",
+    "showcase": true
+  }
+}

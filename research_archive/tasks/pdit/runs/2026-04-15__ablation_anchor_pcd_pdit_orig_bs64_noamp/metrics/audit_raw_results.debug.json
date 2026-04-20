@@ -1,0 +1,35 @@
+{
+  "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0050.pt::episodes=1::max_steps=50::ema=1::seed=1234": {
+    "label": "epoch_0050",
+    "kind": "periodic",
+    "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0050.pt",
+    "epoch": 50,
+    "completed_epoch": 49,
+    "best_metric": 0.6767891668959668,
+    "best_epoch": 37,
+    "best_success_rate": null,
+    "best_success_epoch": null,
+    "success_rate": 0.0,
+    "mean_steps": 50.0,
+    "num_successes": 0,
+    "num_episodes": 1,
+    "duration_sec": 21.473059934998673,
+    "episode_records": [
+      {
+        "episode": 0,
+        "success": false,
+        "steps": 50,
+        "duration_sec": 15.7399861899994,
+        "descriptions": [
+          "unplug charger",
+          "take the charger out of the wall",
+          "grip the black charger and pull it out of its socket",
+          "slide the plug out from the wall",
+          "remove the charger from the mains",
+          "get the charger from the wall plug"
+        ],
+        "error": null
+      }
+    ]
+  }
+}

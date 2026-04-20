@@ -1,0 +1,25 @@
+{
+  "demo/images/mtdp_architecture.png": {
+    "title": "MDIT RGB+Text 主线封面",
+    "caption": "作为当前 MDIT 主线封面，概括多视角视觉、文本条件与动作生成之间的整体结构。"
+  },
+  "demo/videos/关门仿真-1.mp4": {
+    "title": "MDIT RGB+Text 关门仿真演示",
+    "caption": "该片段来自 RGB+Text 主线训练后的关门仿真，说明语言条件已经能落到可执行动作轨迹。它对应的是一条更贴近 VLA / 世界模型接口的多模态策略路径：先对齐视觉与文本语义，再生成 action chunk。"
+  },
+  "charts/01-mdit_rank_overview.svg": {
+    "title": "MDIT 关键结果排行",
+    "caption": "把主线关键节点和共享审计结果放到一张图里，直接看当前真正成立的阶段结果。",
+    "note": "300 / 500 epoch 已经超过早期 0.55@100 锚点，因此这条线后面更应该看 loss 与 MSE 怎样支撑这个提升。"
+  },
+  "charts/02-mdit_mainline_loss_curve.svg": {
+    "title": "MDIT 主线 loss 趋势",
+    "caption": "围绕 100→500 主线续训，直接看 train / valid total loss 如何收束。",
+    "note": "使用 W&B API 抓取完整 history，展示主线真实训练曲线。"
+  },
+  "charts/03-mdit_mainline_mse_curve.svg": {
+    "title": "MDIT 主线 MSE 变化",
+    "caption": "把 xyz / rot6d / grip 三条误差拆开，解释长训结果为什么能抬到 0.75。",
+    "note": "使用 W&B API 抓取 valid mse_xyz / mse_rot6d / mse_grip 全量 history。"
+  }
+}

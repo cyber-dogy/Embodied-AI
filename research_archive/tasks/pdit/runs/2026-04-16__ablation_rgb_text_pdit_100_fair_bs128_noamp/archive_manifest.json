@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp",
+  "run_name": "ablation_rgb_text_pdit_100_fair_bs128_noamp",
+  "experiment_name": "ablation_cross_rgb5text_pdit_adapter_bs128_noamp_eval50_100",
+  "description": "strict fair cross D: 5rgb+text+pdit-adapter, obs2/h100/a24, bs128, no-amp, eval@50/100",
+  "line": "mdit",
+  "phase": "train_only",
+  "source_run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100_fair_bs128_noamp",
+  "source_trial_record": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100_fair_bs128_noamp.json",
+  "status": "incomplete",
+  "missing_items": [
+    "summary",
+    "audit_report",
+    "experiment_manifest"
+  ],
+  "trial_score": 0.05,
+  "best_success_rate": 0.05,
+  "best_success_epoch": 49,
+  "collapse_detected": false
+}

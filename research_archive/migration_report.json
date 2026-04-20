@@ -1,0 +1,411 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "entry_count": 38,
+  "entries": [
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_anchor_pcd_pdit_orig_bs224_noamp.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_anchor_pcd_pdit_orig_bs64_noamp.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp",
+      "status": "incomplete",
+      "missing_items": [
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100_fair_bs128_noamp.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100ep.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/dummy_smoke_root_layout.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__dummy_smoke_root_layout",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_loop_state__unplug_rgb_text_search.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-17__mdit_loop_state_unplug_rgb_text_search",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_takeover_state__lane_c_then_best500.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__mdit_takeover_state_lane_c_then_best500",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/smoke_h3_train.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__smoke_h3_train",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_rgb_text_3token_100.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100",
+      "status": "complete",
+      "missing_items": []
+    },
+    {
+      "kind": "run",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741",
+      "status": "incomplete",
+      "missing_items": [
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_fixed_stats_aug_100__e0100__20260408_124213.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "pdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_modular_dummy__e0001__20260409_manual.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_timeout__e0001__20260407_232344.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_timeout_e0001_20260407_232344",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_train_only_e0001_20260407_233423",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/vram_probe_bs12_test_1775990954.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs12_test_1775990954",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/vram_probe_bs16_1775990761.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs16_1775990761",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/vram_probe_bs20_1775990570.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs20_1775990570",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/vram_probe_bs24_1775990374.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs24_1775990374",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "run",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/vram_probe_bs8_1775991433.json",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs8_1775991433",
+      "status": "incomplete",
+      "missing_items": [
+        "summary",
+        "audit_report",
+        "experiment_manifest"
+      ]
+    },
+    {
+      "kind": "milestone",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055",
+      "status": "complete"
+    },
+    {
+      "kind": "milestone",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/current_provisional_best",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best",
+      "status": "complete"
+    },
+    {
+      "kind": "milestone",
+      "task_id": "mdit",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line",
+      "status": "complete"
+    },
+    {
+      "kind": "record",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__research_desk",
+      "status": "complete"
+    },
+    {
+      "kind": "record",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__fixes",
+      "status": "complete"
+    },
+    {
+      "kind": "record",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure.md",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__code_structure",
+      "status": "complete"
+    },
+    {
+      "kind": "record",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/code-structure-zh.md",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__code_structure_zh",
+      "status": "complete"
+    },
+    {
+      "kind": "record",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/job/pdit_job_packaging.md",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__pdit_job_packaging",
+      "status": "complete"
+    },
+    {
+      "kind": "record",
+      "task_id": "infra",
+      "source": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/homepage/media/tasks/dummy-sim2real-platform",
+      "archive_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__homepage_media_dummy_sim2real_platform",
+      "status": "complete"
+    }
+  ]
+}

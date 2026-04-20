@@ -1,0 +1,27 @@
+{
+  "line": "mdit",
+  "phase": "train_only",
+  "experiment_name": "rgb_text_pdit_ablation_100",
+  "description": "ablation: 5RGB+text + PDIT DiTTrajectory backbone + PDIT FM uniform+exp",
+  "trial_score": -1.0,
+  "pending_offline_audit": false,
+  "offline_audit_command": null,
+  "success_20": null,
+  "success_100": null,
+  "collapse_detected": true,
+  "collapse_reasons": [
+    "Faithful MDIT mainline training only supports RGB + text + MDIT raw weights. Disable legacy options before training: transformer_variant='pdit'."
+  ],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": null,
+  "kept_ckpt_paths": [],
+  "run_name": "ablation_rgb_text_pdit_100ep",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_rgb_text_pdit_100ep",
+  "audit_report_path": null,
+  "summary_path": null,
+  "recipe_drift": false,
+  "recipe_drift_details": [],
+  "error_type": "ValueError"
+}

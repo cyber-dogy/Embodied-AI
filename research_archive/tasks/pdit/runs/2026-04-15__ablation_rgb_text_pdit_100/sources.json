@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-15__ablation_rgb_text_pdit_100",
+  "items": [
+    {
+      "role": "trial_record",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_rgb_text_pdit_100.json",
+      "archive_path": "metrics/trial_record.json",
+      "mode": "copied",
+      "size_bytes": 9582
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "note::fixes",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
+      "archive_path": "notes/fixes.md",
+      "mode": "copied",
+      "size_bytes": 90862
+    },
+    {
+      "role": "note::2026-04-07-autoresearch-pipeline-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-autoresearch-pipeline-zh.md",
+      "archive_path": "notes/2026-04-07-autoresearch-pipeline-zh.md",
+      "mode": "copied",
+      "size_bytes": 3384
+    },
+    {
+      "role": "note::2026-04-07-autoresearch-pipeline",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-autoresearch-pipeline.md",
+      "archive_path": "notes/2026-04-07-autoresearch-pipeline.md",
+      "mode": "copied",
+      "size_bytes": 1029
+    },
+    {
+      "role": "note::2026-04-07-training-model-audit-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-training-model-audit-zh.md",
+      "archive_path": "notes/2026-04-07-training-model-audit-zh.md",
+      "mode": "copied",
+      "size_bytes": 8428
+    },
+    {
+      "role": "note::2026-04-07-training-model-audit",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-training-model-audit.md",
+      "archive_path": "notes/2026-04-07-training-model-audit.md",
+      "mode": "copied",
+      "size_bytes": 1371
+    },
+    {
+      "role": "note::2026-04-08-fm-recovery-progress-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
+      "archive_path": "notes/2026-04-08-fm-recovery-progress-zh.md",
+      "mode": "copied",
+      "size_bytes": 10299
+    },
+    {
+      "role": "note::2026-04-08-fm-recovery-progress",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-08-fm-recovery-progress.md",
+      "archive_path": "notes/2026-04-08-fm-recovery-progress.md",
+      "mode": "copied",
+      "size_bytes": 6133
+    },
+    {
+      "role": "note::2026-04-10-5090-environment-setup",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-10-5090-environment-setup.md",
+      "archive_path": "notes/2026-04-10-5090-environment-setup.md",
+      "mode": "copied",
+      "size_bytes": 6171
+    },
+    {
+      "role": "note::2026-04-10-5090-migration-checklist",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-10-5090-migration-checklist.md",
+      "archive_path": "notes/2026-04-10-5090-migration-checklist.md",
+      "mode": "copied",
+      "size_bytes": 4904
+    }
+  ]
+}

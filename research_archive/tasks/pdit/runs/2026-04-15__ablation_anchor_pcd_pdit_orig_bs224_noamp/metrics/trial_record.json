@@ -1,0 +1,25 @@
+{
+  "phase": "train_only",
+  "experiment_name": "ablation_anchor_pcd_pdit_orig_bs224_noamp_eval50_100",
+  "description": "strict fair anchor A: original pdit line, pcd+pdit, bs224, no-amp, eval@50/100",
+  "trial_score": -1.0,
+  "pending_offline_audit": false,
+  "offline_audit_command": null,
+  "success_100": null,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": true,
+  "collapse_reasons": [
+    "CUDA out of memory. Tried to allocate 5.25 GiB. GPU 0 has a total capacity of 23.40 GiB of which 3.26 GiB is free. Including non-PyTorch memory, this process has 19.86 GiB memory in use. Of the allocated memory 13.21 GiB is allocated by PyTorch, and 6.05 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"
+  ],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": null,
+  "kept_ckpt_paths": [],
+  "run_name": "ablation_anchor_pcd_pdit_orig_bs224_noamp",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs224_noamp",
+  "audit_report_path": null,
+  "summary_path": null,
+  "error_type": "OutOfMemoryError"
+}

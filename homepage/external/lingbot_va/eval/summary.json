@@ -1,0 +1,26 @@
+[
+  {
+    "task_name": "click_bell-aloha-agilex_randomized_500-1000",
+    "prompt": "Click the blue dome-shaped bell's top center using the right arm.",
+    "episode_index": 0,
+    "episode_chunk": 0,
+    "segment_index": 0,
+    "start_frame": 0,
+    "end_frame": 77,
+    "num_chunks": 6,
+    "pred_video_frames": 45,
+    "pred_action_steps": 192,
+    "infer_attn_mode": "flashattn",
+    "guidance_scale": 1.0,
+    "action_guidance_scale": 1.0,
+    "num_inference_steps": 2,
+    "action_num_inference_steps": 4,
+    "video_frames_used": 45,
+    "video_mse": 0.003563144477084279,
+    "video_mae": 0.025171633809804916,
+    "action_steps_used": 93,
+    "action_mse": 0.006736649200320244,
+    "action_mae": 0.020062865689396858,
+    "status": "success"
+  }
+]

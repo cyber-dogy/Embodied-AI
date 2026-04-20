@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-10__dummy_smoke_root_layout",
+  "run_name": "dummy_smoke_root_layout",
+  "experiment_name": "dummy_smoke_root_layout",
+  "description": "",
+  "line": "infra",
+  "phase": "train_only",
+  "source_run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/dummy_smoke_root_layout",
+  "source_trial_record": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/dummy_smoke_root_layout.json",
+  "status": "incomplete",
+  "missing_items": [
+    "summary",
+    "audit_report",
+    "experiment_manifest"
+  ],
+  "trial_score": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "collapse_detected": false
+}

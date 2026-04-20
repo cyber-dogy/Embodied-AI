@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "homepage/config/site-config.json"
 OVERRIDES_PATH = ROOT / "homepage/config/manual_overrides.json"
 OUTPUT_PATH = ROOT / "homepage/assets/generated-homepage-data.js"
+ARCHIVE_ROOT = ROOT / "research_archive"
+ARCHIVE_TASK_INDEX_PATH = ARCHIVE_ROOT / "task_index.json"
 
 LINE_COLORS = {
     "teal": "#2b766f",
@@ -58,6 +60,27 @@ TASK_TO_PRIMARY_RESEARCH_DESK_LINE = {
     "mdit-mainline": "MDIT 主线",
     "lelan-pipeline": "LeLaN 执行线",
     "infra-audit": "基础设施",
+}
+TASK_TO_ARCHIVE_TASK = {
+    "pdit-anchor": "pdit",
+    "mdit-mainline": "mdit",
+    "lingbot-va-world-model": "lingbot",
+    "lelan-pipeline": "lelan",
+    "infra-audit": "infra",
+}
+TASK_TO_ARCHIVE_MEDIA_SOURCE = {
+    "pdit-anchor": {"task_id": "pdit"},
+    "mdit-mainline": {"task_id": "mdit"},
+    "lingbot-va-world-model": {"task_id": "lingbot"},
+    "lelan-pipeline": {"task_id": "lelan"},
+    # dummy 平台当前作为 infra 归档的一部分维护，但页面需要把它当作独立任务来展示。
+    "dummy-sim2real-platform": {"task_id": "infra", "subdir": "dummy-sim2real-platform"},
+}
+BRANCH_TO_ARCHIVE_TASK = {
+    "pdit": "pdit",
+    "mdit": "mdit",
+    "lingbot-va": "lingbot",
+    "lelan": "lelan",
 }
 
 
@@ -348,22 +371,52 @@ def infer_media_caption(task_title: str, file_path: Path) -> str:
     return f"展示 {task_title} 的现场素材：{title}。"
 
 
-def build_media_items(task_id: str, task_title: str, entries: list[dict[str, Any]] | None = None) -> list[dict[str, str]]:
-    items: list[dict[str, str]] = []
-    media_root = ROOT / "homepage/media/tasks" / task_id
-    captions_path = media_root / "captions.json"
-    caption_overrides: dict[str, dict[str, str]] = {}
-    if captions_path.exists():
-        caption_overrides = read_json(captions_path)
+def infer_chart_caption(task_title: str, file_path: Path, *, source_kind: str) -> str:
+    title = humanize_file_name(file_path)
+    if source_kind == "manual":
+        return f"展示 {task_title} 的整理图表：{title}。"
+    return f"来自 archive 自动聚合层的补充图表：{title}。"
 
-    for file_path in sorted(media_root.rglob("*")):
-        if not file_path.is_file() or file_path.name.startswith(".") or file_path.name == "captions.json":
+
+def read_archive_media_captions(archive_task_id: str) -> dict[str, dict[str, Any]]:
+    captions_path = ARCHIVE_ROOT / "tasks" / archive_task_id / "media" / "captions.json"
+    if not captions_path.exists():
+        return {}
+    return read_json(captions_path)
+
+
+def build_archive_demo_items(task_id: str, task_title: str) -> list[dict[str, str]]:
+    source_cfg = TASK_TO_ARCHIVE_MEDIA_SOURCE.get(task_id)
+    if not source_cfg:
+        return []
+    archive_task_id = str(source_cfg["task_id"])
+    source_subdir = source_cfg.get("subdir")
+    demo_root = ARCHIVE_ROOT / "tasks" / archive_task_id / "media" / "demo"
+    if not demo_root.exists():
+        return []
+    caption_overrides = read_archive_media_captions(archive_task_id)
+    items: list[dict[str, str]] = []
+    for file_path in sorted(demo_root.rglob("*")):
+        if not file_path.is_file() or file_path.name.startswith("."):
             continue
         kind = MEDIA_EXTENSIONS.get(file_path.suffix.lower())
-        if not kind:
+        if kind not in {"image", "video"}:
             continue
-        rel_inside_task = file_path.relative_to(media_root).as_posix()
-        overrides = caption_overrides.get(rel_inside_task) or caption_overrides.get(file_path.name) or {}
+        relative = file_path.relative_to(demo_root)
+        parts = relative.parts
+        if not parts:
+            continue
+        # demo 根目录下允许直接放文件，也允许放按子任务命名的文件夹。
+        # 自动聚合的 runs/milestones/records 证据层不作为页面主展示入口。
+        if parts[0] in {"runs", "milestones", "records"}:
+            continue
+        if len(parts) >= 2 and parts[1] in {"runs", "milestones", "records"}:
+            continue
+        if source_subdir:
+            if len(parts) < 2 or parts[1] != source_subdir:
+                continue
+        override_key = f"demo/{relative.as_posix()}"
+        overrides = caption_overrides.get(override_key) or caption_overrides.get(relative.as_posix()) or {}
         items.append(
             {
                 "task_id": task_id,
@@ -374,6 +427,80 @@ def build_media_items(task_id: str, task_title: str, entries: list[dict[str, Any
                 "showcase_preview": bool(overrides.get("showcase", False)),
             }
         )
+    return items
+
+
+def build_archive_chart_items(task_id: str, task_title: str) -> list[dict[str, Any]]:
+    source_cfg = TASK_TO_ARCHIVE_MEDIA_SOURCE.get(task_id)
+    if not source_cfg:
+        return []
+    archive_task_id = str(source_cfg["task_id"])
+    chart_root = ARCHIVE_ROOT / "tasks" / archive_task_id / "media" / "charts"
+    if not chart_root.exists():
+        return []
+    caption_overrides = read_archive_media_captions(archive_task_id)
+    manual_items: list[dict[str, Any]] = []
+    auto_items: list[dict[str, Any]] = []
+    for file_path in sorted(chart_root.rglob("*")):
+        if not file_path.is_file() or file_path.name.startswith("."):
+            continue
+        kind = MEDIA_EXTENSIONS.get(file_path.suffix.lower())
+        if kind != "image":
+            continue
+        relative = file_path.relative_to(chart_root)
+        source_kind = "auto" if relative.parts and relative.parts[0] == "auto" else "manual"
+        override_key = f"charts/{relative.as_posix()}"
+        overrides = caption_overrides.get(override_key) or caption_overrides.get(relative.as_posix()) or {}
+        item = {
+            "id": f"archive-chart-{task_id}-{re.sub(r'[^a-z0-9]+', '-', relative.as_posix().lower()).strip('-') or 'chart'}",
+            "type": "media_chart",
+            "title": overrides.get("title", humanize_file_name(file_path)),
+            "description": overrides.get("caption", infer_chart_caption(task_title, file_path, source_kind=source_kind)),
+            "path": repo_rel(file_path) or "",
+            "kind": kind,
+            "source_kind": source_kind,
+            "note": overrides.get("note", "手工图表优先展示，auto 聚合图只作为补充。" if source_kind == "manual" else "这张图来自 archive 自动聚合层。"),
+        }
+        if source_kind == "manual":
+            manual_items.append(item)
+        else:
+            auto_items.append(item)
+    if manual_items:
+        return manual_items
+    return []
+
+
+def build_media_items(task_id: str, task_title: str, entries: list[dict[str, Any]] | None = None) -> list[dict[str, str]]:
+    items: list[dict[str, str]] = []
+    archive_items = build_archive_demo_items(task_id, task_title)
+    if archive_items:
+        items.extend(archive_items)
+    media_root = ROOT / "homepage/media/tasks" / task_id
+    captions_path = media_root / "captions.json"
+    caption_overrides: dict[str, dict[str, str]] = {}
+    if captions_path.exists():
+        caption_overrides = read_json(captions_path)
+
+    # archive 逐步接管后，这里的 homepage/media 只作为兼容回退源；若 archive 已有同任务素材则不重复灌入。
+    if not archive_items:
+        for file_path in sorted(media_root.rglob("*")):
+            if not file_path.is_file() or file_path.name.startswith(".") or file_path.name == "captions.json":
+                continue
+            kind = MEDIA_EXTENSIONS.get(file_path.suffix.lower())
+            if not kind:
+                continue
+            rel_inside_task = file_path.relative_to(media_root).as_posix()
+            overrides = caption_overrides.get(rel_inside_task) or caption_overrides.get(file_path.name) or {}
+            items.append(
+                {
+                    "task_id": task_id,
+                    "kind": kind,
+                    "title": overrides.get("title", humanize_file_name(file_path)),
+                    "caption": overrides.get("caption", infer_media_caption(task_title, file_path)),
+                    "path": repo_rel(file_path) or "",
+                    "showcase_preview": bool(overrides.get("showcase", False)),
+                }
+            )
     for entry in entries or []:
         rel_path = repo_rel(entry.get("path"))
         if not rel_path:
@@ -389,6 +516,12 @@ def build_media_items(task_id: str, task_title: str, entries: list[dict[str, Any
                 "showcase_preview": bool(entry.get("showcase", False)),
             }
         )
+    seen_paths = {item["path"] for item in items if item.get("path")}
+    for item in build_archive_demo_items(task_id, task_title):
+        if item["path"] in seen_paths:
+            continue
+        seen_paths.add(item["path"])
+        items.append(item)
     return items
 
 
@@ -584,7 +717,8 @@ def apply_research_desk_overview(task: dict[str, Any], overview_map: dict[str, s
     if not overview:
         return task
     task["summary"] = overview
-    if task["id"] in {"pdit-anchor", "mdit-mainline", "lelan-pipeline", "infra-audit"}:
+    # 某些任务页需要保留手工压缩过的报告导语，避免被 research_desk 的两句摘要重新拉长。
+    if task["id"] in {"pdit-anchor", "mdit-mainline", "lelan-pipeline", "infra-audit"} and not task.get("preserve_report_intro"):
         task["report_intro"] = overview
     return task
 
@@ -601,6 +735,306 @@ def apply_research_desk_overview_to_branch(branch: dict[str, Any], overview_map:
     if overview:
         branch["summary"] = overview
     return branch
+
+
+def read_archive_task_index() -> dict[str, Any]:
+    return read_json_if_exists(ARCHIVE_TASK_INDEX_PATH).get("tasks", {})
+
+
+def archive_date_from_text(text: str) -> str:
+    matched = re.match(r"(\d{4}-\d{2}-\d{2})", text or "")
+    if matched:
+        return matched.group(1)
+    return ""
+
+
+def archive_bucket_badge(bucket: str) -> str:
+    if bucket == "runs":
+        return "Archive Run"
+    if bucket == "milestones":
+        return "Archive Milestone"
+    return "Archive Record"
+
+
+def archive_missing_text(missing_items: list[str]) -> str:
+    if not missing_items:
+        return "完整"
+    if len(missing_items) == 1:
+        return missing_items[0]
+    return f"{len(missing_items)} 项"
+
+
+def archive_display_title(manifest: dict[str, Any]) -> str:
+    experiment_name = str(manifest.get("experiment_name") or "")
+    milestone_name = str(manifest.get("milestone_name") or "")
+    slug = str(manifest.get("slug") or "")
+    description = clean_text(str(manifest.get("description") or ""))
+    category = str((manifest.get("metadata") or {}).get("category") or "")
+    lowered = f"{experiment_name} {milestone_name} {slug} {description}".lower()
+
+    # 这里优先给出“人能一眼看懂”的归档标题，避免把 run_name 原样搬上页面。
+    if category == "frozen_best_snapshot":
+        return "冻结最优快照"
+    if category == "reference_line":
+        return "参考线快照"
+    if "baseline_500" in lowered:
+        return "Baseline@500 行为锚点"
+    if "baseline_100" in lowered:
+        return "Baseline@100 恢复验证"
+    if "trial ::" in lowered or experiment_name == "trial":
+        return "早期试跑记录"
+    if "h1" in lowered and "stats" in lowered:
+        if "fixed" in lowered:
+            return "统计特征增强重试"
+        return "统计特征增强初版"
+    if "h2" in lowered or "dit_dynamics" in lowered:
+        return "DiT 动力学候选"
+    if "ablation_anchor_pcd_pdit_orig_bs224" in lowered:
+        return "原始 PDIT 公平锚点（bs224）"
+    if "ablation_anchor_pcd_pdit_orig_bs64" in lowered:
+        return "原始 PDIT 公平锚点（bs64）"
+    if "ablation_cross_rgb5text_pdit_adapter" in lowered:
+        return "RGB+文本跨线公平对照"
+    if "ablation_rgb5text_pdit_adapter" in lowered:
+        return "RGB+文本适配器修正版"
+    if "rgb_text_pdit_ablation" in lowered:
+        return "RGB+文本迁移候选"
+    if "lane_a_mainline" in lowered:
+        if "500_resume" in lowered:
+            return "100→500 主线续训"
+        return "RGB+文本主线 100 轮锚点"
+    if "lane_a_stabilized" in lowered:
+        return "平滑动作稳定化对照"
+    if "lane_b_faithful" in lowered:
+        return "faithful recipe 对照"
+    if "strict_mtdp" in lowered or "mtdp" in lowered:
+        return "严格 MTDP 对照"
+    if "current_provisional_best" in lowered:
+        return "当前临时最优快照"
+    if "reference_line" in lowered:
+        return "参考线快照"
+    if "frozen_best" in lowered:
+        return "冻结最优快照"
+    if description:
+        return safe_excerpt(description, limit=40)
+    name = milestone_name or experiment_name or humanize_file_name(slug)
+    return safe_excerpt(clean_text(name), limit=40)
+
+
+def archive_summary_text(manifest: dict[str, Any], report_sections: list[dict[str, Any]]) -> str:
+    current_judgment = first_sentence(section_body(report_sections, "当前判断"), limit=105)
+    if current_judgment:
+        return current_judgment
+    validation_goal = first_sentence(section_body(report_sections, "本次验证什么"), limit=105)
+    if validation_goal:
+        return validation_goal
+    description = first_sentence(str(manifest.get("description") or ""), limit=105)
+    if description:
+        return description
+    if manifest.get("bucket") == "milestones":
+        return "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。"
+    return "归档条目已经建立，可作为后续主页和专题页的统一证据入口。"
+
+
+def archive_outcome_text(manifest: dict[str, Any], report_sections: list[dict[str, Any]]) -> str:
+    best_success = manifest.get("best_success_rate")
+    best_epoch = manifest.get("best_success_epoch")
+    if best_success is not None and best_epoch is not None:
+        return f"归档里已经固定 {format_ratio(best_success)}@{best_epoch} 的结果，后续页面与专题页都可以直接复用。"
+    core_result = first_sentence(section_body(report_sections, "核心结果"), limit=120)
+    if core_result:
+        return core_result
+    missing_items = manifest.get("missing_items") or []
+    if missing_items:
+        return f"当前归档还缺 {archive_missing_text(missing_items)}，但证据入口已经统一到了 archive。"
+    if manifest.get("bucket") == "milestones":
+        return "该 milestone 快照已经归档到统一证据层，后续展示不必再回翻原始目录。"
+    return "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。"
+
+
+def build_archive_card_metrics(manifest: dict[str, Any]) -> list[dict[str, str]]:
+    metrics: list[dict[str, str]] = []
+    best_success = manifest.get("best_success_rate")
+    best_epoch = manifest.get("best_success_epoch")
+    if best_success is not None:
+        metrics.append(make_metric("best success", format_ratio(best_success)))
+    if best_epoch is not None:
+        metrics.append(make_metric("best epoch", best_epoch))
+    if manifest.get("bucket") == "milestones":
+        category = str((manifest.get("metadata") or {}).get("category") or "快照")
+        metrics.append(make_metric("类型", category))
+    else:
+        metrics.append(make_metric("归档", "完整" if manifest.get("status") == "complete" else "待补齐"))
+    missing_items = manifest.get("missing_items") or []
+    metrics.append(make_metric("缺失", archive_missing_text(missing_items)))
+    return metrics[:3]
+
+
+def build_archive_item_links(archive_dir: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
+    links: list[dict[str, str]] = []
+    report_path = archive_dir / "report/report.md"
+    if report_path.exists():
+        links.append(card_link("归档报告", report_path))
+    summary_path = archive_dir / "metrics/summary.json"
+    if summary_path.exists():
+        links.append(card_link("archive summary", summary_path))
+    audit_path = archive_dir / "metrics/audit_report.json"
+    if audit_path.exists():
+        links.append(card_link("archive audit", audit_path))
+    manifest_path = archive_dir / "archive_manifest.json"
+    if manifest_path.exists():
+        links.append(card_link("archive manifest", manifest_path))
+    return links[:3]
+
+
+def build_archive_evidence_link_set(archive_dir: Path, manifest: dict[str, Any]) -> list[dict[str, str]]:
+    display_title = archive_display_title(manifest)
+    bucket_prefix = "milestone" if manifest.get("bucket") == "milestones" else "archive"
+    links: list[dict[str, str]] = []
+    report_path = archive_dir / "report/report.md"
+    if report_path.exists():
+        links.append(
+            make_link(
+                f"{bucket_prefix} 报告 · {display_title}",
+                report_path,
+                "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+                "打开归档报告",
+            )
+        )
+    summary_path = archive_dir / "metrics/summary.json"
+    if summary_path.exists():
+        links.append(
+            make_link(
+                f"{bucket_prefix} summary · {display_title}",
+                summary_path,
+                "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+                "打开 summary",
+            )
+        )
+    audit_path = archive_dir / "metrics/audit_report.json"
+    if audit_path.exists():
+        links.append(
+            make_link(
+                f"{bucket_prefix} audit · {display_title}",
+                audit_path,
+                "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
+                "打开 audit",
+            )
+        )
+    return links
+
+
+def load_archive_item(raw_item: dict[str, Any], bucket: str) -> dict[str, Any]:
+    manifest_path = Path(raw_item["manifest_path"])
+    archive_dir = manifest_path.parent
+    manifest = read_json(manifest_path)
+    manifest["bucket"] = bucket
+    report_path = archive_dir / "report/report.md"
+    report_text = read_text(report_path) if report_path.exists() else ""
+    report_sections = parse_markdown_sections(report_text) if report_text else []
+    date = archive_date_from_text(str(manifest.get("slug") or raw_item.get("slug") or "")) or archive_date_from_text(str(manifest.get("archived_at") or ""))
+    return {
+        "bucket": bucket,
+        "raw": raw_item,
+        "manifest": manifest,
+        "archive_dir": archive_dir,
+        "date": date,
+        "title": archive_display_title(manifest),
+        "summary": archive_summary_text(manifest, report_sections),
+        "outcome": archive_outcome_text(manifest, report_sections),
+        "metrics": build_archive_card_metrics(manifest),
+        "links": build_archive_item_links(archive_dir, manifest),
+        "evidence_links": build_archive_evidence_link_set(archive_dir, manifest),
+    }
+
+
+def build_archive_bundle(archive_task_id: str, archive_task_index: dict[str, Any]) -> dict[str, Any]:
+    task_block = archive_task_index.get(archive_task_id, {})
+    loaded_items: list[dict[str, Any]] = []
+    for bucket in ("runs", "milestones", "records"):
+        for raw_item in task_block.get(bucket, []):
+            loaded_items.append(load_archive_item(raw_item, bucket))
+    loaded_items.sort(key=lambda item: (item["date"], item["manifest"].get("archived_at", "")), reverse=True)
+
+    grouped_cards: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in loaded_items:
+        grouped_cards[item["date"]].append(
+            {
+                "badge": archive_bucket_badge(item["bucket"]),
+                "title": item["title"],
+                "summary": item["summary"],
+                "date_key": item["date"],
+                "metrics": item["metrics"],
+                "outcome": item["outcome"],
+                "links": item["links"],
+            }
+        )
+
+    timeline_groups = [
+        {"date": date, "cards": grouped_cards[date]}
+        for date in sorted(grouped_cards.keys(), reverse=True)
+    ]
+    evidence_links: list[dict[str, str]] = []
+    seen_paths: set[str] = set()
+    for item in loaded_items:
+        for link in item["evidence_links"]:
+            path = link["path"]
+            if not path or path in seen_paths:
+                continue
+            seen_paths.add(path)
+            evidence_links.append(link)
+    run_count = len(task_block.get("runs", []))
+    milestone_count = len(task_block.get("milestones", []))
+    record_count = len(task_block.get("records", []))
+    complete_count = sum(1 for item in loaded_items if item["manifest"].get("status") == "complete")
+    latest_date = loaded_items[0]["date"] if loaded_items else ""
+    noun = "run" if run_count else "记录"
+    summary_card = None
+    if loaded_items:
+        summary_card = {
+            "eyebrow": "Archive",
+            "title": f"research_archive 已固化 {run_count + record_count} 条{noun}与 {milestone_count} 个 milestone",
+            "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
+            "metrics": [
+                make_metric("归档条目", run_count + record_count),
+                make_metric("完整条目", complete_count),
+                make_metric("milestone", milestone_count),
+            ],
+        }
+    return {
+        "items": loaded_items,
+        "timeline_groups": timeline_groups,
+        "evidence_links": evidence_links[:6],
+        "summary_card": summary_card,
+        "stats": {
+            "run_count": run_count,
+            "record_count": record_count,
+            "milestone_count": milestone_count,
+            "complete_count": complete_count,
+            "latest_date": latest_date,
+        },
+    }
+
+
+def merge_timeline_groups(base_groups: list[dict[str, Any]], extra_groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    grouped_cards: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for group in base_groups:
+        grouped_cards[group["date"]].extend(group["cards"])
+    for group in extra_groups:
+        grouped_cards[group["date"]].extend(group["cards"])
+    return [{"date": date, "cards": grouped_cards[date]} for date in sorted(grouped_cards.keys(), reverse=True)]
+
+
+def inject_archive_into_task(task: dict[str, Any], archive_bundle: dict[str, Any] | None) -> dict[str, Any]:
+    if not archive_bundle or not archive_bundle["items"]:
+        return task
+    if archive_bundle.get("summary_card"):
+        task["summary_cards"] = [*task.get("summary_cards", []), archive_bundle["summary_card"]]
+    task["timeline_groups"] = merge_timeline_groups(task.get("timeline_groups", []), archive_bundle["timeline_groups"])
+    task["evidence_links"] = [*archive_bundle["evidence_links"], *task.get("evidence_links", [])]
+    latest_dates = [task.get("latest_update", ""), archive_bundle["stats"].get("latest_date", "")]
+    task["latest_update"] = max(date for date in latest_dates if date)
+    return task
 
 
 def parse_mdit_journal_events(text: str) -> list[dict[str, Any]]:
@@ -802,7 +1236,13 @@ def build_branch_card_copy(branch_id: str, branch_title: str, related_tasks: lis
         return {
             "title": branch_title,
             "summary": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。",
-            "result": "当前成果：共享审计已经从 0.55@100 抬到 0.75@300/500。",
+            "result": "当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。",
+        }
+    if branch_id == "lingbot-va":
+        return {
+            "title": branch_title,
+            "summary": "围绕视频 latent + 动作联合建模的世界模型后训练，先把单任务 smoke、离线 demo 导出和显存边界摸清。",
+            "result": "当前成果：单任务单卡 smoke、checkpoint 保存和离线 demo exporter 都已打通。",
         }
     if branch_id == "lelan":
         return {
@@ -834,6 +1274,11 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     recheck20_path = ROOT / "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_20.json"
     recheck100_path = ROOT / "ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741/root_layout_recheck_100.json"
     regression_path = ROOT / "docs/baseline-regression-reference.json"
+    archive_results_table_path = ROOT / "research_archive/tasks/pdit/media/tables/pdit_key_results.csv"
+    archive_modules_table_path = ROOT / "research_archive/tasks/pdit/media/tables/pdit_core_modules.csv"
+    baseline100_record_path = ROOT / "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048.json"
+    h1_record_path = ROOT / "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914.json"
+    h2_record_path = ROOT / "autoresearch_records/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130.json"
 
     doc_text = read_text(doc_path)
     doc_sections = parse_markdown_sections(doc_text)
@@ -842,6 +1287,11 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     manifest = read_json(manifest_path)
     recheck20 = read_json(recheck20_path)
     recheck100 = read_json(recheck100_path)
+    baseline100_record = read_json(baseline100_record_path)
+    h1_record = read_json(h1_record_path)
+    h2_record = read_json(h2_record_path)
+    config = summary.get("config", {})
+    dataset_sizes = summary.get("dataset_sizes", {})
 
     success_points = sorted_success_points(audit.get("success_by_epoch"))
     tail_epochs = summary.get("epoch_summaries", [])
@@ -1026,6 +1476,8 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     ]
 
     evidence_links = [
+        make_link("PDIT 关键结果表", archive_results_table_path, "结构化汇总当前主线和关键 challenger 的结果判断。"),
+        make_link("PDIT 技术模块表", archive_modules_table_path, "结构化汇总当前主线的技术骨架与扩展方向。"),
         make_link("FM/DiT 恢复进展", doc_path, "完整记录了修复项、Baseline@100/500、统计特征增强对照与动态候选的判断。"),
         make_link("训练模型审计", training_audit_path, "补充了修复前后模型与训练行为的核对过程。"),
         make_link("PDIT audit report", audit_path, "包含 success_by_epoch 和当前 best checkpoint。"),
@@ -1044,9 +1496,9 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
             "title": "PDIT baseline 在 500 epoch 锚定 0.95@20 / 0.85@100",
             "summary": "修复训练与审计链后，点云主线不再在 300-500 epoch 崩塌，当前最强策略已经有 20 回合与 100 回合两轮复核。",
             "metrics": [
-                make_metric("success@20", "0.95"),
+                make_metric("best success@20", "0.95"),
                 make_metric("100 回合复核", "0.85"),
-                make_metric("锚点", "@500"),
+                make_metric("best epoch", "500"),
             ],
             "meta": "PDIT 基线恢复与锚点固化",
             "path": "homepage/tasks/pdit-anchor/",
@@ -1074,60 +1526,76 @@ def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
         make_metric("100 回合复核", format_ratio(recheck100["success_rate"])),
         make_metric("best epoch", audit["best_success_epoch"]),
     ]
+    core_tables = [
+        {
+            "title": "PDIT 关键结果对照",
+            "columns": ["路线", "关键结果", "长回合复核", "当前判断"],
+            "rows": [
+                ["Baseline@100", f"{baseline100_record.get('best_success_rate', 0.0):.2f}@20", "-", "证明点云主线可训练性恢复"],
+                ["Baseline@500", f"{audit['success_by_epoch']['500']:.2f}@20", f"{recheck100['success_rate']:.2f}@100", "当前行为锚点"],
+                ["H1 统计增强", f"{h1_record.get('best_success_rate', 0.0):.2f}@100", "-", "弱于 baseline，不再作为主结论"],
+                ["H2 动力学候选", f"{h2_record.get('best_success_rate', 0.0):.2f}@100", "-", "有提升，但证据不足以接管主线"],
+            ],
+            "note": "这张表先回答“哪条路线当前成立”，再谈具体结构；对外展示时，PDIT 最重要的结论仍是 baseline@500 已经站成锚点。",
+        },
+        {
+            "title": "PDIT 核心技术模块",
+            "columns": ["技术模块", "当前采用", "当前作用", "后续升级位"],
+            "rows": [
+                ["时序点云观测", f"{config.get('n_obs_steps', 3)} 帧 point cloud 条件输入", "把几何观测稳定送进策略，而不是只依赖单步状态回归。", "可以升级成 RGB / RGB+text 多模态观测编码。"],
+                ["Flow Matching + DiT 策略骨架", f"{config.get('num_blocks', 6)}-block DiT + FM action trajectory generation", "用序列生成方式预测未来动作过程，而不是只做一步动作分类。", "可继续扩成更强的序列生成策略或 latent trajectory 建模。"],
+                ["Action chunk 表达", f"{config.get('n_pred_steps', 32)} 步未来轨迹", "让策略直接学习执行过程，对 manipulation 比单步动作更友好。", "可接 subgoal / subtask 边界或层级动作抽象。"],
+                ["行为审计闭环", "loss + rollout success + 20/100 回合复核", "把训练结果和真实 rollout 表现绑到同一套选模口径上。", "后续可直接复用到多模态策略、VLA 或世界模型对照实验。"],
+            ],
+            "note": f"当前训练数据规模约为 train {dataset_sizes.get('train', '-')} / valid {dataset_sizes.get('valid', '-') }；这张表只保留对外展示真正重要的技术结构，不再重复训练时间线。",
+        },
+    ]
 
     return {
         "id": task_cfg["id"],
         "title": task_cfg["title"],
         "summary": task_cfg["summary"],
+        "core_summary": "PDIT 这一页先展示我已经搭起来的模仿学习主线能力，再展示关键路线对照和审计证据，而不是把实验日志原样搬上来。",
         "status": task_cfg["status"],
         "status_group": status_group(task_cfg["status"]),
         "page_path": f"homepage/tasks/{task_cfg['id']}/",
         "branch_ids": task_cfg["branch_ids"],
         "latest_update": "2026-04-09",
         "hero_metrics": hero_metrics,
-        "report_intro": "PDIT 这条线的任务不是继续堆实验数量，而是把点云主线从“曾经不可信的训练栈”修成一个能反复复核、能承接后续比较的稳定锚点。",
+        "report_intro": "PDIT 这条线对外最值得讲的，不只是“把 baseline 修回来了”，而是已经搭出一条从观测到 action chunk 的模仿学习主线，并把训练、选模、行为审计与回归复核做成了可持续迭代的研究框架。",
         "summary_cards": [
             {
-                "eyebrow": "Anchor",
-                "title": "行为锚点已经稳定下来",
-                "body": "Baseline@500 在离线 20 回合达到 0.95，根目录重整后的 100 回合复核仍有 0.85，说明当前最优策略不是一次性好运气。",
+                "eyebrow": "IL Framework",
+                "title": "把点云观测到 action chunk 的模仿学习主线真正搭起来了",
+                "body": "这条线已经不只是“能训练一个模型”，而是从 3 帧点云观测到 32 步动作 chunk 的策略学习链路、损失监控和离线行为评估全都打通了。",
+                "metrics": [
+                    make_metric("观测帧", config.get("n_obs_steps", 3)),
+                    make_metric("动作 chunk", config.get("n_pred_steps", 32)),
+                    make_metric("obs", "point cloud"),
+                ],
+            },
+            {
+                "eyebrow": "Evaluation",
+                "title": "把训练、选模和行为审计做成了可复核的闭环",
+                "body": "最强点不再靠单次试验自证，而是同时拥有 train/valid loss、离线 success 审计、20 回合短审计和 100 回合复核四层证据。",
                 "metrics": [
                     make_metric("20 回合", "0.95"),
                     make_metric("100 回合", "0.85"),
-                    make_metric("best epoch", "500"),
+                    make_metric("锚点", "@500"),
                 ],
             },
             {
-                "eyebrow": "Repair",
-                "title": "训练 / 保存 / 审计三条链都修过一轮",
-                "body": "导入路径污染、checkpoint 原子保存、audit-only stage 覆盖和 RLBench 挂起隔离等问题被集中处理，当前结果终于能按同一口径解释。",
+                "eyebrow": "Extensibility",
+                "title": "主线之外已经留出了向多模态策略继续扩展的接口",
+                "body": "PDIT 线里除了点云 baseline，还已经开始做 RGB+Text / adapter 公平对照与迁移接口，这意味着这条主线后面可以自然接向更强的多模态策略或世界模型数据层。",
                 "metrics": [
-                    make_metric("关键修复", "6"),
-                    make_metric("audit chain", "稳定"),
-                    make_metric("行为回归", "通过"),
-                ],
-            },
-            {
-                "eyebrow": "Ablation",
-                "title": "统计特征增强对照作废，官方式动态候选仍属待证",
-                "body": "统计特征增强路径存在语义 bug，不能再拿来支持结构结论；更接近官方 DiT 动态的候选在 valid loss 上有优势，但还没有行为层面的替代证据。",
-                "metrics": [
-                    make_metric("增强对照", "作废"),
-                    make_metric("动态候选 best valid", "0.572"),
-                    make_metric("当前锚点", "baseline"),
-                ],
-            },
-            {
-                "eyebrow": "Current",
-                "title": "现在要解决的是后期稳定性，而不是可训练性",
-                "body": "PDIT 已经证明自己能学起来，真正要继续追的是怎样减少中后期漂移、让 success 与 valid signal 更长期对齐。",
-                "metrics": [
-                    make_metric("100 epoch", "可用"),
-                    make_metric("500 epoch", "可复核"),
-                    make_metric("问题", "晚期泛化"),
+                    make_metric("公平对照", "已铺开"),
+                    make_metric("adapter 线", "已接入"),
+                    make_metric("扩展方向", "RGB+Text"),
                 ],
             },
         ],
+        "core_tables": core_tables,
         "timeline_groups": timeline_groups,
         "findings": findings,
         "evidence_links": evidence_links,
@@ -1148,12 +1616,16 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     summary_path = ROOT / task_cfg["artifact_paths"]["summary"]
     wandb_summary_path = ROOT / task_cfg["artifact_paths"]["resume_wandb"]
     resume_record_path = ROOT / task_cfg["artifact_paths"]["resume_record"]
+    archive_results_table_path = ROOT / "research_archive/tasks/mdit/media/tables/mdit_key_results.csv"
+    archive_modules_table_path = ROOT / "research_archive/tasks/mdit/media/tables/mdit_core_modules.csv"
 
     journal_text = read_text(journal_path)
     journal_events = parse_mdit_journal_events(journal_text)
     best_path = parse_best_path(best_path_path)
     audit = read_json(audit_path)
     summary = read_json(summary_path)
+    config = summary.get("config", {})
+    dataset_sizes = summary.get("dataset_sizes", {})
     # 500 续训的阶段结论以 autoresearch 记录和共享审计为准；
     # 本地 wandb 快照只是补充展示，仓库里不一定长期保留。
     wandb_summary = read_json_if_exists(wandb_summary_path)
@@ -1376,6 +1848,8 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     ]
 
     evidence_links = [
+        make_link("MDIT 关键结果表", archive_results_table_path, "结构化汇总主线、stabilized 与对照路线的当前判断。"),
+        make_link("MDIT 技术模块表", archive_modules_table_path, "结构化汇总多模态主线当前已经落成的核心技术模块。"),
         make_link("研究日志", journal_path, "append-only 研究日志，记录每条对照线的推进、失败和接管。"),
         make_link("当前主线路径", best_path_path, "当前主线锚点、best checkpoint 和晋级逻辑。"),
         make_link("执行手册", manual_path, "训练、审计、接管与晋级规则的固定手册。"),
@@ -1387,24 +1861,24 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
 
     home_entries = [
         {
-            "date": "2026-04-18",
-            "group": "in_progress",
+            "date": "2026-04-19",
+            "group": "done",
             "task_id": task_cfg["id"],
             "branch_ids": task_cfg["branch_ids"],
             "badge": "MDIT 主线",
-            "title": "MDIT 主线恢复 100→500 续训接管",
-            "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+            "title": "MDIT 主线固化 0.75@500，并收束出可复现的多模态配方",
+            "summary": "当前工作重点已经从继续开相似对照，转成补齐共享审计点位，并把 3-token 条件组织、分阶段多模态适配、encoder-decoder DiT 与 uniform FM 路径固定为主线配方。",
             "metrics": [
-                make_metric("当前锚点", "0.55@100"),
-                make_metric("续训目标", "500"),
-                make_metric("状态", "恢复中"),
+                make_metric("best success@20", format_ratio(resume_best_success) if resume_best_success is not None else "0.75"),
+                make_metric("100 epoch 锚点", format_ratio(audit["success_by_epoch"]["100"])),
+                make_metric("best epoch", resume_best_epoch if resume_best_epoch is not None else "300"),
             ],
-            "meta": "主线从筛选期进入长训接管期",
+            "meta": "长训结果与主线配方已收束",
             "path": "homepage/tasks/mdit-mainline/",
         },
         {
             "date": "2026-04-17",
-            "group": "in_progress",
+            "group": "done",
             "task_id": task_cfg["id"],
             "branch_ids": task_cfg["branch_ids"],
             "badge": "RGB+Text Anchor",
@@ -1421,28 +1895,111 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     ]
 
     latest_resume_epoch = wandb_summary.get("epoch")
+    # MDIT 第二个指标更适合展示“100 epoch 锚点”，
+    # 它和 PDIT 的“100 回合复核”在结构上对齐，但语义上不是同一回事。
     hero_metrics = [
-        make_metric("早期锚点", "0.55@100"),
-        make_metric("best success", format_ratio(resume_best_success) if resume_best_success is not None else "0.55"),
-        make_metric("500 轮审计", format_ratio(resume_success_500) if resume_success_500 is not None else (f"epoch {latest_resume_epoch}" if latest_resume_epoch is not None else "100→500")),
+        make_metric("best success@20", format_ratio(resume_best_success) if resume_best_success is not None else "0.75"),
+        make_metric("100 epoch 锚点", format_ratio(audit["success_by_epoch"]["100"])),
+        make_metric("best epoch", resume_best_epoch if resume_best_epoch is not None else (latest_resume_epoch if latest_resume_epoch is not None else "500")),
+    ]
+    core_tables = [
+        {
+            "title": "MDIT 关键结果对照",
+            "columns": ["路线", "关键点位", "长训结果", "当前判断"],
+            "rows": [
+                [
+                    "RGB+Text 主线",
+                    f"0.25@50 / {audit['success_by_epoch']['100']:.2f}@100",
+                    f"{format_ratio(resume_success_300) if resume_success_300 is not None else '-'}@300 / {format_ratio(resume_success_500) if resume_success_500 is not None else '-'}@500",
+                    "当前继续推进的主线",
+                ],
+                [
+                    "Stabilized 对照",
+                    "0.35@100",
+                    "-",
+                    "弱于主线，只保留参考价值",
+                ],
+                [
+                    "Faithful recipe",
+                    "-",
+                    "-",
+                    "首轮卡在启动链，暂不作为方法结论",
+                ],
+                [
+                    "Strict MTDP",
+                    "-",
+                    "-",
+                    "当前未通过同一 gate，不接管主线",
+                ],
+            ],
+            "note": "这张表先说明哪条路线真的成立，再谈多模态结构和扩展方向；当前最重要的结论，是 RGB+Text 主线已经把共享审计从 0.55@100 抬到 0.75@300/500。",
+        },
+        {
+            "title": "MDIT 核心技术调整",
+            "columns": ["调整点", "原版做法", "当前做法", "调整意义"],
+            "rows": [
+                [
+                    "条件组织",
+                    "robot state + 多相机 CLS + text 展平成单个全局条件向量",
+                    "按观测步组织 3 个 cond token，再送入 backbone",
+                    "把多视角与文本条件从“压成一个向量”改成“保留短序列结构”，减少全局向量对时序语义的过度压缩。",
+                ],
+                [
+                    "多模态融合",
+                    "观测直接 concat / flatten 后统一进入主干",
+                    "5 路 CLIP 视觉、文本和状态先各自适配，再在 step 内融合",
+                    "先对齐模态尺度再融合，减轻视觉、文本和状态直接拼接造成的语义污染，多模态条件更稳定。",
+                ],
+                [
+                    "骨干结构",
+                    "单塔 DiT 直接在动作序列 + 全局条件上做噪声预测",
+                    "encoder 先编码 cond tokens，decoder 再生成动作轨迹",
+                    "把条件建模和动作生成拆开，避免条件语义与动作噪声混在一条通路里，长程控制更可解释。",
+                ],
+                [
+                    "FM 动力学",
+                    "beta timestep sampling + 100-step Euler ODE",
+                    "uniform 采样 + exp flow schedule + 10-step 推理",
+                    "把训练与推理路径压到当前算力能稳定迭代的区间，先保证主线可持续审计，再谈更重的 ODE 配置。",
+                ],
+                [
+                    "时序与执行口径",
+                    "2 obs / 100 horizon + state/action min-max + 原生推理接口",
+                    "3 obs / 32 pred + legacy 状态归一化 + 共享动作后处理链",
+                    "把训练窗口、归一化和 rollout 执行口径统一到同一主线，减少训练结果与共享审计之间的接口漂移。",
+                ],
+            ],
+            "note": f"当前训练数据规模约为 train {dataset_sizes.get('train', '-')} / valid {dataset_sizes.get('valid', '-')}；这里保留的是已经改变主线语义和训练口径的结构调整，而不是实验过程记录。",
+        },
     ]
 
     return {
         "id": task_cfg["id"],
         "title": task_cfg["title"],
         "summary": task_cfg["summary"],
+        "core_summary": "当前主线已经在共享审计下站稳 0.75@500；页面重点不再是继续扩散相似对照，而是把已经收束出来的主线配方、图表证据和时间线判断讲清楚。",
         "status": task_cfg["status"],
         "status_group": status_group(task_cfg["status"]),
         "page_path": f"homepage/tasks/{task_cfg['id']}/",
         "branch_ids": task_cfg["branch_ids"],
         "latest_update": "2026-04-19",
         "hero_metrics": hero_metrics,
-        "report_intro": "MDIT 这条线现在已经不只是“把 100→500 续训接起来”，而是要把 0.55@100 的早期锚点与 0.75@300/500 的长训结果收进同一条共享审计叙事里，避免新结论继续散落在 fixes 和 run note 中。",
+        "report_intro": "MDIT 当前已经不是“哪条对照还要不要再试”的阶段，而是“0.75@500 的主线结果已经站住，接下来要把主线配方和共享审计叙事一起固定下来”的阶段。",
         "summary_cards": [
             {
-                "eyebrow": "Anchor",
-                "title": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
-                "body": "0.55@100 仍是当前锁定的早期锚点；在此基础上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明这条线不是只能停在 100 epoch。",
+                "eyebrow": "Multimodal IL",
+                "title": "把 5 路 RGB + 文本到 action chunk 的多模态主线真正立起来了",
+                "body": "这条线已经明确落成了以 CLIP 视觉语义和任务文本为条件的多模态策略主线，而不是停留在“加点视觉、加点文本”的 loose idea。",
+                "metrics": [
+                    make_metric("RGB 视角", len(config.get("camera_names") or [])),
+                    make_metric("观测帧", config.get("n_obs_steps", 3)),
+                    make_metric("动作 chunk", config.get("n_pred_steps", 32)),
+                ],
+            },
+            {
+                "eyebrow": "Takeover",
+                "title": "把同一条主线的 100→500 续训接管与共享审计真正打通了",
+                "body": "这不是重新起一个匿名长训 run，而是把已有最优主线在同一 lineage 上接管到 500，并继续用共享审计口径去判断它是否真的变好。",
                 "metrics": [
                     make_metric("epoch 100", "0.55"),
                     make_metric("epoch 300", format_ratio(resume_success_300) if resume_success_300 is not None else "0.75"),
@@ -1450,42 +2007,25 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
                 ],
             },
             {
-                "eyebrow": "Resume",
-                "title": "100→500 续训接管已经真正跑通并完成共享审计",
-                "body": "这轮不只是把 supervisor 和 optimizer 兼容补上，而是已经让同一条 best-route lineage 从 epoch_0100 真正续到 500，并拿回可用于判断的共享审计结果。",
-                "metrics": [
-                    make_metric("best success", format_ratio(resume_best_success) if resume_best_success is not None else "0.75"),
-                    make_metric("best epoch", resume_best_epoch if resume_best_epoch is not None else "300"),
-                    make_metric("状态", "已审计"),
-                ],
-            },
-            {
                 "eyebrow": "Screening",
-                "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经完成出清",
-                "body": "平滑动作对照只到 0.35，faithful 首败被确认是缓存 / 网络问题，严格 MTDP 对照也没有越过共享闸门。主线预算已经重新收束，不再被相似弱候选打断。",
+                "title": "把对照路线放进同一 gate 体系后，主线终于收束了",
+                "body": "stabilized、faithful、strict MTDP 三条路线都已经在统一共享审计口径下被筛过，这条线不再是零散试验堆积，而是有明确淘汰与接管规则的主线研究。",
                 "metrics": [
                     make_metric("stabilized@100", "0.35"),
                     make_metric("faithful", "启动链故障"),
                     make_metric("严格 MTDP", "未过 gate"),
                 ],
             },
-            {
-                "eyebrow": "Audit",
-                "title": "当前缺口是补齐 100 epoch 审计点位，而不是再开新 run",
-                "body": "500 续训 run 当前仍被自动标成 collapse，不是因为 300/500 表现差，而是因为这个续训 run 的共享审计缺了 epoch_0100 点位。下一步应该先把审计叙事补完整。",
-                "metrics": [
-                    make_metric("trial_score", str(resume_record.get("trial_score", "-1.0"))),
-                    make_metric("100 点位", "缺失"),
-                    make_metric("recipe drift", "无"),
-                ],
-            },
         ],
+        "core_tables": core_tables,
         "timeline_groups": timeline_groups,
         "findings": findings,
         "evidence_links": evidence_links,
         "chart_ids": ["mdit-audit-rank", "mdit-loss-curve", "mdit-mse-curve"],
         "media_items": media_items,
         "home_entries": home_entries,
+        "prefer_home_entries": True,
+        "preserve_report_intro": True,
         "task_badge": "MDIT 主线",
         "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
         "event_digest": {
@@ -1501,6 +2041,241 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
                 "trial_score": resume_record.get("trial_score"),
             },
         },
+    }
+
+
+def build_lingbot_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    guide_path = ROOT / task_cfg["featured_paths"][0]
+    desk_path = ROOT / task_cfg["featured_paths"][1]
+    fixes_path = ROOT / task_cfg["featured_paths"][2]
+    readme_path = ROOT / task_cfg["featured_paths"][3]
+    eval_summary_path = ROOT / task_cfg["artifact_paths"]["eval_summary"]
+    eval_table_path = ROOT / task_cfg["artifact_paths"]["eval_table"]
+    wandb_summary_path = ROOT / task_cfg["artifact_paths"]["wandb_summary"]
+
+    guide_text = read_text(guide_path)
+    desk_text = read_text(desk_path)
+    eval_summary = json.loads(read_text(eval_summary_path))[0]
+    wandb_summary = read_json(wandb_summary_path)
+
+    latent_loss = float(wandb_summary["loss_metrics/global_avg_video_loss"])
+    action_loss = float(wandb_summary["loss_metrics/global_avg_action_loss"])
+    grad_norm = float(wandb_summary["grad_norm"])
+    video_mse = float(eval_summary["video_mse"])
+    action_mse = float(eval_summary["action_mse"])
+    pred_video_frames = int(eval_summary["pred_video_frames"])
+    pred_action_steps = int(eval_summary["pred_action_steps"])
+
+    charts["lingbot-smoke-metrics"] = build_compare_cards(
+        "lingbot-smoke-metrics",
+        title="LingBot-VA smoke 训练指标",
+        description="先把单任务单卡 smoke 跑通，用最小可复现链路验证视频 latent + 动作联合后训练是否真的能前向、反向、更新和保存。",
+        cards=[
+            {
+                "badge": "Smoke",
+                "title": "单任务单卡训练链路已贯通",
+                "summary": "当前 smoke 使用单任务、单步、只训练输出头的配置，重点验证训练链路而不是追求最终任务效果。",
+                "metrics": [
+                    make_metric("latent_loss", f"{latent_loss:.4f}"),
+                    make_metric("action_loss", f"{action_loss:.4f}"),
+                    make_metric("grad_norm", f"{grad_norm:.2f}"),
+                ],
+            },
+            {
+                "badge": "Checkpoint",
+                "title": "checkpoint 与 WandB 记录已经稳定产出",
+                "summary": "这条线现在已经能稳定保存新的 transformer checkpoint，并把最小训练指标留到 WandB，后面可以在这个基础上继续扩展正式训练。",
+                "metrics": [
+                    make_metric("step", "1"),
+                    make_metric("WandB", "已打通"),
+                    make_metric("状态", "可复现"),
+                ],
+            },
+        ],
+    )
+    charts["lingbot-offline-eval"] = build_bar_chart(
+        "lingbot-offline-eval",
+        title="LingBot-VA 离线 demo 指标",
+        description="离线 demo exporter 已经能把模型预测视频、动作轨迹和误差统计一起导出来，用最小指标先看预测质量是否站住。",
+        categories=["video_mse", "action_mse"],
+        values=[video_mse, action_mse],
+        color=LINE_COLORS["blue"],
+        fmt="float",
+        note=f"当前导出使用 {eval_summary['num_chunks']} chunks / {eval_summary['num_inference_steps']} video steps / {eval_summary['action_num_inference_steps']} action steps，最终得到 {pred_video_frames} 帧预测视频和 {pred_action_steps} 个预测动作步，优先验证本地可视化链路。",
+    )
+    charts["lingbot-system-boundary"] = build_grouped_bar_chart(
+        "lingbot-system-boundary",
+        title="单卡路径与当前边界",
+        description="这张图不讲 success rate，而是明确现在这台 24GB 卡到底能做什么、卡在什么地方，避免后续世界模型推进时误判算力边界。",
+        categories=["单任务 smoke", "离线 demo 导出", "全参数单卡 post-train"],
+        series=[
+            {"name": "已验证", "values": [1.0, 1.0, 0.0], "color": LINE_COLORS["teal"]},
+            {"name": "当前受限", "values": [0.0, 0.0, 1.0], "color": LINE_COLORS["rust"]},
+        ],
+        fmt="percent",
+        note="当前 RTX 5090 D v2 24GB 已确认可以完成 smoke 和离线 demo，但不能直接承载全参数单卡 RoboTwin post-train。",
+    )
+
+    timeline_groups = [
+        {
+            "date": "2026-04-19",
+            "cards": [
+                {
+                    "badge": "Smoke",
+                    "title": "单任务单卡 smoke 训练链路跑通",
+                    "summary": "先把 LingBot-VA 的最小训练闭环跑通：单任务数据读取、前向、反向、optimizer update、checkpoint 保存和 WandB 记录都在一条链上验证过了。",
+                    "metrics": [
+                        make_metric("latent_loss", f"{latent_loss:.4f}"),
+                        make_metric("action_loss", f"{action_loss:.4f}"),
+                        make_metric("grad_norm", f"{grad_norm:.2f}"),
+                    ],
+                    "outcome": "世界模型后训练的最小可复现入口已经站住，后续不需要再从“机器能不能跑”重新摸索。",
+                    "links": [
+                        card_link("项目速读", guide_path),
+                        card_link("阶段 desk", desk_path),
+                    ],
+                },
+                {
+                    "badge": "Demo Export",
+                    "title": "离线 demo exporter 打通本地单任务验证",
+                    "summary": "预测视频、动作对照和误差指标已经能从同一次导出里一起产出，不再只是拿 loss 判断这条线有没有学到东西。",
+                    "metrics": [
+                        make_metric("video_mse", f"{video_mse:.4f}"),
+                        make_metric("action_mse", f"{action_mse:.4f}"),
+                        make_metric("pred frames", pred_video_frames),
+                    ],
+                    "outcome": "这条线已经从“只有训练日志”推进到“有视频预测和离线指标”的可展示阶段。",
+                    "links": [
+                        card_link("离线导出总结", eval_summary_path),
+                        card_link("summary.csv", eval_table_path),
+                    ],
+                },
+                {
+                    "badge": "Boundary",
+                    "title": "单卡全参数 post-train 的真实边界被明确暴露出来",
+                    "summary": "当前 24GB 单卡不能直接承载全参数 RoboTwin post-train，世界模型这条线后面必须朝多卡或参数高效训练方案推进。",
+                    "metrics": [
+                        make_metric("显存", "24GB"),
+                        make_metric("full FT", "受限"),
+                        make_metric("下一步", "多卡 / PEFT"),
+                    ],
+                    "outcome": "后续研究方向已经从“再硬挤单卡”切到“明确训练策略与评测链路”，路线判断更清晰了。",
+                    "links": [
+                        card_link("阶段 desk", desk_path),
+                        card_link("问题修复日志", fixes_path),
+                    ],
+                },
+            ],
+        }
+    ]
+
+    findings = [
+        {
+            "title": "这条线本质上是视频 latent + 动作联合建模，不是 RL 成功率训练",
+            "body": "LingBot-VA 当前更接近视频世界模型 / VLA 后训练：输入是视频 latent、动作序列和文本条件，训练目标是新的 transformer 权重，真正的任务效果要靠后续推理或评测去验证。",
+        },
+        {
+            "title": "当前最值钱的进展不是数值有多高，而是最小训练闭环和离线展示链已经打通",
+            "body": "Smoke 路径、checkpoint 保存、WandB 记录和离线 demo exporter 一起站住之后，后面可以把主要精力放到训练策略和评测，而不是继续做纯工程排障。",
+        },
+        {
+            "title": "单卡全参数训练受限已经是明确事实，后续推进要围绕多卡或参数高效训练来设计",
+            "body": "当前机器不能直接承载全参数单卡 RoboTwin post-train，这个边界已经在工程上被验证过了；下一步更重要的是如何缩窄训练对象、调度算力和构造评测闭环。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("LingBot-VA 项目速读", guide_path, "快速说明视频 latent、动作序列、文本条件和 transformer 后训练之间的关系。"),
+        make_link("LingBot-VA 研究 desk", desk_path, "当前阶段结论、成功 smoke、离线 demo exporter 与机器边界的集中总结。"),
+        make_link("LingBot-VA fixes", fixes_path, "保留 smoke、导出链和单卡显存问题的事实源。"),
+        make_link("LingBot-VA docs README", readme_path, "外部仓库文档入口。"),
+        make_link("离线导出 summary.json", eval_summary_path, "包含 video_mse、action_mse 与导出参数。"),
+        make_link("离线导出 summary.csv", eval_table_path, "适合后续直接进表格或专题页。"),
+        make_link("Smoke WandB summary", wandb_summary_path, "保留 latent_loss、action_loss、grad_norm 的最小训练指标。"),
+    ]
+
+    home_entries = [
+        {
+            "date": "2026-04-20",
+            "group": "in_progress",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "世界模型线",
+            "title": "LingBot-VA 世界模型后训练已打通单任务 smoke 与离线 demo",
+            "summary": "这条线现在的关键不是直接报 success rate，而是已经打通视频 latent + 动作联合后训练的最小链路，并明确了单卡显存边界与后续多卡 / PEFT 方向。",
+            "metrics": [
+                make_metric("smoke step", "1"),
+                make_metric("offline action_mse", f"{action_mse:.4f}"),
+                make_metric("当前阶段", "smoke+demo"),
+            ],
+            "meta": "LingBot-VA 世界模型研究切入",
+            "path": "homepage/tasks/lingbot-va-world-model/",
+        }
+    ]
+
+    core_tables = [
+        {
+            "title": "LingBot-VA 关键结果对照",
+            "columns": ["验证项", "当前结果", "当前含义", "后续推进"],
+            "rows": [
+                ["单任务 smoke", "1 step + checkpoint + WandB", "最小训练闭环已经打通", "继续放大到更长步数或更完整训练对象"],
+                ["离线 demo exporter", f"video_mse={video_mse:.4f} / action_mse={action_mse:.4f}", "预测视频与动作已经能一起导出并量化", "接正式评测脚本或更多任务片段"],
+                ["单卡全参数 post-train", "当前受限", "24GB 单卡不能直接做全参数 RoboTwin post-train", "转向多卡或参数高效训练方案"],
+                ["任务定位", "世界模型 / VLA 后训练", "不再把这条线误解成 RL success rate 训练", "把重点放到模型结构、训练策略和评测闭环"],
+            ],
+            "note": "这张表先回答“这条世界模型线已经站住了什么”，再讨论更长训练或更重算力配置。",
+        },
+        {
+            "title": "LingBot-VA 核心技术模块",
+            "columns": ["技术模块", "当前采用", "当前作用", "扩展方向"],
+            "rows": [
+                ["视频 latent + 动作联合建模", "同一 transformer 同时建模视频 latent、动作与文本条件", "让世界模型和动作生成在一个统一 backbone 里对齐。", "继续往更完整的 VLA / 世界模型评测推进。"],
+                ["SMOKE_MODE 最小训练链", "只训练输出头，先验证训练闭环", "把工程可行性和方法效果拆开，先确认训练链能跑通。", "逐步放开更多层，探索参数高效训练。"],
+                ["离线 demo exporter", "prediction / metrics / summary 一起导出", "让这条线不只剩下 loss，而是有视频和动作层面的可视化证据。", "接更多任务、更多片段和正式评测脚本。"],
+                ["语言条件与任务语义", "文本 embedding 已进入训练输入", "已经具备向语言监督与更强任务条件控制扩展的基础。", "后续可继续往 subtask、instruction 或更强 VLA 条件推进。"],
+            ],
+            "note": "这张表强调的是世界模型后训练真正已经落地的技术模块，而不是把外部仓库里的全部组件都搬上来。",
+        },
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "core_summary": "这页先把 LingBot-VA 世界模型后训练已经站住的能力讲清楚：单任务 smoke、离线 demo 导出和单卡边界都已经有证据，再往更正式的训练与评测推进。",
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": "2026-04-19",
+        "hero_metrics": [
+            make_metric("smoke step", "1"),
+            make_metric("offline action_mse", f"{action_mse:.4f}"),
+            make_metric("当前阶段", "smoke+demo"),
+        ],
+        "report_intro": "LingBot-VA 这条线现在最重要的不是直接报一个 manipulation success rate，而是已经把视频 latent + 动作联合建模的最小训练闭环、离线 demo 可视化和单卡训练边界全部摸清。",
+        "summary_cards": [
+            {
+                "eyebrow": "World Model",
+                "title": "视频 latent + 动作联合后训练入口已打通",
+                "body": "这条线已经从“只会看代码”推进到“能跑 smoke、能导 demo、知道算力边界”，适合继续往世界模型 / VLA 后训练深入。",
+                "metrics": [
+                    make_metric("任务", "click_bell"),
+                    make_metric("模式", "single-task smoke"),
+                    make_metric("状态", "推进中"),
+                ],
+            }
+        ],
+        "core_tables": core_tables,
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": ["lingbot-smoke-metrics", "lingbot-offline-eval", "lingbot-system-boundary"],
+        "media_items": media_items,
+        "home_entries": home_entries,
+        "task_badge": "世界模型线",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
+        "manifest_note": safe_excerpt(first_sentence(clean_text(desk_text), limit=110) or clean_text(guide_text)),
     }
 
 
@@ -1603,9 +2378,9 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
             "title": "LeLaN 自动研究链路完成首轮固化",
             "summary": "先把 5 路 RGB、3 帧观测、8 步动作的主线配方，以及 EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
             "metrics": [
-                make_metric("观测帧", "3"),
+                make_metric("观测设置", "5 路 RGB / 3 帧"),
                 make_metric("动作步数", "8"),
-                make_metric("100 epoch gate", "0.45"),
+                make_metric("gate@100", "0.45"),
             ],
             "meta": "当前还是工程铺设期，结果页会在正式 run 后变厚",
             "path": "homepage/tasks/lelan-pipeline/",
@@ -1622,9 +2397,9 @@ def build_lelan_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_ite
         "branch_ids": task_cfg["branch_ids"],
         "latest_update": "2026-04-12",
         "hero_metrics": [
-            make_metric("输入", "5 路 RGB / 3 帧"),
+            make_metric("观测设置", "5 路 RGB / 3 帧"),
             make_metric("动作步数", "8"),
-            make_metric("100 epoch gate", "0.45"),
+            make_metric("gate@100", "0.45"),
         ],
         "report_intro": "LeLaN 这页目前更像“执行链路报告”，因为它的首要目标是把训练、评估、选模和审计变成一套能长期追加的自动研究流程。",
         "summary_cards": [
@@ -2014,17 +2789,23 @@ def build_infra_task(
 
 def build_task(task_cfg: dict[str, Any], charts: dict[str, Any], research_desk_entries: list[dict[str, Any]]) -> dict[str, Any]:
     media_items = build_media_items(task_cfg["id"], task_cfg["title"], task_cfg.get("media_entries"))
+    chart_media_items = build_archive_chart_items(task_cfg["id"], task_cfg["title"])
     if task_cfg["id"] == "dummy-sim2real-platform":
-        return build_dummy_sim2real_task(task_cfg, charts, media_items)
-    if task_cfg["id"] == "pdit-anchor":
-        return build_pdit_task(task_cfg, charts, media_items)
-    if task_cfg["id"] == "mdit-mainline":
-        return build_mdit_task(task_cfg, charts, media_items)
-    if task_cfg["id"] == "lelan-pipeline":
-        return build_lelan_task(task_cfg, charts, media_items)
-    if task_cfg["id"] == "infra-audit":
-        return build_infra_task(task_cfg, charts, media_items, research_desk_entries)
-    raise ValueError(f"Unsupported task id: {task_cfg['id']}")
+        task = build_dummy_sim2real_task(task_cfg, charts, media_items)
+    elif task_cfg["id"] == "pdit-anchor":
+        task = build_pdit_task(task_cfg, charts, media_items)
+    elif task_cfg["id"] == "mdit-mainline":
+        task = build_mdit_task(task_cfg, charts, media_items)
+    elif task_cfg["id"] == "lingbot-va-world-model":
+        task = build_lingbot_task(task_cfg, charts, media_items)
+    elif task_cfg["id"] == "lelan-pipeline":
+        task = build_lelan_task(task_cfg, charts, media_items)
+    elif task_cfg["id"] == "infra-audit":
+        task = build_infra_task(task_cfg, charts, media_items, research_desk_entries)
+    else:
+        raise ValueError(f"Unsupported task id: {task_cfg['id']}")
+    task["chart_media_items"] = chart_media_items
+    return task
 
 
 def build_branch_dashboard_charts(
@@ -2094,6 +2875,33 @@ def build_branch_dashboard_charts(
                 "title": "MDIT 主线 MSE 变化",
                 "description": "把 xyz / rot6d / grip 三条误差拆开，解释 0.75@300/500 是靠哪类误差下降撑起来的。",
             } if charts.get("mdit-mse-curve") else None,
+        )
+        return branch_chart_ids
+
+    if branch_id == "lingbot-va":
+        register(
+            "branch-lingbot-smoke",
+            {
+                **copy.deepcopy(charts.get("lingbot-smoke-metrics")),
+                "title": "LingBot-VA smoke 训练指标",
+                "description": "研究线页先看最小训练闭环有没有真的跑通，而不是把世界模型线误读成 success rate 项目。",
+            } if charts.get("lingbot-smoke-metrics") else None,
+        )
+        register(
+            "branch-lingbot-eval",
+            {
+                **copy.deepcopy(charts.get("lingbot-offline-eval")),
+                "title": "LingBot-VA 离线 demo 指标",
+                "description": "世界模型线当前最值得展示的是离线预测视频与动作的误差指标，而不是伪造任务 success 曲线。",
+            } if charts.get("lingbot-offline-eval") else None,
+        )
+        register(
+            "branch-lingbot-boundary",
+            {
+                **copy.deepcopy(charts.get("lingbot-system-boundary")),
+                "title": "LingBot-VA 单卡路径边界",
+                "description": "把已经打通的路径和当前单卡边界拆开看，避免后续世界模型推进时误判算力与训练策略。",
+            } if charts.get("lingbot-system-boundary") else None,
         )
         return branch_chart_ids
 
@@ -2170,6 +2978,7 @@ def build_branches(
     branch_profiles: dict[str, Any],
     tasks: list[dict[str, Any]],
     charts: dict[str, Any],
+    archive_bundles: dict[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
     task_map = {task["id"]: task for task in tasks}
     branches = []
@@ -2197,6 +3006,8 @@ def build_branches(
                     related_chart_ids.append(chart_id)
         related_media_items: list[dict[str, Any]] = []
         seen_media_paths: set[str] = set()
+        related_chart_media_items: list[dict[str, Any]] = []
+        seen_chart_media_paths: set[str] = set()
         for task in related_tasks:
             for item in task.get("media_items", []):
                 media_path = str(item.get("path", ""))
@@ -2204,6 +3015,19 @@ def build_branches(
                     continue
                 seen_media_paths.add(media_path)
                 related_media_items.append(copy.deepcopy(item))
+            for item in task.get("chart_media_items", []):
+                media_path = str(item.get("path", ""))
+                if not media_path or media_path in seen_chart_media_paths:
+                    continue
+                seen_chart_media_paths.add(media_path)
+                related_chart_media_items.append(copy.deepcopy(item))
+        archive_bundle = archive_bundles.get(BRANCH_TO_ARCHIVE_TASK.get(branch_id, ""))
+        archive_note = ""
+        branch_evidence_links = [make_link(humanize_file_name(path), path) for path in profile.get("featured_paths", [])]
+        if archive_bundle and archive_bundle.get("items"):
+            stats = archive_bundle["stats"]
+            archive_note = f" 当前已在 archive 中固化 {stats['run_count'] + stats['record_count']} 条归档条目与 {stats['milestone_count']} 个 milestone。"
+            branch_evidence_links = [*archive_bundle["evidence_links"], *branch_evidence_links]
         branches.append(
             {
                 "id": branch_id,
@@ -2217,12 +3041,15 @@ def build_branches(
                 "card_title": branch_card_copy["title"],
                 "card_summary": branch_card_copy["summary"],
                 "card_result": branch_card_copy["result"],
-                "detail_intro": f"{branch_card_copy['summary']} {branch_card_copy['result']}".strip(),
+                "detail_intro": f"{branch_card_copy['summary']} {branch_card_copy['result']}{archive_note}".strip(),
+                "entry_path": related_tasks[0]["page_path"] if len(related_tasks) == 1 else f"homepage/branches/{branch_id}/",
+                "entry_label": "进入任务页" if len(related_tasks) == 1 else "进入研究线",
                 "related_task_ids": [task["id"] for task in related_tasks],
                 "timeline_groups": merged_timeline,
-                "evidence_links": [make_link(humanize_file_name(path), path) for path in profile.get("featured_paths", [])],
+                "evidence_links": branch_evidence_links[:8],
                 "chart_ids": related_chart_ids[:3],
                 "dashboard_chart_ids": build_branch_dashboard_charts(branch_id, related_tasks, charts),
+                "chart_media_items": related_chart_media_items,
                 "media_items": related_media_items,
                 "summary_cards": [
                     {
@@ -2230,7 +3057,8 @@ def build_branches(
                         "title": related_tasks[0]["summary_cards"][0]["title"],
                         "body": related_tasks[0]["summary_cards"][0]["body"],
                         "metrics": related_tasks[0]["summary_cards"][0]["metrics"],
-                    }
+                    },
+                    *([archive_bundle["summary_card"]] if archive_bundle and archive_bundle.get("summary_card") else []),
                 ],
             }
         )
@@ -2241,10 +3069,18 @@ def build_home_sections(tasks: list[dict[str, Any]], research_desk_entries: list
     done_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     in_progress_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
     task_map = {task["id"]: task for task in tasks}
-    covered_task_ids = {entry["task_id"] for entry in research_desk_entries if entry["task_id"] != "infra-audit"}
+    # 少数任务线需要直接用任务页自己的入口卡口径，而不是被 research_desk 覆盖。
+    preferred_home_entry_tasks = {task["id"] for task in tasks if task.get("prefer_home_entries")}
+    covered_task_ids = {
+        entry["task_id"]
+        for entry in research_desk_entries
+        if entry["task_id"] != "infra-audit" and entry["task_id"] not in preferred_home_entry_tasks
+    }
 
     for entry in research_desk_entries:
         if entry["task_id"] == "infra-audit":
+            continue
+        if entry["task_id"] in preferred_home_entry_tasks:
             continue
         task = task_map.get(entry["task_id"])
         if task is None:
@@ -2318,16 +3154,22 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
     branch_overrides = overrides.get("branches", {})
     research_desk_entries = parse_research_desk_entries()
     research_desk_overview_map = parse_research_desk_overview_map()
+    archive_task_index = read_archive_task_index()
+    archive_bundles = {
+        archive_task_id: build_archive_bundle(archive_task_id, archive_task_index)
+        for archive_task_id in archive_task_index.keys()
+    }
 
     tasks = []
     for task_cfg in config["tasks"]:
         task = build_task(task_cfg, charts, research_desk_entries)
         task = apply_research_desk_overview(task, research_desk_overview_map)
         task = merge_task_timeline_with_research_desk(task, research_desk_entries)
+        task = inject_archive_into_task(task, archive_bundles.get(TASK_TO_ARCHIVE_TASK.get(task["id"], "")))
         task = deep_merge(task, task_overrides.get(task["id"], {}))
         tasks.append(task)
 
-    branches = build_branches(config["branch_profiles"], tasks, charts)
+    branches = build_branches(config["branch_profiles"], tasks, charts, archive_bundles)
     branches = [apply_research_desk_overview_to_branch(branch, research_desk_overview_map) for branch in branches]
     branches = [deep_merge(branch, branch_overrides.get(branch["id"], {})) for branch in branches]
     showcase_items = [item for task in tasks for item in task["media_items"]]
@@ -2349,12 +3191,18 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
         "branch_count": len(branches),
         "timeline_count": sum(len(group["cards"]) for group in timeline_page),
         "validated_rows": sum(len(task["chart_ids"]) for task in tasks if task["chart_ids"]),
+        "archive_entry_count": sum(
+            bundle["stats"]["run_count"] + bundle["stats"]["record_count"]
+            for bundle in archive_bundles.values()
+        ),
+        "archive_milestone_count": sum(bundle["stats"]["milestone_count"] for bundle in archive_bundles.values()),
+        "archive_complete_count": sum(bundle["stats"]["complete_count"] for bundle in archive_bundles.values()),
     }
     home["hero_inline_stats"] = [
         make_metric("任务", stats["task_count"]),
         make_metric("研究线", stats["branch_count"]),
-        make_metric("时间线事件", stats["timeline_count"]),
-        make_metric("图表", stats["validated_rows"]),
+        make_metric("归档条目", stats["archive_entry_count"]),
+        make_metric("milestone", stats["archive_milestone_count"]),
     ]
 
     compare_cards = []

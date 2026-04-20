@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T17:57:45+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-20__collapse_run",
+  "items": [
+    {
+      "role": "run::best_success.pt",
+      "source_path": "/tmp/tmpuvw5go7c/ckpt/collapse_run/best_success.pt",
+      "size_bytes": 42733,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::best_valid.pt",
+      "source_path": "/tmp/tmpuvw5go7c/ckpt/collapse_run/best_valid.pt",
+      "size_bytes": 70719,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0300.pt",
+      "source_path": "/tmp/tmpuvw5go7c/ckpt/collapse_run/epochs/epoch_0300.pt",
+      "size_bytes": 42751,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0500.pt",
+      "source_path": "/tmp/tmpuvw5go7c/ckpt/collapse_run/epochs/epoch_0500.pt",
+      "size_bytes": 70719,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::latest.pt",
+      "source_path": "/tmp/tmpuvw5go7c/ckpt/collapse_run/latest.pt",
+      "size_bytes": 70695,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "num_episodes": 20,
+  "num_successes": 9,
+  "num_failures": 11,
+  "success_rate": 0.45,
+  "mean_steps": 133.2,
+  "success_episode_indices": [
+    0,
+    3,
+    5,
+    6,
+    9,
+    11,
+    17,
+    18,
+    19
+  ],
+  "failure_episode_indices": [
+    1,
+    2,
+    4,
+    7,
+    8,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "failure_error_buckets": {
+    "none": 4,
+    "planning_runtime_error": 6,
+    "planning_recursion_limit": 1
+  },
+  "failure_step_buckets": {
+    "lt_20": 0,
+    "20_to_99": 0,
+    "100_to_horizon_minus_1": 1,
+    "at_horizon": 10
+  },
+  "num_failures_without_error": 4,
+  "max_steps_observed": 200,
+  "min_steps_observed": 38,
+  "likely_causes": [
+    "planner_rejecting_many_predicted_actions",
+    "some_rollouts_exhaust_the_horizon_without_finishing"
+  ]
+}

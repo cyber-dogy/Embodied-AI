@@ -1,0 +1,29 @@
+{
+  "phase": "audit_only",
+  "experiment_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp_eval50_100",
+  "description": "strict fair anchor A: original pdit line, pcd+pdit, bs64, no-amp, eval@50/100",
+  "trial_score": -1.0,
+  "pending_offline_audit": true,
+  "offline_audit_command": "/home/gjw/.conda/envs/mdit_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "success_100": null,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": true,
+  "collapse_reasons": [
+    "Command '['/home/gjw/.conda/envs/mdit_env/bin/python', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/eval_all_checkpoints.py', '--ckpt-epochs-dir', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs', '--results-json', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/audit_raw_results.json', '--strategy', 'fm', '--episodes', '20', '--seed', '1234', '--max-steps', '200', '--heartbeat-every', '50', '--plot-path', '/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/audit_success_rate.png', '--include-special', '--headless', '--show-progress', '--prefer-ema', '--device', 'cuda']' returned non-zero exit status 2."
+  ],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/best_valid.pt",
+  "kept_ckpt_paths": [
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/best_valid.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0050.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/epochs/epoch_0100.pt"
+  ],
+  "run_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "audit_report_path": null,
+  "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/summary.json",
+  "error_type": "CalledProcessError"
+}

@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "items": [
+    {
+      "role": "trial_record",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/ablation_anchor_pcd_pdit_orig_bs64_noamp.json",
+      "archive_path": "metrics/trial_record.json",
+      "mode": "copied",
+      "size_bytes": 2526
+    },
+    {
+      "role": "summary",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/summary.json",
+      "archive_path": "metrics/summary.json",
+      "mode": "copied",
+      "size_bytes": 6281
+    },
+    {
+      "role": "trial_request",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/trial_request.json",
+      "archive_path": "metrics/trial_request.json",
+      "mode": "copied",
+      "size_bytes": 969
+    },
+    {
+      "role": "config",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/config.json",
+      "archive_path": "metrics/config.json",
+      "mode": "copied",
+      "size_bytes": 2684
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "note::fixes",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
+      "archive_path": "notes/fixes.md",
+      "mode": "copied",
+      "size_bytes": 90862
+    },
+    {
+      "role": "note::2026-04-07-autoresearch-pipeline-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-autoresearch-pipeline-zh.md",
+      "archive_path": "notes/2026-04-07-autoresearch-pipeline-zh.md",
+      "mode": "copied",
+      "size_bytes": 3384
+    },
+    {
+      "role": "note::2026-04-07-autoresearch-pipeline",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-autoresearch-pipeline.md",
+      "archive_path": "notes/2026-04-07-autoresearch-pipeline.md",
+      "mode": "copied",
+      "size_bytes": 1029
+    },
+    {
+      "role": "note::2026-04-07-training-model-audit-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-training-model-audit-zh.md",
+      "archive_path": "notes/2026-04-07-training-model-audit-zh.md",
+      "mode": "copied",
+      "size_bytes": 8428
+    },
+    {
+      "role": "note::2026-04-07-training-model-audit",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-07-training-model-audit.md",
+      "archive_path": "notes/2026-04-07-training-model-audit.md",
+      "mode": "copied",
+      "size_bytes": 1371
+    },
+    {
+      "role": "note::2026-04-08-fm-recovery-progress-zh",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
+      "archive_path": "notes/2026-04-08-fm-recovery-progress-zh.md",
+      "mode": "copied",
+      "size_bytes": 10299
+    },
+    {
+      "role": "note::2026-04-08-fm-recovery-progress",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-08-fm-recovery-progress.md",
+      "archive_path": "notes/2026-04-08-fm-recovery-progress.md",
+      "mode": "copied",
+      "size_bytes": 6133
+    },
+    {
+      "role": "note::2026-04-10-5090-environment-setup",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-10-5090-environment-setup.md",
+      "archive_path": "notes/2026-04-10-5090-environment-setup.md",
+      "mode": "copied",
+      "size_bytes": 6171
+    },
+    {
+      "role": "note::2026-04-10-5090-migration-checklist",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/pdit/2026-04-10-5090-migration-checklist.md",
+      "archive_path": "notes/2026-04-10-5090-migration-checklist.md",
+      "mode": "copied",
+      "size_bytes": 4904
+    },
+    {
+      "role": "run::audit_raw_results.debug.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/audit_raw_results.debug.json",
+      "archive_path": "metrics/audit_raw_results.debug.json",
+      "mode": "copied",
+      "size_bytes": 1176
+    },
+    {
+      "role": "run::audit_success_rate.debug.png",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/audit_success_rate.debug.png",
+      "archive_path": "media/demo/images/audit_success_rate.debug.png",
+      "mode": "copied",
+      "size_bytes": 32970
+    },
+    {
+      "role": "run::eval_results/epoch_0100__episodes=20__max_steps=200__seed=1234__ema=1.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/eval_results/epoch_0100__episodes=20__max_steps=200__seed=1234__ema=1.json",
+      "archive_path": "metrics/eval_results/epoch_0100__episodes=20__max_steps=200__seed=1234__ema=1.json",
+      "mode": "copied",
+      "size_bytes": 9533
+    },
+    {
+      "role": "run::eval_results/epoch_0100__episodes=20__max_steps=200__seed=1234__ema=1__analysis.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/eval_results/epoch_0100__episodes=20__max_steps=200__seed=1234__ema=1__analysis.json",
+      "archive_path": "metrics/eval_results/epoch_0100__episodes=20__max_steps=200__seed=1234__ema=1__analysis.json",
+      "mode": "copied",
+      "size_bytes": 798
+    },
+    {
+      "role": "run::eval_results/epoch_0100__episodes=5__max_steps=200__seed=1234__ema=1.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/eval_results/epoch_0100__episodes=5__max_steps=200__seed=1234__ema=1.json",
+      "archive_path": "metrics/eval_results/epoch_0100__episodes=5__max_steps=200__seed=1234__ema=1.json",
+      "mode": "copied",
+      "size_bytes": 2477
+    },
+    {
+      "role": "run::eval_results/epoch_0100__episodes=5__max_steps=200__seed=1234__ema=1__analysis.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp/eval_results/epoch_0100__episodes=5__max_steps=200__seed=1234__ema=1__analysis.json",
+      "archive_path": "metrics/eval_results/epoch_0100__episodes=5__max_steps=200__seed=1234__ema=1__analysis.json",
+      "mode": "copied",
+      "size_bytes": 562
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T17:57:45+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-20__collapse_run",
+  "assets": [
+    "report/assets/success_by_epoch.svg",
+    "report/assets/loss_curve.svg"
+  ],
+  "media_assets": [
+    "media/charts/loss_curve.svg",
+    "media/charts/success_by_epoch.svg"
+  ],
+  "notes": [
+    "report/report.md"
+  ]
+}

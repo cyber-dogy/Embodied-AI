@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T17:57:45+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-20__audit_wandb_run",
+  "run_name": "audit_wandb_run",
+  "experiment_name": "audit_wandb_run",
+  "description": "",
+  "line": "mdit",
+  "phase": "audit_only",
+  "source_run_dir": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run",
+  "source_trial_record": "/tmp/tmp1rgr6a63/autoresearch_records/audit_wandb_run.json",
+  "status": "complete",
+  "missing_items": [],
+  "trial_score": 0.6,
+  "best_success_rate": 0.6,
+  "best_success_epoch": 100,
+  "collapse_detected": false
+}

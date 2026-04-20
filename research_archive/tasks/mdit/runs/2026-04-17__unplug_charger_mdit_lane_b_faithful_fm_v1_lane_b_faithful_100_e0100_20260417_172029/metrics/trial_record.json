@@ -1,0 +1,31 @@
+{
+  "line": "mdit",
+  "phase": "train_only",
+  "experiment_name": "lane_b_faithful_100",
+  "description": "Lane B faithful challenger: multitask-style concat conditioning + shared audit chain",
+  "stage_epochs": 100,
+  "eval_episodes": 20,
+  "trial_score": -1.0,
+  "pending_offline_audit": false,
+  "offline_audit_command": null,
+  "success_100": null,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": true,
+  "collapse_reasons": [
+    "(MaxRetryError(\"HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /timm/vit_base_patch16_clip_224.openai/resolve/main/model.safetensors (Caused by ProxyError('Cannot connect to proxy.', TimeoutError('_ssl.c:1000: The handshake operation timed out')))\"), '(Request ID: 4de944c2-7728-468a-83d0-51d3b3f6962e)')"
+  ],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": null,
+  "kept_ckpt_paths": [],
+  "run_name": "unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029",
+  "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029/experiment_manifest.json",
+  "recipe_drift": false,
+  "recipe_drift_details": [],
+  "audit_report_path": null,
+  "summary_path": null,
+  "error_type": "ProxyError"
+}

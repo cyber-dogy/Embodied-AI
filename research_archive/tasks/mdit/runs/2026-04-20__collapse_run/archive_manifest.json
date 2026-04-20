@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T17:57:45+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-20__collapse_run",
+  "run_name": "collapse_run",
+  "experiment_name": "collapse_run",
+  "description": "",
+  "line": "mdit",
+  "phase": "audit_only",
+  "source_run_dir": "/tmp/tmpuvw5go7c/ckpt/collapse_run",
+  "source_trial_record": "/tmp/tmpuvw5go7c/autoresearch_records/collapse_run.json",
+  "status": "complete",
+  "missing_items": [],
+  "trial_score": -1.0,
+  "best_success_rate": 0.75,
+  "best_success_epoch": 300,
+  "collapse_detected": true
+}

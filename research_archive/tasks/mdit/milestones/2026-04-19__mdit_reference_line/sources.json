@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "mdit",
+  "bucket": "milestones",
+  "slug": "2026-04-19__mdit_reference_line",
+  "items": [
+    {
+      "role": "note::best_path",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/best_path.md",
+      "archive_path": "notes/best_path.md",
+      "mode": "copied",
+      "size_bytes": 2034
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "milestone::README.md",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line/README.md",
+      "archive_path": "notes/README.md",
+      "mode": "copied",
+      "size_bytes": 1067
+    },
+    {
+      "role": "milestone::anchor_config.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line/anchor_config.json",
+      "archive_path": "metrics/anchor_config.json",
+      "mode": "copied",
+      "size_bytes": 3350
+    },
+    {
+      "role": "milestone::anchor_experiment_manifest.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line/anchor_experiment_manifest.json",
+      "archive_path": "metrics/anchor_experiment_manifest.json",
+      "mode": "copied",
+      "size_bytes": 12845
+    },
+    {
+      "role": "milestone::reference_audit_report.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line/reference_audit_report.json",
+      "archive_path": "metrics/reference_audit_report.json",
+      "mode": "copied",
+      "size_bytes": 91748
+    },
+    {
+      "role": "milestone::reference_line.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line/reference_line.json",
+      "archive_path": "metrics/reference_line.json",
+      "mode": "copied",
+      "size_bytes": 12245
+    },
+    {
+      "role": "milestone::reference_sources.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line/reference_sources.json",
+      "archive_path": "metrics/reference_sources.json",
+      "mode": "copied",
+      "size_bytes": 801
+    }
+  ]
+}

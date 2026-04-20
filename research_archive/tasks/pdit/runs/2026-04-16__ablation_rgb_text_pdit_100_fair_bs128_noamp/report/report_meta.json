@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp",
+  "assets": [],
+  "media_assets": [],
+  "notes": [
+    "report/report.md"
+  ]
+}

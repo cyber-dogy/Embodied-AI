@@ -1,0 +1,5 @@
+技术模块,当前实现,当前作用,扩展方向
+时序点云观测,3 帧点云条件输入,把几何观测变成稳定的策略输入,可升级成 RGB / RGB+Text 多模态输入
+Flow Matching + DiT,6-block DiT + flow matching,直接生成未来 action chunk,可继续接 latent trajectory / world model 表达
+Action chunk 表达,32 步动作块,适配 manipulation 的连续执行过程,可继续接 subgoal / 层级动作抽象
+行为审计闭环,loss + rollout + 20/100 回合复核,把选模标准和真实行为绑定起来,后续多模态扩线可以直接复用

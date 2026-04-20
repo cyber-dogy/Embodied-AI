@@ -1,0 +1,310 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T17:57:45+08:00",
+  "tasks": {
+    "pdit": {
+      "runs": [
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_100__e0100__20260408_002048"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__baseline_500__e0500__20260408_011741"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_fixed_stats_aug_100__e0100__20260408_124213"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h1_stats_aug_100__e0100__20260408_103914"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130"
+        },
+        {
+          "slug": "2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/archive_manifest.json",
+          "status": "incomplete",
+          "label": "ablation_anchor_pcd_pdit_orig_bs224_noamp"
+        },
+        {
+          "slug": "2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/archive_manifest.json",
+          "status": "incomplete",
+          "label": "ablation_anchor_pcd_pdit_orig_bs64_noamp"
+        },
+        {
+          "slug": "2026-04-15__ablation_rgb_text_pdit_100",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/archive_manifest.json",
+          "status": "incomplete",
+          "label": "ablation_rgb_text_pdit_100"
+        },
+        {
+          "slug": "2026-04-15__ablation_rgb_text_pdit_100ep",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep/archive_manifest.json",
+          "status": "incomplete",
+          "label": "ablation_rgb_text_pdit_100ep"
+        },
+        {
+          "slug": "2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/archive_manifest.json",
+          "status": "incomplete",
+          "label": "ablation_rgb_text_pdit_100_fair_bs128_noamp"
+        },
+        {
+          "slug": "2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/archive_manifest.json",
+          "status": "incomplete",
+          "label": "ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2"
+        }
+      ],
+      "milestones": [],
+      "records": []
+    },
+    "mdit": {
+      "runs": [
+        {
+          "slug": "2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029"
+        },
+        {
+          "slug": "2026-04-17__unplug_charger_mdit_rgb_text_3token_100",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/archive_manifest.json",
+          "status": "complete",
+          "label": "unplug_charger_mdit_rgb_text_3token_100"
+        },
+        {
+          "slug": "2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544"
+        },
+        {
+          "slug": "2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329"
+        },
+        {
+          "slug": "2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720"
+        },
+        {
+          "slug": "2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723"
+        },
+        {
+          "slug": "2026-04-20__audit_wandb_run",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/archive_manifest.json",
+          "status": "complete",
+          "label": "audit_wandb_run"
+        },
+        {
+          "slug": "2026-04-20__collapse_run",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-20__collapse_run",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-20__collapse_run/archive_manifest.json",
+          "status": "complete",
+          "label": "collapse_run"
+        }
+      ],
+      "milestones": [
+        {
+          "slug": "2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/archive_manifest.json",
+          "status": "complete",
+          "label": "2026-04-17-110536__lane_a_mainline_epoch100_s055"
+        },
+        {
+          "slug": "2026-04-17__current_provisional_best",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/archive_manifest.json",
+          "status": "complete",
+          "label": "current_provisional_best"
+        },
+        {
+          "slug": "2026-04-19__mdit_reference_line",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line/archive_manifest.json",
+          "status": "complete",
+          "label": "mdit_reference_line"
+        }
+      ],
+      "records": []
+    },
+    "lelan": {
+      "runs": [],
+      "milestones": [],
+      "records": []
+    },
+    "infra": {
+      "runs": [],
+      "milestones": [],
+      "records": [
+        {
+          "slug": "2026-04-10__dummy_smoke_root_layout",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__dummy_smoke_root_layout",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__dummy_smoke_root_layout/archive_manifest.json",
+          "status": "incomplete",
+          "label": "dummy_smoke_root_layout"
+        },
+        {
+          "slug": "2026-04-10__smoke_h3_train",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__smoke_h3_train",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__smoke_h3_train/archive_manifest.json",
+          "status": "incomplete",
+          "label": "smoke_h3_train"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_modular_dummy__e0001__20260409_manual"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_timeout_e0001_20260407_232344",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_timeout_e0001_20260407_232344",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_timeout_e0001_20260407_232344/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_timeout__e0001__20260407_232344"
+        },
+        {
+          "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_train_only_e0001_20260407_233423",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_train_only_e0001_20260407_233423",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_train_only_e0001_20260407_233423/archive_manifest.json",
+          "status": "incomplete",
+          "label": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423"
+        },
+        {
+          "slug": "2026-04-12__vram_probe_bs12_test_1775990954",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs12_test_1775990954",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs12_test_1775990954/archive_manifest.json",
+          "status": "incomplete",
+          "label": "vram_probe_bs12_test_1775990954"
+        },
+        {
+          "slug": "2026-04-12__vram_probe_bs16_1775990761",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs16_1775990761",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs16_1775990761/archive_manifest.json",
+          "status": "incomplete",
+          "label": "vram_probe_bs16_1775990761"
+        },
+        {
+          "slug": "2026-04-12__vram_probe_bs20_1775990570",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs20_1775990570",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs20_1775990570/archive_manifest.json",
+          "status": "incomplete",
+          "label": "vram_probe_bs20_1775990570"
+        },
+        {
+          "slug": "2026-04-12__vram_probe_bs24_1775990374",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs24_1775990374",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs24_1775990374/archive_manifest.json",
+          "status": "incomplete",
+          "label": "vram_probe_bs24_1775990374"
+        },
+        {
+          "slug": "2026-04-12__vram_probe_bs8_1775991433",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs8_1775991433",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-12__vram_probe_bs8_1775991433/archive_manifest.json",
+          "status": "incomplete",
+          "label": "vram_probe_bs8_1775991433"
+        },
+        {
+          "slug": "2026-04-17__mdit_loop_state_unplug_rgb_text_search",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-17__mdit_loop_state_unplug_rgb_text_search",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-17__mdit_loop_state_unplug_rgb_text_search/archive_manifest.json",
+          "status": "incomplete",
+          "label": "mdit_loop_state__unplug_rgb_text_search"
+        },
+        {
+          "slug": "2026-04-19__code_structure",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__code_structure",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__code_structure/archive_manifest.json",
+          "status": "complete",
+          "label": "code-structure"
+        },
+        {
+          "slug": "2026-04-19__code_structure_zh",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__code_structure_zh",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__code_structure_zh/archive_manifest.json",
+          "status": "complete",
+          "label": "code-structure-zh"
+        },
+        {
+          "slug": "2026-04-19__fixes",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__fixes",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__fixes/archive_manifest.json",
+          "status": "complete",
+          "label": "fixes"
+        },
+        {
+          "slug": "2026-04-19__homepage_media_dummy_sim2real_platform",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__homepage_media_dummy_sim2real_platform",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__homepage_media_dummy_sim2real_platform/archive_manifest.json",
+          "status": "complete",
+          "label": "homepage_media__dummy-sim2real-platform"
+        },
+        {
+          "slug": "2026-04-19__mdit_takeover_state_lane_c_then_best500",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__mdit_takeover_state_lane_c_then_best500",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__mdit_takeover_state_lane_c_then_best500/archive_manifest.json",
+          "status": "incomplete",
+          "label": "mdit_takeover_state__lane_c_then_best500"
+        },
+        {
+          "slug": "2026-04-19__pdit_job_packaging",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__pdit_job_packaging",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__pdit_job_packaging/archive_manifest.json",
+          "status": "complete",
+          "label": "pdit_job_packaging"
+        },
+        {
+          "slug": "2026-04-19__research_desk",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__research_desk",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/infra/records/2026-04-19__research_desk/archive_manifest.json",
+          "status": "complete",
+          "label": "research_desk"
+        }
+      ]
+    }
+  }
+}

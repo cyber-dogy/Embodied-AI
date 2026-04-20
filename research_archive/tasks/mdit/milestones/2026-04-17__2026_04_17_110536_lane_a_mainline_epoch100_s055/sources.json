@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "mdit",
+  "bucket": "milestones",
+  "slug": "2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055",
+  "items": [
+    {
+      "role": "note::best_path",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/best_path.md",
+      "archive_path": "notes/best_path.md",
+      "mode": "copied",
+      "size_bytes": 2034
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "milestone::README.md",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/README.md",
+      "archive_path": "notes/README.md",
+      "mode": "copied",
+      "size_bytes": 582
+    },
+    {
+      "role": "milestone::audit_report.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/audit_report.json",
+      "archive_path": "metrics/audit_report.json",
+      "mode": "copied",
+      "size_bytes": 36124
+    },
+    {
+      "role": "milestone::config.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/config.json",
+      "archive_path": "metrics/config.json",
+      "mode": "copied",
+      "size_bytes": 3350
+    },
+    {
+      "role": "milestone::experiment_manifest.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/experiment_manifest.json",
+      "archive_path": "metrics/experiment_manifest.json",
+      "mode": "copied",
+      "size_bytes": 12845
+    },
+    {
+      "role": "milestone::meta/source_run_dir.txt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/meta/source_run_dir.txt",
+      "archive_path": "metrics/meta/source_run_dir.txt",
+      "mode": "copied",
+      "size_bytes": 103
+    },
+    {
+      "role": "milestone::meta/status.txt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/meta/status.txt",
+      "archive_path": "metrics/meta/status.txt",
+      "mode": "copied",
+      "size_bytes": 40
+    },
+    {
+      "role": "milestone::summary.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/summary.json",
+      "archive_path": "metrics/summary.json",
+      "mode": "copied",
+      "size_bytes": 7006
+    }
+  ]
+}

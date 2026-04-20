@@ -1,0 +1,19 @@
+{
+  "demo/images/dummy-sim2real-platform/00-封面图.jpg": {
+    "title": "六轴臂平台封面",
+    "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
+    "showcase": true
+  },
+  "demo/videos/dummy-sim2real-platform/01-运动逆解算.mp4": {
+    "title": "正逆运动解算演示",
+    "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。"
+  },
+  "demo/videos/dummy-sim2real-platform/02-真机仿真数字孪生.mp4": {
+    "title": "真机-仿真数字孪生同步",
+    "caption": "展示真机姿态如何实时映射到仿真侧，验证 Sim2Real 运动映射与数字孪生同步效果。"
+  },
+  "demo/videos/dummy-sim2real-platform/03-规划轨迹执行.mp4": {
+    "title": "规划轨迹真机执行",
+    "caption": "展示规划好的关节轨迹如何按照记录节奏下发真机，体现示教回放与总线保护链路。"
+  }
+}

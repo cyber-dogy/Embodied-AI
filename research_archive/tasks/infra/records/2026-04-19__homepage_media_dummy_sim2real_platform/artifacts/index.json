@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-19__homepage_media_dummy_sim2real_platform",
+  "items": [
+    {
+      "role": "extra::dummy-sim2real-platform::images/.gitkeep",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/homepage/media/tasks/dummy-sim2real-platform/images/.gitkeep",
+      "size_bytes": 1,
+      "mtime": "2026-04-19T09:06:41+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
+}

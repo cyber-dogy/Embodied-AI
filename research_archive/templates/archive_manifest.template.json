@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-19T20:00:00+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-17__lane_a_mainline_100",
+  "run_name": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+  "experiment_name": "lane_a_mainline_100",
+  "description": "共享审计锚点",
+  "line": "mdit",
+  "phase": "audit_only",
+  "source_run_dir": "/abs/path/to/run_dir",
+  "source_trial_record": "/abs/path/to/autoresearch_records/run.json",
+  "status": "complete",
+  "missing_items": [],
+  "trial_score": 0.55,
+  "best_success_rate": 0.55,
+  "best_success_epoch": 100,
+  "collapse_detected": false
+}

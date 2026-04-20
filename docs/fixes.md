@@ -1267,3 +1267,12 @@ except Exception as exc:
 处理：在 `_build_train_keep_paths(...)` 中加入 `cfg.best_success_ckpt_path`，并保留中文注释说明这是强保留产物。
 
 结果：当前托管链在 train-only / audit-only 收尾清理时会继续保留 `latest.pt`、`best_valid.pt`、周期 checkpoint，并额外强保留 `best_success.pt`。
+
+### 2026-04-20 18:00:40 +0800 · 从 100epoch 主线锚点构建 500epoch 拔插头恢复线，并加入 0.75 自动停
+范围：`mdit/config/schema.py` + `mdit/train/runner.py` + `scripts/prepare_mdit_resume_run.py` + `scripts/run_prepared_mdit_resume_guard.sh` + `scripts/run_unplug_mdit_best500_resume.sh`
+
+背景：此前 `0.75@300/500` 的原始拔插头冠军 ckpt 被误删，当前仍然保留的实际可恢复锚点是 `unplug_charger_mdit_rgb_text_3token_100` 的 `epoch_0100.pt`。现在需要在不污染原始 100epoch 锚点目录的前提下，重新建立一条可托管的 `100 -> 500` 恢复线；同时旧 WandB 已有历史写入痕迹，这次恢复需要新建 run，但后续中断仍要续回同一条新 run。
+
+处理：新增 `prepare_mdit_resume_run.py`，从 `ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt` 生成独立的新 run `ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100`，写入新的 `config.json`、清空 `latest.pt` 内的 `wandb_run_id`、保留起始 `epoch_0100.pt` / `best_valid.pt` / `best_success.pt`、落地 `resume_plan.json` 与 `train_heartbeat.json`。同时在训练配置中开启 `success_selection_every_epochs=100`、`success_selection_episodes=20`、`stop_on_target_success=true`、`target_success_rate=0.75`；训练器在每次 success 选择后如果达到 `0.75` 会直接把状态写成 `paused_on_target_success` 并停止。另增两条托管脚本：`run_prepared_mdit_resume_guard.sh` 负责守护任意已准备好的恢复 run，`run_unplug_mdit_best500_resume.sh` 作为当前拔插头恢复线的专用入口。
+
+结果：当前恢复线已经真实物化到 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100`，其中 `latest.pt` 来自 100epoch 锚点且 `wandb_run_id=null`，`config.json` 已锁定 `train_epochs=500 / checkpoint_every_epochs=100 / success_selection_every_epochs=100 / target_success_rate=0.75 / wandb_resume=true`。这意味着第一次启动会创建一条全新的 WandB run，后续异常重启会续回同一条新 run；原始 `100epoch` 锚点目录不被修改，当前只是在磁盘上完成准备，尚未抢占正在使用的训练资源。

@@ -238,14 +238,17 @@
         </div>
         <div class="card-footer-line">
           <span>${branch.related_task_ids.map((taskId) => renderEntityTags([taskId], "task")).join("")}</span>
-          <a class="text-link" href="${pathUrl(branch.page_path)}">进入研究线</a>
+          <a class="text-link" href="${pathUrl(branch.entry_path || branch.page_path)}">${escapeHtml(branch.entry_label || "进入研究线")}</a>
         </div>
       </article>
     `;
   }
 
   function renderTaskPage(task) {
-    const taskCharts = task.chart_ids.map((chartId) => charts[chartId]).filter(Boolean);
+    const taskCharts =
+      task.chart_media_items?.length
+        ? task.chart_media_items
+        : task.chart_ids.map((chartId) => charts[chartId]).filter(Boolean);
     const branchChips = task.branch_ids
       .map((branchId) => branchMap.get(branchId))
       .filter(Boolean)
@@ -299,12 +302,14 @@
             <p class="eyebrow">Core Work</p>
             <h2>核心工作</h2>
           </div>
-          <p class="section-description">${escapeHtml(task.summary)}</p>
+          <p class="section-description">${escapeHtml(task.core_summary || task.summary)}</p>
         </div>
         <div class="entity-chip-row">${branchChips}</div>
-        <div class="summary-grid">
-          ${task.summary_cards.map((card) => renderSummaryCard(card)).join("")}
-        </div>
+        ${task.core_tables?.length ? renderTaskCoreTables(task.core_tables) : `
+          <div class="summary-grid">
+            ${task.summary_cards.map((card) => renderSummaryCard(card)).join("")}
+          </div>
+        `}
       </section>
     `;
   }
@@ -335,6 +340,46 @@
         <div class="stats-row">
           ${card.metrics.map((metric) => renderMetric(metric)).join("")}
         </div>
+      </article>
+    `;
+  }
+
+  function renderTaskCoreTables(tables) {
+    return `
+      <div class="table-stack">
+        ${tables.map((table) => renderTaskCoreTable(table)).join("")}
+      </div>
+    `;
+  }
+
+  function renderTaskCoreTable(table) {
+    return `
+      <article class="table-panel">
+        <div class="card-topline">
+          <span class="badge badge-soft">Table</span>
+        </div>
+        <h3>${escapeHtml(table.title)}</h3>
+        <div class="table-scroll">
+          <table class="insight-table">
+            <thead>
+              <tr>
+                ${(table.columns || []).map((column) => `<th>${escapeHtml(column)}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${(table.rows || [])
+                .map(
+                  (row) => `
+                    <tr>
+                      ${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}
+                    </tr>
+                  `,
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+        ${table.note ? `<p class="chart-note">${escapeHtml(table.note)}</p>` : ""}
       </article>
     `;
   }
@@ -419,7 +464,11 @@
 
   function renderChartCard(chart, options = {}) {
     const chartTypeLabel =
-      chart.type === "line"
+      chart.type === "media_chart"
+        ? chart.source_kind === "manual"
+          ? "静态图表"
+          : "补充图表"
+        : chart.type === "line"
         ? "折线图"
         : chart.type === "compare_cards"
           ? "结果卡片"
@@ -438,7 +487,9 @@
         <p class="card-desc">${escapeHtml(chart.description)}</p>
         <div class="chart-body">
           ${
-            chart.type === "line"
+            chart.type === "media_chart"
+              ? renderMediaChart(chart)
+              : chart.type === "line"
               ? renderLineChart(chart)
               : chart.type === "compare_cards"
                 ? renderCompareCardsChart(chart)
@@ -457,9 +508,14 @@
 
   function buildChartCardClass(chart, options = {}) {
     const classes = ["chart-card"];
+    if (chart.type === "media_chart") {
+      classes.push("chart-card-media");
+    }
     if (options.dashboard) {
       classes.push("chart-card-dashboard");
       if (chart.type === "rank_bar") {
+        classes.push("chart-card-wide");
+      } else if (chart.type === "media_chart") {
         classes.push("chart-card-wide");
       } else if (options.index === 0) {
         classes.push("chart-card-feature");
@@ -557,6 +613,17 @@
           <line x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}" class="chart-axis-line"></line>
         </svg>
         <div class="chart-legend">${legend}</div>
+      </div>
+    `;
+  }
+
+  function renderMediaChart(chart) {
+    if (!chart.path) {
+      return `<div class="chart-empty">当前没有可展示的静态图。</div>`;
+    }
+    return `
+      <div class="media-chart-surface">
+        <img src="${pathUrl(chart.path)}" alt="${escapeHtml(chart.title)}">
       </div>
     `;
   }
@@ -769,6 +836,7 @@
     if (!items.length) {
       return "";
     }
+    const showcaseLayout = buildShowcaseLayout(items);
     return `
       <section class="section-block">
         <div class="section-title-row">
@@ -778,21 +846,76 @@
           </div>
           <p class="section-description">${escapeHtml(description)}</p>
         </div>
-        <div class="media-grid">
-          ${items.map((item) => renderMediaCard(item)).join("")}
-        </div>
+        ${
+          showcaseLayout
+            ? `
+              <div class="media-section-stack">
+                <div class="media-featured-wrap">
+                  ${renderMediaCard(showcaseLayout.featured, { featured: true })}
+                </div>
+                <div class="media-grid media-grid-videos">
+                  ${showcaseLayout.videos.map((item) => renderMediaCard(item, { compact: true })).join("")}
+                </div>
+                ${
+                  showcaseLayout.extras.length
+                    ? `
+                      <div class="media-grid">
+                        ${showcaseLayout.extras.map((item) => renderMediaCard(item)).join("")}
+                      </div>
+                    `
+                    : ""
+                }
+              </div>
+            `
+            : `
+              <div class="media-grid">
+                ${items.map((item) => renderMediaCard(item)).join("")}
+              </div>
+            `
+        }
       </section>
     `;
   }
 
-  function renderMediaCard(item) {
+  // 有封面图 + 一组演示视频时，拆成主图和视频带，避免所有素材等大导致阅读拥挤。
+  function buildShowcaseLayout(items) {
+    const featured = items.find((item) => item.kind === "image");
+    if (!featured) {
+      return null;
+    }
+    const videos = items.filter((item) => item.kind === "video");
+    if (videos.length < 2) {
+      return null;
+    }
+    const extras = items.filter((item) => item !== featured && item.kind !== "video");
+    return { featured, videos, extras };
+  }
+
+  function renderMediaCard(item, options = {}) {
+    const cardClasses = ["media-card"];
+    const surfaceClasses = ["media-surface"];
+    const assetClasses = [item.kind === "video" ? "media-asset-video" : "media-asset-image"];
+    const isCover = isCoverMedia(item);
+    if (options.featured) {
+      cardClasses.push("media-card-featured");
+      surfaceClasses.push("media-surface-featured");
+    }
+    if (options.compact) {
+      cardClasses.push("media-card-compact");
+      surfaceClasses.push("media-surface-compact");
+    }
+    if (isCover) {
+      cardClasses.push("media-card-cover");
+      surfaceClasses.push("media-surface-cover");
+      assetClasses.push("media-asset-contain");
+    }
     return `
-      <article class="media-card">
-        <div class="media-surface">
+      <article class="${cardClasses.join(" ")}">
+        <div class="${surfaceClasses.join(" ")}">
           ${
             item.kind === "video"
-              ? `<video controls preload="metadata" src="${pathUrl(item.path)}"></video>`
-              : `<img src="${pathUrl(item.path)}" alt="${escapeHtml(item.title)}">`
+              ? `<video class="${assetClasses.join(" ")}" controls preload="metadata" src="${pathUrl(item.path)}"></video>`
+              : `<img class="${assetClasses.join(" ")}" src="${pathUrl(item.path)}" alt="${escapeHtml(item.title)}">`
           }
         </div>
         <div class="media-copy">
@@ -804,9 +927,22 @@
     `;
   }
 
+  // 封面图优先完整显示，避免被统一的 cover 裁切掉关键信息。
+  function isCoverMedia(item) {
+    if (item.kind !== "image") {
+      return false;
+    }
+    const title = String(item.title || "");
+    const path = String(item.path || "").toLowerCase();
+    return title.includes("封面") || path.includes("cover") || path.includes("封面");
+  }
+
   function renderBranchPage(branch) {
     const relatedTasks = branch.related_task_ids.map((taskId) => taskMap.get(taskId)).filter(Boolean);
-    const branchCharts = (branch.dashboard_chart_ids || branch.chart_ids || []).map((chartId) => charts[chartId]).filter(Boolean);
+    const branchCharts =
+      branch.chart_media_items?.length
+        ? branch.chart_media_items
+        : (branch.dashboard_chart_ids || branch.chart_ids || []).map((chartId) => charts[chartId]).filter(Boolean);
 
     return `
       ${renderDetailHero({

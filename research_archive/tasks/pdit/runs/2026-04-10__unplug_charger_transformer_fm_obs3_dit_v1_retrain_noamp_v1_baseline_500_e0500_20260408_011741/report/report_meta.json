@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "pdit",
+  "bucket": "runs",
+  "slug": "2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741",
+  "assets": [
+    "report/assets/success_by_epoch.svg"
+  ],
+  "media_assets": [
+    "media/charts/success_by_epoch.svg"
+  ],
+  "notes": [
+    "report/report.md"
+  ]
+}

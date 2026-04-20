@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T17:57:45+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-20__audit_wandb_run",
+  "items": [
+    {
+      "role": "run::best_success.pt",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_success.pt",
+      "size_bytes": 14893,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::best_valid.pt",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/best_valid.pt",
+      "size_bytes": 14911,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0100.pt",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/epochs/epoch_0100.pt",
+      "size_bytes": 14911,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::latest.pt",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/latest.pt",
+      "size_bytes": 14887,
+      "mtime": "2026-04-20T17:57:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
+}

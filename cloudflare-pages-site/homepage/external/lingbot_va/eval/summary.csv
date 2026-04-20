@@ -1,0 +1,2 @@
+action_guidance_scale,action_mae,action_mse,action_num_inference_steps,action_steps_used,end_frame,episode_chunk,episode_index,guidance_scale,infer_attn_mode,num_chunks,num_inference_steps,pred_action_steps,pred_video_frames,prompt,segment_index,start_frame,status,task_name,video_frames_used,video_mae,video_mse
+1.0,0.020062865689396858,0.006736649200320244,4,93,77,0,0,1.0,flashattn,6,2,192,45,Click the blue dome-shaped bell's top center using the right arm.,0,0,success,click_bell-aloha-agilex_randomized_500-1000,45,0.025171633809804916,0.003563144477084279

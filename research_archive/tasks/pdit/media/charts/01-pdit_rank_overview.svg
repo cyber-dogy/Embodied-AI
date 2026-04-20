@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="398" viewBox="0 0 980 398">
+<rect width="100%" height="100%" rx="26" fill="#0f172a"/>
+<text x="42" y="38" fill="#f8fafc" font-size="26" font-weight="700">PDIT 关键结果排行</text>
+<text x="42" y="60" fill="#94a3b8" font-size="14">PDIT 只保留一张行为结果图，把关键 checkpoint 和 100 回合复核放在同一张排行条里，直接回答当前该认哪一个锚点。</text>
+<text x="42" y="98" fill="#cbd5e1" font-size="14">epoch 500</text>
+<rect x="210" y="78" width="700" height="18" rx="9" fill="#1e293b"/>
+<rect x="210" y="78" width="665.0" height="18" rx="9" fill="#b2573f"/>
+<text x="918" y="92" fill="#f8fafc" font-size="13">0.95</text>
+<text x="42" y="146" fill="#cbd5e1" font-size="14">epoch 300</text>
+<rect x="210" y="126" width="700" height="18" rx="9" fill="#1e293b"/>
+<rect x="210" y="126" width="630.0" height="18" rx="9" fill="#2b766f"/>
+<text x="918" y="140" fill="#f8fafc" font-size="13">0.90</text>
+<text x="42" y="194" fill="#cbd5e1" font-size="14">epoch 200</text>
+<rect x="210" y="174" width="700" height="18" rx="9" fill="#1e293b"/>
+<rect x="210" y="174" width="560.0" height="18" rx="9" fill="#2b766f"/>
+<text x="918" y="188" fill="#f8fafc" font-size="13">0.80</text>
+<text x="42" y="242" fill="#cbd5e1" font-size="14">epoch 400</text>
+<rect x="210" y="222" width="700" height="18" rx="9" fill="#1e293b"/>
+<rect x="210" y="222" width="560.0" height="18" rx="9" fill="#2b766f"/>
+<text x="918" y="236" fill="#f8fafc" font-size="13">0.80</text>
+<text x="42" y="290" fill="#cbd5e1" font-size="14">epoch 100</text>
+<rect x="210" y="270" width="700" height="18" rx="9" fill="#1e293b"/>
+<rect x="210" y="270" width="525.0" height="18" rx="9" fill="#2b766f"/>
+<text x="918" y="284" fill="#f8fafc" font-size="13">0.75</text>
+<text x="42" y="338" fill="#cbd5e1" font-size="14">100 回合复核</text>
+<rect x="210" y="318" width="700" height="18" rx="9" fill="#1e293b"/>
+<rect x="210" y="318" width="595.0" height="18" rx="9" fill="#3e7cb1"/>
+<text x="918" y="332" fill="#f8fafc" font-size="13">0.85</text>
+</svg>

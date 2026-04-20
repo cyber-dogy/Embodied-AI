@@ -1,0 +1,1 @@
+{"timestamp": "2026-04-20T17:57:45+08:00", "event_type": "audit_only", "task_id": "mdit", "run_name": "audit_wandb_run", "source_run_dir": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run", "source_trial_record": "/tmp/tmp1rgr6a63/autoresearch_records/audit_wandb_run.json", "status": "complete"}

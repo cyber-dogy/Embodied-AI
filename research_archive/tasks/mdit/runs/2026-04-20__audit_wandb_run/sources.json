@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T17:57:45+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-20__audit_wandb_run",
+  "items": [
+    {
+      "role": "trial_record",
+      "source_path": "/tmp/tmp1rgr6a63/autoresearch_records/audit_wandb_run.json",
+      "archive_path": "metrics/trial_record.json",
+      "mode": "copied",
+      "size_bytes": 3604
+    },
+    {
+      "role": "summary",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/summary.json",
+      "archive_path": "metrics/summary.json",
+      "mode": "copied",
+      "size_bytes": 13
+    },
+    {
+      "role": "audit_report",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/audit_report.json",
+      "archive_path": "metrics/audit_report.json",
+      "mode": "copied",
+      "size_bytes": 1941
+    },
+    {
+      "role": "experiment_manifest",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/experiment_manifest.json",
+      "archive_path": "metrics/experiment_manifest.json",
+      "mode": "copied",
+      "size_bytes": 51
+    },
+    {
+      "role": "trial_request",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/trial_request.json",
+      "archive_path": "metrics/trial_request.json",
+      "mode": "copied",
+      "size_bytes": 597
+    },
+    {
+      "role": "config",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/config.json",
+      "archive_path": "metrics/config.json",
+      "mode": "copied",
+      "size_bytes": 2
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "note::fixes",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
+      "archive_path": "notes/fixes.md",
+      "mode": "copied",
+      "size_bytes": 90862
+    },
+    {
+      "role": "note::2026-04-16-mdit-execution-manual",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/2026-04-16-mdit-execution-manual.md",
+      "archive_path": "notes/2026-04-16-mdit-execution-manual.md",
+      "mode": "copied",
+      "size_bytes": 4861
+    },
+    {
+      "role": "note::2026-04-17-172029-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/2026-04-17-172029-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329.md",
+      "archive_path": "notes/2026-04-17-172029-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329.md",
+      "mode": "copied",
+      "size_bytes": 473
+    },
+    {
+      "role": "note::best_path",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/best_path.md",
+      "archive_path": "notes/best_path.md",
+      "mode": "copied",
+      "size_bytes": 2034
+    },
+    {
+      "role": "note::research_journal",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/research_journal.md",
+      "archive_path": "notes/research_journal.md",
+      "mode": "copied",
+      "size_bytes": 17971
+    },
+    {
+      "role": "run::train_heartbeat.json",
+      "source_path": "/tmp/tmp1rgr6a63/ckpt/audit_wandb_run/train_heartbeat.json",
+      "archive_path": "metrics/train_heartbeat.json",
+      "mode": "copied",
+      "size_bytes": 23
+    }
+  ]
+}

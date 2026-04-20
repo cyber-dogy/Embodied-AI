@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "archived_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "mdit",
+  "bucket": "milestones",
+  "slug": "2026-04-19__mdit_reference_line",
+  "milestone_name": "mdit_reference_line",
+  "source_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line",
+  "metadata": {
+    "category": "reference_line"
+  },
+  "status": "complete",
+  "missing_items": []
+}

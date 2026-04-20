@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "infra",
+  "bucket": "records",
+  "slug": "2026-04-19__homepage_media_dummy_sim2real_platform",
+  "items": [
+    {
+      "role": "primary_doc",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/homepage/media/README.md",
+      "archive_path": "notes/README.md",
+      "mode": "copied",
+      "size_bytes": 869
+    },
+    {
+      "role": "extra::dummy-sim2real-platform::captions.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/homepage/media/tasks/dummy-sim2real-platform/captions.json",
+      "archive_path": "metrics/captions.json",
+      "mode": "copied",
+      "size_bytes": 861
+    },
+    {
+      "role": "extra::dummy-sim2real-platform::images/00-封面图.jpg",
+      "source_path": "/home/gjw/MyProjects/dummy_controller/demo/封面图.jpg",
+      "archive_path": "media/demo/images/00-封面图.jpg",
+      "mode": "copied",
+      "size_bytes": 177779
+    },
+    {
+      "role": "extra::dummy-sim2real-platform::videos/01-运动逆解算.mp4",
+      "source_path": "/home/gjw/MyProjects/dummy_controller/demo/运动逆解算/运动逆解算-1.mp4",
+      "archive_path": "media/demo/videos/01-运动逆解算.mp4",
+      "mode": "copied",
+      "size_bytes": 3183557
+    },
+    {
+      "role": "extra::dummy-sim2real-platform::videos/02-真机仿真数字孪生.mp4",
+      "source_path": "/home/gjw/MyProjects/dummy_controller/demo/真机-仿真数字孪生2/真机-仿真数字孪生2-1.mp4",
+      "archive_path": "media/demo/videos/02-真机仿真数字孪生.mp4",
+      "mode": "copied",
+      "size_bytes": 5051565
+    },
+    {
+      "role": "extra::dummy-sim2real-platform::videos/03-规划轨迹执行.mp4",
+      "source_path": "/home/gjw/MyProjects/dummy_controller/demo/规划轨迹执行/规划轨迹执行-1.mp4",
+      "archive_path": "media/demo/videos/03-规划轨迹执行.mp4",
+      "mode": "copied",
+      "size_bytes": 6401930
+    }
+  ]
+}

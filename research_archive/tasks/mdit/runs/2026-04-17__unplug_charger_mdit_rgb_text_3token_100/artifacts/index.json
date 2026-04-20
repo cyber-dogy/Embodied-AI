@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-17__unplug_charger_mdit_rgb_text_3token_100",
+  "items": [
+    {
+      "role": "run::best_success.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_success.pt",
+      "size_bytes": 5198840598,
+      "mtime": "2026-04-17T10:55:41+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::best_valid.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_valid.pt",
+      "size_bytes": 5198868694,
+      "mtime": "2026-04-16T23:25:01+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0050.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0050.pt",
+      "size_bytes": 5198868886,
+      "mtime": "2026-04-16T23:28:23+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0100.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt",
+      "size_bytes": 5198879382,
+      "mtime": "2026-04-17T02:14:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::latest.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/latest.pt",
+      "size_bytes": 5198879382,
+      "mtime": "2026-04-17T02:14:45+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
+}

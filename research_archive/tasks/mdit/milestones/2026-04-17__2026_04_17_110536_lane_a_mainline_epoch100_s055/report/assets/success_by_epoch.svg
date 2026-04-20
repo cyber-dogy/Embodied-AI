@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380">
+<rect width="100%" height="100%" rx="24" fill="#0f172a"/>
+<text x="80" y="34" fill="#e2e8f0" font-size="24" font-weight="700">共享审计成功率</text>
+<line x1="80" y1="300" x2="840" y2="300" stroke="#475569" stroke-width="2"/>
+<line x1="80" y1="60" x2="80" y2="300" stroke="#475569" stroke-width="2"/>
+<rect x="178.8" y="190.9" width="182.4" height="109.1" rx="10" fill="#22c55e"/>
+<text x="270.0" y="182.9" text-anchor="middle" fill="#f8fafc" font-size="14">0.250</text>
+<text x="270.0" y="326.0" text-anchor="middle" fill="#cbd5e1" font-size="13">@50</text>
+<rect x="558.8" y="60.0" width="182.4" height="240.0" rx="10" fill="#22c55e"/>
+<text x="650.0" y="52.0" text-anchor="middle" fill="#f8fafc" font-size="14">0.550</text>
+<text x="650.0" y="326.0" text-anchor="middle" fill="#cbd5e1" font-size="13">@100</text>
+</svg>

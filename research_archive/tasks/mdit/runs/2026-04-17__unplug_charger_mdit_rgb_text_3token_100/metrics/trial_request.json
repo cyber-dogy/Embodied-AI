@@ -1,0 +1,27 @@
+{
+  "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/mdit/fm_autodl_lab.json",
+  "strategy": "fm",
+  "config_overrides": {
+    "research_lane": "lane_a_mainline"
+  },
+  "stage_epochs": 100,
+  "checkpoint_every": 50,
+  "eval_episodes": 20,
+  "eval_seed": 1234,
+  "device": "cuda",
+  "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+  "data_root": null,
+  "run_name": "unplug_charger_mdit_rgb_text_3token_100",
+  "experiment_name": "lane_a_mainline_100",
+  "description": "Lane A mainline: 5RGB + text + CLIP last-block + PDIT FM/DiT semantics",
+  "max_steps": 200,
+  "heartbeat_every": 50,
+  "prefer_ema": true,
+  "headless": true,
+  "show_progress": true,
+  "cleanup_failed": true,
+  "enable_wandb": true,
+  "audit_timeout_sec": 1800,
+  "collapse_thresholds": null,
+  "collapse_drop_tolerance": 0.1
+}

@@ -1,0 +1,7 @@
+{
+  "updated_at": "2026-04-19T12:09:05+08:00",
+  "source_record_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json",
+  "actual_ckpt_anchor_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055",
+  "actual_ckpt_anchor_best": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/best_success.pt",
+  "actual_ckpt_anchor_audit": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055/audit_report.json"
+}

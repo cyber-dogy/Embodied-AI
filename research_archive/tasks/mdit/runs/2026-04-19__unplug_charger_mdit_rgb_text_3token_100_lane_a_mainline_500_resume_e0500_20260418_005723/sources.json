@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-20T11:43:03+08:00",
+  "task_id": "mdit",
+  "bucket": "runs",
+  "slug": "2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723",
+  "items": [
+    {
+      "role": "trial_record",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723.json",
+      "archive_path": "metrics/trial_record.json",
+      "mode": "copied",
+      "size_bytes": 99161
+    },
+    {
+      "role": "note::research_desk",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
+      "archive_path": "notes/research_desk.md",
+      "mode": "copied",
+      "size_bytes": 28860
+    },
+    {
+      "role": "note::fixes",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
+      "archive_path": "notes/fixes.md",
+      "mode": "copied",
+      "size_bytes": 90862
+    },
+    {
+      "role": "note::2026-04-16-mdit-execution-manual",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/2026-04-16-mdit-execution-manual.md",
+      "archive_path": "notes/2026-04-16-mdit-execution-manual.md",
+      "mode": "copied",
+      "size_bytes": 4861
+    },
+    {
+      "role": "note::2026-04-17-172029-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/2026-04-17-172029-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329.md",
+      "archive_path": "notes/2026-04-17-172029-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329.md",
+      "mode": "copied",
+      "size_bytes": 473
+    },
+    {
+      "role": "note::best_path",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/best_path.md",
+      "archive_path": "notes/best_path.md",
+      "mode": "copied",
+      "size_bytes": 2034
+    },
+    {
+      "role": "note::research_journal",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/research_journal.md",
+      "archive_path": "notes/research_journal.md",
+      "mode": "copied",
+      "size_bytes": 17971
+    }
+  ]
+}

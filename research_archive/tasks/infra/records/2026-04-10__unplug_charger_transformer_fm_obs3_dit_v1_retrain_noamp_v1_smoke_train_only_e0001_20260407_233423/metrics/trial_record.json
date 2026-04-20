@@ -1,0 +1,28 @@
+{
+  "phase": "audit_only",
+  "experiment_name": "trial",
+  "description": "",
+  "trial_score": -1.0,
+  "pending_offline_audit": true,
+  "offline_audit_command": "/home/gjw/miniconda3/envs/pfp_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423",
+  "success_100": null,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": true,
+  "collapse_reasons": [
+    "checkpoint audit timed out after 5 seconds"
+  ],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423/best_valid.pt",
+  "kept_ckpt_paths": [
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423/best_valid.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423/epochs/epoch_0001.pt"
+  ],
+  "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423",
+  "audit_report_path": null,
+  "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__smoke_train_only__e0001__20260407_233423/summary.json",
+  "error_type": "RuntimeError"
+}

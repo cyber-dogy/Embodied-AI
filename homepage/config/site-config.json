@@ -71,7 +71,7 @@
       "id": "mdit-mainline",
       "title": "MDIT RGB+Text 主线推进",
       "summary": "围绕 RGB+Text 主线、平滑动作对照、faithful recipe 对照与严格 MTDP 对照的筛选结果，逐步把 100→500 续训接管整理成一条可持续推进的研究主线。",
-      "status": "推进中",
+      "status": "已验证",
       "branch_ids": [
         "mdit"
       ],
@@ -98,6 +98,39 @@
         "mdit-success-curve",
         "mdit-loss-tail",
         "mdit-resume-snapshot"
+      ]
+    },
+    {
+      "id": "lingbot-va-world-model",
+      "title": "LingBot-VA 世界模型后训练切入",
+      "summary": "围绕视频 latent + 动作联合建模的后训练项目，先把单任务 smoke、离线 demo 导出与单卡显存边界摸清，再往正式世界模型训练与评测推进。",
+      "status": "推进中",
+      "branch_ids": [
+        "lingbot-va"
+      ],
+      "keywords": [
+        "world model",
+        "vla",
+        "video latent",
+        "robotwin",
+        "smoke",
+        "post-train"
+      ],
+      "featured_paths": [
+        "homepage/external/lingbot_va/docs/project_guide.md",
+        "homepage/external/lingbot_va/docs/research_desk.md",
+        "homepage/external/lingbot_va/docs/fixes.md",
+        "homepage/external/lingbot_va/docs/README.md"
+      ],
+      "artifact_paths": {
+        "eval_summary": "homepage/external/lingbot_va/eval/summary.json",
+        "eval_table": "homepage/external/lingbot_va/eval/summary.csv",
+        "wandb_summary": "homepage/external/lingbot_va/wandb/smoke-wandb-summary.json"
+      },
+      "chart_ids": [
+        "lingbot-smoke-metrics",
+        "lingbot-offline-eval",
+        "lingbot-system-boundary"
       ]
     },
     {
@@ -198,7 +231,7 @@
     "mdit": {
       "title": "MDIT 研究线",
       "summary": "围绕 RGB+Text 主线、关键对照和续训接管形成的研究线，已经沉淀出日志、主线路径和接管记录。",
-      "status": "推进中",
+      "status": "已验证",
       "keywords": [
         "mdit",
         "lane",
@@ -209,6 +242,23 @@
       "featured_paths": [
         "docs/mdit/research_journal.md",
         "docs/mdit/best_path.md"
+      ]
+    },
+    "lingbot-va": {
+      "title": "LingBot-VA 世界模型线",
+      "summary": "围绕视频 latent + 动作联合建模、单任务 smoke 与离线 demo exporter，逐步切入 LingBot-VA 的世界模型后训练研究。",
+      "status": "推进中",
+      "keywords": [
+        "world model",
+        "video latent",
+        "robotwin",
+        "post-train",
+        "smoke",
+        "demo exporter"
+      ],
+      "featured_paths": [
+        "homepage/external/lingbot_va/docs/project_guide.md",
+        "homepage/external/lingbot_va/docs/research_desk.md"
       ]
     },
     "lelan": {

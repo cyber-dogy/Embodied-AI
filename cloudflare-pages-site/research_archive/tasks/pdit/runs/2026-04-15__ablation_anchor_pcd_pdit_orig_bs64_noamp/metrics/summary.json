@@ -1,0 +1,216 @@
+{
+  "run_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "strategy": "fm",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/ablation_anchor_pcd_pdit_orig_bs64_noamp",
+  "wandb_run_id": "00dqh5au",
+  "wandb_run_url": "https://wandb.ai/cyber-dogy/autodl-unplug-charger-pdit/runs/00dqh5au",
+  "config": {
+    "run_name": "ablation_anchor_pcd_pdit_orig_bs64_noamp",
+    "task_name": "unplug_charger",
+    "obs_mode": "pcd",
+    "encoder_name": "pointnet_token",
+    "backbone_name": "dit",
+    "train_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/train",
+    "valid_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/valid",
+    "seed": 1234,
+    "device": "cuda",
+    "resume_from_latest": false,
+    "n_obs_steps": 3,
+    "n_pred_steps": 32,
+    "subs_factor": 3,
+    "n_points": 2048,
+    "use_pc_color": false,
+    "obs_features_dim": 256,
+    "y_dim": 10,
+    "hidden_dim": 512,
+    "time_dim": 256,
+    "num_blocks": 6,
+    "nhead": 8,
+    "dim_feedforward": 2048,
+    "dropout": 0.1,
+    "activation": "gelu",
+    "debug_finiteness": true,
+    "final_layer_zero_init": false,
+    "decoder_condition_mode": "mean_pool",
+    "batch_size": 64,
+    "grad_accum_steps": 1,
+    "num_workers": 4,
+    "train_epochs": 100,
+    "train_use_amp": false,
+    "train_amp_dtype": "bfloat16",
+    "grad_clip_norm": 1.0,
+    "empty_cuda_cache": true,
+    "learning_rate": 0.0001,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "eps": 1e-08,
+    "transformer_weight_decay": 0.001,
+    "obs_encoder_weight_decay": 1e-06,
+    "lr_scheduler_name": "cosine",
+    "lr_warmup_steps": 1000,
+    "ema_enable": true,
+    "ema_decay": 0.9993,
+    "val_every_epochs": 1,
+    "success_selection_every_epochs": 0,
+    "checkpoint_every_epochs": 50,
+    "sample_every_epochs": 5,
+    "success_selection_episodes": 0,
+    "success_max_steps": 200,
+    "standard_eval_episodes": 0,
+    "eval_step_heartbeat_every": 50,
+    "smooth_actions": false,
+    "command_mode": "first",
+    "horizon_index": 0,
+    "average_first_n": 1,
+    "position_alpha": 0.35,
+    "rotation_alpha": 0.25,
+    "max_position_step": 0.03,
+    "gripper_open_threshold": 0.6,
+    "gripper_close_threshold": 0.4,
+    "norm_pcd_center": [
+      0.4,
+      0.0,
+      1.4
+    ],
+    "robot_state_mean": null,
+    "robot_state_std": null,
+    "augment_data": false,
+    "augment_translation_sigma": 0.02,
+    "augment_rotation_sigma": 0.1,
+    "loss_type": "l2",
+    "fm_num_k_infer": 10,
+    "fm_time_conditioning": true,
+    "fm_noise_type": "gaussian",
+    "fm_noise_scale": 1.0,
+    "fm_flow_schedule": "exp",
+    "fm_exp_scale": 4.0,
+    "fm_snr_sampler": "uniform",
+    "fm_loss_weights": null,
+    "diffusion_train_steps": 100,
+    "diffusion_eval_steps": 100,
+    "diffusion_num_infer_steps": 100,
+    "diffusion_prediction_type": "epsilon",
+    "diffusion_noise_scale": 1.0,
+    "wandb_enable": true,
+    "wandb_project": "autodl-unplug-charger-pdit",
+    "wandb_entity": null,
+    "wandb_mode": "online",
+    "wandb_resume": false,
+    "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+    "print_every": 50
+  },
+  "best_metric": 0.6767891668959668,
+  "best_epoch": 37,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "latest_epoch": 99,
+  "train_loss_last": 0.04245155800627657,
+  "valid_loss_last": 1.307850258767997,
+  "epoch_summaries": [
+    {
+      "epoch": 95,
+      "train": {
+        "loss_total": 0.0411903096520039,
+        "num_batches": 166,
+        "lr": 4.4635406290109984e-07
+      },
+      "valid": {
+        "loss_total": 1.2311503534254276,
+        "loss_xyz": 0.07079484274512843,
+        "loss_rot6d": 0.6698769149615577,
+        "loss_grip": 0.4904786059142728,
+        "mse_xyz": 0.0038984245505784393,
+        "mse_rot6d": 0.06398453580837477,
+        "mse_grip": 0.06595666955935915,
+        "num_batches": 19
+      },
+      "sample": null
+    },
+    {
+      "epoch": 96,
+      "train": {
+        "loss_total": 0.04237832146954824,
+        "num_batches": 166,
+        "lr": 2.512379280910082e-07
+      },
+      "valid": {
+        "loss_total": 1.1644314000088918,
+        "loss_xyz": 0.06732651189361748,
+        "loss_rot6d": 0.6438381350844314,
+        "loss_grip": 0.4532667746595842,
+        "mse_xyz": 0.0039393079427291495,
+        "mse_rot6d": 0.06389324293367711,
+        "mse_grip": 0.06627542070591037,
+        "num_batches": 19
+      },
+      "sample": null
+    },
+    {
+      "epoch": 97,
+      "train": {
+        "loss_total": 0.043410085624151204,
+        "num_batches": 166,
+        "lr": 1.1171331437135336e-07
+      },
+      "valid": {
+        "loss_total": 1.0653613295013968,
+        "loss_xyz": 0.0610663893044387,
+        "loss_rot6d": 0.5711818597965727,
+        "loss_grip": 0.43311304753450186,
+        "mse_xyz": 0.0039505955937784165,
+        "mse_rot6d": 0.06389892299653423,
+        "mse_grip": 0.0659743312678888,
+        "num_batches": 19
+      },
+      "sample": null
+    },
+    {
+      "epoch": 98,
+      "train": {
+        "loss_total": 0.04424757825726845,
+        "num_batches": 166,
+        "lr": 2.793613286803387e-08
+      },
+      "valid": {
+        "loss_total": 1.2033901763589758,
+        "loss_xyz": 0.06664112965135198,
+        "loss_rot6d": 0.6541401543409416,
+        "loss_grip": 0.4826088969742781,
+        "mse_xyz": 0.003916752297204527,
+        "mse_rot6d": 0.06388831327862327,
+        "mse_grip": 0.06626128918172694,
+        "num_batches": 19
+      },
+      "sample": null
+    },
+    {
+      "epoch": 99,
+      "train": {
+        "loss_total": 0.04245155800627657,
+        "num_batches": 166,
+        "lr": 0.0
+      },
+      "valid": {
+        "loss_total": 1.307850258767997,
+        "loss_xyz": 0.0733933529669517,
+        "loss_rot6d": 0.7515050024039259,
+        "loss_grip": 0.4829519056273918,
+        "mse_xyz": 0.003931052265167972,
+        "mse_rot6d": 0.06380286627283663,
+        "mse_grip": 0.06598941867827977,
+        "num_batches": 19
+      },
+      "sample": {
+        "train_action_mse_error": 0.0014227032661437988
+      }
+    }
+  ],
+  "final_standard_eval": null,
+  "wall_clock_hours": 0.32114364145666663,
+  "dataset_sizes": {
+    "train": 10573,
+    "valid": 1189
+  }
+}

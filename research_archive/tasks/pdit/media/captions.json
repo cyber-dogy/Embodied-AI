@@ -1,0 +1,30 @@
+{
+  "demo/images/pdit.png": {
+    "title": "PDIT 点云主线封面",
+    "caption": "作为当前 PDIT 主线封面，概括点云观测、动作生成与行为审计这条模仿学习主线的整体结构。"
+  },
+  "demo/videos/epoch_0450_pcd.mp4": {
+    "title": "PDIT 点云策略关门演示",
+    "caption": "展示点云主线在后期 checkpoint 上的仿真执行效果，说明 point cloud 到 action chunk 的策略已经能稳定落到具体 manipulation 动作。"
+  },
+  "demo/videos/仿真-1.mp4": {
+    "title": "Franka 拔插头仿真执行",
+    "caption": "展示 PDIT 在拔插头任务中的仿真执行现场：策略从观测编码到 action chunk 输出后，驱动 Franka 机械臂完成接近、对位与执行动作。",
+    "showcase": false
+  },
+  "charts/01-pdit_rank_overview.svg": {
+    "title": "PDIT 关键结果排行",
+    "caption": "把关键 checkpoint 和 100 回合复核放到同一张图里，直接看当前该认哪一个锚点。",
+    "note": "epoch 500 仍然是当前最稳的行为锚点，100 回合复核也继续站得住。"
+  },
+  "charts/02-pdit_best_loss_curve.svg": {
+    "title": "PDIT 最优组 loss 尾段",
+    "caption": "围绕当前最优 baseline@500，直接看 train / valid total loss 的尾段关系。",
+    "note": "当前 baseline@500 训练记录里没有可回抓的 W&B history，因此这里只能展示本地 summary 保留下来的 495-499 epoch 尾段快照。"
+  },
+  "charts/03-pdit_best_mse_curve.svg": {
+    "title": "PDIT 最优组 MSE 尾段",
+    "caption": "把 xyz / rot6d / grip 三条误差拆开，解释当前行为锚点背后的误差结构。",
+    "note": "PDIT 当前没有可用的 W&B history，这张图与 loss 图一样来自本地 summary 尾段快照。"
+  }
+}

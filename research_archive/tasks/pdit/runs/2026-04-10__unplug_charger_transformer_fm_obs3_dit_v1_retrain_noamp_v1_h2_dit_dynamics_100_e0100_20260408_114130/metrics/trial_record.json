@@ -1,0 +1,1087 @@
+{
+  "phase": "audit_only",
+  "experiment_name": "h2_dit_dynamics_100",
+  "description": "h2 DiT dynamics: dropout0 + final zero init",
+  "trial_score": 0.65,
+  "pending_offline_audit": false,
+  "offline_audit_command": "/home/gjw/miniconda3/envs/pfp_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+  "success_100": 0.65,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": false,
+  "collapse_reasons": [],
+  "best_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_success.pt",
+  "best_success_rate": 0.65,
+  "best_success_epoch": 100,
+  "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_valid.pt",
+  "kept_ckpt_paths": [
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_valid.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/epochs/epoch_0100.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_success.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_valid.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/epochs/epoch_0100.pt"
+  ],
+  "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+  "audit_report_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/audit_report.json",
+  "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/summary.json",
+  "error_type": null,
+  "audit_report": {
+    "experiment_name": "h2_dit_dynamics_100",
+    "description": "h2 DiT dynamics: dropout0 + final zero init",
+    "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+    "strategy": "fm",
+    "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+    "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/fm_autodl_lab.json",
+    "stage_epochs": 100,
+    "checkpoint_every": 100,
+    "eval_episodes": 20,
+    "eval_seed": 1234,
+    "trial_score": 0.65,
+    "collapse_detected": false,
+    "collapse_reasons": [],
+    "collapse_checks": [
+      {
+        "type": "threshold",
+        "epoch": 100,
+        "threshold": 0.55,
+        "value": 0.65,
+        "passed": true
+      }
+    ],
+    "thresholds": {
+      "100": 0.55,
+      "300": 0.65,
+      "500": 0.68
+    },
+    "success_by_epoch": {
+      "100": 0.65
+    },
+    "audit_records": [
+      {
+        "label": "best_valid",
+        "kind": "special",
+        "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_valid.pt",
+        "epoch": 35,
+        "completed_epoch": 34,
+        "best_metric": 0.5715935011639407,
+        "best_epoch": 34,
+        "best_success_rate": null,
+        "best_success_epoch": null,
+        "success_rate": 0.0,
+        "mean_steps": 200.0,
+        "num_successes": 0,
+        "num_episodes": 20,
+        "duration_sec": 564.3480117819854,
+        "episode_records": [
+          {
+            "episode": 0,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 1,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 2,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 3,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 4,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 5,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 6,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 7,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 8,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 9,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 10,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 11,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 12,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 13,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 14,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 15,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 16,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 17,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 18,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 19,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          }
+        ],
+        "train_loss_at_epoch": 0.08076029817863534,
+        "valid_loss_at_epoch": 0.5715935011639407,
+        "sample_mse_at_epoch": 0.03646273538470268
+      },
+      {
+        "label": "epoch_0100",
+        "kind": "periodic",
+        "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/epochs/epoch_0100.pt",
+        "epoch": 100,
+        "completed_epoch": 99,
+        "best_metric": 0.5715935011639407,
+        "best_epoch": 34,
+        "best_success_rate": null,
+        "best_success_epoch": null,
+        "success_rate": 0.65,
+        "mean_steps": 105.45,
+        "num_successes": 13,
+        "num_episodes": 20,
+        "duration_sec": 300.79275221395073,
+        "episode_records": [
+          {
+            "episode": 0,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 1,
+            "success": true,
+            "steps": 45,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 2,
+            "success": true,
+            "steps": 61,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 3,
+            "success": true,
+            "steps": 42,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 4,
+            "success": true,
+            "steps": 39,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 5,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 6,
+            "success": true,
+            "steps": 71,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 7,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 8,
+            "success": true,
+            "steps": 61,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 9,
+            "success": true,
+            "steps": 52,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 10,
+            "success": true,
+            "steps": 54,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 11,
+            "success": true,
+            "steps": 49,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 12,
+            "success": true,
+            "steps": 69,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 13,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 14,
+            "success": true,
+            "steps": 56,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 15,
+            "success": true,
+            "steps": 66,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 16,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 17,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 18,
+            "success": false,
+            "steps": 200,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          },
+          {
+            "episode": 19,
+            "success": true,
+            "steps": 44,
+            "descriptions": [
+              "unplug charger",
+              "take the charger out of the wall",
+              "grip the black charger and pull it out of its socket",
+              "slide the plug out from the wall",
+              "remove the charger from the mains",
+              "get the charger from the wall plug"
+            ],
+            "error": null
+          }
+        ],
+        "train_loss_at_epoch": 0.014882601993130323,
+        "valid_loss_at_epoch": 1.0434843598203243,
+        "sample_mse_at_epoch": 0.0006429842323996127
+      }
+    ],
+    "best_success_epoch": 100,
+    "best_success_rate": 0.65,
+    "best_success_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_success.pt",
+    "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130/best_valid.pt",
+    "train_summary": {
+      "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+      "strategy": "fm",
+      "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+      "wandb_run_id": null,
+      "wandb_run_url": null,
+      "config": {
+        "run_name": "unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1__h2_dit_dynamics_100__e0100__20260408_114130",
+        "task_name": "unplug_charger",
+        "obs_mode": "pcd",
+        "train_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/train",
+        "valid_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/valid",
+        "seed": 1234,
+        "device": "cuda",
+        "resume_from_latest": false,
+        "n_obs_steps": 3,
+        "n_pred_steps": 32,
+        "subs_factor": 3,
+        "n_points": 2048,
+        "use_pc_color": false,
+        "obs_features_dim": 256,
+        "y_dim": 10,
+        "hidden_dim": 512,
+        "time_dim": 256,
+        "num_blocks": 6,
+        "nhead": 8,
+        "dim_feedforward": 2048,
+        "dropout": 0.0,
+        "activation": "gelu",
+        "debug_finiteness": true,
+        "final_layer_zero_init": true,
+        "decoder_condition_mode": "mean_pool",
+        "batch_size": 32,
+        "grad_accum_steps": 2,
+        "num_workers": 4,
+        "train_epochs": 100,
+        "train_use_amp": false,
+        "train_amp_dtype": "bfloat16",
+        "grad_clip_norm": 1.0,
+        "empty_cuda_cache": true,
+        "learning_rate": 0.0001,
+        "betas": [
+          0.9,
+          0.95
+        ],
+        "eps": 1e-08,
+        "transformer_weight_decay": 0.001,
+        "obs_encoder_weight_decay": 1e-06,
+        "lr_scheduler_name": "cosine",
+        "lr_warmup_steps": 1000,
+        "ema_enable": true,
+        "ema_decay": 0.9993,
+        "val_every_epochs": 1,
+        "success_selection_every_epochs": 0,
+        "checkpoint_every_epochs": 100,
+        "sample_every_epochs": 5,
+        "success_selection_episodes": 0,
+        "success_max_steps": 200,
+        "standard_eval_episodes": 0,
+        "eval_step_heartbeat_every": 50,
+        "smooth_actions": false,
+        "command_mode": "first",
+        "horizon_index": 0,
+        "average_first_n": 1,
+        "position_alpha": 0.35,
+        "rotation_alpha": 0.25,
+        "max_position_step": 0.03,
+        "gripper_open_threshold": 0.6,
+        "gripper_close_threshold": 0.4,
+        "norm_pcd_center": [
+          0.4,
+          0.0,
+          1.4
+        ],
+        "robot_state_mean": null,
+        "robot_state_std": null,
+        "augment_data": false,
+        "augment_translation_sigma": 0.02,
+        "augment_rotation_sigma": 0.1,
+        "loss_type": "l2",
+        "fm_num_k_infer": 10,
+        "fm_time_conditioning": true,
+        "fm_noise_type": "gaussian",
+        "fm_noise_scale": 1.0,
+        "fm_flow_schedule": "exp",
+        "fm_exp_scale": 4.0,
+        "fm_snr_sampler": "uniform",
+        "fm_loss_weights": null,
+        "diffusion_train_steps": 100,
+        "diffusion_eval_steps": 100,
+        "diffusion_num_infer_steps": 100,
+        "diffusion_prediction_type": "epsilon",
+        "diffusion_noise_scale": 1.0,
+        "wandb_enable": false,
+        "wandb_project": "pfp-autodl-transformer-fm",
+        "wandb_entity": null,
+        "wandb_mode": "disabled",
+        "wandb_resume": false,
+        "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+        "print_every": 50
+      },
+      "best_metric": 0.5715935011639407,
+      "best_epoch": 34,
+      "best_success_rate": null,
+      "best_success_epoch": null,
+      "latest_epoch": 99,
+      "train_loss_last": 0.014882601993130323,
+      "valid_loss_last": 1.0434843598203243,
+      "epoch_summaries": [
+        {
+          "epoch": 95,
+          "train": {
+            "loss_total": 0.015032025587286384,
+            "num_batches": 331,
+            "lr": 3.8420121699814794e-07
+          },
+          "valid": {
+            "loss_total": 0.9663577034554788,
+            "loss_xyz": 0.06231686593597069,
+            "loss_rot6d": 0.5139507518033497,
+            "loss_grip": 0.39009009252032756,
+            "mse_xyz": 0.003763945122811588,
+            "mse_rot6d": 0.06253530938173706,
+            "mse_grip": 0.06559187198241477,
+            "num_batches": 38
+          },
+          "sample": null
+        },
+        {
+          "epoch": 96,
+          "train": {
+            "loss_total": 0.014753258308069358,
+            "num_batches": 331,
+            "lr": 2.046626029441112e-07
+          },
+          "valid": {
+            "loss_total": 1.129515202115535,
+            "loss_xyz": 0.06844312125682145,
+            "loss_rot6d": 0.6035181781097843,
+            "loss_grip": 0.4575538800159656,
+            "mse_xyz": 0.00374168758380141,
+            "mse_rot6d": 0.062489747127122096,
+            "mse_grip": 0.0657120735642198,
+            "num_batches": 38
+          },
+          "sample": null
+        },
+        {
+          "epoch": 97,
+          "train": {
+            "loss_total": 0.014975790025840803,
+            "num_batches": 331,
+            "lr": 8.112593350526609e-08
+          },
+          "valid": {
+            "loss_total": 0.9964221100028801,
+            "loss_xyz": 0.05839225002809575,
+            "loss_rot6d": 0.5315293636859247,
+            "loss_grip": 0.4065005005732497,
+            "mse_xyz": 0.003744959181188422,
+            "mse_rot6d": 0.062468389594582015,
+            "mse_grip": 0.06542556654856999,
+            "num_batches": 38
+          },
+          "sample": null
+        },
+        {
+          "epoch": 98,
+          "train": {
+            "loss_total": 0.0150678234689748,
+            "num_batches": 331,
+            "lr": 1.373014325021238e-08
+          },
+          "valid": {
+            "loss_total": 1.0152861288822208,
+            "loss_xyz": 0.05376116780098528,
+            "loss_rot6d": 0.5279026258044484,
+            "loss_grip": 0.4336223373194164,
+            "mse_xyz": 0.003681528141513761,
+            "mse_rot6d": 0.062382663180917584,
+            "mse_grip": 0.06564151541649128,
+            "num_batches": 38
+          },
+          "sample": null
+        },
+        {
+          "epoch": 99,
+          "train": {
+            "loss_total": 0.014882601993130323,
+            "num_batches": 331,
+            "lr": 0.0
+          },
+          "valid": {
+            "loss_total": 1.0434843598203243,
+            "loss_xyz": 0.061950371156471146,
+            "loss_rot6d": 0.5228451078291982,
+            "loss_grip": 0.4586888759628269,
+            "mse_xyz": 0.0037379104628359385,
+            "mse_rot6d": 0.06261206655720966,
+            "mse_grip": 0.0647855533964377,
+            "num_batches": 38
+          },
+          "sample": {
+            "train_action_mse_error": 0.0006429842323996127
+          }
+        }
+      ],
+      "final_standard_eval": null,
+      "wall_clock_hours": 0.7506386383194412,
+      "dataset_sizes": {
+        "train": 10573,
+        "valid": 1189
+      }
+    },
+    "train_loss_history": [
+      3.26943153341011,
+      1.472205498967646,
+      0.8314784333064837,
+      0.5852627371553207,
+      0.476408595314919,
+      0.39970088941453086,
+      0.3518142408474695,
+      0.30004434688213727,
+      0.2582995833947219,
+      0.23814066281131388,
+      0.2157544899743129,
+      0.19935598937946503,
+      0.1815033978205793,
+      0.17059925468666676,
+      0.15814766046954065,
+      0.15188004871059402,
+      0.14309709143242447,
+      0.1377776300258867,
+      0.12970966544126095,
+      0.12843062494546625,
+      0.12055776912009968,
+      0.11604673317506954,
+      0.1117120687019789,
+      0.10867448021683088,
+      0.10487817954891038,
+      0.10768218081883434,
+      0.1024536861168654,
+      0.0985044974079665,
+      0.09283904912473571,
+      0.09466734903321526,
+      0.0892086635791103,
+      0.08731252057449695,
+      0.08596758139277513,
+      0.08453570740730741,
+      0.08076029817863534,
+      0.08019171464974427,
+      0.07759321002666683,
+      0.07797649068324587,
+      0.07119530123121069,
+      0.07090928555210191,
+      0.07093962460891358,
+      0.06937643985778903,
+      0.06584760785282918,
+      0.062494001083998885,
+      0.06689093008727466,
+      0.06251015883850727,
+      0.061202239301449586,
+      0.05718543697880114,
+      0.05686130085988167,
+      0.05812800412834411,
+      0.05560882187524411,
+      0.05593278202765658,
+      0.05178673628976518,
+      0.048630718316241335,
+      0.05256243375920637,
+      0.04917111831894454,
+      0.04789675757559044,
+      0.04903342634484487,
+      0.04432189970184399,
+      0.04273085979874221,
+      0.043571206800121914,
+      0.04010953351832769,
+      0.04048024089528625,
+      0.04306817604538357,
+      0.0396546943512748,
+      0.037374107079901187,
+      0.0369169505712579,
+      0.03470154242798281,
+      0.03640174675800379,
+      0.03103312675269979,
+      0.03194772562974349,
+      0.029507713378308584,
+      0.030366893382208406,
+      0.028774893012606845,
+      0.02821023433308857,
+      0.026431188569755893,
+      0.024569683649163593,
+      0.0254245108440856,
+      0.023816855158656836,
+      0.023687745730063436,
+      0.0235352414474454,
+      0.022712567835213374,
+      0.02279020442973451,
+      0.020264142506623645,
+      0.01950435054254946,
+      0.01963616898311499,
+      0.0169489853663702,
+      0.017313589976419585,
+      0.01766703570658324,
+      0.0174930740198475,
+      0.016810642259217957,
+      0.01645303374856958,
+      0.015637423397883144,
+      0.015467569539379722,
+      0.014564094023238812,
+      0.015032025587286384,
+      0.014753258308069358,
+      0.014975790025840803,
+      0.0150678234689748,
+      0.014882601993130323
+    ],
+    "valid_loss_history": [
+      3.6549652940348576,
+      3.5239262141679464,
+      3.3846793174743652,
+      3.2464335152977393,
+      3.029842502192447,
+      2.8044347512094596,
+      2.4459818193787024,
+      2.0940068426885103,
+      1.787090932068072,
+      1.4803335007868315,
+      1.2589209973812103,
+      1.112087419158534,
+      0.9716626499828539,
+      0.9309723439969515,
+      0.8793212834157442,
+      0.8324659929463738,
+      0.7916408604697177,
+      0.7667533269054011,
+      0.7481670807066717,
+      0.7376106193191126,
+      0.717689941588201,
+      0.6928696636306612,
+      0.6951671297612944,
+      0.6414926901067558,
+      0.6698207376818908,
+      0.6044404291008648,
+      0.6752586105936452,
+      0.6456804653923762,
+      0.6455228540458178,
+      0.638706298446969,
+      0.6278211506769845,
+      0.630616256869153,
+      0.6097769030909005,
+      0.6227023707408654,
+      0.5715935011639407,
+      0.614887874867571,
+      0.6672207253347886,
+      0.6323951491595883,
+      0.6529899308163869,
+      0.6473404489653675,
+      0.6666045444282261,
+      0.5834361104980895,
+      0.6208541954524422,
+      0.6704358213189009,
+      0.6616457805625702,
+      0.6347809114836549,
+      0.7387509534233495,
+      0.6784495973077259,
+      0.6355003451340293,
+      0.6863365167947976,
+      0.6889198393266844,
+      0.7512462664836723,
+      0.7572457119822502,
+      0.6946978772941389,
+      0.7537036052120751,
+      0.7903451500092878,
+      0.7218569520199182,
+      0.718916355656754,
+      0.7891513485902626,
+      0.7810947041419384,
+      0.7808097976406938,
+      0.759333070833236,
+      0.8894868102659913,
+      0.813470484284488,
+      0.7830563527225566,
+      0.7497808415148604,
+      0.8237424431993675,
+      0.828430475164695,
+      0.9699059527269319,
+      0.8361617337213829,
+      0.8421396867764231,
+      0.8571419330730446,
+      0.9332418419959906,
+      0.7955342991351101,
+      0.8968635894554225,
+      0.9612993430530065,
+      0.9800718970302689,
+      0.9364255770036068,
+      0.9627002778610116,
+      1.0130574287552583,
+      0.9678362449600459,
+      0.9066585730883832,
+      0.9049554289759774,
+      0.9655871611321345,
+      0.9424062233148632,
+      1.0598362576902698,
+      1.0126040831306262,
+      1.0296485301866931,
+      1.0613118595149564,
+      1.1252377757214402,
+      1.0169937008268837,
+      1.1366354982846563,
+      1.108493307933187,
+      1.0751230498304052,
+      1.1450341303685778,
+      0.9663577034554788,
+      1.129515202115535,
+      0.9964221100028801,
+      1.0152861288822208,
+      1.0434843598203243
+    ]
+  }
+}

@@ -1,18 +1,85 @@
 window.homepageData = {
-  "generated_at": "2026-04-19T10:37:57+08:00",
+  "generated_at": "2026-04-20T19:44:03+08:00",
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
     "description": ""
   },
   "stats": {
-    "task_count": 5,
-    "branch_count": 4,
-    "timeline_count": 19,
-    "validated_rows": 9
+    "task_count": 6,
+    "branch_count": 5,
+    "timeline_count": 22,
+    "validated_rows": 12,
+    "archive_entry_count": 37,
+    "archive_milestone_count": 3,
+    "archive_complete_count": 12
   },
   "home": {
     "done_groups": [
+      {
+        "date": "2026-04-19",
+        "cards": [
+          {
+            "date": "2026-04-19",
+            "group": "done",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "MDIT 主线",
+            "title": "MDIT 主线固化 0.75@500，并收束出可复现的多模态配方",
+            "summary": "当前工作重点已经从继续开相似对照，转成补齐共享审计点位，并把 3-token 条件组织、分阶段多模态适配、encoder-decoder DiT 与 uniform FM 路径固定为主线配方。",
+            "metrics": [
+              {
+                "label": "best success@20",
+                "value": "0.75"
+              },
+              {
+                "label": "100 epoch 锚点",
+                "value": "0.55"
+              },
+              {
+                "label": "best epoch",
+                "value": "300"
+              }
+            ],
+            "meta": "长训结果与主线配方已收束",
+            "path": "homepage/tasks/mdit-mainline/"
+          }
+        ]
+      },
+      {
+        "date": "2026-04-17",
+        "cards": [
+          {
+            "date": "2026-04-17",
+            "group": "done",
+            "task_id": "mdit-mainline",
+            "branch_ids": [
+              "mdit"
+            ],
+            "badge": "RGB+Text Anchor",
+            "title": "RGB+Text 当前锚点固定为 0.55@100，所有对照暂未越线",
+            "summary": "共享 audit 下的 0.55@100 成为当前唯一可信锚点，平滑动作对照和 faithful recipe 对照的首轮推进都没能完成接管。",
+            "metrics": [
+              {
+                "label": "epoch 50",
+                "value": "0.25"
+              },
+              {
+                "label": "epoch 100",
+                "value": "0.55"
+              },
+              {
+                "label": "对照线",
+                "value": "2"
+              }
+            ],
+            "meta": "研究线开始从扩散筛选重新收束",
+            "path": "homepage/tasks/mdit-mainline/"
+          }
+        ]
+      },
       {
         "date": "2026-04-09",
         "cards": [
@@ -193,248 +260,34 @@ window.homepageData = {
     ],
     "in_progress_groups": [
       {
-        "date": "2026-04-19",
+        "date": "2026-04-20",
         "cards": [
           {
-            "date": "2026-04-19",
+            "date": "2026-04-20",
             "group": "in_progress",
-            "task_id": "mdit-mainline",
+            "task_id": "lingbot-va-world-model",
             "branch_ids": [
-              "mdit"
+              "lingbot-va"
             ],
-            "badge": "MDIT 主线",
-            "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
-            "summary": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。",
+            "badge": "世界模型线",
+            "title": "LingBot-VA 世界模型后训练已打通单任务 smoke 与离线 demo",
+            "summary": "这条线现在的关键不是直接报 success rate，而是已经打通视频 latent + 动作联合后训练的最小链路，并明确了单卡显存边界与后续多卡 / PEFT 方向。",
             "metrics": [
               {
-                "label": "早期锚点",
-                "value": "0.55@100"
+                "label": "smoke step",
+                "value": "1"
               },
               {
-                "label": "best success",
-                "value": "0.75"
+                "label": "offline action_mse",
+                "value": "0.0067"
               },
               {
-                "label": "500 轮审计",
-                "value": "0.75"
+                "label": "当前阶段",
+                "value": "smoke+demo"
               }
             ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          }
-        ]
-      },
-      {
-        "date": "2026-04-18",
-        "cards": [
-          {
-            "date": "2026-04-18",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 主线",
-            "title": "恢复 100→500 续训接管",
-            "summary": "MDIT 现在最重要的工作已经明确，不是再开更多相似候选，而是把当前最佳路线稳定推进到 500 epoch 并完成共享审计。",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          },
-          {
-            "date": "2026-04-18",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 对照线",
-            "title": "严格 MTDP 对照未过共享闸门",
-            "summary": "严格 MTDP 对照已经完成“值得不值得继续投入”的首轮回答，目前结论是否定的。",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          }
-        ]
-      },
-      {
-        "date": "2026-04-17",
-        "cards": [
-          {
-            "date": "2026-04-17",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 对照线",
-            "title": "稳定化与 faithful 对照完成分流，主线不再被弱候选带偏",
-            "summary": "稳定化对照已经被判定为弱线，不再作为主方向推进；",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          },
-          {
-            "date": "2026-04-17",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 主线",
-            "title": "共享审计确认 0.55@100 锚点并冻结当前最佳路线",
-            "summary": "0.55@100 是当前唯一经过共享审计链确认的 RGB+文本锚点。",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          }
-        ]
-      },
-      {
-        "date": "2026-04-16",
-        "cards": [
-          {
-            "date": "2026-04-16",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 主线",
-            "title": "共享评估契约与后台守护链固化为标准执行方式",
-            "summary": "MDIT 从这一步起不再只是零散实验集合，而是一条可托管、可恢复、可比较的研究线；",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          }
-        ]
-      },
-      {
-        "date": "2026-04-15",
-        "cards": [
-          {
-            "date": "2026-04-15",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 主线",
-            "title": "faithful RGB+文本默认路径与共享评估口径定版",
-            "summary": "从这一步开始，MDIT 主线终于拥有可以持续复现和解释的默认配方；",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
-          }
-        ]
-      },
-      {
-        "date": "2026-04-13",
-        "cards": [
-          {
-            "date": "2026-04-13",
-            "group": "in_progress",
-            "task_id": "mdit-mainline",
-            "branch_ids": [
-              "mdit"
-            ],
-            "badge": "MDIT 主线",
-            "title": "早期兼容排查确认混合消融不能直接支持结构结论",
-            "summary": "MDIT 不能靠“把能跑的东西拼起来”推进；",
-            "metrics": [
-              {
-                "label": "早期锚点",
-                "value": "0.55@100"
-              },
-              {
-                "label": "best success",
-                "value": "0.75"
-              },
-              {
-                "label": "500 轮审计",
-                "value": "0.75"
-              }
-            ],
-            "meta": "阶段总结 · Research Desk",
-            "path": "homepage/tasks/mdit-mainline/"
+            "meta": "LingBot-VA 世界模型研究切入",
+            "path": "homepage/tasks/lingbot-va-world-model/"
           }
         ]
       },
@@ -453,7 +306,7 @@ window.homepageData = {
             "summary": "LeLaN 现在首先是一条“执行线”，目标是把正式实验沉淀成可长期追加的研究档案；",
             "metrics": [
               {
-                "label": "输入",
+                "label": "观测设置",
                 "value": "5 路 RGB / 3 帧"
               },
               {
@@ -461,7 +314,7 @@ window.homepageData = {
                 "value": "8"
               },
               {
-                "label": "100 epoch gate",
+                "label": "gate@100",
                 "value": "0.45"
               }
             ],
@@ -472,48 +325,48 @@ window.homepageData = {
       }
     ],
     "current_focus": {
-      "date": "2026-04-19",
+      "date": "2026-04-20",
       "group": "in_progress",
-      "task_id": "mdit-mainline",
+      "task_id": "lingbot-va-world-model",
       "branch_ids": [
-        "mdit"
+        "lingbot-va"
       ],
-      "badge": "MDIT 主线",
-      "title": "100→500 主线续训完成共享审计并把长训结果抬到 0.75",
-      "summary": "MDIT 现在最重要的新结论不是“续训已经恢复”，而是“同一条 RGB+文本主线在共享审计下已经从 0.55@100 抬到了 0.75@300/500”。",
+      "badge": "世界模型线",
+      "title": "LingBot-VA 世界模型后训练已打通单任务 smoke 与离线 demo",
+      "summary": "这条线现在的关键不是直接报 success rate，而是已经打通视频 latent + 动作联合后训练的最小链路，并明确了单卡显存边界与后续多卡 / PEFT…",
       "metrics": [
         {
-          "label": "早期锚点",
-          "value": "0.55@100"
+          "label": "smoke step",
+          "value": "1"
         },
         {
-          "label": "best success",
-          "value": "0.75"
+          "label": "offline action_mse",
+          "value": "0.0067"
         },
         {
-          "label": "500 轮审计",
-          "value": "0.75"
+          "label": "当前阶段",
+          "value": "smoke+demo"
         }
       ],
-      "meta": "阶段总结 · Research Desk",
-      "path": "homepage/tasks/mdit-mainline/"
+      "meta": "LingBot-VA 世界模型研究切入",
+      "path": "homepage/tasks/lingbot-va-world-model/"
     },
     "hero_inline_stats": [
       {
         "label": "任务",
-        "value": "5"
+        "value": "6"
       },
       {
         "label": "研究线",
-        "value": "4"
+        "value": "5"
       },
       {
-        "label": "时间线事件",
-        "value": "19"
+        "label": "归档条目",
+        "value": "37"
       },
       {
-        "label": "图表",
-        "value": "9"
+        "label": "milestone",
+        "value": "3"
       }
     ]
   },
@@ -803,7 +656,7 @@ window.homepageData = {
           "kind": "image",
           "title": "六轴臂平台封面",
           "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+          "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/00-封面图.jpg",
           "showcase_preview": true
         },
         {
@@ -811,7 +664,7 @@ window.homepageData = {
           "kind": "video",
           "title": "正逆运动解算演示",
           "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/01-运动逆解算.mp4",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/01-运动逆解算.mp4",
           "showcase_preview": false
         },
         {
@@ -819,7 +672,7 @@ window.homepageData = {
           "kind": "video",
           "title": "真机-仿真数字孪生同步",
           "caption": "展示真机姿态如何实时映射到仿真侧，验证 Sim2Real 运动映射与数字孪生同步效果。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/02-真机仿真数字孪生.mp4",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/02-真机仿真数字孪生.mp4",
           "showcase_preview": false
         },
         {
@@ -827,7 +680,7 @@ window.homepageData = {
           "kind": "video",
           "title": "规划轨迹真机执行",
           "caption": "展示规划好的关节轨迹如何按照记录节奏下发真机，体现示教回放与总线保护链路。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/03-规划轨迹执行.mp4",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/03-规划轨迹执行.mp4",
           "showcase_preview": false
         }
       ],
@@ -866,19 +719,21 @@ window.homepageData = {
         "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md",
         "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md",
         "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
-      ]
+      ],
+      "chart_media_items": []
     },
     {
       "id": "pdit-anchor",
       "title": "PDIT 基线恢复与锚点固化",
       "summary": "PDIT 现在仍是全仓库最稳定的行为锚点。训练链、保存链和离线审计链修稳后，点云 baseline 在 100 epoch 上先证明“不是学不会”，在 500 epoch 上又通过补评估保住了 0.95 的最佳行为结果，根目录重整后的 100 回合成功率 复核仍有 0.85。",
+      "core_summary": "PDIT 这一页先展示我已经搭起来的模仿学习主线能力，再展示关键路线对照和审计证据，而不是把实验日志原样搬上来。",
       "status": "已验证",
       "status_group": "done",
       "page_path": "homepage/tasks/pdit-anchor/",
       "branch_ids": [
         "pdit"
       ],
-      "latest_update": "2026-04-09",
+      "latest_update": "2026-04-16",
       "hero_metrics": [
         {
           "label": "best success@20",
@@ -896,9 +751,28 @@ window.homepageData = {
       "report_intro": "PDIT 现在仍是全仓库最稳定的行为锚点。训练链、保存链和离线审计链修稳后，点云 baseline 在 100 epoch 上先证明“不是学不会”，在 500 epoch 上又通过补评估保住了 0.95 的最佳行为结果，根目录重整后的 100 回合成功率 复核仍有 0.85。",
       "summary_cards": [
         {
-          "eyebrow": "Anchor",
-          "title": "行为锚点已经稳定下来",
-          "body": "Baseline@500 在离线 20 回合达到 0.95，根目录重整后的 100 回合复核仍有 0.85，说明当前最优策略不是一次性好运气。",
+          "eyebrow": "IL Framework",
+          "title": "把点云观测到 action chunk 的模仿学习主线真正搭起来了",
+          "body": "这条线已经不只是“能训练一个模型”，而是从 3 帧点云观测到 32 步动作 chunk 的策略学习链路、损失监控和离线行为评估全都打通了。",
+          "metrics": [
+            {
+              "label": "观测帧",
+              "value": "3"
+            },
+            {
+              "label": "动作 chunk",
+              "value": "32"
+            },
+            {
+              "label": "obs",
+              "value": "point cloud"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Evaluation",
+          "title": "把训练、选模和行为审计做成了可复核的闭环",
+          "body": "最强点不再靠单次试验自证，而是同时拥有 train/valid loss、离线 success 审计、20 回合短审计和 100 回合复核四层证据。",
           "metrics": [
             {
               "label": "20 回合",
@@ -909,70 +783,469 @@ window.homepageData = {
               "value": "0.85"
             },
             {
-              "label": "best epoch",
-              "value": "500"
+              "label": "锚点",
+              "value": "@500"
             }
           ]
         },
         {
-          "eyebrow": "Repair",
-          "title": "训练 / 保存 / 审计三条链都修过一轮",
-          "body": "导入路径污染、checkpoint 原子保存、audit-only stage 覆盖和 RLBench 挂起隔离等问题被集中处理，当前结果终于能按同一口径解释。",
+          "eyebrow": "Extensibility",
+          "title": "主线之外已经留出了向多模态策略继续扩展的接口",
+          "body": "PDIT 线里除了点云 baseline，还已经开始做 RGB+Text / adapter 公平对照与迁移接口，这意味着这条主线后面可以自然接向更强的多模态策略或世界模型数据层。",
           "metrics": [
             {
-              "label": "关键修复",
-              "value": "6"
+              "label": "公平对照",
+              "value": "已铺开"
             },
             {
-              "label": "audit chain",
-              "value": "稳定"
+              "label": "adapter 线",
+              "value": "已接入"
             },
             {
-              "label": "行为回归",
-              "value": "通过"
+              "label": "扩展方向",
+              "value": "RGB+Text"
             }
           ]
         },
         {
-          "eyebrow": "Ablation",
-          "title": "统计特征增强对照作废，官方式动态候选仍属待证",
-          "body": "统计特征增强路径存在语义 bug，不能再拿来支持结构结论；更接近官方 DiT 动态的候选在 valid loss 上有优势，但还没有行为层面的替代证据。",
+          "eyebrow": "Archive",
+          "title": "research_archive 已固化 11 条run与 0 个 milestone",
+          "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
           "metrics": [
             {
-              "label": "增强对照",
-              "value": "作废"
+              "label": "归档条目",
+              "value": "11"
             },
             {
-              "label": "动态候选 best valid",
-              "value": "0.572"
+              "label": "完整条目",
+              "value": "0"
             },
             {
-              "label": "当前锚点",
-              "value": "baseline"
-            }
-          ]
-        },
-        {
-          "eyebrow": "Current",
-          "title": "现在要解决的是后期稳定性，而不是可训练性",
-          "body": "PDIT 已经证明自己能学起来，真正要继续追的是怎样减少中后期漂移、让 success 与 valid signal 更长期对齐。",
-          "metrics": [
-            {
-              "label": "100 epoch",
-              "value": "可用"
-            },
-            {
-              "label": "500 epoch",
-              "value": "可复核"
-            },
-            {
-              "label": "问题",
-              "value": "晚期泛化"
+              "label": "milestone",
+              "value": "0"
             }
           ]
         }
       ],
+      "core_tables": [
+        {
+          "title": "PDIT 关键结果对照",
+          "columns": [
+            "路线",
+            "关键结果",
+            "长回合复核",
+            "当前判断"
+          ],
+          "rows": [
+            [
+              "Baseline@100",
+              "0.90@20",
+              "-",
+              "证明点云主线可训练性恢复"
+            ],
+            [
+              "Baseline@500",
+              "0.95@20",
+              "0.85@100",
+              "当前行为锚点"
+            ],
+            [
+              "H1 统计增强",
+              "0.55@100",
+              "-",
+              "弱于 baseline，不再作为主结论"
+            ],
+            [
+              "H2 动力学候选",
+              "0.65@100",
+              "-",
+              "有提升，但证据不足以接管主线"
+            ]
+          ],
+          "note": "这张表先回答“哪条路线当前成立”，再谈具体结构；对外展示时，PDIT 最重要的结论仍是 baseline@500 已经站成锚点。"
+        },
+        {
+          "title": "PDIT 核心技术模块",
+          "columns": [
+            "技术模块",
+            "当前采用",
+            "当前作用",
+            "后续升级位"
+          ],
+          "rows": [
+            [
+              "时序点云观测",
+              "3 帧 point cloud 条件输入",
+              "把几何观测稳定送进策略，而不是只依赖单步状态回归。",
+              "可以升级成 RGB / RGB+text 多模态观测编码。"
+            ],
+            [
+              "Flow Matching + DiT 策略骨架",
+              "6-block DiT + FM action trajectory generation",
+              "用序列生成方式预测未来动作过程，而不是只做一步动作分类。",
+              "可继续扩成更强的序列生成策略或 latent trajectory 建模。"
+            ],
+            [
+              "Action chunk 表达",
+              "32 步未来轨迹",
+              "让策略直接学习执行过程，对 manipulation 比单步动作更友好。",
+              "可接 subgoal / subtask 边界或层级动作抽象。"
+            ],
+            [
+              "行为审计闭环",
+              "loss + rollout success + 20/100 回合复核",
+              "把训练结果和真实 rollout 表现绑到同一套选模口径上。",
+              "后续可直接复用到多模态策略、VLA 或世界模型对照实验。"
+            ]
+          ],
+          "note": "当前训练数据规模约为 train 10573 / valid 1189；这张表只保留对外展示真正重要的技术结构，不再重复训练时间线。"
+        }
+      ],
       "timeline_groups": [
+        {
+          "date": "2026-04-16",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本跨线公平对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.05"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "49"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.05@49 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本适配器修正版",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/archive_manifest.json"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-15",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "原始 PDIT 公平锚点（bs224）",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "原始 PDIT 公平锚点（bs64）",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "2 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/metrics/summary.json"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本迁移候选",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.05"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "40"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.05@40 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本迁移候选",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep/archive_manifest.json"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-10",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "Baseline@100 恢复验证",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.90"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.90@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "Baseline@500 行为锚点",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "experiment_manifest"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/metrics/audit_report.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "统计特征增强重试",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.35"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.35@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "统计特征增强初版",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.55"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.55@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "DiT 动力学候选",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.65"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.65@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130/archive_manifest.json"
+                }
+              ]
+            }
+          ]
+        },
         {
           "date": "2026-04-09",
           "cards": [
@@ -1364,6 +1637,54 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · RGB+文本跨线公平对照",
+          "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · RGB+文本适配器修正版",
+          "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · 原始 PDIT 公平锚点（bs224）",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · 原始 PDIT 公平锚点（bs64）",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · 原始 PDIT 公平锚点（bs64）",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
+        },
+        {
+          "title": "archive 报告 · RGB+文本迁移候选",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "PDIT 关键结果表",
+          "path": "research_archive/tasks/pdit/media/tables/pdit_key_results.csv",
+          "summary": "结构化汇总当前主线和关键 challenger 的结果判断。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "PDIT 技术模块表",
+          "path": "research_archive/tasks/pdit/media/tables/pdit_core_modules.csv",
+          "summary": "结构化汇总当前主线的技术骨架与扩展方向。",
+          "label": "查看原始记录"
+        },
+        {
           "title": "FM/DiT 恢复进展",
           "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
           "summary": "完整记录了修复项、Baseline@100/500、统计特征增强对照与动态候选的判断。",
@@ -1405,7 +1726,32 @@ window.homepageData = {
         "pdit-loss-tail",
         "pdit-mse-tail"
       ],
-      "media_items": [],
+      "media_items": [
+        {
+          "task_id": "pdit-anchor",
+          "kind": "image",
+          "title": "PDIT 点云主线封面",
+          "caption": "作为当前 PDIT 主线封面，概括点云观测、动作生成与行为审计这条模仿学习主线的整体结构。",
+          "path": "research_archive/tasks/pdit/media/demo/images/pdit.png",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "pdit-anchor",
+          "kind": "video",
+          "title": "PDIT 点云策略关门演示",
+          "caption": "展示点云主线在后期 checkpoint 上的仿真执行效果，说明 point cloud 到 action chunk 的策略已经能稳定落到具体 manipulation 动作。",
+          "path": "research_archive/tasks/pdit/media/demo/videos/epoch_0450_pcd.mp4",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "pdit-anchor",
+          "kind": "video",
+          "title": "Franka 拔插头仿真执行",
+          "caption": "展示 PDIT 在拔插头任务中的仿真执行现场：策略从观测编码到 action chunk 输出后，驱动 Franka 机械臂完成接近、对位与执行动作。",
+          "path": "research_archive/tasks/pdit/media/demo/videos/仿真-1.mp4",
+          "showcase_preview": false
+        }
+      ],
       "home_entries": [
         {
           "date": "2026-04-09",
@@ -1419,7 +1765,7 @@ window.homepageData = {
           "summary": "修复训练与审计链后，点云主线不再在 300-500 epoch 崩塌，当前最强策略已经有 20 回合与 100 回合两轮复核。",
           "metrics": [
             {
-              "label": "success@20",
+              "label": "best success@20",
               "value": "0.95"
             },
             {
@@ -1427,8 +1773,8 @@ window.homepageData = {
               "value": "0.85"
             },
             {
-              "label": "锚点",
-              "value": "@500"
+              "label": "best epoch",
+              "value": "500"
             }
           ],
           "meta": "PDIT 基线恢复与锚点固化",
@@ -1468,39 +1814,91 @@ window.homepageData = {
         "docs/pdit/2026-04-07-training-model-audit-zh.md",
         "docs/top10-checkpoint-manifest.json"
       ],
-      "manifest_note": "代码库的失败并非由单一原因造成。 最强的确认结论是： 原始的低/不稳定性能被训练栈和评估栈的 bug 严重放大。 修复这些问题后，基线已在 20 个离线回合中达到 0.90 success@100。 剩余问题不再是\"为什么它完全无法学习？\" 剩余问题是\"如何防止强大的早期策略在第 300 到 500 epoch 之间…"
+      "manifest_note": "代码库的失败并非由单一原因造成。 最强的确认结论是： 原始的低/不稳定性能被训练栈和评估栈的 bug 严重放大。 修复这些问题后，基线已在 20 个离线回合中达到 0.90 success@100。 剩余问题不再是\"为什么它完全无法学习？\" 剩余问题是\"如何防止强大的早期策略在第 300 到 500 epoch 之间…",
+      "chart_media_items": [
+        {
+          "id": "archive-chart-pdit-anchor-01-pdit-rank-overview-svg",
+          "type": "media_chart",
+          "title": "PDIT 关键结果排行",
+          "description": "把关键 checkpoint 和 100 回合复核放到同一张图里，直接看当前该认哪一个锚点。",
+          "path": "research_archive/tasks/pdit/media/charts/01-pdit_rank_overview.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "epoch 500 仍然是当前最稳的行为锚点，100 回合复核也继续站得住。"
+        },
+        {
+          "id": "archive-chart-pdit-anchor-02-pdit-best-loss-curve-svg",
+          "type": "media_chart",
+          "title": "PDIT 最优组 loss 尾段",
+          "description": "围绕当前最优 baseline@500，直接看 train / valid total loss 的尾段关系。",
+          "path": "research_archive/tasks/pdit/media/charts/02-pdit_best_loss_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "当前 baseline@500 训练记录里没有可回抓的 W&B history，因此这里只能展示本地 summary 保留下来的 495-499 epoch 尾段快照。"
+        },
+        {
+          "id": "archive-chart-pdit-anchor-03-pdit-best-mse-curve-svg",
+          "type": "media_chart",
+          "title": "PDIT 最优组 MSE 尾段",
+          "description": "把 xyz / rot6d / grip 三条误差拆开，解释当前行为锚点背后的误差结构。",
+          "path": "research_archive/tasks/pdit/media/charts/03-pdit_best_mse_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "PDIT 当前没有可用的 W&B history，这张图与 loss 图一样来自本地 summary 尾段快照。"
+        }
+      ]
     },
     {
       "id": "mdit-mainline",
       "title": "MDIT RGB+Text 主线推进",
       "summary": "MDIT 当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；",
-      "status": "推进中",
-      "status_group": "in_progress",
+      "core_summary": "当前主线已经在共享审计下站稳 0.75@500；页面重点不再是继续扩散相似对照，而是把已经收束出来的主线配方、图表证据和时间线判断讲清楚。",
+      "status": "已验证",
+      "status_group": "done",
       "page_path": "homepage/tasks/mdit-mainline/",
       "branch_ids": [
         "mdit"
       ],
-      "latest_update": "2026-04-19",
+      "latest_update": "2026-04-20",
       "hero_metrics": [
         {
-          "label": "早期锚点",
-          "value": "0.55@100"
-        },
-        {
-          "label": "best success",
+          "label": "best success@20",
           "value": "0.75"
         },
         {
-          "label": "500 轮审计",
-          "value": "0.75"
+          "label": "100 epoch 锚点",
+          "value": "0.55"
+        },
+        {
+          "label": "best epoch",
+          "value": "300"
         }
       ],
-      "report_intro": "MDIT 当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；",
+      "report_intro": "MDIT 当前已经不是“哪条对照还要不要再试”的阶段，而是“0.75@500 的主线结果已经站住，接下来要把主线配方和共享审计叙事一起固定下来”的阶段。",
       "summary_cards": [
         {
-          "eyebrow": "Anchor",
-          "title": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
-          "body": "0.55@100 仍是当前锁定的早期锚点；在此基础上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明这条线不是只能停在 100 epoch。",
+          "eyebrow": "Multimodal IL",
+          "title": "把 5 路 RGB + 文本到 action chunk 的多模态主线真正立起来了",
+          "body": "这条线已经明确落成了以 CLIP 视觉语义和任务文本为条件的多模态策略主线，而不是停留在“加点视觉、加点文本”的 loose idea。",
+          "metrics": [
+            {
+              "label": "RGB 视角",
+              "value": "5"
+            },
+            {
+              "label": "观测帧",
+              "value": "3"
+            },
+            {
+              "label": "动作 chunk",
+              "value": "32"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Takeover",
+          "title": "把同一条主线的 100→500 续训接管与共享审计真正打通了",
+          "body": "这不是重新起一个匿名长训 run，而是把已有最优主线在同一 lineage 上接管到 500，并继续用共享审计口径去判断它是否真的变好。",
           "metrics": [
             {
               "label": "epoch 100",
@@ -1517,28 +1915,9 @@ window.homepageData = {
           ]
         },
         {
-          "eyebrow": "Resume",
-          "title": "100→500 续训接管已经真正跑通并完成共享审计",
-          "body": "这轮不只是把 supervisor 和 optimizer 兼容补上，而是已经让同一条 best-route lineage 从 epoch_0100 真正续到 500，并拿回可用于判断的共享审计结果。",
-          "metrics": [
-            {
-              "label": "best success",
-              "value": "0.75"
-            },
-            {
-              "label": "best epoch",
-              "value": "300"
-            },
-            {
-              "label": "状态",
-              "value": "已审计"
-            }
-          ]
-        },
-        {
           "eyebrow": "Screening",
-          "title": "平滑动作 / faithful / 严格 MTDP 三条对照已经完成出清",
-          "body": "平滑动作对照只到 0.35，faithful 首败被确认是缓存 / 网络问题，严格 MTDP 对照也没有越过共享闸门。主线预算已经重新收束，不再被相似弱候选打断。",
+          "title": "把对照路线放进同一 gate 体系后，主线终于收束了",
+          "body": "stabilized、faithful、strict MTDP 三条路线都已经在统一共享审计口径下被筛过，这条线不再是零散试验堆积，而是有明确淘汰与接管规则的主线研究。",
           "metrics": [
             {
               "label": "stabilized@100",
@@ -1555,26 +1934,181 @@ window.homepageData = {
           ]
         },
         {
-          "eyebrow": "Audit",
-          "title": "当前缺口是补齐 100 epoch 审计点位，而不是再开新 run",
-          "body": "500 续训 run 当前仍被自动标成 collapse，不是因为 300/500 表现差，而是因为这个续训 run 的共享审计缺了 epoch_0100 点位。下一步应该先把审计叙事补完整。",
+          "eyebrow": "Archive",
+          "title": "research_archive 已固化 8 条run与 3 个 milestone",
+          "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
           "metrics": [
             {
-              "label": "trial_score",
-              "value": "-1.0"
+              "label": "归档条目",
+              "value": "8"
             },
             {
-              "label": "100 点位",
-              "value": "缺失"
+              "label": "完整条目",
+              "value": "6"
             },
             {
-              "label": "recipe drift",
-              "value": "无"
+              "label": "milestone",
+              "value": "3"
             }
           ]
         }
       ],
+      "core_tables": [
+        {
+          "title": "MDIT 关键结果对照",
+          "columns": [
+            "路线",
+            "关键点位",
+            "长训结果",
+            "当前判断"
+          ],
+          "rows": [
+            [
+              "RGB+Text 主线",
+              "0.25@50 / 0.55@100",
+              "0.75@300 / 0.75@500",
+              "当前继续推进的主线"
+            ],
+            [
+              "Stabilized 对照",
+              "0.35@100",
+              "-",
+              "弱于主线，只保留参考价值"
+            ],
+            [
+              "Faithful recipe",
+              "-",
+              "-",
+              "首轮卡在启动链，暂不作为方法结论"
+            ],
+            [
+              "Strict MTDP",
+              "-",
+              "-",
+              "当前未通过同一 gate，不接管主线"
+            ]
+          ],
+          "note": "这张表先说明哪条路线真的成立，再谈多模态结构和扩展方向；当前最重要的结论，是 RGB+Text 主线已经把共享审计从 0.55@100 抬到 0.75@300/500。"
+        },
+        {
+          "title": "MDIT 核心技术调整",
+          "columns": [
+            "调整点",
+            "原版做法",
+            "当前做法",
+            "调整意义"
+          ],
+          "rows": [
+            [
+              "条件组织",
+              "robot state + 多相机 CLS + text 展平成单个全局条件向量",
+              "按观测步组织 3 个 cond token，再送入 backbone",
+              "把多视角与文本条件从“压成一个向量”改成“保留短序列结构”，减少全局向量对时序语义的过度压缩。"
+            ],
+            [
+              "多模态融合",
+              "观测直接 concat / flatten 后统一进入主干",
+              "5 路 CLIP 视觉、文本和状态先各自适配，再在 step 内融合",
+              "先对齐模态尺度再融合，减轻视觉、文本和状态直接拼接造成的语义污染，多模态条件更稳定。"
+            ],
+            [
+              "骨干结构",
+              "单塔 DiT 直接在动作序列 + 全局条件上做噪声预测",
+              "encoder 先编码 cond tokens，decoder 再生成动作轨迹",
+              "把条件建模和动作生成拆开，避免条件语义与动作噪声混在一条通路里，长程控制更可解释。"
+            ],
+            [
+              "FM 动力学",
+              "beta timestep sampling + 100-step Euler ODE",
+              "uniform 采样 + exp flow schedule + 10-step 推理",
+              "把训练与推理路径压到当前算力能稳定迭代的区间，先保证主线可持续审计，再谈更重的 ODE 配置。"
+            ],
+            [
+              "时序与执行口径",
+              "2 obs / 100 horizon + state/action min-max + 原生推理接口",
+              "3 obs / 32 pred + legacy 状态归一化 + 共享动作后处理链",
+              "把训练窗口、归一化和 rollout 执行口径统一到同一主线，减少训练结果与共享审计之间的接口漂移。"
+            ]
+          ],
+          "note": "当前训练数据规模约为 train 10573 / valid 1189；这里保留的是已经改变主线语义和训练口径的结构调整，而不是实验过程记录。"
+        }
+      ],
       "timeline_groups": [
+        {
+          "date": "2026-04-20",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "audit_wandb_run",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-20",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.60"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "归档里已经固定 0.60@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/audit_report.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "collapse_run",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-20",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.75"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "300"
+                },
+                {
+                  "label": "归档",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "归档里已经固定 0.75@300 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/audit_report.json"
+                }
+              ]
+            }
+          ]
+        },
         {
           "date": "2026-04-19",
           "cards": [
@@ -1613,6 +2147,64 @@ window.homepageData = {
                 }
               ],
               "task_id": "mdit-mainline"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "100→500 主线续训",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.75"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "300"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.75@300 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Milestone",
+              "title": "参考线快照",
+              "summary": "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "类型",
+                  "value": "reference_line"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该目录已经作为 milestone 快照固化，可用于后续 best path / frozen best 展示。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line/archive_manifest.json"
+                }
+              ]
             }
           ]
         },
@@ -1744,6 +2336,33 @@ window.homepageData = {
                 {
                   "title": "W&B 摘要",
                   "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "严格 MTDP 对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-18",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720/archive_manifest.json"
                 }
               ]
             }
@@ -1907,6 +2526,188 @@ window.homepageData = {
                 {
                   "title": "执行手册",
                   "path": "docs/mdit/2026-04-16-mdit-execution-manual.md"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "faithful recipe 对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本主线 100 轮锚点",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.55"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "归档里已经固定 0.55@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/metrics/audit_report.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "平滑动作稳定化对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Run",
+              "title": "平滑动作稳定化对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.35"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.35@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Milestone",
+              "title": "冻结最优快照",
+              "summary": "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "类型",
+                  "value": "frozen_best_snapshot"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该目录已经作为 milestone 快照固化，可用于后续 best path / frozen best 展示。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/metrics/audit_report.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Milestone",
+              "title": "冻结最优快照",
+              "summary": "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "类型",
+                  "value": "frozen_best_snapshot"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该目录已经作为 milestone 快照固化，可用于后续 best path / frozen best 展示。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/metrics/audit_report.json"
                 }
               ]
             }
@@ -2074,6 +2875,54 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · audit_wandb_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · audit_wandb_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
+        },
+        {
+          "title": "archive audit · audit_wandb_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/audit_report.json",
+          "summary": "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
+          "label": "打开 audit"
+        },
+        {
+          "title": "archive 报告 · collapse_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · collapse_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
+        },
+        {
+          "title": "archive audit · collapse_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/audit_report.json",
+          "summary": "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
+          "label": "打开 audit"
+        },
+        {
+          "title": "MDIT 关键结果表",
+          "path": "research_archive/tasks/mdit/media/tables/mdit_key_results.csv",
+          "summary": "结构化汇总主线、stabilized 与对照路线的当前判断。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "MDIT 技术模块表",
+          "path": "research_archive/tasks/mdit/media/tables/mdit_core_modules.csv",
+          "summary": "结构化汇总多模态主线当前已经落成的核心技术模块。",
+          "label": "查看原始记录"
+        },
+        {
           "title": "研究日志",
           "path": "docs/mdit/research_journal.md",
           "summary": "append-only 研究日志，记录每条对照线的推进、失败和接管。",
@@ -2121,38 +2970,55 @@ window.homepageData = {
         "mdit-loss-curve",
         "mdit-mse-curve"
       ],
-      "media_items": [],
+      "media_items": [
+        {
+          "task_id": "mdit-mainline",
+          "kind": "image",
+          "title": "MDIT RGB+Text 主线封面",
+          "caption": "作为当前 MDIT 主线封面，概括多视角视觉、文本条件与动作生成之间的整体结构。",
+          "path": "research_archive/tasks/mdit/media/demo/images/mtdp_architecture.png",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "mdit-mainline",
+          "kind": "video",
+          "title": "MDIT RGB+Text 关门仿真演示",
+          "caption": "该片段来自 RGB+Text 主线训练后的关门仿真，说明语言条件已经能落到可执行动作轨迹。它对应的是一条更贴近 VLA / 世界模型接口的多模态策略路径：先对齐视觉与文本语义，再生成 action chunk。",
+          "path": "research_archive/tasks/mdit/media/demo/videos/关门仿真-1.mp4",
+          "showcase_preview": false
+        }
+      ],
       "home_entries": [
         {
-          "date": "2026-04-18",
-          "group": "in_progress",
+          "date": "2026-04-19",
+          "group": "done",
           "task_id": "mdit-mainline",
           "branch_ids": [
             "mdit"
           ],
           "badge": "MDIT 主线",
-          "title": "MDIT 主线恢复 100→500 续训接管",
-          "summary": "严格 MTDP 对照没有通过共享审计后，研究预算被收回到唯一过审的 RGB+Text 主线，并把 100→500 续训兼容与 supervisor 一起修通。",
+          "title": "MDIT 主线固化 0.75@500，并收束出可复现的多模态配方",
+          "summary": "当前工作重点已经从继续开相似对照，转成补齐共享审计点位，并把 3-token 条件组织、分阶段多模态适配、encoder-decoder DiT 与 uniform FM 路径固定为主线配方。",
           "metrics": [
             {
-              "label": "当前锚点",
-              "value": "0.55@100"
+              "label": "best success@20",
+              "value": "0.75"
             },
             {
-              "label": "续训目标",
-              "value": "500"
+              "label": "100 epoch 锚点",
+              "value": "0.55"
             },
             {
-              "label": "状态",
-              "value": "恢复中"
+              "label": "best epoch",
+              "value": "300"
             }
           ],
-          "meta": "主线从筛选期进入长训接管期",
+          "meta": "长训结果与主线配方已收束",
           "path": "homepage/tasks/mdit-mainline/"
         },
         {
           "date": "2026-04-17",
-          "group": "in_progress",
+          "group": "done",
           "task_id": "mdit-mainline",
           "branch_ids": [
             "mdit"
@@ -2178,6 +3044,8 @@ window.homepageData = {
           "path": "homepage/tasks/mdit-mainline/"
         }
       ],
+      "prefer_home_entries": true,
+      "preserve_report_intro": true,
       "task_badge": "MDIT 主线",
       "docs": [
         "docs/mdit/research_journal.md",
@@ -2228,7 +3096,370 @@ window.homepageData = {
           "success_500": 0.75,
           "trial_score": -1.0
         }
-      }
+      },
+      "chart_media_items": [
+        {
+          "id": "archive-chart-mdit-mainline-01-mdit-rank-overview-svg",
+          "type": "media_chart",
+          "title": "MDIT 关键结果排行",
+          "description": "把主线关键节点和共享审计结果放到一张图里，直接看当前真正成立的阶段结果。",
+          "path": "research_archive/tasks/mdit/media/charts/01-mdit_rank_overview.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "300 / 500 epoch 已经超过早期 0.55@100 锚点，因此这条线后面更应该看 loss 与 MSE 怎样支撑这个提升。"
+        },
+        {
+          "id": "archive-chart-mdit-mainline-02-mdit-mainline-loss-curve-svg",
+          "type": "media_chart",
+          "title": "MDIT 主线 loss 趋势",
+          "description": "围绕 100→500 主线续训，直接看 train / valid total loss 如何收束。",
+          "path": "research_archive/tasks/mdit/media/charts/02-mdit_mainline_loss_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "使用 W&B API 抓取完整 history，展示主线真实训练曲线。"
+        },
+        {
+          "id": "archive-chart-mdit-mainline-03-mdit-mainline-mse-curve-svg",
+          "type": "media_chart",
+          "title": "MDIT 主线 MSE 变化",
+          "description": "把 xyz / rot6d / grip 三条误差拆开，解释长训结果为什么能抬到 0.75。",
+          "path": "research_archive/tasks/mdit/media/charts/03-mdit_mainline_mse_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "使用 W&B API 抓取 valid mse_xyz / mse_rot6d / mse_grip 全量 history。"
+        }
+      ]
+    },
+    {
+      "id": "lingbot-va-world-model",
+      "title": "LingBot-VA 世界模型后训练切入",
+      "summary": "围绕视频 latent + 动作联合建模的后训练项目，先把单任务 smoke、离线 demo 导出与单卡显存边界摸清，再往正式世界模型训练与评测推进。",
+      "core_summary": "这页先把 LingBot-VA 世界模型后训练已经站住的能力讲清楚：单任务 smoke、离线 demo 导出和单卡边界都已经有证据，再往更正式的训练与评测推进。",
+      "status": "推进中",
+      "status_group": "in_progress",
+      "page_path": "homepage/tasks/lingbot-va-world-model/",
+      "branch_ids": [
+        "lingbot-va"
+      ],
+      "latest_update": "2026-04-19",
+      "hero_metrics": [
+        {
+          "label": "smoke step",
+          "value": "1"
+        },
+        {
+          "label": "offline action_mse",
+          "value": "0.0067"
+        },
+        {
+          "label": "当前阶段",
+          "value": "smoke+demo"
+        }
+      ],
+      "report_intro": "LingBot-VA 这条线现在最重要的不是直接报一个 manipulation success rate，而是已经把视频 latent + 动作联合建模的最小训练闭环、离线 demo 可视化和单卡训练边界全部摸清。",
+      "summary_cards": [
+        {
+          "eyebrow": "World Model",
+          "title": "视频 latent + 动作联合后训练入口已打通",
+          "body": "这条线已经从“只会看代码”推进到“能跑 smoke、能导 demo、知道算力边界”，适合继续往世界模型 / VLA 后训练深入。",
+          "metrics": [
+            {
+              "label": "任务",
+              "value": "click_bell"
+            },
+            {
+              "label": "模式",
+              "value": "single-task smoke"
+            },
+            {
+              "label": "状态",
+              "value": "推进中"
+            }
+          ]
+        }
+      ],
+      "core_tables": [
+        {
+          "title": "LingBot-VA 关键结果对照",
+          "columns": [
+            "验证项",
+            "当前结果",
+            "当前含义",
+            "后续推进"
+          ],
+          "rows": [
+            [
+              "单任务 smoke",
+              "1 step + checkpoint + WandB",
+              "最小训练闭环已经打通",
+              "继续放大到更长步数或更完整训练对象"
+            ],
+            [
+              "离线 demo exporter",
+              "video_mse=0.0036 / action_mse=0.0067",
+              "预测视频与动作已经能一起导出并量化",
+              "接正式评测脚本或更多任务片段"
+            ],
+            [
+              "单卡全参数 post-train",
+              "当前受限",
+              "24GB 单卡不能直接做全参数 RoboTwin post-train",
+              "转向多卡或参数高效训练方案"
+            ],
+            [
+              "任务定位",
+              "世界模型 / VLA 后训练",
+              "不再把这条线误解成 RL success rate 训练",
+              "把重点放到模型结构、训练策略和评测闭环"
+            ]
+          ],
+          "note": "这张表先回答“这条世界模型线已经站住了什么”，再讨论更长训练或更重算力配置。"
+        },
+        {
+          "title": "LingBot-VA 核心技术模块",
+          "columns": [
+            "技术模块",
+            "当前采用",
+            "当前作用",
+            "扩展方向"
+          ],
+          "rows": [
+            [
+              "视频 latent + 动作联合建模",
+              "同一 transformer 同时建模视频 latent、动作与文本条件",
+              "让世界模型和动作生成在一个统一 backbone 里对齐。",
+              "继续往更完整的 VLA / 世界模型评测推进。"
+            ],
+            [
+              "SMOKE_MODE 最小训练链",
+              "只训练输出头，先验证训练闭环",
+              "把工程可行性和方法效果拆开，先确认训练链能跑通。",
+              "逐步放开更多层，探索参数高效训练。"
+            ],
+            [
+              "离线 demo exporter",
+              "prediction / metrics / summary 一起导出",
+              "让这条线不只剩下 loss，而是有视频和动作层面的可视化证据。",
+              "接更多任务、更多片段和正式评测脚本。"
+            ],
+            [
+              "语言条件与任务语义",
+              "文本 embedding 已进入训练输入",
+              "已经具备向语言监督与更强任务条件控制扩展的基础。",
+              "后续可继续往 subtask、instruction 或更强 VLA 条件推进。"
+            ]
+          ],
+          "note": "这张表强调的是世界模型后训练真正已经落地的技术模块，而不是把外部仓库里的全部组件都搬上来。"
+        }
+      ],
+      "timeline_groups": [
+        {
+          "date": "2026-04-19",
+          "cards": [
+            {
+              "badge": "Smoke",
+              "title": "单任务单卡 smoke 训练链路跑通",
+              "summary": "先把 LingBot-VA 的最小训练闭环跑通：单任务数据读取、前向、反向、optimizer update、checkpoint 保存和 WandB 记录都在一条链上验证过了。",
+              "metrics": [
+                {
+                  "label": "latent_loss",
+                  "value": "0.0422"
+                },
+                {
+                  "label": "action_loss",
+                  "value": "0.7244"
+                },
+                {
+                  "label": "grad_norm",
+                  "value": "3.78"
+                }
+              ],
+              "outcome": "世界模型后训练的最小可复现入口已经站住，后续不需要再从“机器能不能跑”重新摸索。",
+              "links": [
+                {
+                  "title": "项目速读",
+                  "path": "homepage/external/lingbot_va/docs/project_guide.md"
+                },
+                {
+                  "title": "阶段 desk",
+                  "path": "homepage/external/lingbot_va/docs/research_desk.md"
+                }
+              ]
+            },
+            {
+              "badge": "Demo Export",
+              "title": "离线 demo exporter 打通本地单任务验证",
+              "summary": "预测视频、动作对照和误差指标已经能从同一次导出里一起产出，不再只是拿 loss 判断这条线有没有学到东西。",
+              "metrics": [
+                {
+                  "label": "video_mse",
+                  "value": "0.0036"
+                },
+                {
+                  "label": "action_mse",
+                  "value": "0.0067"
+                },
+                {
+                  "label": "pred frames",
+                  "value": "45"
+                }
+              ],
+              "outcome": "这条线已经从“只有训练日志”推进到“有视频预测和离线指标”的可展示阶段。",
+              "links": [
+                {
+                  "title": "离线导出总结",
+                  "path": "homepage/external/lingbot_va/eval/summary.json"
+                },
+                {
+                  "title": "summary.csv",
+                  "path": "homepage/external/lingbot_va/eval/summary.csv"
+                }
+              ]
+            },
+            {
+              "badge": "Boundary",
+              "title": "单卡全参数 post-train 的真实边界被明确暴露出来",
+              "summary": "当前 24GB 单卡不能直接承载全参数 RoboTwin post-train，世界模型这条线后面必须朝多卡或参数高效训练方案推进。",
+              "metrics": [
+                {
+                  "label": "显存",
+                  "value": "24GB"
+                },
+                {
+                  "label": "full FT",
+                  "value": "受限"
+                },
+                {
+                  "label": "下一步",
+                  "value": "多卡 / PEFT"
+                }
+              ],
+              "outcome": "后续研究方向已经从“再硬挤单卡”切到“明确训练策略与评测链路”，路线判断更清晰了。",
+              "links": [
+                {
+                  "title": "阶段 desk",
+                  "path": "homepage/external/lingbot_va/docs/research_desk.md"
+                },
+                {
+                  "title": "问题修复日志",
+                  "path": "homepage/external/lingbot_va/docs/fixes.md"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "title": "这条线本质上是视频 latent + 动作联合建模，不是 RL 成功率训练",
+          "body": "LingBot-VA 当前更接近视频世界模型 / VLA 后训练：输入是视频 latent、动作序列和文本条件，训练目标是新的 transformer 权重，真正的任务效果要靠后续推理或评测去验证。"
+        },
+        {
+          "title": "当前最值钱的进展不是数值有多高，而是最小训练闭环和离线展示链已经打通",
+          "body": "Smoke 路径、checkpoint 保存、WandB 记录和离线 demo exporter 一起站住之后，后面可以把主要精力放到训练策略和评测，而不是继续做纯工程排障。"
+        },
+        {
+          "title": "单卡全参数训练受限已经是明确事实，后续推进要围绕多卡或参数高效训练来设计",
+          "body": "当前机器不能直接承载全参数单卡 RoboTwin post-train，这个边界已经在工程上被验证过了；下一步更重要的是如何缩窄训练对象、调度算力和构造评测闭环。"
+        }
+      ],
+      "evidence_links": [
+        {
+          "title": "LingBot-VA 项目速读",
+          "path": "homepage/external/lingbot_va/docs/project_guide.md",
+          "summary": "快速说明视频 latent、动作序列、文本条件和 transformer 后训练之间的关系。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "LingBot-VA 研究 desk",
+          "path": "homepage/external/lingbot_va/docs/research_desk.md",
+          "summary": "当前阶段结论、成功 smoke、离线 demo exporter 与机器边界的集中总结。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "LingBot-VA fixes",
+          "path": "homepage/external/lingbot_va/docs/fixes.md",
+          "summary": "保留 smoke、导出链和单卡显存问题的事实源。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "LingBot-VA docs README",
+          "path": "homepage/external/lingbot_va/docs/README.md",
+          "summary": "外部仓库文档入口。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "离线导出 summary.json",
+          "path": "homepage/external/lingbot_va/eval/summary.json",
+          "summary": "包含 video_mse、action_mse 与导出参数。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "离线导出 summary.csv",
+          "path": "homepage/external/lingbot_va/eval/summary.csv",
+          "summary": "适合后续直接进表格或专题页。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "Smoke WandB summary",
+          "path": "homepage/external/lingbot_va/wandb/smoke-wandb-summary.json",
+          "summary": "保留 latent_loss、action_loss、grad_norm 的最小训练指标。",
+          "label": "查看原始记录"
+        }
+      ],
+      "chart_ids": [
+        "lingbot-smoke-metrics",
+        "lingbot-offline-eval",
+        "lingbot-system-boundary"
+      ],
+      "media_items": [
+        {
+          "task_id": "lingbot-va-world-model",
+          "kind": "image",
+          "title": "LingBot-VA 世界模型线封面",
+          "caption": "用 RoboTwin 任务场景作为切入口，展示这条线当前聚焦的视频 latent + 动作联合后训练方向。",
+          "path": "research_archive/tasks/lingbot/media/demo/images/00-lingbot-va-cover.png",
+          "showcase_preview": true
+        }
+      ],
+      "home_entries": [
+        {
+          "date": "2026-04-20",
+          "group": "in_progress",
+          "task_id": "lingbot-va-world-model",
+          "branch_ids": [
+            "lingbot-va"
+          ],
+          "badge": "世界模型线",
+          "title": "LingBot-VA 世界模型后训练已打通单任务 smoke 与离线 demo",
+          "summary": "这条线现在的关键不是直接报 success rate，而是已经打通视频 latent + 动作联合后训练的最小链路，并明确了单卡显存边界与后续多卡 / PEFT 方向。",
+          "metrics": [
+            {
+              "label": "smoke step",
+              "value": "1"
+            },
+            {
+              "label": "offline action_mse",
+              "value": "0.0067"
+            },
+            {
+              "label": "当前阶段",
+              "value": "smoke+demo"
+            }
+          ],
+          "meta": "LingBot-VA 世界模型研究切入",
+          "path": "homepage/tasks/lingbot-va-world-model/"
+        }
+      ],
+      "task_badge": "世界模型线",
+      "docs": [
+        "homepage/external/lingbot_va/docs/project_guide.md",
+        "homepage/external/lingbot_va/docs/research_desk.md",
+        "homepage/external/lingbot_va/docs/fixes.md",
+        "homepage/external/lingbot_va/docs/README.md"
+      ],
+      "manifest_note": "# LingBot-VA Research Desk ## 当前阶段结论 ### 2026-04-19 · 单任务单卡 smoke 已测通 成功任务：click_bell-aloha-agilex_randomized…",
+      "chart_media_items": []
     },
     {
       "id": "lelan-pipeline",
@@ -2243,7 +3474,7 @@ window.homepageData = {
       "latest_update": "2026-04-12",
       "hero_metrics": [
         {
-          "label": "输入",
+          "label": "观测设置",
           "value": "5 路 RGB / 3 帧"
         },
         {
@@ -2251,7 +3482,7 @@ window.homepageData = {
           "value": "8"
         },
         {
-          "label": "100 epoch gate",
+          "label": "gate@100",
           "value": "0.45"
         }
       ],
@@ -2508,15 +3739,15 @@ window.homepageData = {
           "summary": "先把 5 路 RGB、3 帧观测、8 步动作的主线配方，以及 EMA / eval 双路径和 autoresearch 留痕规范一起固定下来，为后续正式 run 做好底座。",
           "metrics": [
             {
-              "label": "观测帧",
-              "value": "3"
+              "label": "观测设置",
+              "value": "5 路 RGB / 3 帧"
             },
             {
               "label": "动作步数",
               "value": "8"
             },
             {
-              "label": "100 epoch gate",
+              "label": "gate@100",
               "value": "0.45"
             }
           ],
@@ -2529,7 +3760,8 @@ window.homepageData = {
         "docs/lelan/2026-04-12-lelan-autoresearch-execution-plan-zh.md",
         "docs/lelan/research/README.md"
       ],
-      "manifest_note": "现在每个 LeLaN run 至少保留： config.json experiment_manifest.json summary.json dataset_stats.json success_eval_history.json 或 eval_ckpts/ audit_report.json lelan_trial…"
+      "manifest_note": "现在每个 LeLaN run 至少保留： config.json experiment_manifest.json summary.json dataset_stats.json success_eval_history.json 或 eval_ckpts/ audit_report.json lelan_trial…",
+      "chart_media_items": []
     },
     {
       "id": "infra-audit",
@@ -2586,11 +3818,30 @@ window.homepageData = {
             },
             {
               "label": "LeLaN docs",
-              "value": "2"
+              "value": "7"
             },
             {
               "label": "状态",
               "value": "并行保留"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Archive",
+          "title": "research_archive 已固化 18 条记录与 0 个 milestone",
+          "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
+          "metrics": [
+            {
+              "label": "归档条目",
+              "value": "18"
+            },
+            {
+              "label": "完整条目",
+              "value": "6"
+            },
+            {
+              "label": "milestone",
+              "value": "0"
             }
           ]
         }
@@ -2634,6 +3885,195 @@ window.homepageData = {
                 }
               ],
               "task_id": "mdit-mainline"
+            },
+            {
+              "badge": "Archive Record",
+              "title": "code structure",
+              "summary": "该文档已经被纳入统一 archive，可作为后续专题页或 homepage 摘要的事实源。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "完整"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__code_structure/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__code_structure/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "code structure zh",
+              "summary": "该文档已经被纳入统一 archive，可作为后续专题页或 homepage 摘要的事实源。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "完整"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__code_structure_zh/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__code_structure_zh/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "fixes",
+              "summary": "该文档已经被纳入统一 archive，可作为后续专题页或 homepage 摘要的事实源。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "完整"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__fixes/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__fixes/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "homepage media dummy sim2real platform",
+              "summary": "该文档已经被纳入统一 archive，可作为后续专题页或 homepage 摘要的事实源。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "完整"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__homepage_media_dummy_sim2real_platform/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__homepage_media_dummy_sim2real_platform/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "mdit_takeover_state__lane_c_then_best500",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial record 已归档，但目前没有可展示的核心指标。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__mdit_takeover_state_lane_c_then_best500/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__mdit_takeover_state_lane_c_then_best500/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "pdit job packaging",
+              "summary": "该文档已经被纳入统一 archive，可作为后续专题页或 homepage 摘要的事实源。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "完整"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__pdit_job_packaging/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__pdit_job_packaging/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "research desk",
+              "summary": "该文档已经被纳入统一 archive，可作为后续专题页或 homepage 摘要的事实源。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "完整"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该条 run 已经进入统一 archive，后续整理页面时可以直接消费归档产物。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__research_desk/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-19__research_desk/archive_manifest.json"
+                }
+              ]
             }
           ]
         },
@@ -2816,6 +4256,33 @@ window.homepageData = {
                 }
               ],
               "task_id": "mdit-mainline"
+            },
+            {
+              "badge": "Archive Record",
+              "title": "mdit_loop_state__unplug_rgb_text_search",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial record 已归档，但目前没有可展示的核心指标。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-17__mdit_loop_state_unplug_rgb_text_search/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-17__mdit_loop_state_unplug_rgb_text_search/archive_manifest.json"
+                }
+              ]
             }
           ]
         },
@@ -2968,6 +4435,281 @@ window.homepageData = {
                 }
               ],
               "task_id": "lelan-pipeline"
+            },
+            {
+              "badge": "Archive Record",
+              "title": "VRAM probe for batch_size=12",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs12_test_1775990954/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs12_test_1775990954/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "VRAM probe for batch_size=16",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs16_1775990761/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs16_1775990761/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "VRAM probe for batch_size=20",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs20_1775990570/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs20_1775990570/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "VRAM probe for batch_size=24",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs24_1775990374/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs24_1775990374/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "VRAM probe for batch_size=8",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-12",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "collapse_detected: False",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs8_1775991433/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-12__vram_probe_bs8_1775991433/archive_manifest.json"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-10",
+          "cards": [
+            {
+              "badge": "Archive Record",
+              "title": "dummy_smoke_root_layout",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "collapse_detected: False",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__dummy_smoke_root_layout/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__dummy_smoke_root_layout/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "cross attn smoke",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "collapse_detected: False",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__smoke_h3_train/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__smoke_h3_train/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "smoke_modular_dummy",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "collapse_detected: False",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_modular_dummy_e0001_20260409_manual/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "real smoke timeout",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_timeout_e0001_20260407_232344/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_timeout_e0001_20260407_232344/archive_manifest.json"
+                }
+              ]
+            },
+            {
+              "badge": "Archive Record",
+              "title": "早期试跑记录",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_train_only_e0001_20260407_233423/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/infra/records/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_smoke_train_only_e0001_20260407_233423/archive_manifest.json"
+                }
+              ]
             }
           ]
         },
@@ -3174,6 +4916,42 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · code structure",
+          "path": "research_archive/tasks/infra/records/2026-04-19__code_structure/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · code structure zh",
+          "path": "research_archive/tasks/infra/records/2026-04-19__code_structure_zh/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · fixes",
+          "path": "research_archive/tasks/infra/records/2026-04-19__fixes/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · homepage media dummy sim2real platform",
+          "path": "research_archive/tasks/infra/records/2026-04-19__homepage_media_dummy_sim2real_platform/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · mdit_takeover_state__lane_c_then_best500",
+          "path": "research_archive/tasks/infra/records/2026-04-19__mdit_takeover_state_lane_c_then_best500/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · pdit job packaging",
+          "path": "research_archive/tasks/infra/records/2026-04-19__pdit_job_packaging/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
           "title": "research_desk.md",
           "path": "docs/research_desk.md",
           "summary": "跨线路阶段总结总账本，供 homepage 优先提炼。",
@@ -3227,7 +5005,8 @@ window.homepageData = {
         "docs/fixes.md",
         "docs/code-structure-zh.md",
         "docs/pdit-vs-mdit.md"
-      ]
+      ],
+      "chart_media_items": []
     }
   ],
   "branches": [
@@ -3257,6 +5036,8 @@ window.homepageData = {
       "card_summary": "围绕 Sim2Real 映射、示教轨迹和 FK/IK 控制，搭起可复用的六轴臂采集平台。",
       "card_result": "当前成果：平台已固化，可直接承接具身学习数据采集。",
       "detail_intro": "围绕 Sim2Real 映射、示教轨迹和 FK/IK 控制，搭起可复用的六轴臂采集平台。 当前成果：平台已固化，可直接承接具身学习数据采集。",
+      "entry_path": "homepage/tasks/dummy-sim2real-platform/",
+      "entry_label": "进入任务页",
       "related_task_ids": [
         "dummy-sim2real-platform"
       ],
@@ -3421,13 +5202,14 @@ window.homepageData = {
         "branch-robot-capabilities",
         "branch-robot-milestones"
       ],
+      "chart_media_items": [],
       "media_items": [
         {
           "task_id": "dummy-sim2real-platform",
           "kind": "image",
           "title": "六轴臂平台封面",
           "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+          "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/00-封面图.jpg",
           "showcase_preview": true
         },
         {
@@ -3435,7 +5217,7 @@ window.homepageData = {
           "kind": "video",
           "title": "正逆运动解算演示",
           "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/01-运动逆解算.mp4",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/01-运动逆解算.mp4",
           "showcase_preview": false
         },
         {
@@ -3443,7 +5225,7 @@ window.homepageData = {
           "kind": "video",
           "title": "真机-仿真数字孪生同步",
           "caption": "展示真机姿态如何实时映射到仿真侧，验证 Sim2Real 运动映射与数字孪生同步效果。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/02-真机仿真数字孪生.mp4",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/02-真机仿真数字孪生.mp4",
           "showcase_preview": false
         },
         {
@@ -3451,7 +5233,7 @@ window.homepageData = {
           "kind": "video",
           "title": "规划轨迹真机执行",
           "caption": "展示规划好的关节轨迹如何按照记录节奏下发真机，体现示教回放与总线保护链路。",
-          "path": "homepage/media/tasks/dummy-sim2real-platform/videos/03-规划轨迹执行.mp4",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/03-规划轨迹执行.mp4",
           "showcase_preview": false
         }
       ],
@@ -3484,7 +5266,7 @@ window.homepageData = {
       "status": "稳定锚点",
       "status_group": "done",
       "page_path": "homepage/branches/pdit/",
-      "latest_update": "2026-04-09",
+      "latest_update": "2026-04-16",
       "hero_metrics": [
         {
           "label": "best success@20",
@@ -3502,11 +5284,379 @@ window.homepageData = {
       "card_title": "PDIT 主线",
       "card_summary": "围绕点云 DiT 主线，把训练、保存和离线审计修回到可复核的行为锚点。",
       "card_result": "当前成果：best success 0.95@20，100 回合复核 0.85。",
-      "detail_intro": "围绕点云 DiT 主线，把训练、保存和离线审计修回到可复核的行为锚点。 当前成果：best success 0.95@20，100 回合复核 0.85。",
+      "detail_intro": "围绕点云 DiT 主线，把训练、保存和离线审计修回到可复核的行为锚点。 当前成果：best success 0.95@20，100 回合复核 0.85。 当前已在 archive 中固化 11 条归档条目与 0 个 milestone。",
+      "entry_path": "homepage/tasks/pdit-anchor/",
+      "entry_label": "进入任务页",
       "related_task_ids": [
         "pdit-anchor"
       ],
       "timeline_groups": [
+        {
+          "date": "2026-04-16",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本跨线公平对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.05"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "49"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.05@49 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本适配器修正版",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-16",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-15",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "原始 PDIT 公平锚点（bs224）",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "原始 PDIT 公平锚点（bs64）",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "2 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/metrics/summary.json"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本迁移候选",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.05"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "40"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.05@40 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本迁移候选",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-15",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100ep/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-10",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "Baseline@100 恢复验证",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.90"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.90@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_100_e0100_20260408_002048/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "Baseline@500 行为锚点",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "experiment_manifest"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_baseline_500_e0500_20260408_011741/metrics/audit_report.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "统计特征增强重试",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.35"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.35@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_fixed_stats_aug_100_e0100_20260408_124213/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "统计特征增强初版",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.55"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.55@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h1_stats_aug_100_e0100_20260408_103914/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "DiT 动力学候选",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-10",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.65"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.65@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/pdit/runs/2026-04-10__unplug_charger_transformer_fm_obs3_dit_v1_retrain_noamp_v1_h2_dit_dynamics_100_e0100_20260408_114130/archive_manifest.json"
+                }
+              ],
+              "task_id": "pdit-anchor",
+              "task_title": "PDIT 基线恢复与锚点固化"
+            }
+          ]
+        },
         {
           "date": "2026-04-09",
           "cards": [
@@ -3901,6 +6051,42 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · RGB+文本跨线公平对照",
+          "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · RGB+文本适配器修正版",
+          "path": "research_archive/tasks/pdit/runs/2026-04-16__ablation_rgb_text_pdit_100_fair_bs128_noamp_fix_v2/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · 原始 PDIT 公平锚点（bs224）",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs224_noamp/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive 报告 · 原始 PDIT 公平锚点（bs64）",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · 原始 PDIT 公平锚点（bs64）",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_anchor_pcd_pdit_orig_bs64_noamp/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
+        },
+        {
+          "title": "archive 报告 · RGB+文本迁移候选",
+          "path": "research_archive/tasks/pdit/runs/2026-04-15__ablation_rgb_text_pdit_100/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
           "title": "fm recovery progress zh",
           "path": "docs/pdit/2026-04-08-fm-recovery-progress-zh.md",
           "summary": "",
@@ -3923,24 +6109,100 @@ window.homepageData = {
         "branch-pdit-loss",
         "branch-pdit-mse"
       ],
-      "media_items": [],
+      "chart_media_items": [
+        {
+          "id": "archive-chart-pdit-anchor-01-pdit-rank-overview-svg",
+          "type": "media_chart",
+          "title": "PDIT 关键结果排行",
+          "description": "把关键 checkpoint 和 100 回合复核放到同一张图里，直接看当前该认哪一个锚点。",
+          "path": "research_archive/tasks/pdit/media/charts/01-pdit_rank_overview.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "epoch 500 仍然是当前最稳的行为锚点，100 回合复核也继续站得住。"
+        },
+        {
+          "id": "archive-chart-pdit-anchor-02-pdit-best-loss-curve-svg",
+          "type": "media_chart",
+          "title": "PDIT 最优组 loss 尾段",
+          "description": "围绕当前最优 baseline@500，直接看 train / valid total loss 的尾段关系。",
+          "path": "research_archive/tasks/pdit/media/charts/02-pdit_best_loss_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "当前 baseline@500 训练记录里没有可回抓的 W&B history，因此这里只能展示本地 summary 保留下来的 495-499 epoch 尾段快照。"
+        },
+        {
+          "id": "archive-chart-pdit-anchor-03-pdit-best-mse-curve-svg",
+          "type": "media_chart",
+          "title": "PDIT 最优组 MSE 尾段",
+          "description": "把 xyz / rot6d / grip 三条误差拆开，解释当前行为锚点背后的误差结构。",
+          "path": "research_archive/tasks/pdit/media/charts/03-pdit_best_mse_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "PDIT 当前没有可用的 W&B history，这张图与 loss 图一样来自本地 summary 尾段快照。"
+        }
+      ],
+      "media_items": [
+        {
+          "task_id": "pdit-anchor",
+          "kind": "image",
+          "title": "PDIT 点云主线封面",
+          "caption": "作为当前 PDIT 主线封面，概括点云观测、动作生成与行为审计这条模仿学习主线的整体结构。",
+          "path": "research_archive/tasks/pdit/media/demo/images/pdit.png",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "pdit-anchor",
+          "kind": "video",
+          "title": "PDIT 点云策略关门演示",
+          "caption": "展示点云主线在后期 checkpoint 上的仿真执行效果，说明 point cloud 到 action chunk 的策略已经能稳定落到具体 manipulation 动作。",
+          "path": "research_archive/tasks/pdit/media/demo/videos/epoch_0450_pcd.mp4",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "pdit-anchor",
+          "kind": "video",
+          "title": "Franka 拔插头仿真执行",
+          "caption": "展示 PDIT 在拔插头任务中的仿真执行现场：策略从观测编码到 action chunk 输出后，驱动 Franka 机械臂完成接近、对位与执行动作。",
+          "path": "research_archive/tasks/pdit/media/demo/videos/仿真-1.mp4",
+          "showcase_preview": false
+        }
+      ],
       "summary_cards": [
         {
           "eyebrow": "Branch",
-          "title": "行为锚点已经稳定下来",
-          "body": "Baseline@500 在离线 20 回合达到 0.95，根目录重整后的 100 回合复核仍有 0.85，说明当前最优策略不是一次性好运气。",
+          "title": "把点云观测到 action chunk 的模仿学习主线真正搭起来了",
+          "body": "这条线已经不只是“能训练一个模型”，而是从 3 帧点云观测到 32 步动作 chunk 的策略学习链路、损失监控和离线行为评估全都打通了。",
           "metrics": [
             {
-              "label": "20 回合",
-              "value": "0.95"
+              "label": "观测帧",
+              "value": "3"
             },
             {
-              "label": "100 回合",
-              "value": "0.85"
+              "label": "动作 chunk",
+              "value": "32"
             },
             {
-              "label": "best epoch",
-              "value": "500"
+              "label": "obs",
+              "value": "point cloud"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Archive",
+          "title": "research_archive 已固化 11 条run与 0 个 milestone",
+          "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
+          "metrics": [
+            {
+              "label": "归档条目",
+              "value": "11"
+            },
+            {
+              "label": "完整条目",
+              "value": "0"
+            },
+            {
+              "label": "milestone",
+              "value": "0"
             }
           ]
         }
@@ -3950,32 +6212,113 @@ window.homepageData = {
       "id": "mdit",
       "title": "MDIT 研究线",
       "summary": "MDIT 当前最稳的早期锚点仍是 0.55@100 的 RGB+文本主线。稳定化对照弱于主线，faithful 对照的首轮失败被确认是缓存和网络问题，严格 MTDP 对照没有通过共享闸门；",
-      "status": "推进中",
-      "status_group": "in_progress",
+      "status": "已验证",
+      "status_group": "done",
       "page_path": "homepage/branches/mdit/",
-      "latest_update": "2026-04-19",
+      "latest_update": "2026-04-20",
       "hero_metrics": [
         {
-          "label": "早期锚点",
-          "value": "0.55@100"
-        },
-        {
-          "label": "best success",
+          "label": "best success@20",
           "value": "0.75"
         },
         {
-          "label": "500 轮审计",
-          "value": "0.75"
+          "label": "100 epoch 锚点",
+          "value": "0.55"
+        },
+        {
+          "label": "best epoch",
+          "value": "300"
         }
       ],
       "card_title": "MDIT 研究线",
       "card_summary": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。",
-      "card_result": "当前成果：共享审计已经从 0.55@100 抬到 0.75@300/500。",
-      "detail_intro": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。 当前成果：共享审计已经从 0.55@100 抬到 0.75@300/500。",
+      "card_result": "当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。",
+      "detail_intro": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。 当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。 当前已在 archive 中固化 8 条归档条目与 3 个 milestone。",
+      "entry_path": "homepage/tasks/mdit-mainline/",
+      "entry_label": "进入任务页",
       "related_task_ids": [
         "mdit-mainline"
       ],
       "timeline_groups": [
+        {
+          "date": "2026-04-20",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "audit_wandb_run",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-20",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.60"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "归档里已经固定 0.60@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/audit_report.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "collapse_run",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-20",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.75"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "300"
+                },
+                {
+                  "label": "归档",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "归档里已经固定 0.75@300 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/audit_report.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            }
+          ]
+        },
         {
           "date": "2026-04-19",
           "cards": [
@@ -4011,6 +6354,68 @@ window.homepageData = {
                 {
                   "title": "修复留痕总表",
                   "path": "docs/fixes.md"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "100→500 主线续训",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.75"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "300"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.75@300 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-19__unplug_charger_mdit_rgb_text_3token_100_lane_a_mainline_500_resume_e0500_20260418_005723/archive_manifest.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Milestone",
+              "title": "参考线快照",
+              "summary": "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。",
+              "date_key": "2026-04-19",
+              "metrics": [
+                {
+                  "label": "类型",
+                  "value": "reference_line"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该目录已经作为 milestone 快照固化，可用于后续 best path / frozen best 展示。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-19__mdit_reference_line/archive_manifest.json"
                 }
               ],
               "task_id": "mdit-mainline",
@@ -4150,6 +6555,35 @@ window.homepageData = {
                 {
                   "title": "W&B 摘要",
                   "path": "ckpt/unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723/wandb/run-20260418_022912-8ikgnzbw/files/wandb-summary.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "严格 MTDP 对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-18",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-18__unplug_charger_mdit_lane_c_mtdp_strict_fm_v1_lane_c_mtdp_strict_100_e0100_20260417_193720/archive_manifest.json"
                 }
               ],
               "task_id": "mdit-mainline",
@@ -4325,6 +6759,200 @@ window.homepageData = {
               ],
               "task_id": "mdit-mainline",
               "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "faithful recipe 对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_lane_b_faithful_fm_v1_lane_b_faithful_100_e0100_20260417_172029/archive_manifest.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "RGB+文本主线 100 轮锚点",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.55"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "归档里已经固定 0.55@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_3token_100/metrics/audit_report.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "平滑动作稳定化对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "3 项"
+                }
+              ],
+              "outcome": "trial_score: -1.0 collapse_detected: True",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544/archive_manifest.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Run",
+              "title": "平滑动作稳定化对照",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "best success",
+                  "value": "0.35"
+                },
+                {
+                  "label": "best epoch",
+                  "value": "100"
+                },
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                }
+              ],
+              "outcome": "归档里已经固定 0.35@100 的结果，后续页面与专题页都可以直接复用。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-17__unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329/archive_manifest.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Milestone",
+              "title": "冻结最优快照",
+              "summary": "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "类型",
+                  "value": "frozen_best_snapshot"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该目录已经作为 milestone 快照固化，可用于后续 best path / frozen best 展示。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__2026_04_17_110536_lane_a_mainline_epoch100_s055/metrics/audit_report.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            },
+            {
+              "badge": "Archive Milestone",
+              "title": "冻结最优快照",
+              "summary": "该 milestone 快照已经固化，可直接作为主页和专题页的证据入口。",
+              "date_key": "2026-04-17",
+              "metrics": [
+                {
+                  "label": "类型",
+                  "value": "frozen_best_snapshot"
+                },
+                {
+                  "label": "缺失",
+                  "value": "完整"
+                }
+              ],
+              "outcome": "该目录已经作为 milestone 快照固化，可用于后续 best path / frozen best 展示。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/metrics/summary.json"
+                },
+                {
+                  "title": "archive audit",
+                  "path": "research_archive/tasks/mdit/milestones/2026-04-17__current_provisional_best/metrics/audit_report.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
             }
           ]
         },
@@ -4481,6 +7109,42 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · audit_wandb_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · audit_wandb_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
+        },
+        {
+          "title": "archive audit · audit_wandb_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/metrics/audit_report.json",
+          "summary": "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
+          "label": "打开 audit"
+        },
+        {
+          "title": "archive 报告 · collapse_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · collapse_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
+        },
+        {
+          "title": "archive audit · collapse_run",
+          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/audit_report.json",
+          "summary": "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
+          "label": "打开 audit"
+        },
+        {
           "title": "research journal",
           "path": "docs/mdit/research_journal.md",
           "summary": "",
@@ -4503,24 +7167,283 @@ window.homepageData = {
         "branch-mdit-loss",
         "branch-mdit-mse"
       ],
-      "media_items": [],
+      "chart_media_items": [
+        {
+          "id": "archive-chart-mdit-mainline-01-mdit-rank-overview-svg",
+          "type": "media_chart",
+          "title": "MDIT 关键结果排行",
+          "description": "把主线关键节点和共享审计结果放到一张图里，直接看当前真正成立的阶段结果。",
+          "path": "research_archive/tasks/mdit/media/charts/01-mdit_rank_overview.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "300 / 500 epoch 已经超过早期 0.55@100 锚点，因此这条线后面更应该看 loss 与 MSE 怎样支撑这个提升。"
+        },
+        {
+          "id": "archive-chart-mdit-mainline-02-mdit-mainline-loss-curve-svg",
+          "type": "media_chart",
+          "title": "MDIT 主线 loss 趋势",
+          "description": "围绕 100→500 主线续训，直接看 train / valid total loss 如何收束。",
+          "path": "research_archive/tasks/mdit/media/charts/02-mdit_mainline_loss_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "使用 W&B API 抓取完整 history，展示主线真实训练曲线。"
+        },
+        {
+          "id": "archive-chart-mdit-mainline-03-mdit-mainline-mse-curve-svg",
+          "type": "media_chart",
+          "title": "MDIT 主线 MSE 变化",
+          "description": "把 xyz / rot6d / grip 三条误差拆开，解释长训结果为什么能抬到 0.75。",
+          "path": "research_archive/tasks/mdit/media/charts/03-mdit_mainline_mse_curve.svg",
+          "kind": "image",
+          "source_kind": "manual",
+          "note": "使用 W&B API 抓取 valid mse_xyz / mse_rot6d / mse_grip 全量 history。"
+        }
+      ],
+      "media_items": [
+        {
+          "task_id": "mdit-mainline",
+          "kind": "image",
+          "title": "MDIT RGB+Text 主线封面",
+          "caption": "作为当前 MDIT 主线封面，概括多视角视觉、文本条件与动作生成之间的整体结构。",
+          "path": "research_archive/tasks/mdit/media/demo/images/mtdp_architecture.png",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "mdit-mainline",
+          "kind": "video",
+          "title": "MDIT RGB+Text 关门仿真演示",
+          "caption": "该片段来自 RGB+Text 主线训练后的关门仿真，说明语言条件已经能落到可执行动作轨迹。它对应的是一条更贴近 VLA / 世界模型接口的多模态策略路径：先对齐视觉与文本语义，再生成 action chunk。",
+          "path": "research_archive/tasks/mdit/media/demo/videos/关门仿真-1.mp4",
+          "showcase_preview": false
+        }
+      ],
       "summary_cards": [
         {
           "eyebrow": "Branch",
-          "title": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
-          "body": "0.55@100 仍是当前锁定的早期锚点；在此基础上，100→500 续训后的共享审计已经给出 0.75@300 和 0.75@500，说明这条线不是只能停在 100 epoch。",
+          "title": "把 5 路 RGB + 文本到 action chunk 的多模态主线真正立起来了",
+          "body": "这条线已经明确落成了以 CLIP 视觉语义和任务文本为条件的多模态策略主线，而不是停留在“加点视觉、加点文本”的 loose idea。",
           "metrics": [
             {
-              "label": "epoch 100",
-              "value": "0.55"
+              "label": "RGB 视角",
+              "value": "5"
             },
             {
-              "label": "epoch 300",
-              "value": "0.75"
+              "label": "观测帧",
+              "value": "3"
             },
             {
-              "label": "epoch 500",
-              "value": "0.75"
+              "label": "动作 chunk",
+              "value": "32"
+            }
+          ]
+        },
+        {
+          "eyebrow": "Archive",
+          "title": "research_archive 已固化 8 条run与 3 个 milestone",
+          "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
+          "metrics": [
+            {
+              "label": "归档条目",
+              "value": "8"
+            },
+            {
+              "label": "完整条目",
+              "value": "6"
+            },
+            {
+              "label": "milestone",
+              "value": "3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lingbot-va",
+      "title": "LingBot-VA 世界模型线",
+      "summary": "围绕视频 latent + 动作联合建模、单任务 smoke 与离线 demo exporter，逐步切入 LingBot-VA 的世界模型后训练研究。",
+      "status": "推进中",
+      "status_group": "in_progress",
+      "page_path": "homepage/branches/lingbot-va/",
+      "latest_update": "2026-04-19",
+      "hero_metrics": [
+        {
+          "label": "smoke step",
+          "value": "1"
+        },
+        {
+          "label": "offline action_mse",
+          "value": "0.0067"
+        },
+        {
+          "label": "当前阶段",
+          "value": "smoke+demo"
+        }
+      ],
+      "card_title": "LingBot-VA 世界模型线",
+      "card_summary": "围绕视频 latent + 动作联合建模的世界模型后训练，先把单任务 smoke、离线 demo 导出和显存边界摸清。",
+      "card_result": "当前成果：单任务单卡 smoke、checkpoint 保存和离线 demo exporter 都已打通。",
+      "detail_intro": "围绕视频 latent + 动作联合建模的世界模型后训练，先把单任务 smoke、离线 demo 导出和显存边界摸清。 当前成果：单任务单卡 smoke、checkpoint 保存和离线 demo exporter 都已打通。",
+      "entry_path": "homepage/tasks/lingbot-va-world-model/",
+      "entry_label": "进入任务页",
+      "related_task_ids": [
+        "lingbot-va-world-model"
+      ],
+      "timeline_groups": [
+        {
+          "date": "2026-04-19",
+          "cards": [
+            {
+              "badge": "Smoke",
+              "title": "单任务单卡 smoke 训练链路跑通",
+              "summary": "先把 LingBot-VA 的最小训练闭环跑通：单任务数据读取、前向、反向、optimizer update、checkpoint 保存和 WandB 记录都在一条链上验证过了。",
+              "metrics": [
+                {
+                  "label": "latent_loss",
+                  "value": "0.0422"
+                },
+                {
+                  "label": "action_loss",
+                  "value": "0.7244"
+                },
+                {
+                  "label": "grad_norm",
+                  "value": "3.78"
+                }
+              ],
+              "outcome": "世界模型后训练的最小可复现入口已经站住，后续不需要再从“机器能不能跑”重新摸索。",
+              "links": [
+                {
+                  "title": "项目速读",
+                  "path": "homepage/external/lingbot_va/docs/project_guide.md"
+                },
+                {
+                  "title": "阶段 desk",
+                  "path": "homepage/external/lingbot_va/docs/research_desk.md"
+                }
+              ],
+              "task_id": "lingbot-va-world-model",
+              "task_title": "LingBot-VA 世界模型后训练切入"
+            },
+            {
+              "badge": "Demo Export",
+              "title": "离线 demo exporter 打通本地单任务验证",
+              "summary": "预测视频、动作对照和误差指标已经能从同一次导出里一起产出，不再只是拿 loss 判断这条线有没有学到东西。",
+              "metrics": [
+                {
+                  "label": "video_mse",
+                  "value": "0.0036"
+                },
+                {
+                  "label": "action_mse",
+                  "value": "0.0067"
+                },
+                {
+                  "label": "pred frames",
+                  "value": "45"
+                }
+              ],
+              "outcome": "这条线已经从“只有训练日志”推进到“有视频预测和离线指标”的可展示阶段。",
+              "links": [
+                {
+                  "title": "离线导出总结",
+                  "path": "homepage/external/lingbot_va/eval/summary.json"
+                },
+                {
+                  "title": "summary.csv",
+                  "path": "homepage/external/lingbot_va/eval/summary.csv"
+                }
+              ],
+              "task_id": "lingbot-va-world-model",
+              "task_title": "LingBot-VA 世界模型后训练切入"
+            },
+            {
+              "badge": "Boundary",
+              "title": "单卡全参数 post-train 的真实边界被明确暴露出来",
+              "summary": "当前 24GB 单卡不能直接承载全参数 RoboTwin post-train，世界模型这条线后面必须朝多卡或参数高效训练方案推进。",
+              "metrics": [
+                {
+                  "label": "显存",
+                  "value": "24GB"
+                },
+                {
+                  "label": "full FT",
+                  "value": "受限"
+                },
+                {
+                  "label": "下一步",
+                  "value": "多卡 / PEFT"
+                }
+              ],
+              "outcome": "后续研究方向已经从“再硬挤单卡”切到“明确训练策略与评测链路”，路线判断更清晰了。",
+              "links": [
+                {
+                  "title": "阶段 desk",
+                  "path": "homepage/external/lingbot_va/docs/research_desk.md"
+                },
+                {
+                  "title": "问题修复日志",
+                  "path": "homepage/external/lingbot_va/docs/fixes.md"
+                }
+              ],
+              "task_id": "lingbot-va-world-model",
+              "task_title": "LingBot-VA 世界模型后训练切入"
+            }
+          ]
+        }
+      ],
+      "evidence_links": [
+        {
+          "title": "project guide",
+          "path": "homepage/external/lingbot_va/docs/project_guide.md",
+          "summary": "",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "research desk",
+          "path": "homepage/external/lingbot_va/docs/research_desk.md",
+          "summary": "",
+          "label": "查看原始记录"
+        }
+      ],
+      "chart_ids": [
+        "lingbot-smoke-metrics",
+        "lingbot-offline-eval",
+        "lingbot-system-boundary"
+      ],
+      "dashboard_chart_ids": [
+        "branch-lingbot-smoke",
+        "branch-lingbot-eval",
+        "branch-lingbot-boundary"
+      ],
+      "chart_media_items": [],
+      "media_items": [
+        {
+          "task_id": "lingbot-va-world-model",
+          "kind": "image",
+          "title": "LingBot-VA 世界模型线封面",
+          "caption": "用 RoboTwin 任务场景作为切入口，展示这条线当前聚焦的视频 latent + 动作联合后训练方向。",
+          "path": "research_archive/tasks/lingbot/media/demo/images/00-lingbot-va-cover.png",
+          "showcase_preview": true
+        }
+      ],
+      "summary_cards": [
+        {
+          "eyebrow": "Branch",
+          "title": "视频 latent + 动作联合后训练入口已打通",
+          "body": "这条线已经从“只会看代码”推进到“能跑 smoke、能导 demo、知道算力边界”，适合继续往世界模型 / VLA 后训练深入。",
+          "metrics": [
+            {
+              "label": "任务",
+              "value": "click_bell"
+            },
+            {
+              "label": "模式",
+              "value": "single-task smoke"
+            },
+            {
+              "label": "状态",
+              "value": "推进中"
             }
           ]
         }
@@ -4536,7 +7459,7 @@ window.homepageData = {
       "latest_update": "2026-04-12",
       "hero_metrics": [
         {
-          "label": "输入",
+          "label": "观测设置",
           "value": "5 路 RGB / 3 帧"
         },
         {
@@ -4544,7 +7467,7 @@ window.homepageData = {
           "value": "8"
         },
         {
-          "label": "100 epoch gate",
+          "label": "gate@100",
           "value": "0.45"
         }
       ],
@@ -4552,6 +7475,8 @@ window.homepageData = {
       "card_summary": "围绕 LeLaN 的训练、评估、选模和审计流程，先把自动研究执行链路固化下来。",
       "card_result": "当前成果：100 / 300 / 500 gate 已定版，等待正式 run 结果。",
       "detail_intro": "围绕 LeLaN 的训练、评估、选模和审计流程，先把自动研究执行链路固化下来。 当前成果：100 / 300 / 500 gate 已定版，等待正式 run 结果。",
+      "entry_path": "homepage/tasks/lelan-pipeline/",
+      "entry_label": "进入任务页",
       "related_task_ids": [
         "lelan-pipeline"
       ],
@@ -4712,6 +7637,7 @@ window.homepageData = {
         "branch-lelan-gate",
         "branch-lelan-readiness"
       ],
+      "chart_media_items": [],
       "media_items": [],
       "summary_cards": [
         {
@@ -4777,6 +7703,105 @@ window.homepageData = {
           "task_id": "mdit-mainline",
           "task_title": "MDIT RGB+Text 主线推进",
           "task_path": "homepage/tasks/mdit-mainline/"
+        },
+        {
+          "badge": "Smoke",
+          "title": "单任务单卡 smoke 训练链路跑通",
+          "summary": "先把 LingBot-VA 的最小训练闭环跑通：单任务数据读取、前向、反向、optimizer update、checkpoint 保存和 WandB 记录都在一条链上验证过了。",
+          "metrics": [
+            {
+              "label": "latent_loss",
+              "value": "0.0422"
+            },
+            {
+              "label": "action_loss",
+              "value": "0.7244"
+            },
+            {
+              "label": "grad_norm",
+              "value": "3.78"
+            }
+          ],
+          "outcome": "世界模型后训练的最小可复现入口已经站住，后续不需要再从“机器能不能跑”重新摸索。",
+          "links": [
+            {
+              "title": "项目速读",
+              "path": "homepage/external/lingbot_va/docs/project_guide.md"
+            },
+            {
+              "title": "阶段 desk",
+              "path": "homepage/external/lingbot_va/docs/research_desk.md"
+            }
+          ],
+          "task_id": "lingbot-va-world-model",
+          "task_title": "LingBot-VA 世界模型后训练切入",
+          "task_path": "homepage/tasks/lingbot-va-world-model/"
+        },
+        {
+          "badge": "Demo Export",
+          "title": "离线 demo exporter 打通本地单任务验证",
+          "summary": "预测视频、动作对照和误差指标已经能从同一次导出里一起产出，不再只是拿 loss 判断这条线有没有学到东西。",
+          "metrics": [
+            {
+              "label": "video_mse",
+              "value": "0.0036"
+            },
+            {
+              "label": "action_mse",
+              "value": "0.0067"
+            },
+            {
+              "label": "pred frames",
+              "value": "45"
+            }
+          ],
+          "outcome": "这条线已经从“只有训练日志”推进到“有视频预测和离线指标”的可展示阶段。",
+          "links": [
+            {
+              "title": "离线导出总结",
+              "path": "homepage/external/lingbot_va/eval/summary.json"
+            },
+            {
+              "title": "summary.csv",
+              "path": "homepage/external/lingbot_va/eval/summary.csv"
+            }
+          ],
+          "task_id": "lingbot-va-world-model",
+          "task_title": "LingBot-VA 世界模型后训练切入",
+          "task_path": "homepage/tasks/lingbot-va-world-model/"
+        },
+        {
+          "badge": "Boundary",
+          "title": "单卡全参数 post-train 的真实边界被明确暴露出来",
+          "summary": "当前 24GB 单卡不能直接承载全参数 RoboTwin post-train，世界模型这条线后面必须朝多卡或参数高效训练方案推进。",
+          "metrics": [
+            {
+              "label": "显存",
+              "value": "24GB"
+            },
+            {
+              "label": "full FT",
+              "value": "受限"
+            },
+            {
+              "label": "下一步",
+              "value": "多卡 / PEFT"
+            }
+          ],
+          "outcome": "后续研究方向已经从“再硬挤单卡”切到“明确训练策略与评测链路”，路线判断更清晰了。",
+          "links": [
+            {
+              "title": "阶段 desk",
+              "path": "homepage/external/lingbot_va/docs/research_desk.md"
+            },
+            {
+              "title": "问题修复日志",
+              "path": "homepage/external/lingbot_va/docs/fixes.md"
+            }
+          ],
+          "task_id": "lingbot-va-world-model",
+          "task_title": "LingBot-VA 世界模型后训练切入",
+          "task_path": "homepage/tasks/lingbot-va-world-model/"
         }
       ]
     },
@@ -18233,6 +21258,107 @@ window.homepageData = {
         }
       ]
     },
+    "lingbot-smoke-metrics": {
+      "id": "lingbot-smoke-metrics",
+      "type": "compare_cards",
+      "title": "LingBot-VA smoke 训练指标",
+      "description": "先把单任务单卡 smoke 跑通，用最小可复现链路验证视频 latent + 动作联合后训练是否真的能前向、反向、更新和保存。",
+      "cards": [
+        {
+          "badge": "Smoke",
+          "title": "单任务单卡训练链路已贯通",
+          "summary": "当前 smoke 使用单任务、单步、只训练输出头的配置，重点验证训练链路而不是追求最终任务效果。",
+          "metrics": [
+            {
+              "label": "latent_loss",
+              "value": "0.0422"
+            },
+            {
+              "label": "action_loss",
+              "value": "0.7244"
+            },
+            {
+              "label": "grad_norm",
+              "value": "3.78"
+            }
+          ]
+        },
+        {
+          "badge": "Checkpoint",
+          "title": "checkpoint 与 WandB 记录已经稳定产出",
+          "summary": "这条线现在已经能稳定保存新的 transformer checkpoint，并把最小训练指标留到 WandB，后面可以在这个基础上继续扩展正式训练。",
+          "metrics": [
+            {
+              "label": "step",
+              "value": "1"
+            },
+            {
+              "label": "WandB",
+              "value": "已打通"
+            },
+            {
+              "label": "状态",
+              "value": "可复现"
+            }
+          ]
+        }
+      ]
+    },
+    "lingbot-offline-eval": {
+      "id": "lingbot-offline-eval",
+      "type": "bar",
+      "title": "LingBot-VA 离线 demo 指标",
+      "description": "离线 demo exporter 已经能把模型预测视频、动作轨迹和误差统计一起导出来，用最小指标先看预测质量是否站住。",
+      "format": "float",
+      "note": "当前导出使用 6 chunks / 2 video steps / 4 action steps，最终得到 45 帧预测视频和 192 个预测动作步，优先验证本地可视化链路。",
+      "categories": [
+        "video_mse",
+        "action_mse"
+      ],
+      "series": [
+        {
+          "name": "LingBot-VA 离线 demo 指标",
+          "values": [
+            0.003563144477084279,
+            0.006736649200320244
+          ],
+          "color": "#3e7cb1"
+        }
+      ]
+    },
+    "lingbot-system-boundary": {
+      "id": "lingbot-system-boundary",
+      "type": "grouped_bar",
+      "title": "单卡路径与当前边界",
+      "description": "这张图不讲 success rate，而是明确现在这台 24GB 卡到底能做什么、卡在什么地方，避免后续世界模型推进时误判算力边界。",
+      "format": "percent",
+      "note": "当前 RTX 5090 D v2 24GB 已确认可以完成 smoke 和离线 demo，但不能直接承载全参数单卡 RoboTwin post-train。",
+      "categories": [
+        "单任务 smoke",
+        "离线 demo 导出",
+        "全参数单卡 post-train"
+      ],
+      "series": [
+        {
+          "name": "已验证",
+          "values": [
+            1.0,
+            1.0,
+            0.0
+          ],
+          "color": "#2b766f"
+        },
+        {
+          "name": "当前受限",
+          "values": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "color": "#b2573f"
+        }
+      ]
+    },
     "lelan-stage-gates": {
       "id": "lelan-stage-gates",
       "type": "bar",
@@ -18301,7 +21427,7 @@ window.homepageData = {
           "values": [
             8.0,
             16.0,
-            2.0
+            7.0
           ],
           "color": "#3e7cb1"
         }
@@ -31118,6 +34244,107 @@ window.homepageData = {
         }
       ]
     },
+    "branch-lingbot-smoke": {
+      "id": "branch-lingbot-smoke",
+      "type": "compare_cards",
+      "title": "LingBot-VA smoke 训练指标",
+      "description": "研究线页先看最小训练闭环有没有真的跑通，而不是把世界模型线误读成 success rate 项目。",
+      "cards": [
+        {
+          "badge": "Smoke",
+          "title": "单任务单卡训练链路已贯通",
+          "summary": "当前 smoke 使用单任务、单步、只训练输出头的配置，重点验证训练链路而不是追求最终任务效果。",
+          "metrics": [
+            {
+              "label": "latent_loss",
+              "value": "0.0422"
+            },
+            {
+              "label": "action_loss",
+              "value": "0.7244"
+            },
+            {
+              "label": "grad_norm",
+              "value": "3.78"
+            }
+          ]
+        },
+        {
+          "badge": "Checkpoint",
+          "title": "checkpoint 与 WandB 记录已经稳定产出",
+          "summary": "这条线现在已经能稳定保存新的 transformer checkpoint，并把最小训练指标留到 WandB，后面可以在这个基础上继续扩展正式训练。",
+          "metrics": [
+            {
+              "label": "step",
+              "value": "1"
+            },
+            {
+              "label": "WandB",
+              "value": "已打通"
+            },
+            {
+              "label": "状态",
+              "value": "可复现"
+            }
+          ]
+        }
+      ]
+    },
+    "branch-lingbot-eval": {
+      "id": "branch-lingbot-eval",
+      "type": "bar",
+      "title": "LingBot-VA 离线 demo 指标",
+      "description": "世界模型线当前最值得展示的是离线预测视频与动作的误差指标，而不是伪造任务 success 曲线。",
+      "format": "float",
+      "note": "当前导出使用 6 chunks / 2 video steps / 4 action steps，最终得到 45 帧预测视频和 192 个预测动作步，优先验证本地可视化链路。",
+      "categories": [
+        "video_mse",
+        "action_mse"
+      ],
+      "series": [
+        {
+          "name": "LingBot-VA 离线 demo 指标",
+          "values": [
+            0.003563144477084279,
+            0.006736649200320244
+          ],
+          "color": "#3e7cb1"
+        }
+      ]
+    },
+    "branch-lingbot-boundary": {
+      "id": "branch-lingbot-boundary",
+      "type": "grouped_bar",
+      "title": "LingBot-VA 单卡路径边界",
+      "description": "把已经打通的路径和当前单卡边界拆开看，避免后续世界模型推进时误判算力与训练策略。",
+      "format": "percent",
+      "note": "当前 RTX 5090 D v2 24GB 已确认可以完成 smoke 和离线 demo，但不能直接承载全参数单卡 RoboTwin post-train。",
+      "categories": [
+        "单任务 smoke",
+        "离线 demo 导出",
+        "全参数单卡 post-train"
+      ],
+      "series": [
+        {
+          "name": "已验证",
+          "values": [
+            1.0,
+            1.0,
+            0.0
+          ],
+          "color": "#2b766f"
+        },
+        {
+          "name": "当前受限",
+          "values": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "color": "#b2573f"
+        }
+      ]
+    },
     "branch-lelan-gate": {
       "id": "branch-lelan-gate",
       "type": "bar",
@@ -31206,7 +34433,7 @@ window.homepageData = {
         {
           "badge": "PDIT 主线",
           "title": "PDIT 基线恢复与锚点固化",
-          "summary": "行为锚点已经稳定下来",
+          "summary": "把点云观测到 action chunk 的模仿学习主线真正搭起来了",
           "metrics": [
             {
               "label": "best success@20",
@@ -31225,19 +34452,38 @@ window.homepageData = {
         {
           "badge": "MDIT 主线",
           "title": "MDIT RGB+Text 主线推进",
-          "summary": "同一条 RGB+Text 主线已经从 0.55@100 抬到 0.75@300/500",
+          "summary": "把 5 路 RGB + 文本到 action chunk 的多模态主线真正立起来了",
           "metrics": [
             {
-              "label": "早期锚点",
-              "value": "0.55@100"
-            },
-            {
-              "label": "best success",
+              "label": "best success@20",
               "value": "0.75"
             },
             {
-              "label": "500 轮审计",
-              "value": "0.75"
+              "label": "100 epoch 锚点",
+              "value": "0.55"
+            },
+            {
+              "label": "best epoch",
+              "value": "300"
+            }
+          ]
+        },
+        {
+          "badge": "世界模型线",
+          "title": "LingBot-VA 世界模型后训练切入",
+          "summary": "视频 latent + 动作联合后训练入口已打通",
+          "metrics": [
+            {
+              "label": "smoke step",
+              "value": "1"
+            },
+            {
+              "label": "offline action_mse",
+              "value": "0.0067"
+            },
+            {
+              "label": "当前阶段",
+              "value": "smoke+demo"
             }
           ]
         },
@@ -31247,7 +34493,7 @@ window.homepageData = {
           "summary": "第一轮 recipe 固定，不先碰 backbone",
           "metrics": [
             {
-              "label": "输入",
+              "label": "观测设置",
               "value": "5 路 RGB / 3 帧"
             },
             {
@@ -31255,7 +34501,7 @@ window.homepageData = {
               "value": "8"
             },
             {
-              "label": "100 epoch gate",
+              "label": "gate@100",
               "value": "0.45"
             }
           ]
@@ -31271,7 +34517,7 @@ window.homepageData = {
         "kind": "image",
         "title": "六轴臂平台封面",
         "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
-        "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+        "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/00-封面图.jpg",
         "showcase_preview": true
       },
       {
@@ -31279,7 +34525,7 @@ window.homepageData = {
         "kind": "video",
         "title": "正逆运动解算演示",
         "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
-        "path": "homepage/media/tasks/dummy-sim2real-platform/videos/01-运动逆解算.mp4",
+        "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/01-运动逆解算.mp4",
         "showcase_preview": false
       },
       {
@@ -31287,7 +34533,7 @@ window.homepageData = {
         "kind": "video",
         "title": "真机-仿真数字孪生同步",
         "caption": "展示真机姿态如何实时映射到仿真侧，验证 Sim2Real 运动映射与数字孪生同步效果。",
-        "path": "homepage/media/tasks/dummy-sim2real-platform/videos/02-真机仿真数字孪生.mp4",
+        "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/02-真机仿真数字孪生.mp4",
         "showcase_preview": false
       },
       {
@@ -31295,8 +34541,56 @@ window.homepageData = {
         "kind": "video",
         "title": "规划轨迹真机执行",
         "caption": "展示规划好的关节轨迹如何按照记录节奏下发真机，体现示教回放与总线保护链路。",
-        "path": "homepage/media/tasks/dummy-sim2real-platform/videos/03-规划轨迹执行.mp4",
+        "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/03-规划轨迹执行.mp4",
         "showcase_preview": false
+      },
+      {
+        "task_id": "pdit-anchor",
+        "kind": "image",
+        "title": "PDIT 点云主线封面",
+        "caption": "作为当前 PDIT 主线封面，概括点云观测、动作生成与行为审计这条模仿学习主线的整体结构。",
+        "path": "research_archive/tasks/pdit/media/demo/images/pdit.png",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "pdit-anchor",
+        "kind": "video",
+        "title": "PDIT 点云策略关门演示",
+        "caption": "展示点云主线在后期 checkpoint 上的仿真执行效果，说明 point cloud 到 action chunk 的策略已经能稳定落到具体 manipulation 动作。",
+        "path": "research_archive/tasks/pdit/media/demo/videos/epoch_0450_pcd.mp4",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "pdit-anchor",
+        "kind": "video",
+        "title": "Franka 拔插头仿真执行",
+        "caption": "展示 PDIT 在拔插头任务中的仿真执行现场：策略从观测编码到 action chunk 输出后，驱动 Franka 机械臂完成接近、对位与执行动作。",
+        "path": "research_archive/tasks/pdit/media/demo/videos/仿真-1.mp4",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "mdit-mainline",
+        "kind": "image",
+        "title": "MDIT RGB+Text 主线封面",
+        "caption": "作为当前 MDIT 主线封面，概括多视角视觉、文本条件与动作生成之间的整体结构。",
+        "path": "research_archive/tasks/mdit/media/demo/images/mtdp_architecture.png",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "mdit-mainline",
+        "kind": "video",
+        "title": "MDIT RGB+Text 关门仿真演示",
+        "caption": "该片段来自 RGB+Text 主线训练后的关门仿真，说明语言条件已经能落到可执行动作轨迹。它对应的是一条更贴近 VLA / 世界模型接口的多模态策略路径：先对齐视觉与文本语义，再生成 action chunk。",
+        "path": "research_archive/tasks/mdit/media/demo/videos/关门仿真-1.mp4",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "lingbot-va-world-model",
+        "kind": "image",
+        "title": "LingBot-VA 世界模型线封面",
+        "caption": "用 RoboTwin 任务场景作为切入口，展示这条线当前聚焦的视频 latent + 动作联合后训练方向。",
+        "path": "research_archive/tasks/lingbot/media/demo/images/00-lingbot-va-cover.png",
+        "showcase_preview": true
       },
       {
         "task_id": "infra-audit",
@@ -31321,34 +34615,42 @@ window.homepageData = {
         "kind": "image",
         "title": "六轴臂平台封面",
         "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
-        "path": "homepage/media/tasks/dummy-sim2real-platform/images/00-封面图.jpg",
+        "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/00-封面图.jpg",
+        "showcase_preview": true
+      },
+      {
+        "task_id": "lingbot-va-world-model",
+        "kind": "image",
+        "title": "LingBot-VA 世界模型线封面",
+        "caption": "用 RoboTwin 任务场景作为切入口，展示这条线当前聚焦的视频 latent + 动作联合后训练方向。",
+        "path": "research_archive/tasks/lingbot/media/demo/images/00-lingbot-va-cover.png",
         "showcase_preview": true
       }
     ]
   },
   "fix_highlights": [
     {
+      "date": "2026-04-20",
+      "title": "从 100epoch 主线锚点构建 500epoch 拔插头恢复线，并加入 0.75 自动停",
+      "summary": "范围：mdit/config/schema.py + mdit/train/runner.py + scripts/prepare_mdit_resume_run.py + scripts/run_prepared_mdit_resume_guard.sh + scripts/run_unplug…",
+      "path": "docs/fixes.md"
+    },
+    {
       "date": "2026-04-19",
-      "title": "离线审计完成",
-      "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_5…",
+      "title": "MDIT 训练保留清单追加 best_success 强保留",
+      "summary": "范围：research/mdit_trial_runner.py 背景：用户要求最优线路 ckpt 严禁删除；虽然当前 close_door 只有一条主线并且 latest.pt 已强保留，但训练期如果未来启用 success selection，best_success.pt 也应进入默认保留集…",
       "path": "docs/fixes.md"
     },
     {
-      "date": "2026-04-18",
-      "title": "建立 research_desk 阶段总账本，并让 homepage 优先读取阶段总结",
-      "summary": "范围：docs/research_desk.md + docs/fixes.md + docs/mdit/research_journal.md + homepage/MAINTENANCE.md + homepage/config/site-config.json + scripts/build…",
+      "date": "2026-04-19",
+      "title": "close_door 主线续训切换到 64x2",
+      "summary": "范围：scripts/run_mdit_train_guard.sh、ckpt/close_door_mdit_rgb_text_3token_500/config.json 背景：close_door_mdit_rgb_text_3token_500 已具备 latest.pt，需要在不换 ru…",
       "path": "docs/fixes.md"
     },
     {
-      "date": "2026-04-18",
-      "title": "修复主线 100->500 续训兼容并恢复真实后台接管",
-      "summary": "范围：mdit/train/checkpoints.py + mdit/train/runner.py + research/mdit_takeover_controller.py + scripts/run_mdit_takeover_supervisor.py + tmux:mdit_auto…",
-      "path": "docs/fixes.md"
-    },
-    {
-      "date": "2026-04-18",
-      "title": "离线审计完成",
-      "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_…",
+      "date": "2026-04-19",
+      "title": "固化 MDIT 0.75 方法参考线并修复 mdit_best 锚点 · MDIT artifacts",
+      "summary": "范围：scripts/solidify_mdit_reference_line.py + ckpt/mdit_best + ckpt/mdit_reference_line + docs/mdit/best_path.md 背景：历史清理漏洞已经导致 0.75@300/500 的原始长训 ckpt…",
       "path": "docs/fixes.md"
     }
   ]

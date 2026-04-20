@@ -313,3 +313,20 @@
 - Reference method line: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line` -> `0.75@300/500`
 - Reason: 原始 `0.75` 长训权重已经丢失，但方法、审计证据和复训 recipe 仍然必须稳定保留，不能再和实际 ckpt 锚点混在一个目录里。
 - Result: 目录语义已拆清；后续人和模型都可以明确区分“现在能直接加载什么”和“现在应该参考哪条方法线”。
+
+## 2026-04-20T18:00:40+08:00 · prepare_resume_run · unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100
+
+- Title: Prepare MDIT best-line `100 -> 500` recovery run from the surviving epoch-100 anchor
+- Source anchor: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt`
+- New run dir: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100`
+- Why now: the original `0.75@300/500` champion weights were pruned by the old cleanup bug, so we need a clean, restartable `100 -> 500` path built from the remaining 100-epoch mainline anchor without mutating that anchor itself.
+- What changed:
+  - built a fresh resume run with a patched `latest.pt` whose `wandb_run_id` is cleared;
+  - preserved the 100-epoch seed checkpoint plus linked `best_valid.pt` and `best_success.pt` as starting references;
+  - locked training to `train_epochs=500`, `checkpoint_every_epochs=100`, `success_selection_every_epochs=100`, `success_selection_episodes=20`;
+  - added `stop_on_target_success=true` and `target_success_rate=0.75`, so training pauses as soon as the shared success-selection chain reaches the historical best threshold.
+- WandB policy:
+  - first launch: create a new run for this recovery line;
+  - later restarts: resume the same new run via the new checkpoint trail.
+- Launch entry: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_unplug_mdit_best500_resume.sh`
+- Current status: prepared on disk, not launched yet because we did not preempt the currently active training workload.

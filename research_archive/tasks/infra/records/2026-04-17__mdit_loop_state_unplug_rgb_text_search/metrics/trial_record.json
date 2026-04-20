@@ -1,0 +1,1361 @@
+{
+  "tag": "unplug_rgb_text_search",
+  "line": "mdit",
+  "started_at": "2026-04-17T09:49:32+08:00",
+  "updated_at": "2026-04-17T17:43:28+08:00",
+  "strategy": "fm",
+  "lane_a_config": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/mdit/fm_autodl_lab.json",
+  "lane_b_config": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/mdit/fm_autodl_lane_b.json",
+  "existing_lane_a_run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100",
+  "screening": [
+    {
+      "line": "mdit",
+      "phase": "audit_only",
+      "experiment_name": "lane_a_mainline_100",
+      "description": "Lane A mainline: 5RGB + text + CLIP last-block + PDIT FM/DiT semantics",
+      "stage_epochs": 100,
+      "eval_episodes": 20,
+      "trial_score": 0.55,
+      "pending_offline_audit": false,
+      "offline_audit_command": "/home/gjw/.conda/envs/mdit_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --line mdit --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100",
+      "success_100": 0.55,
+      "success_300": null,
+      "success_500": null,
+      "collapse_detected": false,
+      "collapse_reasons": [],
+      "best_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_success.pt",
+      "best_success_rate": 0.55,
+      "best_success_epoch": 100,
+      "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_valid.pt",
+      "kept_ckpt_paths": [
+        "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_valid.pt",
+        "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0050.pt",
+        "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt",
+        "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_success.pt",
+        "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0050.pt",
+        "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt"
+      ],
+      "run_name": "unplug_charger_mdit_rgb_text_3token_100",
+      "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100",
+      "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/experiment_manifest.json",
+      "recipe_drift": false,
+      "recipe_drift_details": [],
+      "audit_report_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json",
+      "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/summary.json",
+      "error_type": null,
+      "lane": "lane_a_mainline",
+      "overrides": {
+        "research_lane": "lane_a_mainline"
+      },
+      "best_path_doc": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/best_path.md"
+    },
+    {
+      "line": "mdit",
+      "phase": "audit_only",
+      "experiment_name": "lane_a_stabilized_100",
+      "description": "Lane A stabilized audit recipe: mean_first_n + smooth_actions",
+      "stage_epochs": 100,
+      "eval_episodes": 20,
+      "trial_score": -1.0,
+      "pending_offline_audit": false,
+      "offline_audit_command": "/home/gjw/.conda/envs/mdit_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --line mdit --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+      "success_100": 0.35,
+      "success_300": null,
+      "success_500": null,
+      "collapse_detected": true,
+      "collapse_reasons": [
+        "epoch 100 success 0.35 below threshold 0.55"
+      ],
+      "best_ckpt_path": null,
+      "best_success_rate": 0.35,
+      "best_success_epoch": 100,
+      "best_valid_ckpt_path": null,
+      "kept_ckpt_paths": [],
+      "run_name": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+      "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+      "experiment_manifest_path": null,
+      "recipe_drift": true,
+      "recipe_drift_details": [
+        {
+          "key": "command_mode",
+          "base_value": "first",
+          "resolved_value": "mean_first_n"
+        },
+        {
+          "key": "average_first_n",
+          "base_value": 1,
+          "resolved_value": 2
+        },
+        {
+          "key": "smooth_actions",
+          "base_value": false,
+          "resolved_value": true
+        }
+      ],
+      "audit_report_path": null,
+      "summary_path": null,
+      "error_type": null,
+      "audit_report": {
+        "experiment_name": "lane_a_stabilized_100",
+        "description": "Lane A stabilized audit recipe: mean_first_n + smooth_actions",
+        "run_name": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+        "strategy": "fm",
+        "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+        "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/mdit/fm_autodl_lab.json",
+        "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329/experiment_manifest.json",
+        "recipe_drift": true,
+        "recipe_drift_details": [
+          {
+            "key": "command_mode",
+            "base_value": "first",
+            "resolved_value": "mean_first_n"
+          },
+          {
+            "key": "average_first_n",
+            "base_value": 1,
+            "resolved_value": 2
+          },
+          {
+            "key": "smooth_actions",
+            "base_value": false,
+            "resolved_value": true
+          }
+        ],
+        "stage_epochs": 100,
+        "checkpoint_every": 50,
+        "eval_episodes": 20,
+        "eval_seed": 1234,
+        "trial_score": -1.0,
+        "collapse_detected": true,
+        "collapse_reasons": [
+          "epoch 100 success 0.35 below threshold 0.55"
+        ],
+        "collapse_checks": [
+          {
+            "type": "threshold",
+            "epoch": 100,
+            "threshold": 0.55,
+            "value": 0.35,
+            "passed": false
+          }
+        ],
+        "thresholds": {
+          "100": 0.55,
+          "300": 0.65,
+          "500": 0.68
+        },
+        "success_by_epoch": {
+          "50": 0.2,
+          "100": 0.35
+        },
+        "audit_records": [
+          {
+            "label": "epoch_0050",
+            "kind": "periodic",
+            "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329/epochs/epoch_0050.pt",
+            "epoch": 50,
+            "completed_epoch": 49,
+            "best_metric": 0.8704131790681889,
+            "best_epoch": 46,
+            "best_success_rate": null,
+            "best_success_epoch": null,
+            "success_rate": 0.2,
+            "mean_steps": 172.85,
+            "num_successes": 4,
+            "num_episodes": 20,
+            "duration_sec": 626.6575672499894,
+            "episode_records": [
+              {
+                "episode": 0,
+                "success": true,
+                "steps": 53,
+                "duration_sec": 15.055638838006416,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 1,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.279149886016967,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 2,
+                "success": true,
+                "steps": 57,
+                "duration_sec": 11.023474892019294,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 3,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.30793667997932,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 4,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.567777349002426,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 5,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 45.16864607500611,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+              },
+              {
+                "episode": 6,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.989986506989226,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 7,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.943433001986705,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 8,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 40.584466035012156,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 9,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 43.481654566014186,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 10,
+                "success": true,
+                "steps": 64,
+                "duration_sec": 11.307859296997776,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 11,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 47.745387086994015,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+              },
+              {
+                "episode": 12,
+                "success": true,
+                "steps": 83,
+                "duration_sec": 14.482163277018117,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 13,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 33.1778065910039,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 14,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.54944243899081,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 15,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.66304664700874,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 16,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.65621723199729,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 17,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.41543973502121,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 18,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 34.989622586988844,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 19,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 42.50007625602302,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+              }
+            ],
+            "train_loss_at_epoch": 0.09280279063791307,
+            "valid_loss_at_epoch": 0.9464730100804254,
+            "sample_mse_at_epoch": 0.00764470873400569
+          },
+          {
+            "label": "epoch_0100",
+            "kind": "periodic",
+            "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329/epochs/epoch_0100.pt",
+            "epoch": 100,
+            "completed_epoch": 99,
+            "best_metric": 0.8704131790681889,
+            "best_epoch": 46,
+            "best_success_rate": null,
+            "best_success_epoch": null,
+            "success_rate": 0.35,
+            "mean_steps": 159.95,
+            "num_successes": 7,
+            "num_episodes": 20,
+            "duration_sec": 642.9471402060008,
+            "episode_records": [
+              {
+                "episode": 0,
+                "success": true,
+                "steps": 68,
+                "duration_sec": 12.127052700991044,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 1,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 35.250333775009494,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+              },
+              {
+                "episode": 2,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.686724536004476,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 3,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.549080171011155,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 4,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 29.79870250998647,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 5,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 31.23899514399818,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 6,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.795318360003876,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 7,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 40.03973266898538,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+              },
+              {
+                "episode": 8,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 32.91399088001344,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 9,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 32.76708243601024,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 10,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 29.72185527998954,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 11,
+                "success": true,
+                "steps": 66,
+                "duration_sec": 11.366096148994984,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 12,
+                "success": true,
+                "steps": 98,
+                "duration_sec": 16.88984081300441,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 13,
+                "success": true,
+                "steps": 124,
+                "duration_sec": 98.67249039802118,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 14,
+                "success": true,
+                "steps": 72,
+                "duration_sec": 12.281363437999971,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 15,
+                "success": true,
+                "steps": 92,
+                "duration_sec": 17.184236749017145,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 16,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 30.847777864022646,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 17,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 29.44185991998529,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              },
+              {
+                "episode": 18,
+                "success": false,
+                "steps": 200,
+                "duration_sec": 33.273596679995535,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": "planning runtime error: The call failed on the V-REP side. Return value: -1"
+              },
+              {
+                "episode": 19,
+                "success": true,
+                "steps": 79,
+                "duration_sec": 51.24279210600071,
+                "descriptions": [
+                  "unplug charger",
+                  "take the charger out of the wall",
+                  "grip the black charger and pull it out of its socket",
+                  "slide the plug out from the wall",
+                  "remove the charger from the mains",
+                  "get the charger from the wall plug"
+                ],
+                "error": null
+              }
+            ],
+            "train_loss_at_epoch": 0.04459464287222152,
+            "valid_loss_at_epoch": 1.1531713346362507,
+            "sample_mse_at_epoch": 0.00041678958223201334
+          }
+        ],
+        "best_success_epoch": 100,
+        "best_success_rate": 0.35,
+        "best_success_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329/best_success.pt",
+        "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329/best_valid.pt",
+        "train_summary": {
+          "run_name": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+          "strategy": "fm",
+          "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+          "wandb_run_id": "s1u3hwcc",
+          "wandb_run_url": "https://wandb.ai/cyber-dogy/autodl-unplug-charger-mdit/runs/s1u3hwcc",
+          "config": {
+            "run_name": "unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329",
+            "task_name": "unplug_charger",
+            "obs_mode": "rgb",
+            "encoder_name": "clip_rgb_text_token",
+            "backbone_name": "dit",
+            "research_lane": "lane_a_mainline",
+            "train_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/train",
+            "valid_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/unplug_charger/valid",
+            "seed": 1234,
+            "device": "cuda",
+            "resume_from_latest": false,
+            "n_obs_steps": 3,
+            "n_pred_steps": 32,
+            "subs_factor": 3,
+            "n_points": 2048,
+            "use_pc_color": false,
+            "obs_features_dim": 256,
+            "y_dim": 10,
+            "camera_names": [
+              "right_shoulder",
+              "left_shoulder",
+              "overhead",
+              "front",
+              "wrist"
+            ],
+            "text_source": "task_template",
+            "task_text_override": null,
+            "vision_backbone_name": "vit_base_patch16_clip_224.openai",
+            "vision_pretrained": true,
+            "vision_image_size": [
+              224,
+              224
+            ],
+            "vision_train_mode": "last_block",
+            "vision_num_unfreeze_blocks": 1,
+            "text_model_name": "openai/clip-vit-base-patch16",
+            "text_projection_dim": 256,
+            "token_fusion_mode": "3_token",
+            "hidden_dim": 512,
+            "time_dim": 256,
+            "num_blocks": 6,
+            "nhead": 8,
+            "dim_feedforward": 2048,
+            "dropout": 0.1,
+            "activation": "gelu",
+            "debug_finiteness": true,
+            "final_layer_zero_init": false,
+            "decoder_condition_mode": "mean_pool",
+            "batch_size": 32,
+            "grad_accum_steps": 4,
+            "num_workers": 4,
+            "train_epochs": 100,
+            "train_use_amp": false,
+            "train_amp_dtype": "bfloat16",
+            "grad_clip_norm": 1.0,
+            "empty_cuda_cache": true,
+            "auto_batch_fallback": true,
+            "batch_fallback_tiers": [
+              [
+                32,
+                4
+              ],
+              [
+                16,
+                8
+              ],
+              [
+                8,
+                16
+              ]
+            ],
+            "learning_rate": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ],
+            "eps": 1e-08,
+            "transformer_weight_decay": 0.001,
+            "obs_encoder_weight_decay": 1e-06,
+            "lr_scheduler_name": "cosine",
+            "lr_warmup_steps": 1000,
+            "ema_enable": true,
+            "ema_decay": 0.9993,
+            "val_every_epochs": 1,
+            "success_selection_every_epochs": 0,
+            "checkpoint_every_epochs": 50,
+            "sample_every_epochs": 5,
+            "success_selection_episodes": 0,
+            "success_max_steps": 200,
+            "standard_eval_episodes": 0,
+            "eval_step_heartbeat_every": 50,
+            "smooth_actions": true,
+            "command_mode": "mean_first_n",
+            "horizon_index": 0,
+            "average_first_n": 2,
+            "position_alpha": 0.35,
+            "rotation_alpha": 0.25,
+            "max_position_step": 0.03,
+            "gripper_open_threshold": 0.6,
+            "gripper_close_threshold": 0.4,
+            "norm_pcd_center": [
+              0.4,
+              0.0,
+              1.4
+            ],
+            "robot_state_mean": null,
+            "robot_state_std": null,
+            "augment_data": false,
+            "augment_translation_sigma": 0.02,
+            "augment_rotation_sigma": 0.1,
+            "loss_type": "l2",
+            "fm_num_k_infer": 10,
+            "fm_time_conditioning": true,
+            "fm_noise_type": "gaussian",
+            "fm_noise_scale": 1.0,
+            "fm_flow_schedule": "exp",
+            "fm_exp_scale": 4.0,
+            "fm_snr_sampler": "uniform",
+            "fm_loss_weights": null,
+            "diffusion_train_steps": 100,
+            "diffusion_eval_steps": 100,
+            "diffusion_num_infer_steps": 100,
+            "diffusion_prediction_type": "epsilon",
+            "diffusion_noise_scale": 1.0,
+            "wandb_enable": true,
+            "wandb_project": "autodl-unplug-charger-mdit",
+            "wandb_entity": "cyber-dogy",
+            "wandb_mode": "online",
+            "wandb_resume": false,
+            "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+            "print_every": 50,
+            "train_heartbeat_every_steps": 50
+          },
+          "best_metric": 0.8704131790681889,
+          "best_epoch": 46,
+          "best_success_rate": null,
+          "best_success_epoch": null,
+          "latest_epoch": 99,
+          "train_loss_last": 0.04459464287222152,
+          "valid_loss_last": 1.1531713346362507,
+          "epoch_summaries": [
+            {
+              "epoch": 95,
+              "train": {
+                "loss_total": 0.04627930968324583,
+                "num_batches": 331,
+                "lr": 4.3874717568992973e-07
+              },
+              "valid": {
+                "loss_total": 1.552490037620852,
+                "loss_xyz": 0.11178976853721236,
+                "loss_rot6d": 0.9208069450074905,
+                "loss_grip": 0.5198933224524617,
+                "mse_xyz": 0.004057804053637052,
+                "mse_rot6d": 0.0643675357729846,
+                "mse_grip": 0.06340647247404113,
+                "num_batches": 38
+              },
+              "sample": null
+            },
+            {
+              "epoch": 96,
+              "train": {
+                "loss_total": 0.04639592824160513,
+                "num_batches": 331,
+                "lr": 2.3373897391925636e-07
+              },
+              "valid": {
+                "loss_total": 1.4721342312956327,
+                "loss_xyz": 0.09602461153592326,
+                "loss_rot6d": 0.8011353460361103,
+                "loss_grip": 0.5749742463813163,
+                "mse_xyz": 0.004034399083282456,
+                "mse_rot6d": 0.06426152787255553,
+                "mse_grip": 0.06361475751539633,
+                "num_batches": 38
+              },
+              "sample": null
+            },
+            {
+              "epoch": 97,
+              "train": {
+                "loss_total": 0.049036202791886925,
+                "num_batches": 331,
+                "lr": 9.265690807006566e-08
+              },
+              "valid": {
+                "loss_total": 1.505266942353429,
+                "loss_xyz": 0.11337127775493029,
+                "loss_rot6d": 0.8573333565268273,
+                "loss_grip": 0.534562313141865,
+                "mse_xyz": 0.004020094653242268,
+                "mse_rot6d": 0.06424244362125664,
+                "mse_grip": 0.06399408621413577,
+                "num_batches": 38
+              },
+              "sample": null
+            },
+            {
+              "epoch": 98,
+              "train": {
+                "loss_total": 0.04684860029980945,
+                "num_batches": 331,
+                "lr": 1.568220195004022e-08
+              },
+              "valid": {
+                "loss_total": 1.2661795744084214,
+                "loss_xyz": 0.09301390983531937,
+                "loss_rot6d": 0.6617454361464632,
+                "loss_grip": 0.5114202367717793,
+                "mse_xyz": 0.004067006469995249,
+                "mse_rot6d": 0.06447970597333838,
+                "mse_grip": 0.0630744469455695,
+                "num_batches": 38
+              },
+              "sample": null
+            },
+            {
+              "epoch": 99,
+              "train": {
+                "loss_total": 0.04459464287222152,
+                "num_batches": 331,
+                "lr": 0.0
+              },
+              "valid": {
+                "loss_total": 1.1531713346362507,
+                "loss_xyz": 0.09177928564971999,
+                "loss_rot6d": 0.6533952293133265,
+                "loss_grip": 0.40799679838758157,
+                "mse_xyz": 0.0040175234213453035,
+                "mse_rot6d": 0.0642863658806738,
+                "mse_grip": 0.06370975813493523,
+                "num_batches": 38
+              },
+              "sample": {
+                "train_action_mse_error": 0.00041678958223201334
+              }
+            }
+          ],
+          "final_standard_eval": null,
+          "wall_clock_hours": 5.5708654853108355,
+          "dataset_sizes": {
+            "train": 10573,
+            "valid": 1189
+          }
+        },
+        "train_loss_history": [
+          4.502287814984509,
+          1.7400927392377594,
+          1.494257031610725,
+          1.3097812607209127,
+          1.1344470455567282,
+          0.9739441805015517,
+          0.8045080847970668,
+          0.6678254826731552,
+          0.5713715926938187,
+          0.5148739599569326,
+          0.4659957952369736,
+          0.4140016043114158,
+          0.37025981475219266,
+          0.3420263916434118,
+          0.31722053583835186,
+          0.2867997465627071,
+          0.26902466485687615,
+          0.25586755294634134,
+          0.24321805962623066,
+          0.22951267173463125,
+          0.2176237909680407,
+          0.20547381982072244,
+          0.19456641801444424,
+          0.18571199614025674,
+          0.17888363320211628,
+          0.16505644319640905,
+          0.1633876879274665,
+          0.15372656087680886,
+          0.1590292197384863,
+          0.14555095437790333,
+          0.14224388718244893,
+          0.13865309217635238,
+          0.13569114635222987,
+          0.13314207292125305,
+          0.12929860400064114,
+          0.12585459117217726,
+          0.11903893003335893,
+          0.11779250278843854,
+          0.12137128295675145,
+          0.11837847104290461,
+          0.11183826241563453,
+          0.11188251219037076,
+          0.11017071795607622,
+          0.10038953966649637,
+          0.09975513066319901,
+          0.09861485839025132,
+          0.09247560101333342,
+          0.09404612472140177,
+          0.09387377204986858,
+          0.09280279063791307,
+          0.09162713224884246,
+          0.09091282607790567,
+          0.08458408097711215,
+          0.08477352570821152,
+          0.08651549182832241,
+          0.08558854780348406,
+          0.07668098067341435,
+          0.0798016061156628,
+          0.07437194304771473,
+          0.07595852708438372,
+          0.07146801290825415,
+          0.07368810901423956,
+          0.07386594735581169,
+          0.06885092241233749,
+          0.06579041163074106,
+          0.06596728315818887,
+          0.060971246947874834,
+          0.06765800534981076,
+          0.0678947366425188,
+          0.0644035702486863,
+          0.061480729579025166,
+          0.057087126674743936,
+          0.062274849115451655,
+          0.05665071236020309,
+          0.06083584955001526,
+          0.05800234052574887,
+          0.055926859294404795,
+          0.054286754524104544,
+          0.05586362047700543,
+          0.053369781812737355,
+          0.05570769872730232,
+          0.04978580174973274,
+          0.05099337690388868,
+          0.051024692265311214,
+          0.04765547941413531,
+          0.04565117633943742,
+          0.05142995645081078,
+          0.04674939458959052,
+          0.05032874434184722,
+          0.048265386009842065,
+          0.049676820517621734,
+          0.04794026822909668,
+          0.045631306915574925,
+          0.05044042596767946,
+          0.04704810144644219,
+          0.04627930968324583,
+          0.04639592824160513,
+          0.049036202791886925,
+          0.04684860029980945,
+          0.04459464287222152
+        ],
+        "valid_loss_history": [
+          9.658489177101536,
+          8.780753022746035,
+          7.857156853926809,
+          7.0444874261554915,
+          6.2450868205020305,
+          5.485749884655601,
+          4.747659112277784,
+          4.0886597256911426,
+          3.454193196798626,
+          2.944009824803001,
+          2.483115183679681,
+          2.139304844956649,
+          1.8901904915508472,
+          1.7013206827013116,
+          1.611839948516143,
+          1.5089143608745776,
+          1.5150976855503886,
+          1.476051344683296,
+          1.3847366242032302,
+          1.4003368239653737,
+          1.3682210884596173,
+          1.309052174812869,
+          1.2641899577881162,
+          1.2538140682797683,
+          1.2103645440779234,
+          1.1029574886748665,
+          1.1364968058310057,
+          1.1963090527998774,
+          1.171058758309013,
+          1.1149745207083852,
+          1.1211792136493481,
+          1.1384219668413464,
+          1.148482999519298,
+          1.1058050315631063,
+          1.126291765978462,
+          1.0218742764309834,
+          1.0515520204054682,
+          1.0763023425089686,
+          1.0300025924255973,
+          1.0337367073485726,
+          0.9868783735130963,
+          0.941614977623287,
+          1.0159094408154488,
+          0.9497164872131849,
+          0.9435067212111071,
+          0.9702318118591058,
+          0.8704131790681889,
+          0.9585836796384108,
+          0.9111045693096361,
+          0.9464730100804254,
+          0.9688024956144785,
+          0.9697057520480532,
+          0.9491088692294923,
+          1.0720929721076238,
+          0.9347695506324893,
+          0.9749600026560458,
+          0.9624383678953898,
+          0.9437873792883597,
+          1.0812563564824431,
+          1.0580424989916777,
+          0.9678094494891795,
+          1.037716249886312,
+          1.0546711086246527,
+          1.0291536035702418,
+          1.0332515507838445,
+          1.0303738925998147,
+          1.1284458202947127,
+          1.1056076723494028,
+          1.093513521905008,
+          1.1748027498588751,
+          1.1440699173039512,
+          1.1333168991106122,
+          1.1290737335619174,
+          1.1819226881979328,
+          1.0992170179164724,
+          1.1018825885104506,
+          1.0930651848351485,
+          1.2351019280521494,
+          1.2303133755432147,
+          1.223518437656917,
+          1.3339732529497461,
+          1.3109592183149958,
+          1.27833452786466,
+          1.1449514366196174,
+          1.1757982010511976,
+          1.3565348492641198,
+          1.2099065196357275,
+          1.299299486471634,
+          1.211825279518962,
+          1.2468603077883784,
+          1.3106961893898093,
+          1.4180259136973243,
+          1.419353491675697,
+          1.2863420672028472,
+          1.3507192142699893,
+          1.552490037620852,
+          1.4721342312956327,
+          1.505266942353429,
+          1.2661795744084214,
+          1.1531713346362507
+        ]
+      },
+      "audit_log_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329__audit.log",
+      "audit_attempts": 1,
+      "lane": "lane_a_mainline",
+      "overrides": {
+        "research_lane": "lane_a_mainline",
+        "command_mode": "mean_first_n",
+        "average_first_n": 2,
+        "smooth_actions": true
+      }
+    },
+    {
+      "line": "mdit",
+      "phase": "train_only",
+      "experiment_name": "lane_b_faithful_100",
+      "description": "Lane B faithful challenger: multitask-style concat conditioning + shared audit chain",
+      "stage_epochs": 100,
+      "eval_episodes": 20,
+      "trial_score": -1.0,
+      "pending_offline_audit": false,
+      "offline_audit_command": null,
+      "success_100": null,
+      "success_300": null,
+      "success_500": null,
+      "collapse_detected": true,
+      "collapse_reasons": [
+        "(MaxRetryError(\"HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /timm/vit_base_patch16_clip_224.openai/resolve/main/model.safetensors (Caused by ProxyError('Cannot connect to proxy.', TimeoutError('_ssl.c:1000: The handshake operation timed out')))\"), '(Request ID: 4de944c2-7728-468a-83d0-51d3b3f6962e)')"
+      ],
+      "best_ckpt_path": null,
+      "best_success_rate": null,
+      "best_success_epoch": null,
+      "best_valid_ckpt_path": null,
+      "kept_ckpt_paths": [],
+      "run_name": "unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029",
+      "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029",
+      "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029/experiment_manifest.json",
+      "recipe_drift": false,
+      "recipe_drift_details": [],
+      "audit_report_path": null,
+      "summary_path": null,
+      "error_type": "ProxyError",
+      "train_log_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029__train.log",
+      "train_attempts": 1,
+      "lane": "lane_b_faithful",
+      "overrides": {
+        "research_lane": "lane_b_faithful"
+      }
+    }
+  ],
+  "promoted_300": [],
+  "deep_runs_500": [],
+  "winner": {
+    "line": "mdit",
+    "phase": "audit_only",
+    "experiment_name": "lane_a_mainline_100",
+    "description": "Lane A mainline: 5RGB + text + CLIP last-block + PDIT FM/DiT semantics",
+    "stage_epochs": 100,
+    "eval_episodes": 20,
+    "trial_score": 0.55,
+    "pending_offline_audit": false,
+    "offline_audit_command": "/home/gjw/.conda/envs/mdit_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --line mdit --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100",
+    "success_100": 0.55,
+    "success_300": null,
+    "success_500": null,
+    "collapse_detected": false,
+    "collapse_reasons": [],
+    "best_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_success.pt",
+    "best_success_rate": 0.55,
+    "best_success_epoch": 100,
+    "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_valid.pt",
+    "kept_ckpt_paths": [
+      "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_valid.pt",
+      "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0050.pt",
+      "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt",
+      "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/best_success.pt",
+      "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0050.pt",
+      "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt"
+    ],
+    "run_name": "unplug_charger_mdit_rgb_text_3token_100",
+    "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100",
+    "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/experiment_manifest.json",
+    "recipe_drift": false,
+    "recipe_drift_details": [],
+    "audit_report_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json",
+    "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/summary.json",
+    "error_type": null,
+    "lane": "lane_a_mainline",
+    "overrides": {
+      "research_lane": "lane_a_mainline"
+    },
+    "best_path_doc": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/mdit/best_path.md"
+  },
+  "current_candidate": {
+    "name": "lane_b_faithful_100",
+    "lane": "lane_b_faithful",
+    "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/mdit/fm_autodl_lane_b.json",
+    "stage_epochs": 100,
+    "eval_episodes": 20,
+    "description": "Lane B faithful challenger: multitask-style concat conditioning + shared audit chain",
+    "overrides": {
+      "research_lane": "lane_b_faithful"
+    }
+  },
+  "loop_status": "screening",
+  "finished_at": "2026-04-17T17:20:54+08:00"
+}

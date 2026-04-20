@@ -88,6 +88,10 @@ http://127.0.0.1:43429/
 
 后续你自己打磨内容时，优先按下面这个索引改：
 
+- 改归档后的统一证据、run 报告、milestone 快照：
+  - `research_archive/`
+  - homepage 现在会直接消费 archive 里的 `report/report.md`、`archive_manifest.json`、`summary.json` 和 `audit_report.json`
+  - 如果是新 run，优先先做 archive 固化，再重建 homepage
 - 改首页和任务页的阶段叙事、时间线提炼、跨线路总结：
   - `docs/research_desk.md`
   - 这是 homepage 当前最优先读取的阶段总结源
@@ -126,6 +130,7 @@ http://127.0.0.1:43429/
 - `manual_overrides.json` 里的数组字段是整段替换，不是局部 patch
 - 如果只是想润色公开文案，优先改 `manual_overrides.json`
 - 如果是“这一天到底做成了什么、主页应该怎么讲”，优先改 `docs/research_desk.md`
+- 如果页面内容与 archive 不一致，优先修 `research_archive/`，不要先在 homepage 里手工打补丁
 - 只有当自动生成逻辑本身不合理时，再改 `scripts/build_homepage_data.py`
 
 ## Cloudflare Pages 发布包
