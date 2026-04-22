@@ -16,6 +16,7 @@ import torch
 from common.runtime import PROJECT_ROOT
 from pdit.config import ExperimentConfig, apply_config_overrides, load_config
 from pdit.train.runner import train_experiment
+from research.archive_writer import default_source_docs, solidify_run_archive, write_task_index
 
 
 DEFAULT_COLLAPSE_THRESHOLDS: dict[int, float] = {
@@ -541,6 +542,26 @@ def _record_trial_output(
     return _write_json(record_dir / f"{run_name}.json", payload)
 
 
+def _sync_pdit_archive(
+    *,
+    run_dir: Path,
+    run_name: str,
+    event_type: str,
+) -> None:
+    # 归档层是训练证据的补充入口，不能反过来阻塞主训练链。
+    try:
+        solidify_run_archive(
+            task_id="pdit",
+            run_dir=run_dir,
+            trial_record_path=(PROJECT_ROOT / "autoresearch_records" / f"{run_name}.json"),
+            source_docs=default_source_docs("pdit"),
+            event_type=event_type,
+        )
+        write_task_index()
+    except Exception as exc:
+        print(f"[archive] pdit archive sync failed for {run_name}: {exc}", file=sys.stderr)
+
+
 def _training_error_output(
     *,
     request: TrialRequest,
@@ -588,8 +609,10 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
 
     try:
         _clean_existing_run_dir(run_dir, ckpt_root)
-        summary = train_experiment(cfg, strategy=request.strategy)
+        run_dir.mkdir(parents=True, exist_ok=True)
         _write_trial_request(run_dir, resolved_request)
+        _sync_pdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="start")
+        summary = train_experiment(cfg, strategy=request.strategy)
         keep_paths = _build_train_keep_paths(run_dir, cfg)
         _prune_run_dir(run_dir, keep_paths)
         output = {
@@ -617,6 +640,7 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
             "train_summary": summary,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
+        _sync_pdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="train_only")
         if log_results:
             _append_results_row(
                 repo_root,
@@ -631,6 +655,7 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
             shutil.rmtree(run_dir)
         output = _training_error_output(request=request, run_dir=run_dir, exc=exc)
         _record_trial_output(repo_root, run_name=run_dir.name, output=output)
+        _sync_pdit_archive(run_dir=run_dir, run_name=run_dir.name, event_type="train_error")
         if log_results:
             _append_results_row(
                 repo_root,
@@ -792,6 +817,7 @@ def finalize_autoresearch_trial(
             "error_type": None,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output, audit_report=audit_report)
+        _sync_pdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="audit_only")
         if log_results:
             _append_results_row(
                 repo_root,
@@ -829,6 +855,7 @@ def finalize_autoresearch_trial(
             "error_type": type(exc).__name__,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
+        _sync_pdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="audit_error")
         if log_results:
             _append_results_row(
                 repo_root,

@@ -126,6 +126,9 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
     global_step = int(resume_state["global_step"])
     start_epoch = int(resume_state["start_epoch"])
     bootstrap_epoch = int(start_epoch) - 1
+    last_completed_epoch = bootstrap_epoch
+    stopped_early = False
+    stop_reason: str | None = None
     resume_notes = list(resume_state.get("resume_notes") or [])
 
     for note in resume_notes:
@@ -366,6 +369,16 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
                     epoch_summaries=epoch_summaries,
                     wandb_run_id=None if wandb_run is None else wandb_run.id,
                 )
+            if (
+                bool(cfg.stop_on_target_success)
+                and cfg.target_success_rate is not None
+                and success_rate >= float(cfg.target_success_rate)
+            ):
+                stopped_early = True
+                stop_reason = (
+                    f"target_success_rate_reached:"
+                    f"{success_rate:.4f}>={float(cfg.target_success_rate):.4f}"
+                )
 
         if wandb_run is not None:
             payload = {
@@ -385,17 +398,21 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
                 payload["success_select/success_rate"] = float(success_summary["success_rate"])
                 payload["success_select/mean_steps"] = float(success_summary["mean_steps"])
                 payload["success_select/num_episodes"] = int(success_summary["num_episodes"])
+                payload["success_select/target_reached"] = bool(stopped_early)
             wandb_run.log(payload, step=global_step)
             wandb_run.summary["best_metric"] = best_metric
             wandb_run.summary["best_epoch"] = best_epoch
             wandb_run.summary["best_success_rate"] = best_success_rate
             wandb_run.summary["best_success_epoch"] = best_success_epoch
             wandb_run.summary["strategy"] = strategy
+            wandb_run.summary["stopped_early"] = bool(stopped_early)
+            wandb_run.summary["stop_reason"] = stop_reason
 
         maybe_empty_cuda_cache(cfg.empty_cuda_cache)
+        last_completed_epoch = int(epoch)
         _write_train_heartbeat(
             cfg,
-            status="running",
+            status="paused_on_target_success" if stopped_early else "running",
             epoch=epoch,
             batch_idx=len(dataloader_train) - 1,
             global_step=global_step,
@@ -404,8 +421,12 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
                 "valid_loss_total": None if valid_summary is None else valid_summary["loss_total"],
                 "best_metric": best_metric,
                 "best_success_rate": best_success_rate,
+                "stop_reason": stop_reason,
             },
         )
+        if stopped_early:
+            print(f"[stop] {stop_reason}", flush=True)
+            break
 
     final_eval = None
     if cfg.standard_eval_episodes and int(cfg.standard_eval_episodes) > 0:
@@ -431,7 +452,9 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
         "best_epoch": best_epoch,
         "best_success_rate": best_success_rate,
         "best_success_epoch": best_success_epoch,
-        "latest_epoch": cfg.train_epochs - 1,
+        "latest_epoch": int(last_completed_epoch),
+        "stopped_early": bool(stopped_early),
+        "stop_reason": stop_reason,
         "train_loss_last": train_loss_history[-1] if train_loss_history else None,
         "valid_loss_last": valid_loss_history[-1] if valid_loss_history else None,
         "epoch_summaries": epoch_summaries[-5:],
@@ -445,14 +468,15 @@ def _train_experiment_once(cfg: ExperimentConfig, strategy: str = "fm") -> dict[
     write_summary_json(cfg, summary)
     _write_train_heartbeat(
         cfg,
-        status="completed",
-        epoch=cfg.train_epochs - 1,
+        status="paused_on_target_success" if stopped_early else "completed",
+        epoch=int(last_completed_epoch),
         batch_idx=None,
         global_step=global_step,
         payload={
             "best_metric": best_metric,
             "best_success_rate": best_success_rate,
             "summary_path": str(cfg.summary_path),
+            "stop_reason": stop_reason,
         },
     )
     finish_wandb_run(wandb_run)

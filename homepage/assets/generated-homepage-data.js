@@ -1,5 +1,5 @@
 window.homepageData = {
-  "generated_at": "2026-04-20T19:44:03+08:00",
+  "generated_at": "2026-04-21T10:14:02+08:00",
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
@@ -10,7 +10,7 @@ window.homepageData = {
     "branch_count": 5,
     "timeline_count": 22,
     "validated_rows": 12,
-    "archive_entry_count": 37,
+    "archive_entry_count": 38,
     "archive_milestone_count": 3,
     "archive_complete_count": 12
   },
@@ -362,7 +362,7 @@ window.homepageData = {
       },
       {
         "label": "归档条目",
-        "value": "37"
+        "value": "38"
       },
       {
         "label": "milestone",
@@ -658,6 +658,22 @@ window.homepageData = {
           "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
           "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/00-封面图.jpg",
           "showcase_preview": true
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "image",
+          "title": "三维建模与仿真资产准备",
+          "caption": "用三维建模补齐机械结构、关节关系与几何尺度，为后续导出 URDF 和整理碰撞/惯性参数打底。这一步把平台从单纯的运动控制，推进到可接入 Isaac 或 MuJoCo 的动力学仿真资产层。",
+          "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/01-SW三维模型.png",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "video",
+          "title": "URDF 与动力学仿真链路",
+          "caption": "展示从三维建模到仿真资产落地的流程：先把机械结构整理成可导出的 URDF，再接入动力学引擎做运动与接触验证。它为后续在 Isaac / MuJoCo 中复现实验、扩展数据采集与世界模型环境提供了统一底座。",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/00-三维建模与动力学仿真-1.mp4",
+          "showcase_preview": false
         },
         {
           "task_id": "dummy-sim2real-platform",
@@ -1859,7 +1875,7 @@ window.homepageData = {
       "branch_ids": [
         "mdit"
       ],
-      "latest_update": "2026-04-20",
+      "latest_update": "2026-04-21",
       "hero_metrics": [
         {
           "label": "best success@20",
@@ -1935,12 +1951,12 @@ window.homepageData = {
         },
         {
           "eyebrow": "Archive",
-          "title": "research_archive 已固化 8 条run与 3 个 milestone",
+          "title": "research_archive 已固化 9 条run与 3 个 milestone",
           "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
           "metrics": [
             {
               "label": "归档条目",
-              "value": "8"
+              "value": "9"
             },
             {
               "label": "完整条目",
@@ -2034,6 +2050,38 @@ window.homepageData = {
         }
       ],
       "timeline_groups": [
+        {
+          "date": "2026-04-21",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "put_books_on_bookshelf_mdit_rgb_text_3t…",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-21",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "2 项"
+                }
+              ],
+              "outcome": "目前还没有归档到 trial record，需要后续补齐。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/archive_manifest.json"
+                }
+              ]
+            }
+          ]
+        },
         {
           "date": "2026-04-20",
           "cards": [
@@ -2875,6 +2923,12 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · put_books_on_bookshelf_mdit_rgb_text_3t…",
+          "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
           "title": "archive 报告 · audit_wandb_run",
           "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/report/report.md",
           "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
@@ -2903,12 +2957,6 @@ window.homepageData = {
           "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json",
           "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
           "label": "打开 summary"
-        },
-        {
-          "title": "archive audit · collapse_run",
-          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/audit_report.json",
-          "summary": "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
-          "label": "打开 audit"
         },
         {
           "title": "MDIT 关键结果表",
@@ -5214,6 +5262,22 @@ window.homepageData = {
         },
         {
           "task_id": "dummy-sim2real-platform",
+          "kind": "image",
+          "title": "三维建模与仿真资产准备",
+          "caption": "用三维建模补齐机械结构、关节关系与几何尺度，为后续导出 URDF 和整理碰撞/惯性参数打底。这一步把平台从单纯的运动控制，推进到可接入 Isaac 或 MuJoCo 的动力学仿真资产层。",
+          "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/01-SW三维模型.png",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
+          "kind": "video",
+          "title": "URDF 与动力学仿真链路",
+          "caption": "展示从三维建模到仿真资产落地的流程：先把机械结构整理成可导出的 URDF，再接入动力学引擎做运动与接触验证。它为后续在 Isaac / MuJoCo 中复现实验、扩展数据采集与世界模型环境提供了统一底座。",
+          "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/00-三维建模与动力学仿真-1.mp4",
+          "showcase_preview": false
+        },
+        {
+          "task_id": "dummy-sim2real-platform",
           "kind": "video",
           "title": "正逆运动解算演示",
           "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
@@ -6215,7 +6279,7 @@ window.homepageData = {
       "status": "已验证",
       "status_group": "done",
       "page_path": "homepage/branches/mdit/",
-      "latest_update": "2026-04-20",
+      "latest_update": "2026-04-21",
       "hero_metrics": [
         {
           "label": "best success@20",
@@ -6233,13 +6297,47 @@ window.homepageData = {
       "card_title": "MDIT 研究线",
       "card_summary": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。",
       "card_result": "当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。",
-      "detail_intro": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。 当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。 当前已在 archive 中固化 8 条归档条目与 3 个 milestone。",
+      "detail_intro": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。 当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。 当前已在 archive 中固化 9 条归档条目与 3 个 milestone。",
       "entry_path": "homepage/tasks/mdit-mainline/",
       "entry_label": "进入任务页",
       "related_task_ids": [
         "mdit-mainline"
       ],
       "timeline_groups": [
+        {
+          "date": "2026-04-21",
+          "cards": [
+            {
+              "badge": "Archive Run",
+              "title": "put_books_on_bookshelf_mdit_rgb_text_3t…",
+              "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
+              "date_key": "2026-04-21",
+              "metrics": [
+                {
+                  "label": "归档",
+                  "value": "待补齐"
+                },
+                {
+                  "label": "缺失",
+                  "value": "2 项"
+                }
+              ],
+              "outcome": "目前还没有归档到 trial record，需要后续补齐。",
+              "links": [
+                {
+                  "title": "归档报告",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md"
+                },
+                {
+                  "title": "archive manifest",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/archive_manifest.json"
+                }
+              ],
+              "task_id": "mdit-mainline",
+              "task_title": "MDIT RGB+Text 主线推进"
+            }
+          ]
+        },
         {
           "date": "2026-04-20",
           "cards": [
@@ -7109,6 +7207,12 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
+          "title": "archive 报告 · put_books_on_bookshelf_mdit_rgb_text_3t…",
+          "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md",
+          "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
+          "label": "打开归档报告"
+        },
+        {
           "title": "archive 报告 · audit_wandb_run",
           "path": "research_archive/tasks/mdit/runs/2026-04-20__audit_wandb_run/report/report.md",
           "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
@@ -7137,12 +7241,6 @@ window.homepageData = {
           "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json",
           "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
           "label": "打开 summary"
-        },
-        {
-          "title": "archive audit · collapse_run",
-          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/audit_report.json",
-          "summary": "共享审计或行为审计结果已复制进 archive，可直接作为后续展示证据。",
-          "label": "打开 audit"
         },
         {
           "title": "research journal",
@@ -7239,12 +7337,12 @@ window.homepageData = {
         },
         {
           "eyebrow": "Archive",
-          "title": "research_archive 已固化 8 条run与 3 个 milestone",
+          "title": "research_archive 已固化 9 条run与 3 个 milestone",
           "body": "页面里的证据层、归档时间线和后续专题页素材现在都可以优先从 research_archive 消费，不必再回翻零散的 ckpt、autoresearch_records 和 docs 目录。",
           "metrics": [
             {
               "label": "归档条目",
-              "value": "8"
+              "value": "9"
             },
             {
               "label": "完整条目",
@@ -34522,6 +34620,22 @@ window.homepageData = {
       },
       {
         "task_id": "dummy-sim2real-platform",
+        "kind": "image",
+        "title": "三维建模与仿真资产准备",
+        "caption": "用三维建模补齐机械结构、关节关系与几何尺度，为后续导出 URDF 和整理碰撞/惯性参数打底。这一步把平台从单纯的运动控制，推进到可接入 Isaac 或 MuJoCo 的动力学仿真资产层。",
+        "path": "research_archive/tasks/infra/media/demo/images/dummy-sim2real-platform/01-SW三维模型.png",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "dummy-sim2real-platform",
+        "kind": "video",
+        "title": "URDF 与动力学仿真链路",
+        "caption": "展示从三维建模到仿真资产落地的流程：先把机械结构整理成可导出的 URDF，再接入动力学引擎做运动与接触验证。它为后续在 Isaac / MuJoCo 中复现实验、扩展数据采集与世界模型环境提供了统一底座。",
+        "path": "research_archive/tasks/infra/media/demo/videos/dummy-sim2real-platform/00-三维建模与动力学仿真-1.mp4",
+        "showcase_preview": false
+      },
+      {
+        "task_id": "dummy-sim2real-platform",
         "kind": "video",
         "title": "正逆运动解算演示",
         "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。",
@@ -34630,27 +34744,27 @@ window.homepageData = {
   },
   "fix_highlights": [
     {
-      "date": "2026-04-20",
-      "title": "从 100epoch 主线锚点构建 500epoch 拔插头恢复线，并加入 0.75 自动停",
-      "summary": "范围：mdit/config/schema.py + mdit/train/runner.py + scripts/prepare_mdit_resume_run.py + scripts/run_prepared_mdit_resume_guard.sh + scripts/run_unplug…",
+      "date": "2026-04-21",
+      "title": "同步 MDIT 成功原因与 PDIT 差异总结到稳定文档",
+      "summary": "范围：docs/research_desk.md、docs/pdit-vs-mdit.md 背景：此前已经口头总结过“MDIT 主线为什么能成功”以及“它和 PDIT 的关键不同”，但稳定文档没有同步更新，导致后续阅读 research_desk 和 pdit-vs-mdit 时仍然容易读到旧口径…",
       "path": "docs/fixes.md"
     },
     {
-      "date": "2026-04-19",
-      "title": "MDIT 训练保留清单追加 best_success 强保留",
-      "summary": "范围：research/mdit_trial_runner.py 背景：用户要求最优线路 ckpt 严禁删除；虽然当前 close_door 只有一条主线并且 latest.pt 已强保留，但训练期如果未来启用 success selection，best_success.pt 也应进入默认保留集…",
+      "date": "2026-04-21",
+      "title": "增加 MDIT 审计队列监督器，close_door 与 put_books 两条 run 自动排队审计 · MDIT audit takeover",
+      "summary": "范围：scripts/run_mdit_audit_queue_supervisor.py + tmux:mdit_audit_queue 背景：close_door_mdit_rgb_text_3token_500 已经训练完成但尚未进入共享离线审计；put_books_on_bookshelf…",
       "path": "docs/fixes.md"
     },
     {
-      "date": "2026-04-19",
-      "title": "close_door 主线续训切换到 64x2",
-      "summary": "范围：scripts/run_mdit_train_guard.sh、ckpt/close_door_mdit_rgb_text_3token_500/config.json 背景：close_door_mdit_rgb_text_3token_500 已具备 latest.pt，需要在不换 ru…",
+      "date": "2026-04-21",
+      "title": "put_books_on_bookshelf 后续任务增加数据完整性闸门，避免半传输目录误启动 · MDIT next-task bootstrap",
+      "summary": "范围：scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh 背景：检查发现 data/put_books_on_bookshelf 当前只落下了 train/data/pcd_xyz，valid 尚不存在，images 和 robot_st…",
       "path": "docs/fixes.md"
     },
     {
-      "date": "2026-04-19",
-      "title": "固化 MDIT 0.75 方法参考线并修复 mdit_best 锚点 · MDIT artifacts",
-      "summary": "范围：scripts/solidify_mdit_reference_line.py + ckpt/mdit_best + ckpt/mdit_reference_line + docs/mdit/best_path.md 背景：历史清理漏洞已经导致 0.75@300/500 的原始长训 ckpt…",
+      "date": "2026-04-21",
+      "title": "put_books_on_bookshelf 后续任务改为 10 分钟数据轮询，并显式锁定主线断点续训语义 · MDIT next-task bootstrap",
+      "summary": "范围：scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh 背景：用户要求后续 put_books_on_bookshelf 任务在数据尚未落位时，每隔 10 分钟再尝试一次自动启动，同时要明确保证后续训练走的是当前最强 MDIT 主线 f…",
       "path": "docs/fixes.md"
     }
   ]

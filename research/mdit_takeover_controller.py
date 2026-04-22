@@ -12,6 +12,7 @@ import time
 from typing import Any
 
 from common.runtime import PROJECT_ROOT
+from research.archive_writer import archive_directory_as_milestone, default_source_docs, write_task_index
 from research.mdit_trial_runner import (
     TrialRequest,
     adopt_existing_mdit_autoresearch_run,
@@ -118,6 +119,22 @@ def _fallback_run_dir_from_state(state: dict[str, Any]) -> Path | None:
 
 def _result_record_path(run_name: str) -> Path:
     return _record_dir() / f"{run_name}.json"
+
+
+def _sync_frozen_milestone(snapshot_dir: Path, *, metadata: dict[str, Any]) -> None:
+    # frozen_best 是后续 best-path 与 homepage 的稳定锚点，归档应当跟快照同步更新。
+    try:
+        archive_directory_as_milestone(
+            task_id="mdit",
+            source_dir=snapshot_dir,
+            milestone_name=snapshot_dir.name,
+            metadata=metadata,
+            source_docs=default_source_docs("mdit"),
+            event_type="milestone",
+        )
+        write_task_index()
+    except Exception as exc:
+        print(f"[archive] mdit takeover milestone sync failed for {snapshot_dir.name}: {exc}", file=sys.stderr)
 
 
 def _load_result_record(run_name: str) -> dict[str, Any] | None:
@@ -603,6 +620,15 @@ def run_mdit_takeover_controller(config: TakeoverConfig) -> dict[str, Any]:
         )
         if freeze_result is not None:
             state["frozen_best_snapshot"] = freeze_result
+            _sync_frozen_milestone(
+                Path(freeze_result["snapshot_dir"]),
+                metadata={
+                    "source": "active_run",
+                    "run_dir": str(config.active_run_dir),
+                    "best_success_rate": active_audit_result.get("best_success_rate"),
+                    "best_success_epoch": active_audit_result.get("best_success_epoch"),
+                },
+            )
         _persist_state(state_path, state)
     else:
         active_audit_result = dict(state["active_audit_result"])
@@ -732,6 +758,15 @@ def run_mdit_takeover_controller(config: TakeoverConfig) -> dict[str, Any]:
     )
     if freeze_result is not None:
         state["frozen_best_snapshot"] = freeze_result
+        _sync_frozen_milestone(
+            Path(freeze_result["snapshot_dir"]),
+            metadata={
+                "source": "fallback_run",
+                "run_dir": str(fallback_run_dir),
+                "best_success_rate": fallback_audit_result.get("best_success_rate"),
+                "best_success_epoch": fallback_audit_result.get("best_success_epoch"),
+            },
+        )
 
     state["status"] = "completed_with_fallback"
     state["finished_at"] = _timestamp()

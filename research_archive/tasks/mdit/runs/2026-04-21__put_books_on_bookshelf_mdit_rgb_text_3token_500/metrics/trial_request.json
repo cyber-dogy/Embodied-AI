@@ -1,0 +1,50 @@
+{
+  "config_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/configs/mdit/fm_autodl_lab.json",
+  "strategy": "fm",
+  "config_overrides": {
+    "task_name": "put_books_on_bookshelf",
+    "train_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/put_books_on_bookshelf/train",
+    "valid_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/put_books_on_bookshelf/valid",
+    "research_lane": "lane_a_mainline",
+    "batch_size": 64,
+    "grad_accum_steps": 2,
+    "batch_fallback_tiers": [
+      [
+        64,
+        2
+      ],
+      [
+        32,
+        4
+      ],
+      [
+        16,
+        8
+      ],
+      [
+        8,
+        16
+      ]
+    ]
+  },
+  "stage_epochs": 500,
+  "checkpoint_every": 100,
+  "eval_episodes": 20,
+  "eval_seed": 1234,
+  "device": "cuda",
+  "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+  "data_root": null,
+  "run_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
+  "experiment_name": "put_books_on_bookshelf_mainline_500",
+  "description": "Put books on bookshelf MDIT mainline 500 epochs",
+  "max_steps": 200,
+  "heartbeat_every": 50,
+  "prefer_ema": true,
+  "headless": true,
+  "show_progress": true,
+  "cleanup_failed": false,
+  "enable_wandb": true,
+  "audit_timeout_sec": 1800,
+  "collapse_thresholds": null,
+  "collapse_drop_tolerance": 0.1
+}

@@ -26,6 +26,13 @@
 
 ## 记录
 
+### 2026-04-21 08:45:00 +0800 · 同步 MDIT 成功原因与 PDIT 差异总结到稳定文档
+
+- `范围`：`docs/research_desk.md`、`docs/pdit-vs-mdit.md`
+- `背景`：此前已经口头总结过“MDIT 主线为什么能成功”以及“它和 PDIT 的关键不同”，但稳定文档没有同步更新，导致后续阅读 `research_desk` 和 `pdit-vs-mdit` 时仍然容易读到旧口径，尤其会把当前成功的 MDIT 误解成 faithful `MTDP` 复现线。
+- `处理`：在 `research_desk.md` 的 `MDIT 主线` 段新增“为什么能成功”和“与 PDIT 的关键不同”两组压缩技术总结；同时重写 `pdit-vs-mdit.md`，明确当前成功的 MDIT 是“保留 PDIT 骨干、控制语义和共享审计链，只把输入换成 `5RGB + text + robot_state`”的主线，而不是 `flat conditioning vector` 版的原始 MTDP 口径。
+- `结果`：现在 `research_desk.md`、`pdit-vs-mdit.md` 和后续主线叙事已经对齐。当前稳定结论是：MDIT 主线的成功来自“输入替换 + 骨干与执行语义保持稳定”，其代表结果为 `0.55@100` 以及长训参考线 `0.75@300/500`；后续人或模型接手时，不会再把当前主线误读成原版 `MTDP` 直接复现。
+
 ### 2026-04-12 · `mdit/model/transformer.py` · output_proj 未零初始化
 
 **问题**：`_initialize_weights` 只零初始化了各 block 的 `adaLN_modulation`，未零初始化 `output_proj`。
@@ -1276,3 +1283,57 @@ except Exception as exc:
 处理：新增 `prepare_mdit_resume_run.py`，从 `ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt` 生成独立的新 run `ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100`，写入新的 `config.json`、清空 `latest.pt` 内的 `wandb_run_id`、保留起始 `epoch_0100.pt` / `best_valid.pt` / `best_success.pt`、落地 `resume_plan.json` 与 `train_heartbeat.json`。同时在训练配置中开启 `success_selection_every_epochs=100`、`success_selection_episodes=20`、`stop_on_target_success=true`、`target_success_rate=0.75`；训练器在每次 success 选择后如果达到 `0.75` 会直接把状态写成 `paused_on_target_success` 并停止。另增两条托管脚本：`run_prepared_mdit_resume_guard.sh` 负责守护任意已准备好的恢复 run，`run_unplug_mdit_best500_resume.sh` 作为当前拔插头恢复线的专用入口。
 
 结果：当前恢复线已经真实物化到 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100`，其中 `latest.pt` 来自 100epoch 锚点且 `wandb_run_id=null`，`config.json` 已锁定 `train_epochs=500 / checkpoint_every_epochs=100 / success_selection_every_epochs=100 / target_success_rate=0.75 / wandb_resume=true`。这意味着第一次启动会创建一条全新的 WandB run，后续异常重启会续回同一条新 run；原始 `100epoch` 锚点目录不被修改，当前只是在磁盘上完成准备，尚未抢占正在使用的训练资源。
+
+### 2026-04-20 20:01:30 +0800 · 加固 close_door 结束后自动切回 unplug best500 的顺序接管监督器 · MDIT takeover
+范围：`scripts/run_mdit_sequence_supervisor.py` + `tmux:mdit_task_takeover`
+
+背景：当前 GPU 正在运行 `close_door_mdit_rgb_text_3token_500`，用户要求它结束后立即切回拔插头 `100 -> 500` 恢复线继续训练，而且训练/守护中途掉了也不能放着不管。此前拔插头恢复线虽然已经准备好，但缺少一个真正常驻的“先等当前任务完成，再自动接上后续任务”的顺序监督器。
+
+处理：新增并挂载 `scripts/run_mdit_sequence_supervisor.py`。监督器现在会持续读取 `close_door` 和 `unplug best500` 两条 run 的 `train_heartbeat.json`，在 `close_door` 仍处于 `running` 时只做守护与必要重拉；一旦 `close_door` 进入 `completed/paused_on_target_success` 且训练进程退出，就自动启动 `scripts/run_unplug_mdit_best500_resume.sh` 接管拔插头恢复线；如果后续任一阶段训练进程异常消失，监督器会基于对应 run 的 `config.json` 和 `latest.pt` 自动重拉。为避免后台脚本依赖训练环境，此监督器只使用标准库，不再导入会隐式拉起 `torch` 的模块。
+
+结果：后台新增常驻会话 `tmux:mdit_task_takeover`；状态文件为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_sequence_state__close_door_then_unplug_best500.json`；日志文件为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/close_door_then_unplug_best500__sequence_supervisor.log`。当前状态已经确认是 `phase=wait_primary`、`primary_status=running`、`secondary_status=prepared`，说明 `close_door` 还在正常训练，拔插头 `100 -> 500` 恢复线已处于待接管状态。
+
+### 2026-04-20 20:03:50 +0800 · 拔插头 100->500 恢复线提档到 64x2 以复用当前任务的稳定提速形态 · MDIT unplug resume
+范围：`ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100/*` + `scripts/prepare_mdit_resume_run.py`
+
+背景：用户希望拔插头这条 `100 -> 500` 恢复线参考当前 `close_door` 任务的执行经验，在不改变主线方法和等效 global batch 的前提下，把恢复训练从 `32x4` 提到 `64x2`，用更大的 micro-batch 提高吞吐。
+
+处理：保持方法线和 global batch=128 不变，把待命恢复 run `unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100` 的 `config.json`、`resume_plan.json`、`experiment_manifest.json`、`latest.pt` 内置 `cfg` 同步更新为 `batch_size=64`、`grad_accum_steps=2`、`batch_fallback_tiers=[[64,2],[32,4],[16,8],[8,16]]`；同时给 `scripts/prepare_mdit_resume_run.py` 增加显式 batch 覆盖参数，便于后续重建恢复线时直接生成同一训练口径。
+
+结果：当前 `close_door -> unplug best500` 顺序接管器后续拉起拔插头恢复线时，会直接按 `64x2` 进入恢复训练，而不是旧的 `32x4`；当前正在训练的 `close_door` run 未被改动。
+
+### 2026-04-21 00:25:20 +0800 · 后续接管任务从 unplug best500 切换为 put_books_on_bookshelf 主线训练 · MDIT task takeover
+范围：`scripts/run_mdit_sequence_supervisor.py` + `scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh` + `tmux:mdit_task_takeover`
+
+背景：用户修改了当前训练完成后的后续任务，不再要求切回拔插头 `100 -> 500` 恢复线，而是改成在 `data/put_books_on_bookshelf` 上启动新的 MDIT 主线训练。数据尚未拷贝到位，但目录组织方式会和现有任务一致，仍放在 `data/<task>/{train,valid}` 下。
+
+处理：将顺序监督器默认 secondary 从 `unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100` 改为 `put_books_on_bookshelf_mdit_rgb_text_3token_500`，并新增 `scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh` 作为专用后续任务启动器。该脚本会先等待 `data/put_books_on_bookshelf/train` 与 `data/put_books_on_bookshelf/valid` 实际出现，再交给通用 `run_mdit_train_guard.sh` 启动训练；训练配置沿用当前主线 family，并参考当前 close_door 任务使用 `64x2` 执行形态提升吞吐。顺序监督器同时修正了“secondary 尚在等待数据时不应反复杀会话重拉”的逻辑。
+
+结果：后台 `tmux:mdit_task_takeover` 已经按新任务重启；状态文件为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_sequence_state__close_door_then_put_books_on_bookshelf.json`，当前显示 `primary_status=running`、`secondary_status=null`，说明 close_door 仍在训练，后续任务已经切换为等待数据到位的 put_books_on_bookshelf 主线训练。旧的 unplug 恢复线产物仍保留，但不再是当前接管链的下一跳。
+
+### 2026-04-21 00:46:30 +0800 · put_books_on_bookshelf 后续任务改为 10 分钟数据轮询，并显式锁定主线断点续训语义 · MDIT next-task bootstrap
+范围：`scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh`
+
+背景：用户要求后续 `put_books_on_bookshelf` 任务在数据尚未落位时，每隔 10 分钟再尝试一次自动启动，同时要明确保证后续训练走的是当前最强 MDIT 主线 family，且断点续训必须开启。
+
+处理：将 `run_put_books_on_bookshelf_mdit_mainline_500.sh` 的数据等待周期从 60 秒改为 `DATA_RETRY_INTERVAL_SEC=600`；同时在脚本中明确注明后续启动链路由通用 `run_mdit_train_guard.sh` 接管，因此第一次启动会使用 `configs/mdit/fm_autodl_lab.json + research_lane=lane_a_mainline` 建立标准主线 run，之后如果训练中断，会基于同一 run 的 `latest.pt` 自动恢复。执行形态继续锁定为 `64x2`，保持主线方法不变、只提升吞吐。
+
+结果：当前接管链在 `close_door` 结束后，如果 `data/put_books_on_bookshelf/{train,valid}` 仍未落位，会每 10 分钟记录一次等待并继续保活；一旦数据到位，将直接按最强 MDIT 主线 family 拉起 `put_books_on_bookshelf_mdit_rgb_text_3token_500`，且后续中断仍会自动断点续训。
+
+### 2026-04-21 00:47:40 +0800 · put_books_on_bookshelf 后续任务增加数据完整性闸门，避免半传输目录误启动 · MDIT next-task bootstrap
+范围：`scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh`
+
+背景：检查发现 `data/put_books_on_bookshelf` 当前只落下了 `train/data/pcd_xyz`，`valid` 尚不存在，`images` 和 `robot_state` 也未到位。如果后续启动器只看 `train/valid` 目录是否存在，就可能在数据半传输状态下误启动训练。
+
+处理：把后续任务启动器的等待条件从“目录存在”收紧为“当前 MDIT RGB 主线真正需要的 Zarr 结构完整可见”，即必须同时满足 `train/valid` 两侧的 `.zgroup`、`data/.zgroup`、`meta/.zgroup`、`data/images`、`data/robot_state` 存在，且 `images` 与 `robot_state` 目录下至少已经有实际文件；轮询周期继续保持 10 分钟。
+
+结果：当前 `put_books_on_bookshelf` 数据尚未满足启动条件，因此接管链会继续等待，不会提前开训；一旦 `images + robot_state + valid` 全部到位，仍会按 `lane_a_mainline + fm_autodl_lab.json + latest 断点续训` 的主线语义自动启动。
+
+### 2026-04-21 08:36:40 +0800 · 增加 MDIT 审计队列监督器，close_door 与 put_books 两条 run 自动排队审计 · MDIT audit takeover
+范围：`scripts/run_mdit_audit_queue_supervisor.py` + `tmux:mdit_audit_queue`
+
+背景：`close_door_mdit_rgb_text_3token_500` 已经训练完成但尚未进入共享离线审计；`put_books_on_bookshelf_mdit_rgb_text_3token_500` 当前正在训练，用户要求这条当前任务后续也必须自动进入审计，不能依赖人工再次提醒。
+
+处理：新增独立的 `scripts/run_mdit_audit_queue_supervisor.py`。该监督器持续跟踪一组 run 的 `train_heartbeat.json`、`audit_report.json` 与进程状态：如果任意 MDIT 训练仍在运行，则先等待，避免审计与训练争抢资源；一旦训练资源空闲，就按队列顺序自动执行 `run_autoresearch_trial.py --phase audit-only --run-dir <run_dir>`，审计失败会记录日志并延迟重试。当前默认队列为 `close_door_mdit_rgb_text_3token_500 -> put_books_on_bookshelf_mdit_rgb_text_3token_500`。
+
+结果：后台新增 `tmux:mdit_audit_queue` 常驻监督器；状态文件为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_audit_queue_state__close_door_then_put_books_audits.json`，日志为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/close_door_then_put_books_audits__audit_queue.log`。当前状态显示 `close_door` 已进入待审计队列首位，但由于 `put_books_on_bookshelf` 仍在训练，审计队列处于 `wait_training`；待训练结束后会先审 `close_door`，再审当前 `put_books_on_bookshelf`。

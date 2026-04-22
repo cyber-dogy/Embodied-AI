@@ -4,6 +4,14 @@
     "caption": "概览展示这套六轴臂 Sim2Real 采集平台的整体形态，作为首页亮点封面使用。",
     "showcase": true
   },
+  "demo/images/dummy-sim2real-platform/01-SW三维模型.png": {
+    "title": "三维建模与仿真资产准备",
+    "caption": "用三维建模补齐机械结构、关节关系与几何尺度，为后续导出 URDF 和整理碰撞/惯性参数打底。这一步把平台从单纯的运动控制，推进到可接入 Isaac 或 MuJoCo 的动力学仿真资产层。"
+  },
+  "demo/videos/dummy-sim2real-platform/00-三维建模与动力学仿真-1.mp4": {
+    "title": "URDF 与动力学仿真链路",
+    "caption": "展示从三维建模到仿真资产落地的流程：先把机械结构整理成可导出的 URDF，再接入动力学引擎做运动与接触验证。它为后续在 Isaac / MuJoCo 中复现实验、扩展数据采集与世界模型环境提供了统一底座。"
+  },
   "demo/videos/dummy-sim2real-platform/01-运动逆解算.mp4": {
     "title": "正逆运动解算演示",
     "caption": "展示六轴臂平台里从目标位姿到数值逆解、再到仿真预览与控制联动的过程。"

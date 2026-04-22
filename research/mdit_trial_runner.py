@@ -32,6 +32,7 @@ from mdit.config.consistency import (
     experiment_manifest_path,
 )
 from mdit.train.runner import train_experiment
+from research.archive_writer import default_source_docs, solidify_run_archive, write_task_index
 
 
 DEFAULT_COLLAPSE_THRESHOLDS: dict[int, float] = {
@@ -895,6 +896,26 @@ def _record_trial_output(
     return _write_json(record_dir / f"{run_name}.json", payload)
 
 
+def _sync_mdit_archive(
+    *,
+    run_dir: Path,
+    run_name: str,
+    event_type: str,
+) -> None:
+    # archive 是证据层补充，不能因为归档失败把已经完成的训练链误判成失败。
+    try:
+        solidify_run_archive(
+            task_id="mdit",
+            run_dir=run_dir,
+            trial_record_path=(PROJECT_ROOT / "autoresearch_records" / f"{run_name}.json"),
+            source_docs=default_source_docs("mdit"),
+            event_type=event_type,
+        )
+        write_task_index()
+    except Exception as exc:
+        print(f"[archive] mdit archive sync failed for {run_name}: {exc}", file=sys.stderr)
+
+
 def _print_audit_console_summary(output: dict[str, Any]) -> None:
     print()
     print("trial_audit_summary:")
@@ -991,6 +1012,7 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
             resolved_cfg=cfg,
             resolved_request=resolved_request,
         )
+        _sync_mdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="start")
         summary = train_experiment(cfg, strategy=request.strategy)
         manifest = _load_experiment_manifest(run_dir)
         keep_paths = _build_train_keep_paths(run_dir, cfg)
@@ -1028,6 +1050,7 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
             "train_summary": summary,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
+        _sync_mdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="train_only")
         _write_research_note(
             repo_root,
             run_name=cfg.run_name,
@@ -1062,6 +1085,7 @@ def train_autoresearch_trial(request: TrialRequest, *, log_results: bool = True)
         if request.cleanup_failed and run_dir.exists():
             shutil.rmtree(run_dir)
         _record_trial_output(repo_root, run_name=run_dir.name, output=output)
+        _sync_mdit_archive(run_dir=run_dir, run_name=run_dir.name, event_type="train_error")
         _write_research_note(
             repo_root,
             run_name=run_dir.name,
@@ -1258,6 +1282,7 @@ def finalize_autoresearch_trial(
             output=output,
         )
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output, audit_report=audit_report)
+        _sync_mdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="audit_only")
         _write_research_note(
             repo_root,
             run_name=cfg.run_name,
@@ -1325,6 +1350,7 @@ def finalize_autoresearch_trial(
             "error_type": type(exc).__name__,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
+        _sync_mdit_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="audit_error")
         _write_research_note(
             repo_root,
             run_name=cfg.run_name,

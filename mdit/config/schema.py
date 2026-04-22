@@ -97,6 +97,8 @@ class ExperimentConfig:
     sample_every_epochs: int = 5
     success_selection_episodes: int = 0
     success_max_steps: int = 200
+    stop_on_target_success: bool = False
+    target_success_rate: float | None = None
     standard_eval_episodes: int = 0
     eval_step_heartbeat_every: int = 50
     smooth_actions: bool = False
@@ -200,6 +202,7 @@ class ExperimentConfig:
         self.fm_timestep_beta_alpha = float(self.fm_timestep_beta_alpha)
         self.fm_timestep_beta_beta = float(self.fm_timestep_beta_beta)
         self.fm_timestep_beta_s = float(self.fm_timestep_beta_s)
+        self.stop_on_target_success = bool(self.stop_on_target_success)
         if self.state_min is not None:
             self.state_min = tuple(float(v) for v in self.state_min)
         if self.state_max is not None:
@@ -258,6 +261,10 @@ class ExperimentConfig:
                 raise ValueError("vision_encode_chunk_size must be >= 0.")
             if self.state_min is not None and len(self.state_min) != int(self.y_dim):
                 raise ValueError("state_min must match y_dim.")
+        if self.target_success_rate is not None:
+            self.target_success_rate = float(self.target_success_rate)
+            if not (0.0 <= float(self.target_success_rate) <= 1.0):
+                raise ValueError("target_success_rate must be within [0, 1].")
             if self.state_max is not None and len(self.state_max) != int(self.y_dim):
                 raise ValueError("state_max must match y_dim.")
             if self.action_min is not None and len(self.action_min) != int(self.y_dim):

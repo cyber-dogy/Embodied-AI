@@ -1,0 +1,5 @@
+benchmark_root: /home/gjw/MyProjects/LIBERO/libero/libero
+bddl_files: /home/gjw/MyProjects/LIBERO/libero/libero/./bddl_files
+init_states: /home/gjw/MyProjects/LIBERO/libero/libero/./init_files
+datasets: /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/libero/headless_tools/data/libero_datasets
+assets: /home/gjw/MyProjects/LIBERO/libero/libero/./assets

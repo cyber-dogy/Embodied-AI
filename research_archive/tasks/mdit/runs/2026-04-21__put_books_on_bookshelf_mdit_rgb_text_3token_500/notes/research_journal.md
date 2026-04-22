@@ -1,0 +1,332 @@
+# MDIT Research Journal
+
+- This file is append-only and maintained by autoresearch.
+- Keep `best_path.md` and the execution manual as separate stable docs; run-by-run notes are consolidated here.
+- Cross-line stage summaries now live in `docs/research_desk.md`; this file only keeps MDIT run-by-run notes and audit history.
+- Legacy one-file-per-run notes have been moved to `docs/mdit/archive/legacy_notes/` so the root `docs/mdit` directory stays clean.
+
+## Historical Migration
+
+### Source `2026-04-17-100433-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:04:33+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-100452-audit-visibility-and-resume-fix.md`
+
+#### MDIT Audit Visibility And Resume Fix
+
+- Time: 2026-04-17T10:04:52+08:00
+- Scope: `mdit audit output`, `autoresearch resume gating`
+- Phenomenon: `audit-only` 结束后主要信息仍偏机器可读，人在 `tmux` 里不容易第一眼拿到 `success@50/100` 与最佳 checkpoint；同时 autoresearch 会把 `pending_offline_audit=true` 的 screening 记录视作已完成，可能跳过该做的正式审计。
+- Cause: `eval_all_checkpoints.py` 与 `mdit_trial_runner.py` 缺少面向人工观察的结论式打印；`research/mdit_autoresearch_loop.py` 对历史记录的完成态判断过宽。
+- Fix:
+- 在 `mdit/cli/eval_all_checkpoints.py` 中新增 `audit_summary`，显式打印各关键 epoch 的成功率、最佳 checkpoint 与 aggregate success。
+- 在 `research/mdit_trial_runner.py` 中新增 `trial_audit_summary`，显式打印 trial 级结论、`best_success`、`trial_score`、`collapse_detected` 与报告路径。
+- 在 `research/mdit_autoresearch_loop.py` 中收紧恢复判定，`pending_offline_audit=true` 的记录不再被当成完成态。
+- Result: 后续所有 MDIT 审计在终端里都会直接打印关键信息；autoresearch 恢复时会优先把主线候选按正确口径审完，再继续后续筛选与晋级。
+
+
+### Source `2026-04-17-103735-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:37:35+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-103934-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:39:34+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-104023-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:40:23+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-104109-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:41:09+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-104159-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:41:59+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-105544-unplug_charger_mdit_rgb_text_3token_100.md`
+
+#### MDIT Audit Note · unplug_charger_mdit_rgb_text_3token_100
+
+- Time: 2026-04-17T10:55:44+08:00
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Phase: `audit_only`
+- Phenomenon: trial_score=0.55 | best_success_rate=0.55 | collapse=False
+- Reasons: none
+- Result: best_success_rate=0.55 trial_score=0.55
+- Audit report: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/audit_report.json`
+- Contract issues: none
+
+
+### Source `2026-04-17-110536-provisional-best-lane-a-mainline.md`
+
+#### MDIT Provisional Best Freeze
+
+- Time: 2026-04-17 11:05:36 +0800
+- Run: `unplug_charger_mdit_rgb_text_3token_100`
+- Experiment: `lane_a_mainline_100`
+- Status: provisional best before winner is fixed
+
+## Why This Is The Current Best
+
+- It is the only RGB+text candidate that has already completed the locked shared audit chain.
+- The audit used the same evaluation contract restored from checkpoint payload, so there is no train/eval recipe drift.
+- It reached `0.55` success rate at `epoch_0100` over `20 episodes`, which is the strongest confirmed result we have on the MDIT RGB+text line so far.
+
+## Confirmed Metrics
+
+- `epoch_0050`: `0.25` (`5/20`)
+- `epoch_0100`: `0.55` (`11/20`)
+- `best_success`: `0.55 @ epoch 100`
+- `mean_steps@best`: `121.75`
+- `recipe_drift`: `false`
+- `collapse_detected`: `false`
+
+## Current Planning Logic
+
+- **Anchor first**: keep a PDIT-style RGB+text baseline stable before opening wider search.
+- **Immediate next experiment**: `lane_a_stabilized_100`
+  - changes: `command_mode=mean_first_n`, `average_first_n=2`, `smooth_actions=true`
+  - goal: reduce planner rejection and horizon exhaustion without changing RGB+text, FM, or Transformer backbone.
+- **Next challenger**: `lane_b_faithful`
+  - role: test a faithful alternative RGB+text input path under the same shared audit chain.
+- **Promotion rule**: only candidates that beat the current best under the same 20-episode locked audit move forward as the new primary direction.
+
+## Best Route Backup
+
+- Frozen snapshot: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/2026-04-17-110536__lane_a_mainline_epoch100_s055`
+- Stable alias: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/current_provisional_best`
+- Best checkpoint backup: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/frozen_best/current_provisional_best/best_success.pt`
+- Source run: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100`
+
+## Guardrails
+
+- The frozen snapshot preserves `best_success.pt`, `best_valid.pt`, `epoch_0050.pt`, and `epoch_0100.pt`.
+- Checkpoints inside the frozen snapshot are hard-linked, so they remain recoverable even if the original run is later cleaned by autoresearch.
+- Later candidates are allowed to replace the provisional best only after they beat it on the same locked audit path.
+
+
+### Source `2026-04-17-111609-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_105544.md`
+
+#### MDIT Train Failure · unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544
+
+- Time: 2026-04-17T11:16:09+08:00
+- Run: `unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_105544`
+- Phase: `train_only`
+- Phenomenon: trial_score=-1.0 | best_success_rate=None | collapse=True
+- Reasons: [enforce fail at inline_container.cc:664] . unexpected pos 2602795840 vs 2602795728
+- Result: best_success_rate=None trial_score=-1.0
+- Audit report: none
+- Contract issues: none
+
+
+### Source `2026-04-17-165816-unplug_charger_mdit_rgb_text_fm_v1_lane_a_stabilized_100_e0100_20260417_112329.md`
+
+#### MDIT Train Note · unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329
+
+- Time: 2026-04-17T16:58:16+08:00
+- Run: `unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329`
+- Phase: `train_only`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+## 2026-04-17T17:20:44+08:00 · train_only · unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029
+
+- Title: MDIT Train Failure · unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029
+- Run: `unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029`
+- Phase: `train_only`
+- Phenomenon: trial_score=-1.0 | best_success_rate=None | collapse=True
+- Reasons: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /timm/vit_base_patch16_clip_224.openai/resolve/main/model.safetensors (Caused by ProxyError('Cannot connect to proxy.', TimeoutError('_ssl.c:1000: The handshake operation timed out')))"), '(Request ID: 4de944c2-7728-468a-83d0-51d3b3f6962e)')
+- Result: best_success_rate=None trial_score=-1.0
+- Audit report: none
+- Contract issues: none
+
+## 2026-04-17T17:20:54+08:00 · audit_only · unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329
+
+- Title: Lane A stabilized is weaker than the current mainline anchor
+- Run: `unplug_charger_mdit_rgb_text_fm_v1__lane_a_stabilized_100__e0100__20260417_112329`
+- Phase: `audit_only`
+- Phenomenon: `epoch_0050=0.20 (4/20)` and `epoch_0100=0.35 (7/20)` are both below the current locked anchor `unplug_charger_mdit_rgb_text_3token_100` (`epoch_0100=0.55`).
+- Reasons: Failures are still dominated by horizon exhaustion (`at_horizon`), with a small number of `planning_runtime_error`; smoothing the action head did not address the core failure mode.
+- Result: This branch is now treated as a weak lane, not a new primary direction. The best RGB+text route remains the original Lane A mainline.
+- Audit report: embedded in `autoresearch_records/mdit_loop_state__unplug_rgb_text_search.json`
+- Contract issues: none
+
+## 2026-04-17T17:21:30+08:00 · infra_fix · lane_b_faithful_100
+
+- Title: Lane B first launch failed due to remote model fetch, not model quality
+- Run: `unplug_charger_mdit_lane_b_faithful_fm_v1__lane_b_faithful_100__e0100__20260417_172029`
+- Phase: `train_only`
+- Phenomenon: The candidate failed before training started because `timm/vit_base_patch16_clip_224.openai` tried to hit `huggingface.co` and timed out through the proxy.
+- Reasons: The process did not force offline loading even though both the TIMM vision checkpoint and the OpenAI CLIP text checkpoint were already present in local cache.
+- Result: Patched the autoresearch loop to inject `HF_HUB_OFFLINE=1`, `TRANSFORMERS_OFFLINE=1`, and `HF_HUB_DISABLE_TELEMETRY=1` into child processes whenever the required cached checkpoints are present. Lane B should now restart from local cache instead of being blocked by external network handshakes.
+- Audit report: none
+- Contract issues: none
+
+## 2026-04-17T19:05:00+08:00 · impl · lane_c_mtdp_strict
+
+- Title: Added a strict MTDP validation lane plus a single-step 12G execution profile
+- Run: `lane_c_mtdp_strict_100 / lane_c_mtdp_strict_100_12g`
+- Phase: `implementation`
+- Phenomenon: Existing RGB+text challengers still did not answer the real question of whether MTDP is viable under our shared evaluation chain.
+- Reasons: `lane_b` only approximated MTDP at the concat level; it did not yet introduce global conditioning, RoPE backbone semantics, beta timestep sampling, or MTDP-style state/action min-max normalization.
+- Result: Added an isolated strict lane with `clip_rgb_text_mtdp`, `dit_mtdp_rope`, `fm_variant=mtdp_strict`, runtime min-max stats resolution, and a 12G-compatible single-step execution profile (`16x8`, activation checkpointing, camera chunk encode). Existing mainline/eval defaults remain unchanged.
+- Audit report: none
+- Contract issues: none
+## 2026-04-18T00:26:53+08:00 · train_only · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+
+- Title: MDIT Train Note · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+- Run: `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`
+- Phase: `train_only`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+## 2026-04-18T00:57:23+08:00 · audit_only · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+
+- Title: MDIT Audit Note · unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720
+- Run: `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`
+- Phase: `audit_only`
+- Phenomenon: trial_score=-1.0 | best_success_rate=None | collapse=True
+- Reasons: epoch 100 success None below threshold 0.55
+- Result: best_success_rate=None trial_score=-1.0
+- Audit report: none
+- Contract issues: none
+## 2026-04-18T00:57:23+08:00 · takeover · takeover_triggered_fallback_best500
+
+- Active run: `unplug_charger_mdit_lane_c_mtdp_strict_fm_v1__lane_c_mtdp_strict_100__e0100__20260417_193720`
+- Incumbent run: `unplug_charger_mdit_rgb_text_3token_100`
+- Decision: trigger best-route 500 fallback
+- Reason: challenger audit reported recipe drift
+## 2026-04-18T00:57:23+08:00 · adopt_existing · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+
+- Title: MDIT Adopt Existing Run · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phase: `adopt_existing`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none
+
+## 2026-04-18T09:00:55+08:00 · takeover · best500_resume_recovered
+
+- Title: Best-route 100->500 resume recovered under supervisor
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phase: `takeover_resume`
+- Phenomenon: The earlier fallback run crashed at the first optimizer step and the previous guard died, so the project looked “taken over” in tmux but was actually idle.
+- Reasons: Legacy optimizer moments were mismatched to the current parameter order; stale heartbeat timestamps and non-training processes also confused the watchdog.
+- Result: Resume now skips incompatible optimizer state, recomputes scheduler lr for the 500-epoch horizon, and is supervised by `run_mdit_takeover_supervisor.py`. Current log already shows `epoch 100` continuing with non-zero lr.
+- Audit report: pending after training reaches 500 and shared audit starts
+- Contract issues: none for the incumbent best-route resume path
+## 2026-04-19T09:00:36+08:00 · audit_only · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+
+- Title: MDIT Audit Note · unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phase: `audit_only`
+- Phenomenon: trial_score=-1.0 | best_success_rate=0.75 | collapse=True
+- Reasons: epoch 100 success None below threshold 0.55
+- Result: best_success_rate=0.75 trial_score=-1.0
+- Audit report: none
+- Contract issues: none
+
+## 2026-04-19T10:59:00+08:00 · postmortem · champion_ckpt_pruned_by_collapse_cleanup
+
+- Title: MDIT Postmortem · `0.75@300/500` 冠军产物误删
+- Run: `unplug_charger_mdit_rgb_text_3token_100__lane_a_mainline_500_resume__e0500__20260418_005723`
+- Phenomenon: `autoresearch_records` 里保留了 `best_success_rate=0.75`，但真实 ckpt run dir 已不存在，`ckpt/mdit_best` 仍指向旧的 `0.55@100` 主线。
+- Cause: 共享审计把缺失 `epoch_0100` 的续训 run 误判为 `collapse=True`；`finalize_autoresearch_trial()` 在 `cleanup_failed=True` 下直接删除整条 run；takeover 又没有把新的最优结果冻结到稳定快照。
+- Fix: 审计后无论 `collapse` 与否都只允许受控裁剪；新增 takeover 最优冻结链路，把最佳产物硬链接到 `autoresearch_records/frozen_best/` 并回写 `ckpt/mdit_best`。
+- Result: 新逻辑已通过回归测试；本次丢失的 `0.75` ckpt 无法从 WandB 直接恢复，因为远端没有同步 `.pt` 文件。
+
+## 2026-04-19T12:10:00+08:00 · solidify_reference_line · mdit_reference_line
+
+- Title: MDIT Solidify Reference Line · `0.75@300/500`
+- Artifact split: `ckpt/mdit_best` now means the clean actual ckpt anchor; `ckpt/mdit_reference_line` now means the stable method reference line.
+- Actual ckpt anchor: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_best` -> `0.55@100`
+- Reference method line: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/mdit_reference_line` -> `0.75@300/500`
+- Reason: 原始 `0.75` 长训权重已经丢失，但方法、审计证据和复训 recipe 仍然必须稳定保留，不能再和实际 ckpt 锚点混在一个目录里。
+- Result: 目录语义已拆清；后续人和模型都可以明确区分“现在能直接加载什么”和“现在应该参考哪条方法线”。
+
+## 2026-04-20T18:00:40+08:00 · prepare_resume_run · unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100
+
+- Title: Prepare MDIT best-line `100 -> 500` recovery run from the surviving epoch-100 anchor
+- Source anchor: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_100/epochs/epoch_0100.pt`
+- New run dir: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/unplug_charger_mdit_rgb_text_3token_500_resume_from_epoch0100`
+- Why now: the original `0.75@300/500` champion weights were pruned by the old cleanup bug, so we need a clean, restartable `100 -> 500` path built from the remaining 100-epoch mainline anchor without mutating that anchor itself.
+- What changed:
+  - built a fresh resume run with a patched `latest.pt` whose `wandb_run_id` is cleared;
+  - preserved the 100-epoch seed checkpoint plus linked `best_valid.pt` and `best_success.pt` as starting references;
+  - locked training to `train_epochs=500`, `checkpoint_every_epochs=100`, `success_selection_every_epochs=100`, `success_selection_episodes=20`;
+  - added `stop_on_target_success=true` and `target_success_rate=0.75`, so training pauses as soon as the shared success-selection chain reaches the historical best threshold.
+- WandB policy:
+  - first launch: create a new run for this recovery line;
+  - later restarts: resume the same new run via the new checkpoint trail.
+- Launch entry: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_unplug_mdit_best500_resume.sh`
+- Current status: prepared on disk, not launched yet because we did not preempt the currently active training workload.

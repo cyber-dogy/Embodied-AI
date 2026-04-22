@@ -16,6 +16,14 @@
 
 `notebooks/` 保留为实验总控台，只负责拼配置、调用 `.py` 入口和查看结果。
 
+## LIBERO 工作区
+
+如果你接下来要把研究主线推进到 `具身 / VLA / WM / 仿真验证`，直接从这里进：
+
+- 总说明：[libero/README.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/libero/README.md)
+- 学习型 notebook：[notebooks/libero/libero_vla_wm_full_flow.ipynb](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/notebooks/libero/libero_vla_wm_full_flow.ipynb)
+- headless 工具目录：[libero/headless_tools/README.md](/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/libero/headless_tools/README.md)
+
 ## 当前默认方案
 
 - 默认训练方案：`repaired baseline`

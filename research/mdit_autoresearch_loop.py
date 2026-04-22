@@ -14,6 +14,7 @@ from typing import Any
 
 from common.runtime import PROJECT_ROOT
 from mdit.config import load_config
+from research.archive_writer import archive_directory_as_milestone, default_source_docs, write_task_index
 from research.mdit_trial_runner import (
     TrialRequest,
     adopt_existing_mdit_autoresearch_run,
@@ -1185,6 +1186,38 @@ def _write_best_path_doc(winner: dict[str, Any]) -> Path:
     return path
 
 
+def _sync_frozen_milestone(
+    *,
+    snapshot_dir: Path,
+    winner: dict[str, Any],
+    best_path_doc: Path | None = None,
+) -> None:
+    # 自回路里最终保留下来的 frozen snapshot 是长期主线锚点，需要同步进入 milestones。
+    try:
+        source_docs = default_source_docs("mdit")
+        if best_path_doc is not None and best_path_doc.exists():
+            source_docs = [best_path_doc, *source_docs]
+        archive_directory_as_milestone(
+            task_id="mdit",
+            source_dir=snapshot_dir,
+            milestone_name=snapshot_dir.name,
+            metadata={
+                "winner_run_name": winner.get("run_name"),
+                "winner_experiment_name": winner.get("experiment_name"),
+                "winner_lane": winner.get("lane"),
+                "best_success_rate": winner.get("best_success_rate"),
+                "best_success_epoch": winner.get("best_success_epoch"),
+                "confirmed_success_100": winner.get("confirmed_success_100"),
+                "best_path_doc": None if best_path_doc is None else str(best_path_doc),
+            },
+            source_docs=source_docs,
+            event_type="milestone",
+        )
+        write_task_index()
+    except Exception as exc:
+        print(f"[archive] mdit loop milestone sync failed for {snapshot_dir.name}: {exc}", file=sys.stderr)
+
+
 def _prune_non_winner_runs(state: dict[str, Any], winner: dict[str, Any] | None) -> None:
     if winner is None:
         return
@@ -1452,6 +1485,12 @@ def run_mdit_autoresearch_loop(
         _refresh_champion_alias(winner)
         best_path = _write_best_path_doc(winner)
         winner["best_path_doc"] = str(best_path)
+        if freeze_result is not None:
+            _sync_frozen_milestone(
+                snapshot_dir=Path(freeze_result["snapshot_dir"]),
+                winner=winner,
+                best_path_doc=best_path,
+            )
         state["winner"] = winner
         _persist_state(summary_path, state)
         _prune_non_winner_runs(state, winner)

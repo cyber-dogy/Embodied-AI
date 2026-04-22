@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-20T17:57:45+08:00",
+  "generated_at": "2026-04-21T03:33:03+08:00",
   "tasks": {
     "pdit": {
       "runs": [
@@ -142,6 +142,13 @@
           "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-20__collapse_run/archive_manifest.json",
           "status": "complete",
           "label": "collapse_run"
+        },
+        {
+          "slug": "2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500",
+          "path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500",
+          "manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/archive_manifest.json",
+          "status": "incomplete",
+          "label": "put_books_on_bookshelf_mdit_rgb_text_3token_500"
         }
       ],
       "milestones": [

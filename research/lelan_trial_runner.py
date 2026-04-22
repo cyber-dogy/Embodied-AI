@@ -16,6 +16,7 @@ import torch
 
 from common.runtime import PROJECT_ROOT
 from lelan.config import LeLaNExperimentConfig, apply_config_overrides, config_to_dict, load_config
+from research.archive_writer import default_source_docs, solidify_run_archive, write_task_index
 
 
 DEFAULT_COLLAPSE_THRESHOLDS: dict[int, float] = {
@@ -837,6 +838,26 @@ def _record_trial_output(
     return _write_json(record_dir / f"{run_name}.json", payload)
 
 
+def _sync_lelan_archive(
+    *,
+    run_dir: Path,
+    run_name: str,
+    event_type: str,
+) -> None:
+    # 归档层用于固化证据，不应该让 LeLaN 的主训练链因为额外整理失败而中断。
+    try:
+        solidify_run_archive(
+            task_id="lelan",
+            run_dir=run_dir,
+            trial_record_path=(PROJECT_ROOT / "autoresearch_records" / f"{run_name}.json"),
+            source_docs=default_source_docs("lelan"),
+            event_type=event_type,
+        )
+        write_task_index()
+    except Exception as exc:
+        print(f"[archive] lelan archive sync failed for {run_name}: {exc}", file=sys.stderr)
+
+
 def _format_metric(value: Any) -> str:
     metric = _maybe_float(value)
     if metric is None:
@@ -951,6 +972,7 @@ def train_lelan_autoresearch_trial(request: LeLaNTrialRequest, *, log_results: b
             resolved_cfg=cfg,
             resolved_request=resolved_request,
         )
+        _sync_lelan_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="start")
         summary = train_experiment(cfg)
         keep_paths = _build_train_keep_paths(run_dir, cfg)
         _prune_run_dir(run_dir, keep_paths)
@@ -996,6 +1018,7 @@ def train_lelan_autoresearch_trial(request: LeLaNTrialRequest, *, log_results: b
             "train_summary": summary,
         }
         _record_trial_output(repo_root, run_name=cfg.run_name, output=output)
+        _sync_lelan_archive(run_dir=run_dir, run_name=cfg.run_name, event_type="train_only")
         _write_research_note(
             repo_root,
             run_name=cfg.run_name,
@@ -1031,6 +1054,7 @@ def train_lelan_autoresearch_trial(request: LeLaNTrialRequest, *, log_results: b
             shutil.rmtree(run_dir)
         output = _training_error_output(request=request, run_dir=run_dir, exc=exc)
         _record_trial_output(repo_root, run_name=run_dir.name, output=output)
+        _sync_lelan_archive(run_dir=run_dir, run_name=run_dir.name, event_type="train_error")
         _write_research_note(
             repo_root,
             run_name=run_dir.name,
@@ -1197,6 +1221,7 @@ def finalize_lelan_autoresearch_trial(
         "error_type": None,
     }
     _record_trial_output(repo_root, run_name=run_dir.name, output=output, audit_report=audit_report)
+    _sync_lelan_archive(run_dir=run_dir, run_name=run_dir.name, event_type="audit_only")
     audit_title = (
         f"LeLaN Audit Failure · {run_dir.name}"
         if collapse_detected
