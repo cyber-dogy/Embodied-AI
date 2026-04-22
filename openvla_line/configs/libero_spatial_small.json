@@ -1,0 +1,32 @@
+{
+  "data": {
+    "camera_names": ["agentview_rgb", "eye_in_hand_rgb"],
+    "image_size": 96,
+    "max_text_tokens": 24,
+    "sample_stride": 4
+  },
+  "model": {
+    "hidden_dim": 256,
+    "num_heads": 8,
+    "depth": 6,
+    "mlp_ratio": 4.0,
+    "dropout": 0.1
+  },
+  "train": {
+    "batch_size": 32,
+    "num_workers": 0,
+    "epochs": 10,
+    "lr": 0.0002,
+    "weight_decay": 0.0001,
+    "warmup_steps": 100,
+    "grad_clip_norm": 1.0,
+    "use_amp": true,
+    "log_every": 20,
+    "max_train_steps_per_epoch": null,
+    "max_val_steps": null
+  },
+  "run": {
+    "run_name": "openvla_libero_spatial_small"
+  }
+}
+

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "max_files": 2,
+    "camera_names": ["agentview_rgb", "eye_in_hand_rgb"],
+    "image_size": 64,
+    "max_text_tokens": 24,
+    "sample_stride": 16,
+    "max_train_samples": 64,
+    "max_val_samples": 16
+  },
+  "model": {
+    "hidden_dim": 128,
+    "num_heads": 4,
+    "depth": 3,
+    "mlp_ratio": 2.0,
+    "dropout": 0.1
+  },
+  "train": {
+    "batch_size": 8,
+    "num_workers": 0,
+    "epochs": 1,
+    "lr": 0.0003,
+    "weight_decay": 0.0001,
+    "warmup_steps": 4,
+    "grad_clip_norm": 1.0,
+    "use_amp": true,
+    "log_every": 1,
+    "max_train_steps_per_epoch": 4,
+    "max_val_steps": 2
+  },
+  "run": {
+    "run_name": "openvla_libero_spatial_smoke"
+  }
+}
+
