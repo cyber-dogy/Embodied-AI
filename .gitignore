@@ -3,6 +3,9 @@ ckpt/
 archive/ckpt_research/
 # 排除本地数据集
 data/
+# 排除 LIBERO 仿真数据与导出视频
+libero/headless_tools/data/
+libero/headless_tools/output/
 # Python缓存
 __pycache__/
 *.pyc
