@@ -1,23 +1,22 @@
 {
   "schema_version": 1,
-  "archived_at": "2026-04-21T03:33:03+08:00",
+  "archived_at": "2026-04-23T06:24:12+08:00",
   "task_id": "mdit",
   "bucket": "runs",
   "slug": "2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500",
   "run_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
-  "experiment_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
-  "description": "",
+  "experiment_name": "put_books_on_bookshelf_mainline_500",
+  "description": "Put books on bookshelf MDIT mainline 500 epochs",
   "line": "mdit",
-  "phase": null,
+  "phase": "train_only",
   "source_run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500",
   "source_trial_record": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/put_books_on_bookshelf_mdit_rgb_text_3token_500.json",
   "status": "incomplete",
   "missing_items": [
-    "summary",
     "audit_report"
   ],
   "trial_score": null,
   "best_success_rate": null,
   "best_success_epoch": null,
-  "collapse_detected": null
+  "collapse_detected": false
 }

@@ -1,0 +1,6 @@
+module,current_design,meaning
+world_frame_teaching,世界坐标 Jog -> posture-biased IK -> 安全过滤 -> LeRobot action,把示教从低层关节扰动改成任务空间动作监督
+multi_view_rgbd,D405 RGB + D405 Depth 伪彩 + UVC RGB,让 ACT / VLA 同时获得近景几何与外部视角
+dual_action_interface,TCP action 与 action.joints 同步落盘,同时服务策略学习与真机安全回放
+isaac_warm_start,Reach / PreGrasp / GraspLift PPO 课程预训练,先在仿真中学到空间移动与接触阶段先验
+deployment_guard,temporal aggregation + CAN 限频 + 夹爪电流保护,把策略输出落到真机执行时仍保持稳定与安全

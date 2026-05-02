@@ -1,21 +1,53 @@
 window.homepageData = {
-  "generated_at": "2026-04-21T10:14:02+08:00",
+  "generated_at": "2026-05-01T17:56:56+08:00",
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
     "description": ""
   },
   "stats": {
-    "task_count": 6,
-    "branch_count": 5,
-    "timeline_count": 22,
-    "validated_rows": 12,
+    "task_count": 7,
+    "branch_count": 6,
+    "timeline_count": 27,
+    "validated_rows": 15,
     "archive_entry_count": 38,
     "archive_milestone_count": 3,
     "archive_complete_count": 12
   },
   "home": {
     "done_groups": [
+      {
+        "date": "2026-05-01",
+        "cards": [
+          {
+            "date": "2026-05-01",
+            "group": "done",
+            "task_id": "act-lerobot-demo",
+            "branch_ids": [
+              "act"
+            ],
+            "badge": "ACT Demo",
+            "title": "LeRobot + ACT 具身模仿学习闭环完成落地",
+            "summary": "把自研 Dummy V2 机械臂、世界坐标示教、LeRobot v3、多视角 RGB-D、Isaac warm-start 和 ACT 部署串成了一条可展示的具身模仿学习工作线。",
+            "metrics": [
+              {
+                "label": "episodes",
+                "value": "5"
+              },
+              {
+                "label": "frames",
+                "value": "4379"
+              },
+              {
+                "label": "demo",
+                "value": "已打通"
+              }
+            ],
+            "meta": "已完成 · ACT 模仿学习线",
+            "path": "homepage/tasks/act-lerobot-demo/"
+          }
+        ]
+      },
       {
         "date": "2026-04-19",
         "cards": [
@@ -354,11 +386,11 @@ window.homepageData = {
     "hero_inline_stats": [
       {
         "label": "任务",
-        "value": "6"
+        "value": "7"
       },
       {
         "label": "研究线",
-        "value": "5"
+        "value": "6"
       },
       {
         "label": "归档条目",
@@ -2055,7 +2087,7 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Archive Run",
-              "title": "put_books_on_bookshelf_mdit_rgb_text_3t…",
+              "title": "Put books on bookshelf MDIT mainline 50…",
               "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
               "date_key": "2026-04-21",
               "metrics": [
@@ -2065,14 +2097,18 @@ window.homepageData = {
                 },
                 {
                   "label": "缺失",
-                  "value": "2 项"
+                  "value": "audit_report"
                 }
               ],
-              "outcome": "目前还没有归档到 trial record，需要后续补齐。",
+              "outcome": "collapse_detected: False",
               "links": [
                 {
                   "title": "归档报告",
                   "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/metrics/summary.json"
                 },
                 {
                   "title": "archive manifest",
@@ -2923,10 +2959,16 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
-          "title": "archive 报告 · put_books_on_bookshelf_mdit_rgb_text_3t…",
+          "title": "archive 报告 · Put books on bookshelf MDIT mainline 50…",
           "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md",
           "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
           "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · Put books on bookshelf MDIT mainline 50…",
+          "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
         },
         {
           "title": "archive 报告 · audit_wandb_run",
@@ -2951,12 +2993,6 @@ window.homepageData = {
           "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/report/report.md",
           "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
           "label": "打开归档报告"
-        },
-        {
-          "title": "archive summary · collapse_run",
-          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json",
-          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
-          "label": "打开 summary"
         },
         {
           "title": "MDIT 关键结果表",
@@ -3177,6 +3213,399 @@ window.homepageData = {
           "note": "使用 W&B API 抓取 valid mse_xyz / mse_rot6d / mse_grip 全量 history。"
         }
       ]
+    },
+    {
+      "id": "act-lerobot-demo",
+      "title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+      "summary": "把自研机械臂、世界坐标示教、LeRobot v3 数据、多视角 RGB-D 感知、Isaac 预训练和 ACT 策略部署串成一条可展示的具身模仿学习闭环。",
+      "core_summary": "这条线的重点不是再解释一次控制平台，而是突出自研机械臂如何被整理成 LeRobot + ACT 可直接消费的具身模仿学习闭环。",
+      "status": "已完成",
+      "status_group": "done",
+      "page_path": "homepage/tasks/act-lerobot-demo/",
+      "branch_ids": [
+        "act"
+      ],
+      "latest_update": "2026-05-01",
+      "hero_metrics": [
+        {
+          "label": "episodes",
+          "value": "5"
+        },
+        {
+          "label": "frames",
+          "value": "4379"
+        },
+        {
+          "label": "fps",
+          "value": "10Hz"
+        }
+      ],
+      "report_intro": "ACT 这条线现在已经从“自研机械臂能不能采到数据”推进到“LeRobot 数据、Isaac warm-start 和 ACT 部署能否组成可展示的具身模仿学习闭环”。页面重点是把这条工作线里真正可复用的技术资产讲清楚。",
+      "summary_cards": [
+        {
+          "eyebrow": "LeRobot",
+          "title": "把自研机械臂整理成 LeRobot 可直接消费的数据和回放入口",
+          "body": "这条线真正完成的不是单个 demo 视频，而是把世界坐标示教、多视角感知、关节安全回放和 LeRobot v3 结构统一成同一套具身数据接口。",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "camera",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "eyebrow": "ACT",
+          "title": "ACT 已经在 Dummy V2 上完成可展示的方块操作部署",
+          "body": "策略侧不再停留在离线训练说明，而是能够接到真实机械臂的数据、通过安全链下发动作，并完成方块抓取与叠放 demo。",
+          "metrics": [
+            {
+              "label": "policy",
+              "value": "ACT"
+            },
+            {
+              "label": "task",
+              "value": "抓取 / 叠放"
+            },
+            {
+              "label": "deploy",
+              "value": "已完成"
+            }
+          ]
+        }
+      ],
+      "core_tables": [
+        {
+          "title": "ACT 核心能力模块",
+          "columns": [
+            "模块",
+            "当前做法",
+            "直接意义",
+            "后续扩展"
+          ],
+          "rows": [
+            [
+              "世界坐标示教",
+              "操作员先在任务空间给出 TCP 路线，再经 posture-biased IK、安全边界和连续性约束生成动作。",
+              "示范数据直接对应“机器人该怎么完成任务”，而不是低层关节抖动。",
+              "可自然接语言子任务、VLA 指令和更长 horizon 任务分解。"
+            ],
+            [
+              "LeRobot v3 数据层",
+              "低维状态写 Parquet，多相机画面写 MP4，并保留真机安全回放索引。",
+              "训练、审计和真机 replay 统一到同一份数据资产里。",
+              "后续可直接接 ACT、Diffusion Policy、VLA 或世界模型。"
+            ],
+            [
+              "多视角 RGB-D 感知",
+              "D405 RGB、D405 Depth 伪彩和 UVC RGB 与 proprioception 同步记录。",
+              "策略同时拿到近景几何线索和外部全局视角，监督信号更完整。",
+              "可继续扩展语言条件或多任务视觉提示。"
+            ],
+            [
+              "双动作接口",
+              "同时保存任务空间 action 和 action.joints，部署优先走 joint replay 安全链。",
+              "兼顾策略学习表达能力和真机执行稳定性。",
+              "后续可在任务空间接口上继续接在线规划或 VLA 输出。"
+            ],
+            [
+              "Sim2Real warm-start",
+              "Isaac Lab 先做 Reach / PreGrasp / GraspLift 课程预训练，再用真实 rollout 微调 ACT。",
+              "把稀缺真机数据留给接触与策略细化，而不是从零学基础运动。",
+              "可继续扩展到更多桌面 manipulation 任务和 sim2real 对齐研究。"
+            ]
+          ],
+          "note": "这张表强调的是 ACT 线已经沉淀下来的技术资产，而不是单次 demo 的叙事包装。"
+        },
+        {
+          "title": "ACT 数据与系统验收",
+          "columns": [
+            "条目",
+            "当前结果",
+            "展示价值"
+          ],
+          "rows": [
+            [
+              "LeRobotDataset",
+              "5 个 cleaned episodes / 4379 帧 / 10Hz",
+              "证明数据已经过清洗，能直接进入训练与回放。"
+            ],
+            [
+              "视觉观测",
+              "3 路输入：D405 RGB + D405 Depth + UVC RGB",
+              "支撑 ACT 当前部署，也为 VLA / 世界模型保留多模态入口。"
+            ],
+            [
+              "机器人接口",
+              "6DoF 机械臂 + 二值夹爪 + joint replay",
+              "把策略输出落到真实执行时仍能保持安全和稳定。"
+            ],
+            [
+              "仿真预训练",
+              "Isaac PPO 三阶段课程：Reach / PreGrasp / GraspLift",
+              "说明这条线不仅能采数据，也能往 sim2real 预训练推进。"
+            ],
+            [
+              "部署结果",
+              "ACT 叠方块 demo 已打通",
+              "形成可展示的具身模仿学习闭环，而不只是离线训练记录。"
+            ]
+          ],
+          "note": "ACT 这条线当前最适合展示的是“系统闭环已经成立”，因此页面优先放数据、接口和部署验收，而不是堆训练日志。"
+        }
+      ],
+      "timeline_groups": [
+        {
+          "date": "2026-05-01",
+          "cards": [
+            {
+              "badge": "Demo",
+              "title": "LeRobot 采集、ACT 部署与 VLA 扩展接口在同一天收束成可展示闭环",
+              "summary": "三路相机、LeRobot v3 数据集、真实回放索引和 ACT demo 在这一天被整理成统一成果线，项目从“控制平台”正式推进到“具身模仿学习 demo”。",
+              "metrics": [
+                {
+                  "label": "episodes",
+                  "value": "5"
+                },
+                {
+                  "label": "frames",
+                  "value": "4379"
+                },
+                {
+                  "label": "demo",
+                  "value": "已打通"
+                }
+              ],
+              "outcome": "ACT 线已经具备作品集展示价值，后续可以在同一数据和动作接口上继续挂 VLA / 世界模型研究。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                },
+                {
+                  "title": "关键结果表",
+                  "path": "research_archive/tasks/act/media/tables/act_key_results.csv"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-29",
+          "cards": [
+            {
+              "badge": "RL Warm-start",
+              "title": "Isaac Lab PPO 课程预训练把接触前后动作拆成三阶段",
+              "summary": "Reach、PreGrasp、GraspLift 被拆成统一动作接口下的三阶段课程，用并行环境把空间移动与抓取抬升的基础先验先学出来。",
+              "metrics": [
+                {
+                  "label": "curriculum",
+                  "value": "3 阶段"
+                },
+                {
+                  "label": "parallel envs",
+                  "value": "128"
+                },
+                {
+                  "label": "action dim",
+                  "value": "7"
+                }
+              ],
+              "outcome": "真实 ACT 训练不必从零学习基础运动，sim2real 桥接路线开始成立。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-27",
+          "cards": [
+            {
+              "badge": "Hardware",
+              "title": "夹爪固件、电流阈值和受保护开合逻辑完成定版",
+              "summary": "线轨夹爪的静摩擦、电流阈值和 disable 保护被真正落到控制链里，夹爪不再被当成普通关节直接暴力驱动。",
+              "metrics": [
+                {
+                  "label": "夹爪控制",
+                  "value": "独立命令"
+                },
+                {
+                  "label": "保护",
+                  "value": "open / close / disable"
+                },
+                {
+                  "label": "静摩擦",
+                  "value": "约 0.7A"
+                }
+              ],
+              "outcome": "真实回放和策略部署终于有了稳定、可重复的末端执行条件。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-24",
+          "cards": [
+            {
+              "badge": "Teleoperation",
+              "title": "世界坐标 Jog、MuJoCo 同步和 posture-biased IK 串成同一条示教链路",
+              "summary": "操作员输入先落到 TCP，再经 IK、连续性约束和安全边界转成可记录动作，示教从关节拖动升级成任务空间路线采集。",
+              "metrics": [
+                {
+                  "label": "动作口径",
+                  "value": "TCP → joints"
+                },
+                {
+                  "label": "预览",
+                  "value": "MuJoCo"
+                },
+                {
+                  "label": "目标",
+                  "value": "任务空间示教"
+                }
+              ],
+              "outcome": "示范数据语义更干净，也更适合后续 ACT / VLA 学习。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "date": "2026-04-21",
+          "cards": [
+            {
+              "badge": "Control",
+              "title": "先把真机控制、边界保护和回放安全链打稳",
+              "summary": "在引入 LeRobot 和 ACT 之前，先明确关节限位、用户软边界、回放节奏和 CAN / 串口保护，确保后续学习链路建立在安全控制底座上。",
+              "metrics": [
+                {
+                  "label": "robot",
+                  "value": "6DoF + 二值夹爪"
+                },
+                {
+                  "label": "回放",
+                  "value": "受保护"
+                },
+                {
+                  "label": "目标",
+                  "value": "长期复用"
+                }
+              ],
+              "outcome": "ACT 这条线从一开始就不是孤立 demo，而是建立在可长期复用的控制与采集平台之上。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "title": "ACT 线真正完成的是“数据-策略-回放”闭环，而不是单个视频演示",
+          "body": "世界坐标示教、多视角 RGB-D、LeRobot v3、Isaac 预训练和 ACT 部署已经共用同一套动作与数据口径，这比单独展示一次 rollout 更有长期价值。"
+        },
+        {
+          "title": "世界坐标示教让示范数据从“关节痕迹”升级成“任务空间监督”",
+          "body": "人类输入先定义任务空间目标，再经 IK 和安全过滤转成动作，这让后续模仿学习更直接对齐任务意图，也更适合继续接语言条件和子任务分解。"
+        },
+        {
+          "title": "这条线天然贴近 VLA / 世界模型，而不是只能停在低层行为克隆",
+          "body": "当前数据已经同时具备多视角图像、低维状态、动作序列和真实 replay 接口，后续可以在同一底座上继续接入语言、视频 latent 和长 horizon 预测模型。"
+        }
+      ],
+      "evidence_links": [
+        {
+          "title": "ACT / LeRobot 求职 Demo 说明",
+          "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md",
+          "summary": "",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "ACT 关键结果表",
+          "path": "research_archive/tasks/act/media/tables/act_key_results.csv",
+          "summary": "把 cleaned episodes、frames、相机流和预训练阶段整理成结构化结果表。",
+          "label": "查看原始记录"
+        },
+        {
+          "title": "ACT 核心模块表",
+          "path": "research_archive/tasks/act/media/tables/act_core_modules.csv",
+          "summary": "把世界坐标示教、LeRobot 数据层、ACT 输出接口和 sim2real warm-start 压成统一模块表。",
+          "label": "查看原始记录"
+        }
+      ],
+      "chart_ids": [
+        "act-dataset-overview",
+        "act-stack-coverage",
+        "act-policy-interface"
+      ],
+      "media_items": [
+        {
+          "task_id": "act-lerobot-demo",
+          "kind": "video",
+          "title": "LeRobot + ACT 叠方块 Demo",
+          "caption": "展示 Dummy V2 基于 LeRobot v3 数据和 ACT 策略完成方块抓取与叠放的具身模仿学习 demo。这条线已经把采集、训练、部署和安全回放接成闭环，并为后续 VLA / 世界模型继续接入保留了统一动作接口。",
+          "path": "research_archive/tasks/act/media/demo/videos/01-LeRobot框架与ACTdemo.mp4",
+          "showcase_preview": false
+        }
+      ],
+      "home_entries": [
+        {
+          "date": "2026-05-01",
+          "group": "done",
+          "task_id": "act-lerobot-demo",
+          "branch_ids": [
+            "act"
+          ],
+          "badge": "ACT Demo",
+          "title": "LeRobot + ACT 具身模仿学习闭环完成落地",
+          "summary": "把自研 Dummy V2 机械臂、世界坐标示教、LeRobot v3、多视角 RGB-D、Isaac warm-start 和 ACT 部署串成了一条可展示的具身模仿学习工作线。",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "demo",
+              "value": "已打通"
+            }
+          ],
+          "meta": "已完成 · ACT 模仿学习线",
+          "path": "homepage/tasks/act-lerobot-demo/"
+        }
+      ],
+      "prefer_home_entries": true,
+      "task_badge": "ACT Demo",
+      "docs": [
+        "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+      ],
+      "chart_media_items": []
     },
     {
       "id": "lingbot-va-world-model",
@@ -6309,7 +6738,7 @@ window.homepageData = {
           "cards": [
             {
               "badge": "Archive Run",
-              "title": "put_books_on_bookshelf_mdit_rgb_text_3t…",
+              "title": "Put books on bookshelf MDIT mainline 50…",
               "summary": "归档条目已经建立，可作为后续 homepage / 专题页的统一证据入口。",
               "date_key": "2026-04-21",
               "metrics": [
@@ -6319,14 +6748,18 @@ window.homepageData = {
                 },
                 {
                   "label": "缺失",
-                  "value": "2 项"
+                  "value": "audit_report"
                 }
               ],
-              "outcome": "目前还没有归档到 trial record，需要后续补齐。",
+              "outcome": "collapse_detected: False",
               "links": [
                 {
                   "title": "归档报告",
                   "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md"
+                },
+                {
+                  "title": "archive summary",
+                  "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/metrics/summary.json"
                 },
                 {
                   "title": "archive manifest",
@@ -7207,10 +7640,16 @@ window.homepageData = {
       ],
       "evidence_links": [
         {
-          "title": "archive 报告 · put_books_on_bookshelf_mdit_rgb_text_3t…",
+          "title": "archive 报告 · Put books on bookshelf MDIT mainline 50…",
           "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/report/report.md",
           "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
           "label": "打开归档报告"
+        },
+        {
+          "title": "archive summary · Put books on bookshelf MDIT mainline 50…",
+          "path": "research_archive/tasks/mdit/runs/2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500/metrics/summary.json",
+          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
+          "label": "打开 summary"
         },
         {
           "title": "archive 报告 · audit_wandb_run",
@@ -7235,12 +7674,6 @@ window.homepageData = {
           "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/report/report.md",
           "summary": "archive 内的背景、核心结果与证据索引已经整理成可直接消费的报告页。",
           "label": "打开归档报告"
-        },
-        {
-          "title": "archive summary · collapse_run",
-          "path": "research_archive/tasks/mdit/runs/2026-04-20__collapse_run/metrics/summary.json",
-          "summary": "训练后固化的结构化 summary，会作为后续图表和专题页的统一输入。",
-          "label": "打开 summary"
         },
         {
           "title": "research journal",
@@ -7350,6 +7783,259 @@ window.homepageData = {
             },
             {
               "label": "milestone",
+              "value": "3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "act",
+      "title": "ACT 模仿学习线",
+      "summary": "围绕 LeRobot v3 数据、世界坐标示教、多视角 RGB-D 感知和 ACT 策略部署，把自研机械臂整理成一条可展示的具身模仿学习工作线。",
+      "status": "已完成",
+      "status_group": "done",
+      "page_path": "homepage/branches/act/",
+      "latest_update": "2026-05-01",
+      "hero_metrics": [
+        {
+          "label": "episodes",
+          "value": "5"
+        },
+        {
+          "label": "frames",
+          "value": "4379"
+        },
+        {
+          "label": "fps",
+          "value": "10Hz"
+        }
+      ],
+      "card_title": "ACT 模仿学习线",
+      "card_summary": "围绕 LeRobot v3 数据、世界坐标示教和 ACT 策略部署，把自研机械臂整理成可展示的具身模仿学习闭环。",
+      "card_result": "当前成果：5 个 cleaned episodes、4379 帧多视角数据和方块叠放 ACT demo 已打通。",
+      "detail_intro": "围绕 LeRobot v3 数据、世界坐标示教和 ACT 策略部署，把自研机械臂整理成可展示的具身模仿学习闭环。 当前成果：5 个 cleaned episodes、4379 帧多视角数据和方块叠放 ACT demo 已打通。",
+      "entry_path": "homepage/tasks/act-lerobot-demo/",
+      "entry_label": "进入任务页",
+      "related_task_ids": [
+        "act-lerobot-demo"
+      ],
+      "timeline_groups": [
+        {
+          "date": "2026-05-01",
+          "cards": [
+            {
+              "badge": "Demo",
+              "title": "LeRobot 采集、ACT 部署与 VLA 扩展接口在同一天收束成可展示闭环",
+              "summary": "三路相机、LeRobot v3 数据集、真实回放索引和 ACT demo 在这一天被整理成统一成果线，项目从“控制平台”正式推进到“具身模仿学习 demo”。",
+              "metrics": [
+                {
+                  "label": "episodes",
+                  "value": "5"
+                },
+                {
+                  "label": "frames",
+                  "value": "4379"
+                },
+                {
+                  "label": "demo",
+                  "value": "已打通"
+                }
+              ],
+              "outcome": "ACT 线已经具备作品集展示价值，后续可以在同一数据和动作接口上继续挂 VLA / 世界模型研究。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                },
+                {
+                  "title": "关键结果表",
+                  "path": "research_archive/tasks/act/media/tables/act_key_results.csv"
+                }
+              ],
+              "task_id": "act-lerobot-demo",
+              "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-29",
+          "cards": [
+            {
+              "badge": "RL Warm-start",
+              "title": "Isaac Lab PPO 课程预训练把接触前后动作拆成三阶段",
+              "summary": "Reach、PreGrasp、GraspLift 被拆成统一动作接口下的三阶段课程，用并行环境把空间移动与抓取抬升的基础先验先学出来。",
+              "metrics": [
+                {
+                  "label": "curriculum",
+                  "value": "3 阶段"
+                },
+                {
+                  "label": "parallel envs",
+                  "value": "128"
+                },
+                {
+                  "label": "action dim",
+                  "value": "7"
+                }
+              ],
+              "outcome": "真实 ACT 训练不必从零学习基础运动，sim2real 桥接路线开始成立。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ],
+              "task_id": "act-lerobot-demo",
+              "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-27",
+          "cards": [
+            {
+              "badge": "Hardware",
+              "title": "夹爪固件、电流阈值和受保护开合逻辑完成定版",
+              "summary": "线轨夹爪的静摩擦、电流阈值和 disable 保护被真正落到控制链里，夹爪不再被当成普通关节直接暴力驱动。",
+              "metrics": [
+                {
+                  "label": "夹爪控制",
+                  "value": "独立命令"
+                },
+                {
+                  "label": "保护",
+                  "value": "open / close / disable"
+                },
+                {
+                  "label": "静摩擦",
+                  "value": "约 0.7A"
+                }
+              ],
+              "outcome": "真实回放和策略部署终于有了稳定、可重复的末端执行条件。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ],
+              "task_id": "act-lerobot-demo",
+              "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-24",
+          "cards": [
+            {
+              "badge": "Teleoperation",
+              "title": "世界坐标 Jog、MuJoCo 同步和 posture-biased IK 串成同一条示教链路",
+              "summary": "操作员输入先落到 TCP，再经 IK、连续性约束和安全边界转成可记录动作，示教从关节拖动升级成任务空间路线采集。",
+              "metrics": [
+                {
+                  "label": "动作口径",
+                  "value": "TCP → joints"
+                },
+                {
+                  "label": "预览",
+                  "value": "MuJoCo"
+                },
+                {
+                  "label": "目标",
+                  "value": "任务空间示教"
+                }
+              ],
+              "outcome": "示范数据语义更干净，也更适合后续 ACT / VLA 学习。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ],
+              "task_id": "act-lerobot-demo",
+              "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo"
+            }
+          ]
+        },
+        {
+          "date": "2026-04-21",
+          "cards": [
+            {
+              "badge": "Control",
+              "title": "先把真机控制、边界保护和回放安全链打稳",
+              "summary": "在引入 LeRobot 和 ACT 之前，先明确关节限位、用户软边界、回放节奏和 CAN / 串口保护，确保后续学习链路建立在安全控制底座上。",
+              "metrics": [
+                {
+                  "label": "robot",
+                  "value": "6DoF + 二值夹爪"
+                },
+                {
+                  "label": "回放",
+                  "value": "受保护"
+                },
+                {
+                  "label": "目标",
+                  "value": "长期复用"
+                }
+              ],
+              "outcome": "ACT 这条线从一开始就不是孤立 demo，而是建立在可长期复用的控制与采集平台之上。",
+              "links": [
+                {
+                  "title": "ACT / LeRobot 求职 Demo",
+                  "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+                }
+              ],
+              "task_id": "act-lerobot-demo",
+              "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo"
+            }
+          ]
+        }
+      ],
+      "evidence_links": [
+        {
+          "title": "DummyV2 LeRobot 求职Demo",
+          "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md",
+          "summary": "",
+          "label": "查看原始记录"
+        }
+      ],
+      "chart_ids": [
+        "act-dataset-overview",
+        "act-stack-coverage",
+        "act-policy-interface"
+      ],
+      "dashboard_chart_ids": [
+        "branch-act-dataset",
+        "branch-act-stack",
+        "branch-act-policy"
+      ],
+      "chart_media_items": [],
+      "media_items": [
+        {
+          "task_id": "act-lerobot-demo",
+          "kind": "video",
+          "title": "LeRobot + ACT 叠方块 Demo",
+          "caption": "展示 Dummy V2 基于 LeRobot v3 数据和 ACT 策略完成方块抓取与叠放的具身模仿学习 demo。这条线已经把采集、训练、部署和安全回放接成闭环，并为后续 VLA / 世界模型继续接入保留了统一动作接口。",
+          "path": "research_archive/tasks/act/media/demo/videos/01-LeRobot框架与ACTdemo.mp4",
+          "showcase_preview": false
+        }
+      ],
+      "summary_cards": [
+        {
+          "eyebrow": "Branch",
+          "title": "把自研机械臂整理成 LeRobot 可直接消费的数据和回放入口",
+          "body": "这条线真正完成的不是单个 demo 视频，而是把世界坐标示教、多视角感知、关节安全回放和 LeRobot v3 结构统一成同一套具身数据接口。",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "camera",
               "value": "3"
             }
           ]
@@ -7761,6 +8447,180 @@ window.homepageData = {
     }
   ],
   "timeline_page_groups": [
+    {
+      "date": "2026-05-01",
+      "cards": [
+        {
+          "badge": "Demo",
+          "title": "LeRobot 采集、ACT 部署与 VLA 扩展接口在同一天收束成可展示闭环",
+          "summary": "三路相机、LeRobot v3 数据集、真实回放索引和 ACT demo 在这一天被整理成统一成果线，项目从“控制平台”正式推进到“具身模仿学习 demo”。",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "demo",
+              "value": "已打通"
+            }
+          ],
+          "outcome": "ACT 线已经具备作品集展示价值，后续可以在同一数据和动作接口上继续挂 VLA / 世界模型研究。",
+          "links": [
+            {
+              "title": "ACT / LeRobot 求职 Demo",
+              "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+            },
+            {
+              "title": "关键结果表",
+              "path": "research_archive/tasks/act/media/tables/act_key_results.csv"
+            }
+          ],
+          "task_id": "act-lerobot-demo",
+          "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+          "task_path": "homepage/tasks/act-lerobot-demo/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-29",
+      "cards": [
+        {
+          "badge": "RL Warm-start",
+          "title": "Isaac Lab PPO 课程预训练把接触前后动作拆成三阶段",
+          "summary": "Reach、PreGrasp、GraspLift 被拆成统一动作接口下的三阶段课程，用并行环境把空间移动与抓取抬升的基础先验先学出来。",
+          "metrics": [
+            {
+              "label": "curriculum",
+              "value": "3 阶段"
+            },
+            {
+              "label": "parallel envs",
+              "value": "128"
+            },
+            {
+              "label": "action dim",
+              "value": "7"
+            }
+          ],
+          "outcome": "真实 ACT 训练不必从零学习基础运动，sim2real 桥接路线开始成立。",
+          "links": [
+            {
+              "title": "ACT / LeRobot 求职 Demo",
+              "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+            }
+          ],
+          "task_id": "act-lerobot-demo",
+          "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+          "task_path": "homepage/tasks/act-lerobot-demo/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-27",
+      "cards": [
+        {
+          "badge": "Hardware",
+          "title": "夹爪固件、电流阈值和受保护开合逻辑完成定版",
+          "summary": "线轨夹爪的静摩擦、电流阈值和 disable 保护被真正落到控制链里，夹爪不再被当成普通关节直接暴力驱动。",
+          "metrics": [
+            {
+              "label": "夹爪控制",
+              "value": "独立命令"
+            },
+            {
+              "label": "保护",
+              "value": "open / close / disable"
+            },
+            {
+              "label": "静摩擦",
+              "value": "约 0.7A"
+            }
+          ],
+          "outcome": "真实回放和策略部署终于有了稳定、可重复的末端执行条件。",
+          "links": [
+            {
+              "title": "ACT / LeRobot 求职 Demo",
+              "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+            }
+          ],
+          "task_id": "act-lerobot-demo",
+          "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+          "task_path": "homepage/tasks/act-lerobot-demo/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-24",
+      "cards": [
+        {
+          "badge": "Teleoperation",
+          "title": "世界坐标 Jog、MuJoCo 同步和 posture-biased IK 串成同一条示教链路",
+          "summary": "操作员输入先落到 TCP，再经 IK、连续性约束和安全边界转成可记录动作，示教从关节拖动升级成任务空间路线采集。",
+          "metrics": [
+            {
+              "label": "动作口径",
+              "value": "TCP → joints"
+            },
+            {
+              "label": "预览",
+              "value": "MuJoCo"
+            },
+            {
+              "label": "目标",
+              "value": "任务空间示教"
+            }
+          ],
+          "outcome": "示范数据语义更干净，也更适合后续 ACT / VLA 学习。",
+          "links": [
+            {
+              "title": "ACT / LeRobot 求职 Demo",
+              "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+            }
+          ],
+          "task_id": "act-lerobot-demo",
+          "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+          "task_path": "homepage/tasks/act-lerobot-demo/"
+        }
+      ]
+    },
+    {
+      "date": "2026-04-21",
+      "cards": [
+        {
+          "badge": "Control",
+          "title": "先把真机控制、边界保护和回放安全链打稳",
+          "summary": "在引入 LeRobot 和 ACT 之前，先明确关节限位、用户软边界、回放节奏和 CAN / 串口保护，确保后续学习链路建立在安全控制底座上。",
+          "metrics": [
+            {
+              "label": "robot",
+              "value": "6DoF + 二值夹爪"
+            },
+            {
+              "label": "回放",
+              "value": "受保护"
+            },
+            {
+              "label": "目标",
+              "value": "长期复用"
+            }
+          ],
+          "outcome": "ACT 这条线从一开始就不是孤立 demo，而是建立在可长期复用的控制与采集平台之上。",
+          "links": [
+            {
+              "title": "ACT / LeRobot 求职 Demo",
+              "path": "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+            }
+          ],
+          "task_id": "act-lerobot-demo",
+          "task_title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+          "task_path": "homepage/tasks/act-lerobot-demo/"
+        }
+      ]
+    },
     {
       "date": "2026-04-19",
       "cards": [
@@ -21356,6 +22216,143 @@ window.homepageData = {
         }
       ]
     },
+    "act-dataset-overview": {
+      "id": "act-dataset-overview",
+      "type": "compare_cards",
+      "title": "LeRobot 数据与感知验收",
+      "description": "先看 ACT 这条线到底沉淀了什么样的数据底座：示范是否结构化、感知是否多视角、回放是否可复现。",
+      "cards": [
+        {
+          "badge": "Dataset",
+          "title": "LeRobotDataset v3 已落成可训练数据闭环",
+          "summary": "低维状态、动作、关节目标和多路视频已经统一落到 LeRobot v3 结构里，不再需要为训练和真机回放维护两套数据格式。",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "fps",
+              "value": "10Hz"
+            }
+          ]
+        },
+        {
+          "badge": "Perception",
+          "title": "多视角 RGB-D 观测已经对齐到策略输入侧",
+          "summary": "D405 RGB、D405 Depth 伪彩和 UVC RGB 三路画面与低维 proprioception 同步记录，足以支撑 ACT、VLA 和世界模型后续接入。",
+          "metrics": [
+            {
+              "label": "camera streams",
+              "value": "3"
+            },
+            {
+              "label": "robot",
+              "value": "6DoF + 二值夹爪"
+            },
+            {
+              "label": "dataset",
+              "value": "LeRobot v3"
+            }
+          ]
+        }
+      ]
+    },
+    "act-stack-coverage": {
+      "id": "act-stack-coverage",
+      "type": "grouped_bar",
+      "title": "ACT 具身栈当前覆盖范围",
+      "description": "这张图不讲 success rate，而是明确这条线哪些层已经真正打通，哪些层已经具备继续扩展的接口。",
+      "format": "percent",
+      "note": "这里的 1.0 表示基础链路已经实际跑通；VLA / 世界模型当前不是“从零开始”，而是建立在同一套数据、动作和回放接口之上继续扩展。",
+      "categories": [
+        "真机控制",
+        "世界坐标示教",
+        "LeRobot 数据",
+        "MuJoCo 预览",
+        "Isaac 预训练",
+        "ACT 部署",
+        "VLA 接口"
+      ],
+      "series": [
+        {
+          "name": "已打通",
+          "values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "color": "#2b766f"
+        },
+        {
+          "name": "待深化",
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "color": "#a27a32"
+        }
+      ]
+    },
+    "act-policy-interface": {
+      "id": "act-policy-interface",
+      "type": "compare_cards",
+      "title": "ACT 部署接口与 Sim2Real 桥接",
+      "description": "重点看这条线如何把策略输出、真机安全回放和后续多模态模型扩展放进同一套动作口径。",
+      "cards": [
+        {
+          "badge": "Policy IO",
+          "title": "ACT 直接预测 future action chunk 与 action.joints",
+          "summary": "策略既可以输出任务空间目标，也可以同步输出关节动作，部署时优先走安全回放链，避免在线 IK 抖动直接污染模型评估。",
+          "metrics": [
+            {
+              "label": "输入",
+              "value": "RGB-D + state"
+            },
+            {
+              "label": "输出",
+              "value": "action chunk"
+            },
+            {
+              "label": "回放",
+              "value": "joint replay"
+            }
+          ]
+        },
+        {
+          "badge": "Sim2Real",
+          "title": "Isaac warm-start 与真实 rollout 通过同一动作接口衔接",
+          "summary": "Reach / PreGrasp / GraspLift 课程预训练先提供空间移动与接触阶段先验，再用真实 LeRobot rollout 做 ACT 微调，形成可复用的 sim2real 路线。",
+          "metrics": [
+            {
+              "label": "curriculum",
+              "value": "3 阶段"
+            },
+            {
+              "label": "warm-start",
+              "value": "已打通"
+            },
+            {
+              "label": "扩展",
+              "value": "VLA / 世界模型"
+            }
+          ]
+        }
+      ]
+    },
     "lingbot-smoke-metrics": {
       "id": "lingbot-smoke-metrics",
       "type": "compare_cards",
@@ -34342,6 +35339,143 @@ window.homepageData = {
         }
       ]
     },
+    "branch-act-dataset": {
+      "id": "branch-act-dataset",
+      "type": "compare_cards",
+      "title": "ACT 数据与感知验收",
+      "description": "研究线页先看这条线到底沉淀了什么样的数据、感知和回放底座，而不是只看单个 demo 片段。",
+      "cards": [
+        {
+          "badge": "Dataset",
+          "title": "LeRobotDataset v3 已落成可训练数据闭环",
+          "summary": "低维状态、动作、关节目标和多路视频已经统一落到 LeRobot v3 结构里，不再需要为训练和真机回放维护两套数据格式。",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "fps",
+              "value": "10Hz"
+            }
+          ]
+        },
+        {
+          "badge": "Perception",
+          "title": "多视角 RGB-D 观测已经对齐到策略输入侧",
+          "summary": "D405 RGB、D405 Depth 伪彩和 UVC RGB 三路画面与低维 proprioception 同步记录，足以支撑 ACT、VLA 和世界模型后续接入。",
+          "metrics": [
+            {
+              "label": "camera streams",
+              "value": "3"
+            },
+            {
+              "label": "robot",
+              "value": "6DoF + 二值夹爪"
+            },
+            {
+              "label": "dataset",
+              "value": "LeRobot v3"
+            }
+          ]
+        }
+      ]
+    },
+    "branch-act-stack": {
+      "id": "branch-act-stack",
+      "type": "grouped_bar",
+      "title": "ACT 具身栈覆盖范围",
+      "description": "把真机控制、LeRobot 数据、仿真预训练和 ACT 部署放到同一张覆盖图里，明确这条线已经打通到哪里。",
+      "format": "percent",
+      "note": "这里的 1.0 表示基础链路已经实际跑通；VLA / 世界模型当前不是“从零开始”，而是建立在同一套数据、动作和回放接口之上继续扩展。",
+      "categories": [
+        "真机控制",
+        "世界坐标示教",
+        "LeRobot 数据",
+        "MuJoCo 预览",
+        "Isaac 预训练",
+        "ACT 部署",
+        "VLA 接口"
+      ],
+      "series": [
+        {
+          "name": "已打通",
+          "values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "color": "#2b766f"
+        },
+        {
+          "name": "待深化",
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "color": "#a27a32"
+        }
+      ]
+    },
+    "branch-act-policy": {
+      "id": "branch-act-policy",
+      "type": "compare_cards",
+      "title": "ACT 部署接口与 Sim2Real 桥接",
+      "description": "直接看策略输入输出、joint replay 安全链和 sim2real warm-start 是如何衔接的。",
+      "cards": [
+        {
+          "badge": "Policy IO",
+          "title": "ACT 直接预测 future action chunk 与 action.joints",
+          "summary": "策略既可以输出任务空间目标，也可以同步输出关节动作，部署时优先走安全回放链，避免在线 IK 抖动直接污染模型评估。",
+          "metrics": [
+            {
+              "label": "输入",
+              "value": "RGB-D + state"
+            },
+            {
+              "label": "输出",
+              "value": "action chunk"
+            },
+            {
+              "label": "回放",
+              "value": "joint replay"
+            }
+          ]
+        },
+        {
+          "badge": "Sim2Real",
+          "title": "Isaac warm-start 与真实 rollout 通过同一动作接口衔接",
+          "summary": "Reach / PreGrasp / GraspLift 课程预训练先提供空间移动与接触阶段先验，再用真实 LeRobot rollout 做 ACT 微调，形成可复用的 sim2real 路线。",
+          "metrics": [
+            {
+              "label": "curriculum",
+              "value": "3 阶段"
+            },
+            {
+              "label": "warm-start",
+              "value": "已打通"
+            },
+            {
+              "label": "扩展",
+              "value": "VLA / 世界模型"
+            }
+          ]
+        }
+      ]
+    },
     "branch-lingbot-smoke": {
       "id": "branch-lingbot-smoke",
       "type": "compare_cards",
@@ -34567,6 +35701,25 @@ window.homepageData = {
           ]
         },
         {
+          "badge": "ACT Demo",
+          "title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+          "summary": "把自研机械臂整理成 LeRobot 可直接消费的数据和回放入口",
+          "metrics": [
+            {
+              "label": "episodes",
+              "value": "5"
+            },
+            {
+              "label": "frames",
+              "value": "4379"
+            },
+            {
+              "label": "fps",
+              "value": "10Hz"
+            }
+          ]
+        },
+        {
           "badge": "世界模型线",
           "title": "LingBot-VA 世界模型后训练切入",
           "summary": "视频 latent + 动作联合后训练入口已打通",
@@ -34699,6 +35852,14 @@ window.homepageData = {
         "showcase_preview": false
       },
       {
+        "task_id": "act-lerobot-demo",
+        "kind": "video",
+        "title": "LeRobot + ACT 叠方块 Demo",
+        "caption": "展示 Dummy V2 基于 LeRobot v3 数据和 ACT 策略完成方块抓取与叠放的具身模仿学习 demo。这条线已经把采集、训练、部署和安全回放接成闭环，并为后续 VLA / 世界模型继续接入保留了统一动作接口。",
+        "path": "research_archive/tasks/act/media/demo/videos/01-LeRobot框架与ACTdemo.mp4",
+        "showcase_preview": false
+      },
+      {
         "task_id": "lingbot-va-world-model",
         "kind": "image",
         "title": "LingBot-VA 世界模型线封面",
@@ -34744,6 +35905,12 @@ window.homepageData = {
   },
   "fix_highlights": [
     {
+      "date": "2026-04-23",
+      "title": "训练完成并进入待审计状态",
+      "summary": "范围：research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md 背景：候选 run put_books_on_bookshelf_mdit_rgb_text_3token_500 已完成训练阶段，需要…",
+      "path": "docs/fixes.md"
+    },
+    {
       "date": "2026-04-21",
       "title": "同步 MDIT 成功原因与 PDIT 差异总结到稳定文档",
       "summary": "范围：docs/research_desk.md、docs/pdit-vs-mdit.md 背景：此前已经口头总结过“MDIT 主线为什么能成功”以及“它和 PDIT 的关键不同”，但稳定文档没有同步更新，导致后续阅读 research_desk 和 pdit-vs-mdit 时仍然容易读到旧口径…",
@@ -34759,12 +35926,6 @@ window.homepageData = {
       "date": "2026-04-21",
       "title": "put_books_on_bookshelf 后续任务增加数据完整性闸门，避免半传输目录误启动 · MDIT next-task bootstrap",
       "summary": "范围：scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh 背景：检查发现 data/put_books_on_bookshelf 当前只落下了 train/data/pcd_xyz，valid 尚不存在，images 和 robot_st…",
-      "path": "docs/fixes.md"
-    },
-    {
-      "date": "2026-04-21",
-      "title": "put_books_on_bookshelf 后续任务改为 10 分钟数据轮询，并显式锁定主线断点续训语义 · MDIT next-task bootstrap",
-      "summary": "范围：scripts/run_put_books_on_bookshelf_mdit_mainline_500.sh 背景：用户要求后续 put_books_on_bookshelf 任务在数据尚未落位时，每隔 10 分钟再尝试一次自动启动，同时要明确保证后续训练走的是当前最强 MDIT 主线 f…",
       "path": "docs/fixes.md"
     }
   ]

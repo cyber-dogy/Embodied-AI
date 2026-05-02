@@ -1,0 +1,6 @@
+{
+  "demo/videos/01-LeRobot框架与ACTdemo.mp4": {
+    "title": "LeRobot + ACT 叠方块 Demo",
+    "caption": "展示 Dummy V2 基于 LeRobot v3 数据和 ACT 策略完成方块抓取与叠放的具身模仿学习 demo。这条线已经把采集、训练、部署和安全回放接成闭环，并为后续 VLA / 世界模型继续接入保留了统一动作接口。"
+  }
+}

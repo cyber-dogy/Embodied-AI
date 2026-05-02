@@ -3,11 +3,12 @@
 	auto_https off
 }
 
-# 用户态 Caddy 默认监听高位端口，避免没有 sudo 时抢占 80/443。
-{$HOMEPAGE_SITE::18080} {
+# 用户态 Caddy 同时接管原来的 43429 和对外用的 18080，
+# 这样本机、局域网和依赖代理的访问路径都能统一走反向代理层。
+{$HOMEPAGE_SITE::18080}, :43429 {
 	encode zstd gzip
 
-	reverse_proxy {$HOMEPAGE_UPSTREAM:127.0.0.1:43429}
+	reverse_proxy {$HOMEPAGE_UPSTREAM:127.0.0.1:43430}
 
 	header {
 		-Server

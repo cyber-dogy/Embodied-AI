@@ -101,6 +101,31 @@
       ]
     },
     {
+      "id": "act-lerobot-demo",
+      "title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+      "summary": "把自研机械臂、世界坐标示教、LeRobot v3 数据、多视角 RGB-D 感知、Isaac 预训练和 ACT 策略部署串成一条可展示的具身模仿学习闭环。",
+      "status": "已完成",
+      "branch_ids": [
+        "act"
+      ],
+      "keywords": [
+        "act",
+        "lerobot",
+        "imitation learning",
+        "rgb-d",
+        "isaac",
+        "sim2real"
+      ],
+      "featured_paths": [
+        "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+      ],
+      "artifact_paths": {
+        "key_results": "research_archive/tasks/act/media/tables/act_key_results.csv",
+        "core_modules": "research_archive/tasks/act/media/tables/act_core_modules.csv"
+      },
+      "chart_ids": []
+    },
+    {
       "id": "lingbot-va-world-model",
       "title": "LingBot-VA 世界模型后训练切入",
       "summary": "围绕视频 latent + 动作联合建模的后训练项目，先把单任务 smoke、离线 demo 导出与单卡显存边界摸清，再往正式世界模型训练与评测推进。",
@@ -242,6 +267,22 @@
       "featured_paths": [
         "docs/mdit/research_journal.md",
         "docs/mdit/best_path.md"
+      ]
+    },
+    "act": {
+      "title": "ACT 模仿学习线",
+      "summary": "围绕 LeRobot v3 数据、世界坐标示教、多视角 RGB-D 感知和 ACT 策略部署，把自研机械臂整理成一条可展示的具身模仿学习工作线。",
+      "status": "已完成",
+      "keywords": [
+        "act",
+        "lerobot",
+        "imitation learning",
+        "rgb-d",
+        "isaac",
+        "vla"
+      ],
+      "featured_paths": [
+        "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
       ]
     },
     "lingbot-va": {

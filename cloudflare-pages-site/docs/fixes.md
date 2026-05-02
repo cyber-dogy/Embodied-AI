@@ -1337,3 +1337,12 @@ except Exception as exc:
 处理：新增独立的 `scripts/run_mdit_audit_queue_supervisor.py`。该监督器持续跟踪一组 run 的 `train_heartbeat.json`、`audit_report.json` 与进程状态：如果任意 MDIT 训练仍在运行，则先等待，避免审计与训练争抢资源；一旦训练资源空闲，就按队列顺序自动执行 `run_autoresearch_trial.py --phase audit-only --run-dir <run_dir>`，审计失败会记录日志并延迟重试。当前默认队列为 `close_door_mdit_rgb_text_3token_500 -> put_books_on_bookshelf_mdit_rgb_text_3token_500`。
 
 结果：后台新增 `tmux:mdit_audit_queue` 常驻监督器；状态文件为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_audit_queue_state__close_door_then_put_books_audits.json`，日志为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/close_door_then_put_books_audits__audit_queue.log`。当前状态显示 `close_door` 已进入待审计队列首位，但由于 `put_books_on_bookshelf` 仍在训练，审计队列处于 `wait_training`；待训练结束后会先审 `close_door`，再审当前 `put_books_on_bookshelf`。
+
+### 2026-04-23 06:24:12 +0800 · 训练完成并进入待审计状态 · put_books_on_bookshelf_mdit_rgb_text_3token_500
+范围：`research/mdit_trial_runner.py + docs/mdit/research_journal.md + docs/fixes.md`
+
+背景：候选 run `put_books_on_bookshelf_mdit_rgb_text_3token_500` 已完成训练阶段，需要保留关键产物并转入共享离线审计。
+
+处理：写出 trial record、summary、experiment_manifest，并保留关键 checkpoint；stage_epochs=500，checkpoint_every=100。
+
+结果：run_dir=/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500；训练已完成 500 个 epoch（latest_epoch=499）；最佳验证指标 best_metric=0.123，best_epoch=43；保留检查点=latest.pt, best_valid.pt, epoch_0100.pt, epoch_0200.pt, epoch_0300.pt, epoch_0400.pt, epoch_0500.pt；待离线审计=True；受控配方偏移=task_name unplug charger -> put books on bookshelf；effective_task_text unplug the charger cable -> put the books on the bookshelf；batch_size 32 -> 64；grad_accum_steps 4 -> 2；checkpoint_every_epochs 50 -> 100

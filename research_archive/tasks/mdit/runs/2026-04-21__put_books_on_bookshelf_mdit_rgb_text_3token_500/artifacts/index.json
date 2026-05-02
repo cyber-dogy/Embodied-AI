@@ -1,8 +1,65 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-21T03:33:03+08:00",
+  "generated_at": "2026-04-23T06:24:12+08:00",
   "task_id": "mdit",
   "bucket": "runs",
   "slug": "2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500",
-  "items": []
+  "items": [
+    {
+      "role": "run::best_valid.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/best_valid.pt",
+      "size_bytes": 5198869334,
+      "mtime": "2026-04-21T08:03:17+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0100.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0100.pt",
+      "size_bytes": 5198881110,
+      "mtime": "2026-04-21T13:44:33+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0200.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0200.pt",
+      "size_bytes": 5198902102,
+      "mtime": "2026-04-21T23:54:35+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0300.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0300.pt",
+      "size_bytes": 5198923158,
+      "mtime": "2026-04-22T10:03:50+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0400.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0400.pt",
+      "size_bytes": 5198944214,
+      "mtime": "2026-04-22T20:13:01+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::epochs/epoch_0500.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0500.pt",
+      "size_bytes": 5198965334,
+      "mtime": "2026-04-23T06:24:08+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    },
+    {
+      "role": "run::latest.pt",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/latest.pt",
+      "size_bytes": 5198965334,
+      "mtime": "2026-04-23T06:24:05+08:00",
+      "exists": true,
+      "note": "根据轻量归档规则仅记录索引，不复制该文件。"
+    }
+  ]
 }

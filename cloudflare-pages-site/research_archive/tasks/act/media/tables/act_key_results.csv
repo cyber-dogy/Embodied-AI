@@ -1,0 +1,7 @@
+item,value,note
+cleaned_episodes,5,清洗后可直接用于 LeRobotDataset v3 的 episode 数
+frames,4379,多路视频与低维状态同步后的总帧数
+recording_fps,10Hz,示教录制与回放统一按 10Hz 组织
+camera_streams,3,D405 RGB + D405 Depth 伪彩 + UVC RGB
+robot_setup,6DoF + binary gripper,自研机械臂与二值夹爪动作接口
+sim_curriculum,Reach / PreGrasp / GraspLift,Isaac Lab PPO 预训练三阶段

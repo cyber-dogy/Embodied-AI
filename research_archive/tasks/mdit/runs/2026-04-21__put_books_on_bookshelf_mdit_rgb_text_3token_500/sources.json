@@ -1,10 +1,24 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-04-21T03:33:03+08:00",
+  "generated_at": "2026-04-23T06:24:12+08:00",
   "task_id": "mdit",
   "bucket": "runs",
   "slug": "2026-04-21__put_books_on_bookshelf_mdit_rgb_text_3token_500",
   "items": [
+    {
+      "role": "trial_record",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/put_books_on_bookshelf_mdit_rgb_text_3token_500.json",
+      "archive_path": "metrics/trial_record.json",
+      "mode": "copied",
+      "size_bytes": 11729
+    },
+    {
+      "role": "summary",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/summary.json",
+      "archive_path": "metrics/summary.json",
+      "mode": "copied",
+      "size_bytes": 7934
+    },
     {
       "role": "experiment_manifest",
       "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/experiment_manifest.json",
@@ -20,18 +34,25 @@
       "size_bytes": 1387
     },
     {
+      "role": "config",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/config.json",
+      "archive_path": "metrics/config.json",
+      "mode": "copied",
+      "size_bytes": 4125
+    },
+    {
       "role": "note::research_desk",
       "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/research_desk.md",
       "archive_path": "notes/research_desk.md",
       "mode": "copied",
-      "size_bytes": 30391
+      "size_bytes": 32863
     },
     {
       "role": "note::fixes",
       "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/docs/fixes.md",
       "archive_path": "notes/fixes.md",
       "mode": "copied",
-      "size_bytes": 100464
+      "size_bytes": 103353
     },
     {
       "role": "note::2026-04-16-mdit-execution-manual",
@@ -60,6 +81,13 @@
       "archive_path": "notes/research_journal.md",
       "mode": "copied",
       "size_bytes": 19629
+    },
+    {
+      "role": "run::train_heartbeat.json",
+      "source_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/train_heartbeat.json",
+      "archive_path": "metrics/train_heartbeat.json",
+      "mode": "copied",
+      "size_bytes": 561
     }
   ]
 }

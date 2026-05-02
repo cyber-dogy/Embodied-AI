@@ -18,6 +18,9 @@ research_archive/
   task_index.json
   migration_report.json
   tasks/
+    act/
+      media/
+      notes/
     pdit/
       media/
       runs/

@@ -1,0 +1,348 @@
+{
+  "line": "mdit",
+  "phase": "train_only",
+  "experiment_name": "put_books_on_bookshelf_mainline_500",
+  "description": "Put books on bookshelf MDIT mainline 500 epochs",
+  "stage_epochs": 500,
+  "eval_episodes": 20,
+  "trial_score": null,
+  "pending_offline_audit": true,
+  "offline_audit_command": "/home/gjw/.conda/envs/mdit_env/bin/python /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_autoresearch_trial.py --line mdit --phase audit-only --run-dir /home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500",
+  "success_100": null,
+  "success_300": null,
+  "success_500": null,
+  "collapse_detected": false,
+  "collapse_reasons": [],
+  "best_ckpt_path": null,
+  "best_success_rate": null,
+  "best_success_epoch": null,
+  "best_valid_ckpt_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/best_valid.pt",
+  "kept_ckpt_paths": [
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/latest.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/best_valid.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0100.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0200.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0300.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0400.pt",
+    "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/epochs/epoch_0500.pt"
+  ],
+  "run_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500",
+  "experiment_manifest_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/experiment_manifest.json",
+  "recipe_drift": true,
+  "recipe_drift_details": [
+    {
+      "key": "task_name",
+      "base_value": "unplug charger",
+      "resolved_value": "put books on bookshelf"
+    },
+    {
+      "key": "effective_task_text",
+      "base_value": "unplug the charger cable",
+      "resolved_value": "put the books on the bookshelf"
+    },
+    {
+      "key": "batch_size",
+      "base_value": 32,
+      "resolved_value": 64
+    },
+    {
+      "key": "grad_accum_steps",
+      "base_value": 4,
+      "resolved_value": 2
+    },
+    {
+      "key": "checkpoint_every_epochs",
+      "base_value": 50,
+      "resolved_value": 100
+    },
+    {
+      "key": "train_epochs",
+      "base_value": 100,
+      "resolved_value": 500
+    }
+  ],
+  "audit_report_path": null,
+  "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/summary.json",
+  "error_type": null,
+  "train_summary": {
+    "run_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
+    "strategy": "fm",
+    "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500",
+    "wandb_run_id": "ro8i05jk",
+    "wandb_run_url": "https://wandb.ai/cyber-dogy/autodl-unplug-charger-mdit/runs/ro8i05jk",
+    "config": {
+      "run_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
+      "task_name": "put_books_on_bookshelf",
+      "obs_mode": "rgb",
+      "encoder_name": "clip_rgb_text_token",
+      "backbone_name": "dit",
+      "fm_variant": "standard",
+      "normalization_profile": "legacy",
+      "research_lane": "lane_a_mainline",
+      "train_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/put_books_on_bookshelf/train",
+      "valid_data_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/data/put_books_on_bookshelf/valid",
+      "seed": 1234,
+      "device": "cuda",
+      "resume_from_latest": false,
+      "n_obs_steps": 3,
+      "n_pred_steps": 32,
+      "subs_factor": 3,
+      "n_points": 2048,
+      "use_pc_color": false,
+      "obs_features_dim": 256,
+      "y_dim": 10,
+      "camera_names": [
+        "right_shoulder",
+        "left_shoulder",
+        "overhead",
+        "front",
+        "wrist"
+      ],
+      "text_source": "task_template",
+      "task_text_override": null,
+      "vision_backbone_name": "vit_base_patch16_clip_224.openai",
+      "vision_pretrained": true,
+      "vision_image_size": [
+        224,
+        224
+      ],
+      "vision_train_mode": "last_block",
+      "vision_num_unfreeze_blocks": 1,
+      "text_model_name": "openai/clip-vit-base-patch16",
+      "text_projection_dim": 256,
+      "token_fusion_mode": "3_token",
+      "vision_lr_multiplier": 1.0,
+      "vision_encode_chunk_size": 0,
+      "activation_checkpointing": false,
+      "hidden_dim": 512,
+      "time_dim": 256,
+      "num_blocks": 6,
+      "nhead": 8,
+      "dim_feedforward": 2048,
+      "dropout": 0.1,
+      "activation": "gelu",
+      "debug_finiteness": true,
+      "final_layer_zero_init": false,
+      "decoder_condition_mode": "mean_pool",
+      "use_rope": false,
+      "rope_base": 10000.0,
+      "use_positional_encoding": true,
+      "batch_size": 64,
+      "grad_accum_steps": 2,
+      "num_workers": 4,
+      "train_epochs": 500,
+      "train_use_amp": false,
+      "train_amp_dtype": "bfloat16",
+      "grad_clip_norm": 1.0,
+      "empty_cuda_cache": true,
+      "auto_batch_fallback": true,
+      "batch_fallback_tiers": [
+        [
+          64,
+          2
+        ],
+        [
+          32,
+          4
+        ],
+        [
+          16,
+          8
+        ],
+        [
+          8,
+          16
+        ]
+      ],
+      "learning_rate": 0.0001,
+      "betas": [
+        0.9,
+        0.95
+      ],
+      "eps": 1e-08,
+      "transformer_weight_decay": 0.001,
+      "obs_encoder_weight_decay": 1e-06,
+      "lr_scheduler_name": "cosine",
+      "lr_warmup_steps": 1000,
+      "ema_enable": true,
+      "ema_decay": 0.9993,
+      "val_every_epochs": 1,
+      "success_selection_every_epochs": 0,
+      "checkpoint_every_epochs": 100,
+      "sample_every_epochs": 5,
+      "success_selection_episodes": 0,
+      "success_max_steps": 200,
+      "stop_on_target_success": false,
+      "target_success_rate": null,
+      "standard_eval_episodes": 0,
+      "eval_step_heartbeat_every": 50,
+      "smooth_actions": false,
+      "command_mode": "first",
+      "horizon_index": 0,
+      "average_first_n": 1,
+      "position_alpha": 0.35,
+      "rotation_alpha": 0.25,
+      "max_position_step": 0.03,
+      "gripper_open_threshold": 0.6,
+      "gripper_close_threshold": 0.4,
+      "norm_pcd_center": [
+        0.4,
+        0.0,
+        1.4
+      ],
+      "robot_state_mean": null,
+      "robot_state_std": null,
+      "augment_data": false,
+      "augment_translation_sigma": 0.02,
+      "augment_rotation_sigma": 0.1,
+      "loss_type": "l2",
+      "fm_num_k_infer": 10,
+      "fm_time_conditioning": true,
+      "fm_noise_type": "gaussian",
+      "fm_noise_scale": 1.0,
+      "fm_flow_schedule": "exp",
+      "fm_exp_scale": 4.0,
+      "fm_snr_sampler": "uniform",
+      "fm_loss_weights": null,
+      "fm_sigma_min": 0.0,
+      "fm_num_integration_steps": 100,
+      "fm_integration_method": "euler",
+      "fm_timestep_sampling_strategy": "uniform",
+      "fm_timestep_beta_alpha": 1.5,
+      "fm_timestep_beta_beta": 1.0,
+      "fm_timestep_beta_s": 0.999,
+      "state_min": null,
+      "state_max": null,
+      "action_min": null,
+      "action_max": null,
+      "diffusion_train_steps": 100,
+      "diffusion_eval_steps": 100,
+      "diffusion_num_infer_steps": 100,
+      "diffusion_prediction_type": "epsilon",
+      "diffusion_noise_scale": 1.0,
+      "wandb_enable": true,
+      "wandb_project": "autodl-unplug-charger-mdit",
+      "wandb_entity": "cyber-dogy",
+      "wandb_mode": "online",
+      "wandb_resume": false,
+      "ckpt_root": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt",
+      "print_every": 50,
+      "train_heartbeat_every_steps": 50
+    },
+    "best_metric": 0.12336427586213235,
+    "best_epoch": 43,
+    "best_success_rate": null,
+    "best_success_epoch": null,
+    "latest_epoch": 499,
+    "stopped_early": false,
+    "stop_reason": null,
+    "train_loss_last": 0.009905907737377744,
+    "valid_loss_last": 0.5152100483406215,
+    "epoch_summaries": [
+      {
+        "epoch": 495,
+        "train": {
+          "loss_total": 0.00937912098351472,
+          "num_batches": 312,
+          "lr": 1.6203320596697156e-08
+        },
+        "valid": {
+          "loss_total": 0.4544560370906707,
+          "loss_xyz": 0.11010019488692764,
+          "loss_rot6d": 0.2791230978384133,
+          "loss_grip": 0.06523275388298638,
+          "mse_xyz": 0.002287064643291336,
+          "mse_rot6d": 0.009609682197239431,
+          "mse_grip": 0.010942866505881133,
+          "num_batches": 31
+        },
+        "sample": null
+      },
+      {
+        "epoch": 496,
+        "train": {
+          "loss_total": 0.009050652973924,
+          "num_batches": 312,
+          "lr": 9.114583222713525e-09
+        },
+        "valid": {
+          "loss_total": 0.48923132499499666,
+          "loss_xyz": 0.14531634713432962,
+          "loss_rot6d": 0.27660178936897745,
+          "loss_grip": 0.06731318960350284,
+          "mse_xyz": 0.0022905967221783113,
+          "mse_rot6d": 0.00960332391907521,
+          "mse_grip": 0.011054659243700766,
+          "num_batches": 31
+        },
+        "sample": null
+      },
+      {
+        "epoch": 497,
+        "train": {
+          "loss_total": 0.01020961009243575,
+          "num_batches": 312,
+          "lr": 4.050994254717333e-09
+        },
+        "valid": {
+          "loss_total": 0.4807066363733142,
+          "loss_xyz": 0.128012198654394,
+          "loss_rot6d": 0.28918768656289867,
+          "loss_grip": 0.06350674441003526,
+          "mse_xyz": 0.0022898211792644653,
+          "mse_rot6d": 0.009613132513139487,
+          "mse_grip": 0.011013470206842799,
+          "num_batches": 31
+        },
+        "sample": null
+      },
+      {
+        "epoch": 498,
+        "train": {
+          "loss_total": 0.009200386579323094,
+          "num_batches": 312,
+          "lr": 1.0127588204844607e-09
+        },
+        "valid": {
+          "loss_total": 0.56630411702058,
+          "loss_xyz": 0.13432932786282994,
+          "loss_rot6d": 0.3591395966828831,
+          "loss_grip": 0.07283519107389316,
+          "mse_xyz": 0.0022880478699657796,
+          "mse_rot6d": 0.009604129827141972,
+          "mse_grip": 0.010987024695265381,
+          "num_batches": 31
+        },
+        "sample": null
+      },
+      {
+        "epoch": 499,
+        "train": {
+          "loss_total": 0.009905907737377744,
+          "num_batches": 312,
+          "lr": 0.0
+        },
+        "valid": {
+          "loss_total": 0.5152100483406215,
+          "loss_xyz": 0.15251277907255797,
+          "loss_rot6d": 0.29463844656223254,
+          "loss_grip": 0.06805882482430822,
+          "mse_xyz": 0.002297927266608308,
+          "mse_rot6d": 0.009615332487643877,
+          "mse_grip": 0.010987582999555207,
+          "num_batches": 31
+        },
+        "sample": {
+          "train_action_mse_error": 1.5588244423270226e-05
+        }
+      }
+    ],
+    "final_standard_eval": null,
+    "wall_clock_hours": 50.84706984779112,
+    "dataset_sizes": {
+      "train": 19908,
+      "valid": 1983
+    }
+  }
+}

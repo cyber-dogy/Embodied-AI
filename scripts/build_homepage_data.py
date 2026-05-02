@@ -62,6 +62,7 @@ TASK_TO_PRIMARY_RESEARCH_DESK_LINE = {
     "infra-audit": "基础设施",
 }
 TASK_TO_ARCHIVE_TASK = {
+    "act-lerobot-demo": "act",
     "pdit-anchor": "pdit",
     "mdit-mainline": "mdit",
     "lingbot-va-world-model": "lingbot",
@@ -69,6 +70,7 @@ TASK_TO_ARCHIVE_TASK = {
     "infra-audit": "infra",
 }
 TASK_TO_ARCHIVE_MEDIA_SOURCE = {
+    "act-lerobot-demo": {"task_id": "act"},
     "pdit-anchor": {"task_id": "pdit"},
     "mdit-mainline": {"task_id": "mdit"},
     "lingbot-va-world-model": {"task_id": "lingbot"},
@@ -77,6 +79,7 @@ TASK_TO_ARCHIVE_MEDIA_SOURCE = {
     "dummy-sim2real-platform": {"task_id": "infra", "subdir": "dummy-sim2real-platform"},
 }
 BRANCH_TO_ARCHIVE_TASK = {
+    "act": "act",
     "pdit": "pdit",
     "mdit": "mdit",
     "lingbot-va": "lingbot",
@@ -1238,6 +1241,12 @@ def build_branch_card_copy(branch_id: str, branch_title: str, related_tasks: lis
             "summary": "围绕 RGB+文本主线、对照出清和 100→500 续训接管，收束成同一条可审计的多模态主线。",
             "result": "当前成果：best success 已稳定在 0.75@500，共享审计已越过早期 0.55@100 锚点。",
         }
+    if branch_id == "act":
+        return {
+            "title": branch_title,
+            "summary": "围绕 LeRobot v3 数据、世界坐标示教和 ACT 策略部署，把自研机械臂整理成可展示的具身模仿学习闭环。",
+            "result": "当前成果：5 个 cleaned episodes、4379 帧多视角数据和方块叠放 ACT demo 已打通。",
+        }
     if branch_id == "lingbot-va":
         return {
             "title": branch_title,
@@ -2044,6 +2053,323 @@ def build_mdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_item
     }
 
 
+def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
+    doc_path = ROOT / task_cfg["featured_paths"][0]
+    key_results_table_path = ROOT / task_cfg["artifact_paths"]["key_results"]
+    core_modules_table_path = ROOT / task_cfg["artifact_paths"]["core_modules"]
+
+    doc_text = read_text(doc_path)
+    sections = parse_markdown_sections(doc_text)
+
+    cleaned_episodes = 5
+    cleaned_frames = 4379
+    recording_fps = "10Hz"
+    camera_streams = 3
+    robot_setup = "6DoF + 二值夹爪"
+
+    charts["act-dataset-overview"] = build_compare_cards(
+        "act-dataset-overview",
+        title="LeRobot 数据与感知验收",
+        description="先看 ACT 这条线到底沉淀了什么样的数据底座：示范是否结构化、感知是否多视角、回放是否可复现。",
+        cards=[
+            {
+                "badge": "Dataset",
+                "title": "LeRobotDataset v3 已落成可训练数据闭环",
+                "summary": "低维状态、动作、关节目标和多路视频已经统一落到 LeRobot v3 结构里，不再需要为训练和真机回放维护两套数据格式。",
+                "metrics": [
+                    make_metric("episodes", cleaned_episodes),
+                    make_metric("frames", cleaned_frames),
+                    make_metric("fps", recording_fps),
+                ],
+            },
+            {
+                "badge": "Perception",
+                "title": "多视角 RGB-D 观测已经对齐到策略输入侧",
+                "summary": "D405 RGB、D405 Depth 伪彩和 UVC RGB 三路画面与低维 proprioception 同步记录，足以支撑 ACT、VLA 和世界模型后续接入。",
+                "metrics": [
+                    make_metric("camera streams", camera_streams),
+                    make_metric("robot", robot_setup),
+                    make_metric("dataset", "LeRobot v3"),
+                ],
+            },
+        ],
+    )
+    charts["act-stack-coverage"] = build_grouped_bar_chart(
+        "act-stack-coverage",
+        title="ACT 具身栈当前覆盖范围",
+        description="这张图不讲 success rate，而是明确这条线哪些层已经真正打通，哪些层已经具备继续扩展的接口。",
+        categories=["真机控制", "世界坐标示教", "LeRobot 数据", "MuJoCo 预览", "Isaac 预训练", "ACT 部署", "VLA 接口"],
+        series=[
+            {"name": "已打通", "values": [1, 1, 1, 1, 1, 1, 1], "color": LINE_COLORS["teal"]},
+            {"name": "待深化", "values": [0, 0, 0, 0, 0, 0, 1], "color": LINE_COLORS["gold"]},
+        ],
+        fmt="percent",
+        note="这里的 1.0 表示基础链路已经实际跑通；VLA / 世界模型当前不是“从零开始”，而是建立在同一套数据、动作和回放接口之上继续扩展。",
+    )
+    charts["act-policy-interface"] = build_compare_cards(
+        "act-policy-interface",
+        title="ACT 部署接口与 Sim2Real 桥接",
+        description="重点看这条线如何把策略输出、真机安全回放和后续多模态模型扩展放进同一套动作口径。",
+        cards=[
+            {
+                "badge": "Policy IO",
+                "title": "ACT 直接预测 future action chunk 与 action.joints",
+                "summary": "策略既可以输出任务空间目标，也可以同步输出关节动作，部署时优先走安全回放链，避免在线 IK 抖动直接污染模型评估。",
+                "metrics": [
+                    make_metric("输入", "RGB-D + state"),
+                    make_metric("输出", "action chunk"),
+                    make_metric("回放", "joint replay"),
+                ],
+            },
+            {
+                "badge": "Sim2Real",
+                "title": "Isaac warm-start 与真实 rollout 通过同一动作接口衔接",
+                "summary": "Reach / PreGrasp / GraspLift 课程预训练先提供空间移动与接触阶段先验，再用真实 LeRobot rollout 做 ACT 微调，形成可复用的 sim2real 路线。",
+                "metrics": [
+                    make_metric("curriculum", "3 阶段"),
+                    make_metric("warm-start", "已打通"),
+                    make_metric("扩展", "VLA / 世界模型"),
+                ],
+            },
+        ],
+    )
+
+    summary_cards = [
+        {
+            "eyebrow": "LeRobot",
+            "title": "把自研机械臂整理成 LeRobot 可直接消费的数据和回放入口",
+            "body": "这条线真正完成的不是单个 demo 视频，而是把世界坐标示教、多视角感知、关节安全回放和 LeRobot v3 结构统一成同一套具身数据接口。",
+            "metrics": [
+                make_metric("episodes", cleaned_episodes),
+                make_metric("frames", cleaned_frames),
+                make_metric("camera", camera_streams),
+            ],
+        },
+        {
+            "eyebrow": "ACT",
+            "title": "ACT 已经在 Dummy V2 上完成可展示的方块操作部署",
+            "body": "策略侧不再停留在离线训练说明，而是能够接到真实机械臂的数据、通过安全链下发动作，并完成方块抓取与叠放 demo。",
+            "metrics": [
+                make_metric("policy", "ACT"),
+                make_metric("task", "抓取 / 叠放"),
+                make_metric("deploy", "已完成"),
+            ],
+        },
+    ]
+
+    core_tables = [
+        {
+            "title": "ACT 核心能力模块",
+            "columns": ["模块", "当前做法", "直接意义", "后续扩展"],
+            "rows": [
+                [
+                    "世界坐标示教",
+                    "操作员先在任务空间给出 TCP 路线，再经 posture-biased IK、安全边界和连续性约束生成动作。",
+                    "示范数据直接对应“机器人该怎么完成任务”，而不是低层关节抖动。",
+                    "可自然接语言子任务、VLA 指令和更长 horizon 任务分解。",
+                ],
+                [
+                    "LeRobot v3 数据层",
+                    "低维状态写 Parquet，多相机画面写 MP4，并保留真机安全回放索引。",
+                    "训练、审计和真机 replay 统一到同一份数据资产里。",
+                    "后续可直接接 ACT、Diffusion Policy、VLA 或世界模型。",
+                ],
+                [
+                    "多视角 RGB-D 感知",
+                    "D405 RGB、D405 Depth 伪彩和 UVC RGB 与 proprioception 同步记录。",
+                    "策略同时拿到近景几何线索和外部全局视角，监督信号更完整。",
+                    "可继续扩展语言条件或多任务视觉提示。",
+                ],
+                [
+                    "双动作接口",
+                    "同时保存任务空间 action 和 action.joints，部署优先走 joint replay 安全链。",
+                    "兼顾策略学习表达能力和真机执行稳定性。",
+                    "后续可在任务空间接口上继续接在线规划或 VLA 输出。",
+                ],
+                [
+                    "Sim2Real warm-start",
+                    "Isaac Lab 先做 Reach / PreGrasp / GraspLift 课程预训练，再用真实 rollout 微调 ACT。",
+                    "把稀缺真机数据留给接触与策略细化，而不是从零学基础运动。",
+                    "可继续扩展到更多桌面 manipulation 任务和 sim2real 对齐研究。",
+                ],
+            ],
+            "note": "这张表强调的是 ACT 线已经沉淀下来的技术资产，而不是单次 demo 的叙事包装。",
+        },
+        {
+            "title": "ACT 数据与系统验收",
+            "columns": ["条目", "当前结果", "展示价值"],
+            "rows": [
+                ["LeRobotDataset", "5 个 cleaned episodes / 4379 帧 / 10Hz", "证明数据已经过清洗，能直接进入训练与回放。"],
+                ["视觉观测", "3 路输入：D405 RGB + D405 Depth + UVC RGB", "支撑 ACT 当前部署，也为 VLA / 世界模型保留多模态入口。"],
+                ["机器人接口", "6DoF 机械臂 + 二值夹爪 + joint replay", "把策略输出落到真实执行时仍能保持安全和稳定。"],
+                ["仿真预训练", "Isaac PPO 三阶段课程：Reach / PreGrasp / GraspLift", "说明这条线不仅能采数据，也能往 sim2real 预训练推进。"],
+                ["部署结果", "ACT 叠方块 demo 已打通", "形成可展示的具身模仿学习闭环，而不只是离线训练记录。"],
+            ],
+            "note": "ACT 这条线当前最适合展示的是“系统闭环已经成立”，因此页面优先放数据、接口和部署验收，而不是堆训练日志。",
+        },
+    ]
+
+    timeline_groups = [
+        {
+            "date": "2026-05-01",
+            "cards": [
+                {
+                    "badge": "Demo",
+                    "title": "LeRobot 采集、ACT 部署与 VLA 扩展接口在同一天收束成可展示闭环",
+                    "summary": "三路相机、LeRobot v3 数据集、真实回放索引和 ACT demo 在这一天被整理成统一成果线，项目从“控制平台”正式推进到“具身模仿学习 demo”。",
+                    "metrics": [
+                        make_metric("episodes", cleaned_episodes),
+                        make_metric("frames", cleaned_frames),
+                        make_metric("demo", "已打通"),
+                    ],
+                    "outcome": "ACT 线已经具备作品集展示价值，后续可以在同一数据和动作接口上继续挂 VLA / 世界模型研究。",
+                    "links": [
+                        card_link("ACT / LeRobot 求职 Demo", doc_path),
+                        card_link("关键结果表", key_results_table_path),
+                    ],
+                }
+            ],
+        },
+        {
+            "date": "2026-04-29",
+            "cards": [
+                {
+                    "badge": "RL Warm-start",
+                    "title": "Isaac Lab PPO 课程预训练把接触前后动作拆成三阶段",
+                    "summary": "Reach、PreGrasp、GraspLift 被拆成统一动作接口下的三阶段课程，用并行环境把空间移动与抓取抬升的基础先验先学出来。",
+                    "metrics": [
+                        make_metric("curriculum", "3 阶段"),
+                        make_metric("parallel envs", "128"),
+                        make_metric("action dim", "7"),
+                    ],
+                    "outcome": "真实 ACT 训练不必从零学习基础运动，sim2real 桥接路线开始成立。",
+                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                }
+            ],
+        },
+        {
+            "date": "2026-04-27",
+            "cards": [
+                {
+                    "badge": "Hardware",
+                    "title": "夹爪固件、电流阈值和受保护开合逻辑完成定版",
+                    "summary": "线轨夹爪的静摩擦、电流阈值和 disable 保护被真正落到控制链里，夹爪不再被当成普通关节直接暴力驱动。",
+                    "metrics": [
+                        make_metric("夹爪控制", "独立命令"),
+                        make_metric("保护", "open / close / disable"),
+                        make_metric("静摩擦", "约 0.7A"),
+                    ],
+                    "outcome": "真实回放和策略部署终于有了稳定、可重复的末端执行条件。",
+                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                }
+            ],
+        },
+        {
+            "date": "2026-04-24",
+            "cards": [
+                {
+                    "badge": "Teleoperation",
+                    "title": "世界坐标 Jog、MuJoCo 同步和 posture-biased IK 串成同一条示教链路",
+                    "summary": "操作员输入先落到 TCP，再经 IK、连续性约束和安全边界转成可记录动作，示教从关节拖动升级成任务空间路线采集。",
+                    "metrics": [
+                        make_metric("动作口径", "TCP → joints"),
+                        make_metric("预览", "MuJoCo"),
+                        make_metric("目标", "任务空间示教"),
+                    ],
+                    "outcome": "示范数据语义更干净，也更适合后续 ACT / VLA 学习。",
+                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                }
+            ],
+        },
+        {
+            "date": "2026-04-21",
+            "cards": [
+                {
+                    "badge": "Control",
+                    "title": "先把真机控制、边界保护和回放安全链打稳",
+                    "summary": "在引入 LeRobot 和 ACT 之前，先明确关节限位、用户软边界、回放节奏和 CAN / 串口保护，确保后续学习链路建立在安全控制底座上。",
+                    "metrics": [
+                        make_metric("robot", robot_setup),
+                        make_metric("回放", "受保护"),
+                        make_metric("目标", "长期复用"),
+                    ],
+                    "outcome": "ACT 这条线从一开始就不是孤立 demo，而是建立在可长期复用的控制与采集平台之上。",
+                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                }
+            ],
+        },
+    ]
+
+    findings = [
+        {
+            "title": "ACT 线真正完成的是“数据-策略-回放”闭环，而不是单个视频演示",
+            "body": "世界坐标示教、多视角 RGB-D、LeRobot v3、Isaac 预训练和 ACT 部署已经共用同一套动作与数据口径，这比单独展示一次 rollout 更有长期价值。",
+        },
+        {
+            "title": "世界坐标示教让示范数据从“关节痕迹”升级成“任务空间监督”",
+            "body": "人类输入先定义任务空间目标，再经 IK 和安全过滤转成动作，这让后续模仿学习更直接对齐任务意图，也更适合继续接语言条件和子任务分解。",
+        },
+        {
+            "title": "这条线天然贴近 VLA / 世界模型，而不是只能停在低层行为克隆",
+            "body": "当前数据已经同时具备多视角图像、低维状态、动作序列和真实 replay 接口，后续可以在同一底座上继续接入语言、视频 latent 和长 horizon 预测模型。",
+        },
+    ]
+
+    evidence_links = [
+        make_link("ACT / LeRobot 求职 Demo 说明", doc_path, first_sentence(section_body(sections, "1. 项目概述"), limit=120)),
+        make_link("ACT 关键结果表", key_results_table_path, "把 cleaned episodes、frames、相机流和预训练阶段整理成结构化结果表。"),
+        make_link("ACT 核心模块表", core_modules_table_path, "把世界坐标示教、LeRobot 数据层、ACT 输出接口和 sim2real warm-start 压成统一模块表。"),
+    ]
+
+    home_entries = [
+        {
+            "date": "2026-05-01",
+            "group": "done",
+            "task_id": task_cfg["id"],
+            "branch_ids": task_cfg["branch_ids"],
+            "badge": "ACT Demo",
+            "title": "LeRobot + ACT 具身模仿学习闭环完成落地",
+            "summary": "把自研 Dummy V2 机械臂、世界坐标示教、LeRobot v3、多视角 RGB-D、Isaac warm-start 和 ACT 部署串成了一条可展示的具身模仿学习工作线。",
+            "metrics": [
+                make_metric("episodes", cleaned_episodes),
+                make_metric("frames", cleaned_frames),
+                make_metric("demo", "已打通"),
+            ],
+            "meta": "已完成 · ACT 模仿学习线",
+            "path": f"homepage/tasks/{task_cfg['id']}/",
+        }
+    ]
+
+    return {
+        "id": task_cfg["id"],
+        "title": task_cfg["title"],
+        "summary": task_cfg["summary"],
+        "core_summary": "这条线的重点不是再解释一次控制平台，而是突出自研机械臂如何被整理成 LeRobot + ACT 可直接消费的具身模仿学习闭环。",
+        "status": task_cfg["status"],
+        "status_group": status_group(task_cfg["status"]),
+        "page_path": f"homepage/tasks/{task_cfg['id']}/",
+        "branch_ids": task_cfg["branch_ids"],
+        "latest_update": "2026-05-01",
+        "hero_metrics": [
+            make_metric("episodes", cleaned_episodes),
+            make_metric("frames", cleaned_frames),
+            make_metric("fps", recording_fps),
+        ],
+        "report_intro": "ACT 这条线现在已经从“自研机械臂能不能采到数据”推进到“LeRobot 数据、Isaac warm-start 和 ACT 部署能否组成可展示的具身模仿学习闭环”。页面重点是把这条工作线里真正可复用的技术资产讲清楚。",
+        "summary_cards": summary_cards,
+        "core_tables": core_tables,
+        "timeline_groups": timeline_groups,
+        "findings": findings,
+        "evidence_links": evidence_links,
+        "chart_ids": ["act-dataset-overview", "act-stack-coverage", "act-policy-interface"],
+        "media_items": media_items,
+        "home_entries": home_entries,
+        "prefer_home_entries": True,
+        "task_badge": "ACT Demo",
+        "docs": [repo_rel(path) for path in task_cfg["featured_paths"]],
+    }
+
+
 def build_lingbot_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
     guide_path = ROOT / task_cfg["featured_paths"][0]
     desk_path = ROOT / task_cfg["featured_paths"][1]
@@ -2796,6 +3122,8 @@ def build_task(task_cfg: dict[str, Any], charts: dict[str, Any], research_desk_e
         task = build_pdit_task(task_cfg, charts, media_items)
     elif task_cfg["id"] == "mdit-mainline":
         task = build_mdit_task(task_cfg, charts, media_items)
+    elif task_cfg["id"] == "act-lerobot-demo":
+        task = build_act_task(task_cfg, charts, media_items)
     elif task_cfg["id"] == "lingbot-va-world-model":
         task = build_lingbot_task(task_cfg, charts, media_items)
     elif task_cfg["id"] == "lelan-pipeline":
@@ -2968,6 +3296,33 @@ def build_branch_dashboard_charts(
                 fmt="percent",
                 note="这张图表达的是平台搭建完成度，而不是训练结果。",
             ),
+        )
+        return branch_chart_ids
+
+    if branch_id == "act":
+        register(
+            "branch-act-dataset",
+            {
+                **copy.deepcopy(charts.get("act-dataset-overview")),
+                "title": "ACT 数据与感知验收",
+                "description": "研究线页先看这条线到底沉淀了什么样的数据、感知和回放底座，而不是只看单个 demo 片段。",
+            } if charts.get("act-dataset-overview") else None,
+        )
+        register(
+            "branch-act-stack",
+            {
+                **copy.deepcopy(charts.get("act-stack-coverage")),
+                "title": "ACT 具身栈覆盖范围",
+                "description": "把真机控制、LeRobot 数据、仿真预训练和 ACT 部署放到同一张覆盖图里，明确这条线已经打通到哪里。",
+            } if charts.get("act-stack-coverage") else None,
+        )
+        register(
+            "branch-act-policy",
+            {
+                **copy.deepcopy(charts.get("act-policy-interface")),
+                "title": "ACT 部署接口与 Sim2Real 桥接",
+                "description": "直接看策略输入输出、joint replay 安全链和 sim2real warm-start 是如何衔接的。",
+            } if charts.get("act-policy-interface") else None,
         )
         return branch_chart_ids
 

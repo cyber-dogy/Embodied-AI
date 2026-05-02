@@ -94,3 +94,4 @@ lane_b_faithful_100	768929b7d4ea0c6217cf2bf4f7bd6420b87ccde8	-1.000000	train_err
 lane_c_mtdp_strict_100	5dc84177ab1921784b31565af9738c047a645beb		trained_pending_audit	Lane C strict MTDP challenger: global conditioning + RoPE + beta timestep sampling
 lane_c_mtdp_strict_100	5dc84177ab1921784b31565af9738c047a645beb	-1.000000	collapsed	Lane C strict MTDP challenger: global conditioning + RoPE + beta timestep sampling
 lane_a_mainline_500_resume	66dbc7dc37f07655bd0601cf24f10d4c079d6835	-1.000000	collapsed	Fallback to incumbent best RGB+text mainline by resuming epoch_0100 toward 500 epochs
+put_books_on_bookshelf_mainline_500	c5b6c7736741e30af3d4659ececfcee6a32b9f0b		trained_pending_audit	Put books on bookshelf MDIT mainline 500 epochs

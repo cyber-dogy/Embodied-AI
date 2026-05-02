@@ -330,3 +330,13 @@
   - later restarts: resume the same new run via the new checkpoint trail.
 - Launch entry: `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/scripts/run_unplug_mdit_best500_resume.sh`
 - Current status: prepared on disk, not launched yet because we did not preempt the currently active training workload.
+## 2026-04-23T06:24:12+08:00 · train_only · put_books_on_bookshelf_mdit_rgb_text_3token_500
+
+- Title: MDIT Train Note · put_books_on_bookshelf_mdit_rgb_text_3token_500
+- Run: `put_books_on_bookshelf_mdit_rgb_text_3token_500`
+- Phase: `train_only`
+- Phenomenon: trial_score=None | best_success_rate=None | collapse=False
+- Reasons: none
+- Result: best_success_rate=None trial_score=None
+- Audit report: none
+- Contract issues: none

@@ -26,6 +26,13 @@
 
 ## 记录
 
+### 2026-04-21 08:45:00 +0800 · 同步 MDIT 成功原因与 PDIT 差异总结到稳定文档
+
+- `范围`：`docs/research_desk.md`、`docs/pdit-vs-mdit.md`
+- `背景`：此前已经口头总结过“MDIT 主线为什么能成功”以及“它和 PDIT 的关键不同”，但稳定文档没有同步更新，导致后续阅读 `research_desk` 和 `pdit-vs-mdit` 时仍然容易读到旧口径，尤其会把当前成功的 MDIT 误解成 faithful `MTDP` 复现线。
+- `处理`：在 `research_desk.md` 的 `MDIT 主线` 段新增“为什么能成功”和“与 PDIT 的关键不同”两组压缩技术总结；同时重写 `pdit-vs-mdit.md`，明确当前成功的 MDIT 是“保留 PDIT 骨干、控制语义和共享审计链，只把输入换成 `5RGB + text + robot_state`”的主线，而不是 `flat conditioning vector` 版的原始 MTDP 口径。
+- `结果`：现在 `research_desk.md`、`pdit-vs-mdit.md` 和后续主线叙事已经对齐。当前稳定结论是：MDIT 主线的成功来自“输入替换 + 骨干与执行语义保持稳定”，其代表结果为 `0.55@100` 以及长训参考线 `0.75@300/500`；后续人或模型接手时，不会再把当前主线误读成原版 `MTDP` 直接复现。
+
 ### 2026-04-12 · `mdit/model/transformer.py` · output_proj 未零初始化
 
 **问题**：`_initialize_weights` 只零初始化了各 block 的 `adaLN_modulation`，未零初始化 `output_proj`。
@@ -1321,3 +1328,12 @@ except Exception as exc:
 处理：把后续任务启动器的等待条件从“目录存在”收紧为“当前 MDIT RGB 主线真正需要的 Zarr 结构完整可见”，即必须同时满足 `train/valid` 两侧的 `.zgroup`、`data/.zgroup`、`meta/.zgroup`、`data/images`、`data/robot_state` 存在，且 `images` 与 `robot_state` 目录下至少已经有实际文件；轮询周期继续保持 10 分钟。
 
 结果：当前 `put_books_on_bookshelf` 数据尚未满足启动条件，因此接管链会继续等待，不会提前开训；一旦 `images + robot_state + valid` 全部到位，仍会按 `lane_a_mainline + fm_autodl_lab.json + latest 断点续训` 的主线语义自动启动。
+
+### 2026-04-21 08:36:40 +0800 · 增加 MDIT 审计队列监督器，close_door 与 put_books 两条 run 自动排队审计 · MDIT audit takeover
+范围：`scripts/run_mdit_audit_queue_supervisor.py` + `tmux:mdit_audit_queue`
+
+背景：`close_door_mdit_rgb_text_3token_500` 已经训练完成但尚未进入共享离线审计；`put_books_on_bookshelf_mdit_rgb_text_3token_500` 当前正在训练，用户要求这条当前任务后续也必须自动进入审计，不能依赖人工再次提醒。
+
+处理：新增独立的 `scripts/run_mdit_audit_queue_supervisor.py`。该监督器持续跟踪一组 run 的 `train_heartbeat.json`、`audit_report.json` 与进程状态：如果任意 MDIT 训练仍在运行，则先等待，避免审计与训练争抢资源；一旦训练资源空闲，就按队列顺序自动执行 `run_autoresearch_trial.py --phase audit-only --run-dir <run_dir>`，审计失败会记录日志并延迟重试。当前默认队列为 `close_door_mdit_rgb_text_3token_500 -> put_books_on_bookshelf_mdit_rgb_text_3token_500`。
+
+结果：后台新增 `tmux:mdit_audit_queue` 常驻监督器；状态文件为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/mdit_audit_queue_state__close_door_then_put_books_audits.json`，日志为 `/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/autoresearch_records/logs/close_door_then_put_books_audits__audit_queue.log`。当前状态显示 `close_door` 已进入待审计队列首位，但由于 `put_books_on_bookshelf` 仍在训练，审计队列处于 `wait_training`；待训练结束后会先审 `close_door`，再审当前 `put_books_on_bookshelf`。

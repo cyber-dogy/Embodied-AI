@@ -1,0 +1,13 @@
+{
+  "updated_at": "2026-04-23T06:24:09+08:00",
+  "status": "completed",
+  "run_name": "put_books_on_bookshelf_mdit_rgb_text_3token_500",
+  "run_dir": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500",
+  "epoch": 499,
+  "batch_idx": null,
+  "global_step": 78000,
+  "best_metric": 0.12336427586213235,
+  "best_success_rate": null,
+  "summary_path": "/home/gjw/MyProjects/autodl_unplug_charger_transformer_fm/ckpt/put_books_on_bookshelf_mdit_rgb_text_3token_500/summary.json",
+  "stop_reason": null
+}
