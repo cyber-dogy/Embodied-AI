@@ -1,4 +1,4 @@
-# Dummy V2: LeRobot-Based Imitation Learning Demo for a Self-Built Robotic Arm
+# Dummy V2: LeRobot + ACT 具身模仿学习实践记录
 
 > 自研 6DoF + 线轨夹爪机械臂，基于 LeRobot v3 数据标准、世界坐标 Jog 示教、多视角 RGB-D 感知、MuJoCo/Isaac Lab 仿真和 ACT 策略部署，构建面向方块抓取/叠放任务的端到端具身模仿学习 demo。
 
@@ -430,7 +430,7 @@ World Model:
 
 ## 8. 可展示结果
 
-作品集展示时建议按下面顺序放视频和截图：
+页面整理时建议按下面顺序放视频和截图：
 
 1. GUI 主界面：真机状态、MuJoCo 同步、D405 RGB、D405 depth、UVC RGB 同屏。
 2. 世界坐标 Jog：按 X/Y/Z 移动 TCP，并同步夹爪开合。
@@ -485,7 +485,7 @@ sim curriculum: reach / pregrasp / grasplift
 - 清洗得到 5 个高质量 episode，共 4379 帧。
 - 基于 rollout 数据整理 ACT 叠方块 demo，并将数据接口扩展到 VLA/世界模型方向。
 
-## 10. 简历 Bullet
+## 10. 项目摘要条目
 
 ### 中文版
 
@@ -503,9 +503,9 @@ sim curriculum: reach / pregrasp / grasplift
 - Developed an Isaac Lab PPO curriculum for cube manipulation, including Reach, PreGrasp, and GraspLift stages, enabling simulation warm-start and sim-to-real validation for downstream imitation policies.
 - Deployed an ACT-style chunked action policy for block grasping/stacking, using multi-view RGB-D and proprioceptive inputs to predict future action chunks, with temporal aggregation and hardware-aware safety constraints for stable execution.
 
-## 11. 面试讲解要点
+## 11. 项目解读要点
 
-### 为什么这个项目适合具身算法岗位
+### 为什么这条线对具身学习研究重要
 
 这个项目不是单点功能，而是一个小型 embodied AI stack：
 

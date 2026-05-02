@@ -2197,7 +2197,7 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
         },
         {
             "title": "ACT 数据与系统验收",
-            "columns": ["条目", "当前结果", "展示价值"],
+            "columns": ["条目", "当前结果", "当前意义"],
             "rows": [
                 ["LeRobotDataset", "5 个 cleaned episodes / 4379 帧 / 10Hz", "证明数据已经过清洗，能直接进入训练与回放。"],
                 ["视觉观测", "3 路输入：D405 RGB + D405 Depth + UVC RGB", "支撑 ACT 当前部署，也为 VLA / 世界模型保留多模态入口。"],
@@ -2222,9 +2222,9 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
                         make_metric("frames", cleaned_frames),
                         make_metric("demo", "已打通"),
                     ],
-                    "outcome": "ACT 线已经具备作品集展示价值，后续可以在同一数据和动作接口上继续挂 VLA / 世界模型研究。",
+                    "outcome": "ACT 线已经形成完整闭环，后续可以在同一数据和动作接口上继续挂 VLA / 世界模型研究。",
                     "links": [
-                        card_link("ACT / LeRobot 求职 Demo", doc_path),
+                        card_link("ACT / LeRobot 实践记录", doc_path),
                         card_link("关键结果表", key_results_table_path),
                     ],
                 }
@@ -2243,7 +2243,7 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
                         make_metric("action dim", "7"),
                     ],
                     "outcome": "真实 ACT 训练不必从零学习基础运动，sim2real 桥接路线开始成立。",
-                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                    "links": [card_link("ACT / LeRobot 实践记录", doc_path)],
                 }
             ],
         },
@@ -2260,7 +2260,7 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
                         make_metric("静摩擦", "约 0.7A"),
                     ],
                     "outcome": "真实回放和策略部署终于有了稳定、可重复的末端执行条件。",
-                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                    "links": [card_link("ACT / LeRobot 实践记录", doc_path)],
                 }
             ],
         },
@@ -2277,7 +2277,7 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
                         make_metric("目标", "任务空间示教"),
                     ],
                     "outcome": "示范数据语义更干净，也更适合后续 ACT / VLA 学习。",
-                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                    "links": [card_link("ACT / LeRobot 实践记录", doc_path)],
                 }
             ],
         },
@@ -2294,7 +2294,7 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
                         make_metric("目标", "长期复用"),
                     ],
                     "outcome": "ACT 这条线从一开始就不是孤立 demo，而是建立在可长期复用的控制与采集平台之上。",
-                    "links": [card_link("ACT / LeRobot 求职 Demo", doc_path)],
+                    "links": [card_link("ACT / LeRobot 实践记录", doc_path)],
                 }
             ],
         },
@@ -2316,7 +2316,7 @@ def build_act_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items
     ]
 
     evidence_links = [
-        make_link("ACT / LeRobot 求职 Demo 说明", doc_path, first_sentence(section_body(sections, "1. 项目概述"), limit=120)),
+        make_link("ACT / LeRobot 实践记录", doc_path, first_sentence(section_body(sections, "1. 项目概述"), limit=120)),
         make_link("ACT 关键结果表", key_results_table_path, "把 cleaned episodes、frames、相机流和预训练阶段整理成结构化结果表。"),
         make_link("ACT 核心模块表", core_modules_table_path, "把世界坐标示教、LeRobot 数据层、ACT 输出接口和 sim2real warm-start 压成统一模块表。"),
     ]

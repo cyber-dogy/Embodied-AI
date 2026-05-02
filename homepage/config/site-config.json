@@ -27,7 +27,7 @@
         "digital twin"
       ],
       "featured_paths": [
-        "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+        "homepage/external/dummy_controller/项目总览.md",
         "homepage/external/dummy_controller/CAN_PROTECTION_SUMMARY.md",
         "homepage/external/dummy_controller/TEACH_BOUNDARY_COMPLETE.md",
         "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
@@ -117,7 +117,7 @@
         "sim2real"
       ],
       "featured_paths": [
-        "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+        "research_archive/tasks/act/notes/DummyV2_LeRobot_ACT实践记录.md"
       ],
       "artifact_paths": {
         "key_results": "research_archive/tasks/act/media/tables/act_key_results.csv",
@@ -233,7 +233,7 @@
         "teleoperation"
       ],
       "featured_paths": [
-        "homepage/external/dummy_controller/INTERVIEW_TECH_DOC.md",
+        "homepage/external/dummy_controller/项目总览.md",
         "homepage/external/dummy_controller/docs/技术文档_正逆运动学与示教系统.md"
       ]
     },
@@ -282,7 +282,7 @@
         "vla"
       ],
       "featured_paths": [
-        "research_archive/tasks/act/notes/DummyV2_LeRobot_求职Demo.md"
+        "research_archive/tasks/act/notes/DummyV2_LeRobot_ACT实践记录.md"
       ]
     },
     "lingbot-va": {
