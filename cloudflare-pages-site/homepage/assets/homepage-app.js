@@ -74,7 +74,7 @@
   function renderHomePage() {
     return `
       ${renderHero()}
-      ${renderBranchSection()}
+      ${renderWorkstreamSection()}
       ${renderStatusSection({
         id: "in-progress",
         kicker: "In Progress",
@@ -206,15 +206,71 @@
     `;
   }
 
-  function renderBranchSection() {
+  function renderWorkstreamSection() {
+    const groups = home.workstream_groups || [];
     return `
       <section class="section-block" id="branches">
+        <div class="section-title-row">
+          <div>
+            <p class="eyebrow">Workstreams</p>
+            <h2>主线分区</h2>
+          </div>
+          <p class="section-description">首页先按主线分成 Sim2Real / 硬件、模仿学习、VLA、世界模型几个大区块；单独任务页继续保留。</p>
+        </div>
+        <div class="workstream-stack">
+          ${groups.map((group) => renderWorkstreamGroup(group)).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  function renderWorkstreamGroup(group) {
+    return `
+      <section class="workstream-panel">
+        <div class="section-title-row workstream-title-row">
+          <div>
+            <p class="eyebrow">Workstream</p>
+            <h3>${escapeHtml(group.title)}</h3>
+          </div>
+          <p class="section-description">${escapeHtml(group.summary)}</p>
+        </div>
+        <div class="branch-grid">
+          ${group.cards.map((card) => renderWorkstreamCard(card)).join("")}
+        </div>
+      </section>
+    `;
+  }
+
+  function renderWorkstreamCard(card) {
+    return `
+      <article class="branch-card workstream-card">
+        <div class="card-topline">
+          <div class="badge-group">${renderBadgeGroup(buildCardBadges(card))}</div>
+          <span class="card-meta">${escapeHtml(card.status)}</span>
+        </div>
+        <h3>${escapeHtml(card.title)}</h3>
+        <p class="card-desc">${escapeHtml(card.summary)}</p>
+        <p class="branch-result"><strong>当前成果：</strong>${escapeHtml(card.result || "")}</p>
+        <div class="stats-row compact">
+          ${(card.metrics || []).map((metric) => renderMetric(metric)).join("")}
+        </div>
+        <div class="card-footer-line">
+          <span>${renderEntityTags(card.branch_ids || [], "branch")}</span>
+          <a class="text-link" href="${pathUrl(card.path)}">进入任务页</a>
+        </div>
+      </article>
+    `;
+  }
+
+  function renderBranchSection() {
+    return `
+      <section class="section-block" id="branches-legacy">
         <div class="section-title-row">
           <div>
             <p class="eyebrow">Branches</p>
             <h2>研究线入口</h2>
           </div>
-          <p class="section-description">首页以成果卡为主，研究线入口退到这里，保持导航清晰但不过度喧宾夺主。</p>
+          <p class="section-description">研究线详情页仍然保留；首页主入口优先按大区块组织，减少平铺时的阅读负担。</p>
         </div>
         <div class="branch-grid">
           ${branches.map((branch) => renderBranchCard(branch)).join("")}

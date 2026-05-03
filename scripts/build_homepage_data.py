@@ -1274,6 +1274,88 @@ def build_branch_card_copy(branch_id: str, branch_title: str, related_tasks: lis
     }
 
 
+def build_workstream_task_copy(task: dict[str, Any]) -> dict[str, str]:
+    # 首页主线分区强调“这条任务是什么、当前走到哪”，
+    # 这里单独给任务入口准备一层更简洁的文案，避免直接堆长摘要。
+    task_id = task["id"]
+    if task_id == "dummy-sim2real-platform":
+        return {
+            "summary": "把六轴臂的真机-仿真映射、示教回放和 FK / IK 控制固化成可复用的采集平台。",
+            "result": "当前成果：Sim2Real 映射、示教回放和逆解控制已经形成稳定底座。",
+        }
+    if task_id == "infra-audit":
+        return {
+            "summary": "把训练、评估、审计、研究留痕和发布链路统一到同一套基础设施里。",
+            "result": "当前成果：训练栈、评估栈和 archive / homepage 发布链已经成体系。",
+        }
+    if task_id == "pdit-anchor":
+        return {
+            "summary": "围绕点云 DiT 主线，把训练、保存和离线审计修回到可复核的行为锚点。",
+            "result": "当前成果：best success 0.95@20，100 回合复核 0.85。",
+        }
+    if task_id == "mdit-mainline":
+        return {
+            "summary": "围绕 RGB+Text 主线、续训接管和共享审计，收束成同一条可复现的多模态策略线。",
+            "result": "当前成果：best success 已稳定在 0.75@500，共享审计同步站稳 0.75。",
+        }
+    if task_id == "act-lerobot-demo":
+        return {
+            "summary": "围绕 LeRobot v3 数据、世界坐标示教和 ACT 部署，把自研机械臂整理成具身模仿学习闭环。",
+            "result": "当前成果：5 个 cleaned episodes、4379 帧数据和 ACT demo 已打通。",
+        }
+    if task_id == "lelan-pipeline":
+        return {
+            "summary": "围绕 LeLaN 的训练、评估和 gate 链路，先把 VLA 方向的执行基线固化下来。",
+            "result": "当前成果：100 / 300 / 500 gate 已定版，等待正式 run 结果。",
+        }
+    if task_id == "lingbot-va-world-model":
+        return {
+            "summary": "围绕视频 latent 与动作联合建模，先把世界模型线的 smoke、导出和离线评测摸清。",
+            "result": "当前成果：smoke、offline eval 与 demo exporter 都已打通。",
+        }
+    return {
+        "summary": first_sentence(task.get("summary", ""), limit=100),
+        "result": first_sentence(task.get("summary_cards", [{}])[0].get("title", ""), limit=96),
+    }
+
+
+def build_home_workstreams(workstream_cfgs: list[dict[str, Any]], tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    task_map = {task["id"]: task for task in tasks}
+    groups: list[dict[str, Any]] = []
+    for group_cfg in workstream_cfgs:
+        cards = []
+        for task_id in group_cfg.get("task_ids", []):
+            task = task_map.get(task_id)
+            if task is None:
+                continue
+            copy_block = build_workstream_task_copy(task)
+            cards.append(
+                {
+                    "task_id": task["id"],
+                    "title": task["title"],
+                    "status": task["status"],
+                    "status_group": task["status_group"],
+                    "summary": copy_block["summary"],
+                    "result": copy_block["result"],
+                    "metrics": task["hero_metrics"][:3],
+                    "badge": task.get("task_badge", task["title"]),
+                    "branch_ids": task.get("branch_ids", []),
+                    "path": task["page_path"],
+                }
+            )
+        if not cards:
+            continue
+        groups.append(
+            {
+                "id": group_cfg["id"],
+                "title": group_cfg["title"],
+                "summary": group_cfg["summary"],
+                "cards": cards,
+            }
+        )
+    return groups
+
+
 def build_pdit_task(task_cfg: dict[str, Any], charts: dict[str, Any], media_items: list[dict[str, str]]) -> dict[str, Any]:
     doc_path = ROOT / task_cfg["featured_paths"][0]
     audit_path = ROOT / task_cfg["artifact_paths"]["audit"]
@@ -3538,6 +3620,7 @@ def build_payload(config: dict[str, Any], overrides: dict[str, Any] | None = Non
         seen_preview_tasks.add(item["task_id"])
         showcase_preview_items.append(item)
     home = build_home_sections(tasks, research_desk_entries)
+    home["workstream_groups"] = build_home_workstreams(config.get("home_workstreams", []), tasks)
     timeline_page = build_timeline_page(tasks, research_desk_entries)
     fix_highlights = parse_fix_entries(limit=4)
 

@@ -1,5 +1,5 @@
 window.homepageData = {
-  "generated_at": "2026-05-02T19:09:16+08:00",
+  "generated_at": "2026-05-03T10:33:59+08:00",
   "site": {
     "title": "GJW · Embodied AI Lab Notes",
     "slogan": "把实验、修复与主线推进整理成清晰可追溯的研究档案。",
@@ -383,6 +383,223 @@ window.homepageData = {
       "meta": "LingBot-VA 世界模型研究切入",
       "path": "homepage/tasks/lingbot-va-world-model/"
     },
+    "workstream_groups": [
+      {
+        "id": "sim2real-hardware",
+        "title": "Sim2Real / 硬件与基础设施",
+        "summary": "把真机控制、数字孪生、示教回放、正逆运动学和训练审计基础设施放在同一块里看，先看底座，再看上层算法线。",
+        "cards": [
+          {
+            "task_id": "dummy-sim2real-platform",
+            "title": "六轴臂 Sim2Real 采集平台搭建",
+            "status": "已完成",
+            "status_group": "done",
+            "summary": "把六轴臂的真机-仿真映射、示教回放和 FK / IK 控制固化成可复用的采集平台。",
+            "result": "当前成果：Sim2Real 映射、示教回放和逆解控制已经形成稳定底座。",
+            "metrics": [
+              {
+                "label": "机械臂",
+                "value": "6 轴"
+              },
+              {
+                "label": "IK 精度",
+                "value": "< 8 mm"
+              },
+              {
+                "label": "Demo",
+                "value": "3 个"
+              }
+            ],
+            "badge": "Sim2Real 平台",
+            "branch_ids": [
+              "robot-platform"
+            ],
+            "path": "homepage/tasks/dummy-sim2real-platform/"
+          },
+          {
+            "task_id": "infra-audit",
+            "title": "训练与审计基础设施修复",
+            "status": "长期维护",
+            "status_group": "in_progress",
+            "summary": "把训练、评估、审计、研究留痕和发布链路统一到同一套基础设施里。",
+            "result": "当前成果：训练栈、评估栈和 archive / homepage 发布链已经成体系。",
+            "metrics": [
+              {
+                "label": "desk 条目",
+                "value": "15"
+              },
+              {
+                "label": "PDIT docs",
+                "value": "8"
+              },
+              {
+                "label": "MDIT docs",
+                "value": "16"
+              }
+            ],
+            "badge": "Infra",
+            "branch_ids": [],
+            "path": "homepage/tasks/infra-audit/"
+          }
+        ]
+      },
+      {
+        "id": "policy-il",
+        "title": "模仿学习 / 策略主线",
+        "summary": "把点云主线、多模态主线和 ACT 具身模仿学习闭环收在一起，方便直接比较当前策略线的输入、动作口径和阶段结果。",
+        "cards": [
+          {
+            "task_id": "pdit-anchor",
+            "title": "PDIT 基线恢复与锚点固化",
+            "status": "已验证",
+            "status_group": "done",
+            "summary": "围绕点云 DiT 主线，把训练、保存和离线审计修回到可复核的行为锚点。",
+            "result": "当前成果：best success 0.95@20，100 回合复核 0.85。",
+            "metrics": [
+              {
+                "label": "best success@20",
+                "value": "0.95"
+              },
+              {
+                "label": "100 回合复核",
+                "value": "0.85"
+              },
+              {
+                "label": "best epoch",
+                "value": "500"
+              }
+            ],
+            "badge": "PDIT 主线",
+            "branch_ids": [
+              "pdit"
+            ],
+            "path": "homepage/tasks/pdit-anchor/"
+          },
+          {
+            "task_id": "mdit-mainline",
+            "title": "MDIT RGB+Text 主线推进",
+            "status": "已验证",
+            "status_group": "done",
+            "summary": "围绕 RGB+Text 主线、续训接管和共享审计，收束成同一条可复现的多模态策略线。",
+            "result": "当前成果：best success 已稳定在 0.75@500，共享审计同步站稳 0.75。",
+            "metrics": [
+              {
+                "label": "best success@20",
+                "value": "0.75"
+              },
+              {
+                "label": "100 epoch 锚点",
+                "value": "0.55"
+              },
+              {
+                "label": "best epoch",
+                "value": "300"
+              }
+            ],
+            "badge": "MDIT 主线",
+            "branch_ids": [
+              "mdit"
+            ],
+            "path": "homepage/tasks/mdit-mainline/"
+          },
+          {
+            "task_id": "act-lerobot-demo",
+            "title": "Dummy V2 LeRobot + ACT 具身模仿学习 Demo",
+            "status": "已完成",
+            "status_group": "done",
+            "summary": "围绕 LeRobot v3 数据、世界坐标示教和 ACT 部署，把自研机械臂整理成具身模仿学习闭环。",
+            "result": "当前成果：5 个 cleaned episodes、4379 帧数据和 ACT demo 已打通。",
+            "metrics": [
+              {
+                "label": "episodes",
+                "value": "5"
+              },
+              {
+                "label": "frames",
+                "value": "4379"
+              },
+              {
+                "label": "fps",
+                "value": "10Hz"
+              }
+            ],
+            "badge": "ACT Demo",
+            "branch_ids": [
+              "act"
+            ],
+            "path": "homepage/tasks/act-lerobot-demo/"
+          }
+        ]
+      },
+      {
+        "id": "vla-line",
+        "title": "VLA 线路",
+        "summary": "围绕视觉-语言-动作的执行链整理当前实验入口，先看链路与 gate，再看后续正式结果如何展开。",
+        "cards": [
+          {
+            "task_id": "lelan-pipeline",
+            "title": "LeLaN 自动研究链路固化",
+            "status": "待结果",
+            "status_group": "in_progress",
+            "summary": "围绕 LeLaN 的训练、评估和 gate 链路，先把 VLA 方向的执行基线固化下来。",
+            "result": "当前成果：100 / 300 / 500 gate 已定版，等待正式 run 结果。",
+            "metrics": [
+              {
+                "label": "观测设置",
+                "value": "5 路 RGB / 3 帧"
+              },
+              {
+                "label": "动作步数",
+                "value": "8"
+              },
+              {
+                "label": "gate@100",
+                "value": "0.45"
+              }
+            ],
+            "badge": "LeLaN",
+            "branch_ids": [
+              "lelan"
+            ],
+            "path": "homepage/tasks/lelan-pipeline/"
+          }
+        ]
+      },
+      {
+        "id": "world-model-line",
+        "title": "世界模型线路",
+        "summary": "围绕视频 latent、动作联合建模和后训练评测，把世界模型相关工作单独成区，避免和策略线混在一起。",
+        "cards": [
+          {
+            "task_id": "lingbot-va-world-model",
+            "title": "LingBot-VA 世界模型后训练切入",
+            "status": "推进中",
+            "status_group": "in_progress",
+            "summary": "围绕视频 latent 与动作联合建模，先把世界模型线的 smoke、导出和离线评测摸清。",
+            "result": "当前成果：smoke、offline eval 与 demo exporter 都已打通。",
+            "metrics": [
+              {
+                "label": "smoke step",
+                "value": "1"
+              },
+              {
+                "label": "offline action_mse",
+                "value": "0.0067"
+              },
+              {
+                "label": "当前阶段",
+                "value": "smoke+demo"
+              }
+            ],
+            "badge": "世界模型线",
+            "branch_ids": [
+              "lingbot-va"
+            ],
+            "path": "homepage/tasks/lingbot-va-world-model/"
+          }
+        ]
+      }
+    ],
     "hero_inline_stats": [
       {
         "label": "任务",

@@ -9,6 +9,43 @@
     "pdit-success-curve",
     "mdit-success-curve"
   ],
+  "home_workstreams": [
+    {
+      "id": "sim2real-hardware",
+      "title": "Sim2Real / 硬件与基础设施",
+      "summary": "把真机控制、数字孪生、示教回放、正逆运动学和训练审计基础设施放在同一块里看，先看底座，再看上层算法线。",
+      "task_ids": [
+        "dummy-sim2real-platform",
+        "infra-audit"
+      ]
+    },
+    {
+      "id": "policy-il",
+      "title": "模仿学习 / 策略主线",
+      "summary": "把点云主线、多模态主线和 ACT 具身模仿学习闭环收在一起，方便直接比较当前策略线的输入、动作口径和阶段结果。",
+      "task_ids": [
+        "pdit-anchor",
+        "mdit-mainline",
+        "act-lerobot-demo"
+      ]
+    },
+    {
+      "id": "vla-line",
+      "title": "VLA 线路",
+      "summary": "围绕视觉-语言-动作的执行链整理当前实验入口，先看链路与 gate，再看后续正式结果如何展开。",
+      "task_ids": [
+        "lelan-pipeline"
+      ]
+    },
+    {
+      "id": "world-model-line",
+      "title": "世界模型线路",
+      "summary": "围绕视频 latent、动作联合建模和后训练评测，把世界模型相关工作单独成区，避免和策略线混在一起。",
+      "task_ids": [
+        "lingbot-va-world-model"
+      ]
+    }
+  ],
   "tasks": [
     {
       "id": "dummy-sim2real-platform",
